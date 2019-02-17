@@ -239,7 +239,11 @@ def goal_to_4subgoal_prediction_test(x,y,l,knownN,startG,finishG,goals,subgoals,
 
 def single_goal_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY): 
     predictedX, predictedY, varX, varY = trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY) 
-    plot_prediction(img,x,y,knownN,predictedX, predictedY,varX,varY)
+    lenX = goals[finishG][len(goals[finishG]) -2] - goals[finishG][0]
+    lenY = goals[finishG][len(goals[finishG]) -1] - goals[finishG][1]
+    elipse = [lenX, lenY]
+    
+    plot_prediction(img,x,y,knownN,predictedX, predictedY,varX,varY,elipse)
     
 #recibe: datos conocidos, valores por predecir, areas de inicio y final
 def prediction_test(x,y,z,knownN,startG,finishG,goals,unitMat,meanLenMat,steps):
@@ -656,7 +660,8 @@ for i in range(2,part_num-1):
     #print("likely goals:", likely_goals)
     """Simple prediction test"""
     #single_goal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y)
-    goal_to_4subgoal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,subgoals,unitMat,stepUnit,kernelMat_x,kernelMat_y,subgoalsUnitMat,subgoalsKernelMat_x,subgoalsKernelMat_y)    
+    #goal_to_4subgoal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,subgoals,unitMat,stepUnit,kernelMat_x,kernelMat_y,subgoalsUnitMat,subgoalsKernelMat_x,subgoalsKernelMat_y)    
+    trajectory_subgoal_prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
     #prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,meanLenMat,steps)
     """Multigoal prediction test"""    
     #multigoal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorLikelihoodMat)
