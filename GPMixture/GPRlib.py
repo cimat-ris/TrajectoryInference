@@ -735,6 +735,48 @@ def trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUni
     newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
     return newX, newY, varX, varY
     
+
+def trajectory_subgoal_prediction_test(img,x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,samplingAxis):
+    kernelX = kernelMatX[startG][finishG]
+    kernelY = kernelMatY[startG][finishG]
+    
+    trueX, trueY, trueL = get_known_set(x,y,l,knownN)
+    lastKnownPoint = [x[knownN-1], y[knownN-1], l[knownN-1] ]
+    unit = unitMat[startG][finishG]
+    #goalCenter = middle_of_area(goals[finishG])
+    nSubgoals = 2
+    sampleX, sampleY, axis = uniform_sampling_1D(nSubgoals,goals[finishG],samplingAxis[finishG])
+    subgoalsXY = []
+    for i in range(nSubgoals):
+        subgoalsXY.append([sampleX[i], sampleY[i]])
+    
+    predictedXYVec, varXYVec = [],[]
+    for i in range(nSubgoals):
+        newL, finalL = get_prediction_set(lastKnownPoint,subgoalsXY[i],unit,stepUnit)
+        trueX.append(subgoalsXY[i][0])    
+        trueY.append(subgoalsXY[i][1])
+        trueL.append(finalL)
+        newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
+        predictedXYVec.append([newX,newY])
+        varXYVec.append([varX,varY])
+        trueX.pop()
+        trueY.pop()
+        trueL.pop()
+        
+    subgoalElipseX, subgoalElipseY = 0,0
+    if samplingAxis[finishG] == 'x':
+        subgoalElipseX = (goals[finishG][len(goals[finishG]) -2] - goals[finishG][0])/nSubgoals 
+        subgoalElipseY = (goals[finishG][len(goals[finishG]) -1] - goals[finishG][1])/2
+    
+    if samplingAxis[finishG] == 'y':
+        subgoalElipseX = (goals[finishG][len(goals[finishG]) -2] - goals[finishG][0])/2 
+        subgoalElipseY = (goals[finishG][len(goals[finishG]) -1] - goals[finishG][1])/nSubgoals
+    
+    elipse = [subgoalElipseX,subgoalElipseY]
+    print("[Elipse]:", elipse)
+    plot_subgoal_prediction(img,trueX,trueY,knownN,nSubgoals,predictedXYVec,varXYVec,elipse)
+     
+
 #Mean error (mx,my) de los valores reales con los predichos
 def meanError(trueX, trueY, predX, predY):
     e = [0,0]
@@ -897,7 +939,7 @@ def get_min_and_max_arcLength(paths):
 #******************************************************************************#
 """ PLOT FUNCTIONS """
 #Grafica los datos reales, los datos conocidos y los calculados
-def plot_prediction(img,trueX,trueY,nUsedData,predictedX,predictedY,varX,varY): 
+def plot_prediction(img,trueX,trueY,nUsedData,predictedX,predictedY,varX,varY,finalPointElipse): 
     realX, realY = [],[]
     partialX, partialY = [], []
     N = int(len(trueX))
@@ -935,6 +977,13 @@ def plot_prediction(img,trueX,trueY,nUsedData,predictedX,predictedY,varX,varY):
         ell.set_lw(0)
         ell.set_facecolor('g')
         ax.add_patch(ell)
+    #final point
+    xy = [predictedX[predictedN-1],predictedY[predictedN-1]]#trueX[N-1],trueY[N-1]]
+    ell = Ellipse(xy,finalPointElipse[0], finalPointElipse[1])
+    ell.set_alpha(.4)
+    ell.set_lw(0)
+    ell.set_facecolor('m')
+    ax.add_patch(ell)
         
     v = [0,1920,1080,0]
     plt.axis(v)
@@ -974,3 +1023,50 @@ def plot_sampling_prediction(img,trueX,trueY,nUsedData,predictedX,predictedY,var
     v = [0,1920,1080,0]
     plt.axis(v)
     plt.show() 
+
+#Pinta las predicciones de los subgoals
+def plot_subgoal_prediction(img,trueX,trueY,nUsedData,nSubgoals,predictedXYVec,varXYVec,finalPointElipse): 
+    realX, realY = [],[]
+    partialX, partialY = [], []
+    N = int(len(trueX))
+    
+    #seccion 2, partial path + euclidian distance
+    for i in range(int(nUsedData)):
+        partialX.append(trueX[i])
+        partialY.append(trueY[i])
+    
+    for i in range(int(nUsedData-1),N):
+        realX.append(trueX[i])
+        realY.append(trueY[i])
+    
+    fig,ax = plt.subplots(1)
+    ax.set_aspect('equal')
+    ax.imshow(img) # Show the image 
+    
+    plt.plot(partialX,partialY,'c',realX,realY,'r')
+    
+    for i in range(nSubgoals): #pinta la prediccion para cada subgoal
+        plt.plot(predictedXYVec[i][0],predictedXYVec[i][1],'b')    
+        predictedN = len(predictedXYVec[i][0])
+        for j in range(predictedN):
+            xy = [predictedXYVec[i][0][j],predictedXYVec[i][1][j]]
+            if j > (predictedN/2):
+                eX = (finalPointElipse[0] + 2.*np.sqrt(varXYVec[i][0][j]))/2
+                eY = (finalPointElipse[1] + 2.*np.sqrt(varXYVec[i][1][j]))/2
+                ell = Ellipse(xy, eX, eY)
+            else:
+                ell = Ellipse(xy,2.*np.sqrt(varXYVec[i][0][j]), 2.*np.sqrt(varXYVec[i][1][j]))
+            ell.set_alpha(.2)
+            ell.set_facecolor('g')
+            ax.add_patch(ell)        
+        #final point
+        xy = [predictedXYVec[i][0][predictedN-1],predictedXYVec[i][1][predictedN-1]]
+        ell = Ellipse(xy,finalPointElipse[0], finalPointElipse[1])
+        ell.set_alpha(.4)
+        ell.set_facecolor('g')
+        ax.add_patch(ell)
+        
+    v = [0,1920,1080,0]
+    plt.axis(v)
+    plt.show() 
+    
