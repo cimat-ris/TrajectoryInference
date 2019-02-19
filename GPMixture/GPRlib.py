@@ -681,6 +681,13 @@ def get_prediction_set(lastKnownPoint, finishPoint, unit, stepUnit):
         
     return newset, l + dist*unit     
     
+def get_arclen_to_finish_point(lastKnownPoint, finishPoint, unit):
+    x, y, l = lastKnownPoint[0], lastKnownPoint[1], lastKnownPoint[2] 
+    _x, _y = finishPoint[0], finishPoint[1]
+    dist = math.sqrt( (_x-x)**2 + (_y-y)**2 )
+    
+    return l + dist*unit 
+
 #Recibe los puntos conocidos (x,y) el conjunto de puntos por predecir newX.
 def estimate_new_set_of_values(known_x,known_y,newX,kernel):
     lenNew = len(newX)
@@ -717,7 +724,7 @@ def prediction_XY_of_set(x, y, z, newZ, kernel_x, kernel_y):#prediction
         variance_y.append(var_y)
     return predicted_x, predicted_y,variance_x, variance_y
     
-def trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,samplingAxis):
+def trajectory_prediction_test_using_sampling(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,samplingAxis):
     kernelX = kernelMatX[startG][finishG]
     kernelY = kernelMatY[startG][finishG]
     
@@ -734,7 +741,41 @@ def trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUni
     
     newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
     return newX, newY, varX, varY
+
+def trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,samplingAxis):
+    kernelX = kernelMatX[startG][finishG]
+    kernelY = kernelMatY[startG][finishG]
     
+    trueX, trueY, trueL = get_known_set(x,y,l,knownN)
+    lastKnownPoint = [x[knownN-1], y[knownN-1], l[knownN-1] ]
+    unit = unitMat[startG][finishG]
+    
+    finalPoints = []
+    finalArcLen = []
+    p = middle_of_area(goals[finishG])
+    finalPoints.append(p)
+    newL, finalL = get_prediction_set(lastKnownPoint,p,unit,stepUnit)
+    
+    lenX = goals[finishG][len(goals[finishG]) -2] - goals[finishG][0]
+    lenY = goals[finishG][len(goals[finishG]) -1] - goals[finishG][1]
+    q1 = [p[0]-lenX/2, p[1]]
+    q2 = [p[0], p[1]+lenY/2]
+    q3 = [p[0]+lenX/2, p[1]]
+    q4 = [p[0], p[1]-lenY/2]
+    finalPoints.append(q1)
+    finalPoints.append(q2)
+    finalPoints.append(q3)
+    finalPoints.append(q4)
+    for i in range(5):
+        finalArcLen.append(get_arclen_to_finish_point(lastKnownPoint,finalPoints[i],unit))
+        trueX.append(finalPoints[i][0])    
+        trueY.append(finalPoints[i][1])
+        trueL.append(finalArcLen[i])
+        
+    #print("[final points]:",finalPoints)
+    #print("[final arclen]:",finalArcLen)
+    newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
+    return newX, newY, varX, varY
 
 def trajectory_subgoal_prediction_test(img,x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,samplingAxis):
     kernelX = kernelMatX[startG][finishG]
@@ -970,13 +1011,15 @@ def plot_prediction(img,trueX,trueY,nUsedData,predictedX,predictedY,varX,varY,fi
     plt.plot(lineX,lineY,'b', label='Euclidean distance')
     ax.legend()
     """
-    for i in range(len(predictedX)):
+    predictedN = len(predictedX)
+    for i in range(predictedN):
         xy = [predictedX[i],predictedY[i]]
         ell = Ellipse(xy,2.*np.sqrt(varX[i]), 2.*np.sqrt(varY[i]))
+        #ell = Ellipse(xy,varX[i], varY[i])
         ell.set_alpha(.4)
-        ell.set_lw(0)
         ell.set_facecolor('g')
         ax.add_patch(ell)
+    """    
     #final point
     xy = [predictedX[predictedN-1],predictedY[predictedN-1]]#trueX[N-1],trueY[N-1]]
     ell = Ellipse(xy,finalPointElipse[0], finalPointElipse[1])
@@ -984,7 +1027,7 @@ def plot_prediction(img,trueX,trueY,nUsedData,predictedX,predictedY,varX,varY,fi
     ell.set_lw(0)
     ell.set_facecolor('m')
     ax.add_patch(ell)
-        
+    """ 
     v = [0,1920,1080,0]
     plt.axis(v)
     plt.show() 
