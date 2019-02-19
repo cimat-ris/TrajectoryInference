@@ -237,8 +237,8 @@ def goal_to_4subgoal_prediction_test(x,y,l,knownN,startG,finishG,goals,subgoals,
     plt.axis(v)
     plt.show() 
 
-def single_goal_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY): 
-    predictedX, predictedY, varX, varY = trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY) 
+def single_goal_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,goalSamplingAxis): 
+    predictedX, predictedY, varX, varY = trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,goalSamplingAxis) 
     lenX = goals[finishG][len(goals[finishG]) -2] - goals[finishG][0]
     lenY = goals[finishG][len(goals[finishG]) -1] - goals[finishG][1]
     elipse = [lenX, lenY]
@@ -511,8 +511,8 @@ def test_prediction_goal_to_subgoal(trajectorySet,startG,finishG,goals,subgoals,
 R0 = [400,10,680,10,400,150,680,150] #azul
 R1 = [1100,10,1400,10,1100,150,1400,150] #cian
 R2 = [1650,490,1810,490,1650,740,1810,740] #verde
-R3 = [1450,950,1800,950,1450,1100,1800,1100]#amarillo
-R4 = [100,950,500,950,100,1100,500,1100] #naranja
+R3 = [1450,950,1800,950,1450,1080,1800,1080]#amarillo
+R4 = [100,950,500,950,100,1080,500,1080] #naranja
 R5 = [300,210,450,210,300,400,450,400] #rosa
 goalSamplingAxis = ['x','x','y','x','x','y']
 #R6 = [750,460,1050,460,750,730,1050,730] #rojo
@@ -632,8 +632,8 @@ subgoalsKernelMat_x = read_and_set_parameters("subgoalsParameters_x.txt",nGoals,
 subgoalsKernelMat_y = read_and_set_parameters("subgoalsParameters_y.txt",nGoals,nSubgoals,2)
 subgoalsUnitMat = copy_unitMat(unitMat, nGoals, nSubgoals); 
 
-startG = 1
-nextG = 4#getNextKGoals(start[0], 2, priorLikelihoodMat, nGoals)
+startG = 0
+nextG = 2#getNextKGoals(start[0], 2, priorLikelihoodMat, nGoals)
 kernelid = nextG
 kernelX = kernelMat_x[startG][kernelid]
 kernelY = kernelMat_y[startG][kernelid]
@@ -645,10 +645,10 @@ traj_arclen = pathMat[startG][nextG][traj_id].length
 likelihoodVector, error_vector = [], []
 arclen_vec = []
 
-part_num = 6
+part_num = 4
 steps = 15
 
-for i in range(2,part_num-1):
+for i in range(1,part_num-1):
     arclen_vec.append( (i+1)*(traj_arclen/float(part_num))  )
     knownN = int((i+1)*(traj_len/part_num)) 
     
@@ -659,9 +659,9 @@ for i in range(2,part_num-1):
     likely_goals = most_likely_goals(likelihood, nGoals)
     #print("likely goals:", likely_goals)
     """Simple prediction test"""
-    #single_goal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y)
+    single_goal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
     #goal_to_4subgoal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,subgoals,unitMat,stepUnit,kernelMat_x,kernelMat_y,subgoalsUnitMat,subgoalsKernelMat_x,subgoalsKernelMat_y)    
-    trajectory_subgoal_prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
+    #trajectory_subgoal_prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
     #prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,meanLenMat,steps)
     """Multigoal prediction test"""    
     #multigoal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorLikelihoodMat)
