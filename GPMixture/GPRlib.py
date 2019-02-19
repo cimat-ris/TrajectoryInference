@@ -14,43 +14,33 @@ from copy import copy
 import random
 
 """ READ DATA """
-#lectura de archivos  
-def read_file(file_name):    
-    f = open(file_name,'r')
-    x, y, t = [],[],[]
-        
-    line = f.readline()
-    while line!="":
-        if line!="":
-            x_ = int(line)
-            line = f.readline()
-            y_ = int(line)
-            line = f.readline()
-            t_ = int(line)
-            if equal(x,y,x_,y_) == 0:
-                x.append(x_)
-                y.append(y_)
-                t.append(t_)
-        line = f.readline()
-        
-    f.close()
-    return x,y,t
+def get_paths_from_file(path_file,areas):
     
-def get_paths_from_files(path_files,areas):
     paths, multigoal_paths = [],[] 
-
-    for i in range(len(path_files)):
-        auxX, auxY, auxT = read_file(path_files[i])
-        auxPath = path.path(auxT,auxX,auxY)
-        
-        gi = get_goal_sequence(auxPath,areas)
-        if len(gi) > 2:
-            multigoal_paths.append(auxPath)
-            new_paths = break_multigoal_path(auxPath,gi,areas)   
-            for j in range(len(new_paths)):
-                paths.append(new_paths[j])
-        else:
-            paths.append(auxPath) 
+    # Open file
+    with open(path_file) as f:
+        # Each line should contain a path
+        for line in f:
+            auxX, auxY, auxT = [],[],[]
+            # Split the line into sub-strings
+            data    = line.split()
+            for i in range(0, len(data), 3):
+                x_ = int(data[i])
+                y_ = int(data[i+1])
+                t_ = int(data[i+2])
+                if equal(auxX,auxY,x_,y_) == 0:
+                    auxX.append(x_)
+                    auxY.append(y_)
+                    auxT.append(t_)
+            auxPath = path.path(auxT,auxX,auxY)
+            gi = get_goal_sequence(auxPath,areas)
+            if len(gi) > 2:
+                multigoal_paths.append(auxPath)
+                new_paths = break_multigoal_path(auxPath,gi,areas)   
+                for j in range(len(new_paths)):
+                    paths.append(new_paths[j])
+            else:
+                paths.append(auxPath) 
     return paths, multigoal_paths
     
 """Recibe un conjunto de paths y obtiene los puntos (x,y,z)

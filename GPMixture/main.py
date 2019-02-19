@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 """
 Created on Mon Oct 24 00:50:28 2016
 
@@ -570,12 +570,11 @@ for i in range(nGoals):
     for j in range(4):
         subgoalSamplingAxis.append(goalSamplingAxis[i])
 #print("subG sampling axis:", subgoalSamplingAxis)
-img = mpimg.imread('goals.jpg')  
+img = mpimg.imread('imgs/goals.jpg')  
 
-pathFiles = readDataset('pathSet10000.txt')
 #Al leer cortamos las trayectorias multiobjetivos por pares consecutivos 
 #y las agregamos como trayectorias independientes 
-true_paths, multigoal = get_paths_from_files(pathFiles,areas)
+true_paths, multigoal = get_paths_from_file('datasets/CentralStation_paths_10000.txt',areas)
 usefulPaths = path.getUsefulPaths(true_paths,areas)
 #path.plotPaths(usefulPaths, img)
 #print("useful paths: ",len(usefulPaths))
