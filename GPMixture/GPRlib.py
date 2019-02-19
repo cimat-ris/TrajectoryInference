@@ -99,7 +99,7 @@ def get_data_from_files(files, flag):
     
 """ FILTER PATHS """    
 #Calcula la mediana m, y la desviacion estandar s de un vector de paths
-#si alguna trayectoria difiere de la mediana en 4s o más, se descarta
+#si alguna trayectoria difiere de la mediana en 4s o mas, se descarta
 def filter_path_vec(vec):
     arclen = getArcLength(vec)    
     m = np.median(arclen)
@@ -227,7 +227,7 @@ def break_multigoal_path(multigoalPath, goalVec, goals):
 #******************************************************************************#
 """ REGRESSION FUNCTIONS """
 # The main regression function 
-def regression(x,y,xnew,kernel):  #regresion sin recibir los parámetros, el kernel ya los trae fijos  
+def regression(x,y,xnew,kernel):  #regresion sin recibir los parametros, el kernel ya los trae fijos  
     n = len(x) # Number of observed data
     # Compute K, k and c
     K  = np.zeros((n,n))
@@ -275,7 +275,7 @@ def arclength(x,y):
 #******************************************************************************#    
 """ LEARNING """
 nsigma = 8.0 #error de las observaciones 
-#Parámetros: theta, vector de vectores: x,y
+#Parametros: theta, vector de vectores: x,y
     
 def setKernel(name):
     if(name == "squaredExponential"):
@@ -387,7 +387,7 @@ def optimize_parameters_between_2goals(learnSet, kernelMat, parametersMat, start
     print("y:",paramY)
     
 #Aprendizaje para cada par de trayectorias 
-#Regresa una matriz de kernels con los parámetros optimizados  
+#Regresa una matriz de kernels con los parametros optimizados  
 #learnSet = [[(start_i,goal_j)]], kernelMat = [[k_ij]], thetaMat = [[parametros del kernel_ij]]
 def optimize_parameters_between_goals_(learnSet, parametersMat, nGoals):
     #parameters = []
@@ -489,7 +489,7 @@ def read_and_set_parameters(file_name, rows, columns, nParameters):
        
     for i in range(rows):
         for j in range(columns):
-            parameters = []#el kernel combinado usa 2 parámetros: [s,l] 
+            parameters = []#el kernel combinado usa 2 parametros: [s,l] 
             line = f.readline()
             parameters_str = line.split()
             for k in range(nParameters):
