@@ -13,6 +13,8 @@ from matplotlib.patches import Ellipse
 from copy import copy
 import random
 
+color = ['b','g','r','c','m','y','k','w']   
+
 """ READ DATA """
 def get_paths_from_file(path_file,areas):
     
@@ -676,7 +678,35 @@ def get_arclen_to_finish_point(lastKnownPoint, finishPoint, unit):
     _x, _y = finishPoint[0], finishPoint[1]
     dist = math.sqrt( (_x-x)**2 + (_y-y)**2 )
     
-    return l + dist*unit 
+    return l + dist*unit
+
+def get_subgoals_center_and_size(nSubgoals, goal, axis):
+    goalX = goal[len(goal) -2] - goal[0]
+    goalY = goal[len(goal) -1] - goal[1]
+    goalCenterX = goal[0]+ goalX/2    
+    goalCenterY = goal[1]+ goalY/2
+    
+    subgoalsCenter = []
+    subgoalX, subgoalY = 0,0
+    if axis == 'x':
+        subgoalX = goalX/nSubgoals
+        subgoalY = goalY
+        _x = goal[0]
+        _y = goalCenterY
+        for i in range(nSubgoals):
+            subgoalsCenter.append( [_x+subgoalX/2, _y] )
+            _x += subgoalX
+            
+    if axis == 'y':
+        subgoalX = goalX
+        subgoalY = goalY/nSubgoals
+        _x = goalCenterX
+        _y = goal[1]
+        for i in range(nSubgoals):
+            subgoalsCenter.append( [_x, _y+subgoalY/2] )
+            _y += subgoalY
+            
+    return subgoalsCenter, [subgoalX, subgoalY]
 
 #Recibe los puntos conocidos (x,y) el conjunto de puntos por predecir newX.
 def estimate_new_set_of_values(known_x,known_y,newX,kernel):
@@ -732,7 +762,23 @@ def trajectory_prediction_test_using_sampling(x,y,l,knownN,startG,finishG,goals,
     newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
     return newX, newY, varX, varY
 
-def trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,samplingAxis):
+def get_goal_center_and_boundaries(goal):
+    points = []
+    p = middle_of_area(goal)
+    points.append(p)
+    lenX = goal[len(goal) -2] - goal[0]
+    lenY = goal[len(goal) -1] - goal[1]
+    q1 = [p[0]-lenX/2, p[1]]
+    q2 = [p[0], p[1]+lenY/2]
+    q3 = [p[0]+lenX/2, p[1]]
+    q4 = [p[0], p[1]-lenY/2]
+    points.append(q1)
+    points.append(q2)
+    points.append(q3)
+    points.append(q4)
+    return points
+
+def trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY):
     kernelX = kernelMatX[startG][finishG]
     kernelY = kernelMatY[startG][finishG]
     
@@ -740,23 +786,32 @@ def trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUni
     lastKnownPoint = [x[knownN-1], y[knownN-1], l[knownN-1] ]
     unit = unitMat[startG][finishG]
     
-    finalPoints = []
-    finalArcLen = []
-    p = middle_of_area(goals[finishG])
-    finalPoints.append(p)
-    newL, finalL = get_prediction_set(lastKnownPoint,p,unit,stepUnit)
+    finalPoints = get_goal_center_and_boundaries(goals[finishG])
     
-    lenX = goals[finishG][len(goals[finishG]) -2] - goals[finishG][0]
-    lenY = goals[finishG][len(goals[finishG]) -1] - goals[finishG][1]
-    q1 = [p[0]-lenX/2, p[1]]
-    q2 = [p[0], p[1]+lenY/2]
-    q3 = [p[0]+lenX/2, p[1]]
-    q4 = [p[0], p[1]-lenY/2]
-    finalPoints.append(q1)
-    finalPoints.append(q2)
-    finalPoints.append(q3)
-    finalPoints.append(q4)
-    for i in range(5):
+    newL, finalL = get_prediction_set(lastKnownPoint,finalPoints[0],unit,stepUnit)
+    finalArcLen = []
+    
+    for i in range(1):#len(finalPoints)):
+        finalArcLen.append(get_arclen_to_finish_point(lastKnownPoint,finalPoints[i],unit))
+        trueX.append(finalPoints[i][0])    
+        trueY.append(finalPoints[i][1])
+        trueL.append(finalArcLen[i])
+        
+    #print("[final points]:",finalPoints)
+    #print("[final arclen]:",finalArcLen)
+    newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
+    return newX, newY, varX, varY
+
+def subgoal_prediction(x,y,l,knownN,subgoal,unit,stepUnit,kernelX,kernelY):
+    trueX, trueY, trueL = get_known_set(x,y,l,knownN)
+    lastKnownPoint = [x[knownN-1], y[knownN-1], l[knownN-1] ]
+    
+    finalPoints = get_goal_center_and_boundaries(subgoal)
+    
+    newL, finalL = get_prediction_set(lastKnownPoint,finalPoints[0],unit,stepUnit)
+    finalArcLen = []
+    
+    for i in range(len(finalPoints)):
         finalArcLen.append(get_arclen_to_finish_point(lastKnownPoint,finalPoints[i],unit))
         trueX.append(finalPoints[i][0])    
         trueY.append(finalPoints[i][1])
@@ -776,6 +831,17 @@ def trajectory_subgoal_prediction_test(img,x,y,l,knownN,startG,finishG,goals,uni
     unit = unitMat[startG][finishG]
     #goalCenter = middle_of_area(goals[finishG])
     nSubgoals = 2
+    subgoalsXY, size = get_subgoals_center_and_size(nSubgoals,goals[finishG],samplingAxis[finishG])
+    predictedXYVec, varXYVec = [], []    
+    for i in range(nSubgoals):
+        _x, _y = subgoalsXY[i][0], subgoalsXY[i][1]
+        lx, ly = size[0]/2, size[1]/2
+        subgoal = [_x -lx, _y -ly, _x +lx, _y -ly,_x -lx, _y +ly, _x +lx, _y +ly]
+        predX, predY, varX, varY = subgoal_prediction(x,y,l,knownN,subgoal,unit,stepUnit,kernelX,kernelY)
+        predictedXYVec.append([predX,predY])
+        varXYVec.append([varX,varY])
+    
+    """
     sampleX, sampleY, axis = uniform_sampling_1D(nSubgoals,goals[finishG],samplingAxis[finishG])
     subgoalsXY = []
     for i in range(nSubgoals):
@@ -802,11 +868,11 @@ def trajectory_subgoal_prediction_test(img,x,y,l,knownN,startG,finishG,goals,uni
     if samplingAxis[finishG] == 'y':
         subgoalElipseX = (goals[finishG][len(goals[finishG]) -2] - goals[finishG][0])/2 
         subgoalElipseY = (goals[finishG][len(goals[finishG]) -1] - goals[finishG][1])/nSubgoals
+    """
     
-    elipse = [subgoalElipseX,subgoalElipseY]
+    elipse = size#[subgoalElipseX,subgoalElipseY]
     print("[Elipse]:", elipse)
     plot_subgoal_prediction(img,trueX,trueY,knownN,nSubgoals,predictedXYVec,varXYVec,elipse)
-     
 
 #Mean error (mx,my) de los valores reales con los predichos
 def meanError(trueX, trueY, predX, predY):
@@ -1004,10 +1070,11 @@ def plot_prediction(img,trueX,trueY,nUsedData,predictedX,predictedY,varX,varY,fi
     predictedN = len(predictedX)
     for i in range(predictedN):
         xy = [predictedX[i],predictedY[i]]
-        ell = Ellipse(xy,2.*np.sqrt(varX[i]), 2.*np.sqrt(varY[i]))
-        #ell = Ellipse(xy,varX[i], varY[i])
-        ell.set_alpha(.4)
-        ell.set_facecolor('g')
+        #ell = Ellipse(xy,2.*np.sqrt(varX[i]), 2.*np.sqrt(varY[i]))
+        ell = Ellipse(xy,varX[i], varY[i])
+        ell.set_lw(1.5)
+        ell.set_fill(0)
+        ell.set_edgecolor('g')
         ax.add_patch(ell)
     """    
     #final point
@@ -1047,9 +1114,9 @@ def plot_sampling_prediction(img,trueX,trueY,nUsedData,predictedX,predictedY,var
     for i in range(len(predictedX)):
         xy = [predictedX[i],predictedY[i]]
         ell = Ellipse(xy,2.*np.sqrt(varX[i]), 2.*np.sqrt(varY[i]))
-        ell.set_alpha(.4)
-        ell.set_lw(0)
-        ell.set_facecolor('g')
+        ell.set_lw(1.5)
+        ell.set_fill(0)
+        ell.set_edgecolor('g')
         ax.add_patch(ell)
     plt.plot([finish_xy[0]], [finish_xy[1]], 'yo')
         
@@ -1083,20 +1150,16 @@ def plot_subgoal_prediction(img,trueX,trueY,nUsedData,nSubgoals,predictedXYVec,v
         predictedN = len(predictedXYVec[i][0])
         for j in range(predictedN):
             xy = [predictedXYVec[i][0][j],predictedXYVec[i][1][j]]
-            if j > (predictedN/2):
-                eX = (finalPointElipse[0] + 2.*np.sqrt(varXYVec[i][0][j]))/2
-                eY = (finalPointElipse[1] + 2.*np.sqrt(varXYVec[i][1][j]))/2
-                ell = Ellipse(xy, eX, eY)
-            else:
-                ell = Ellipse(xy,2.*np.sqrt(varXYVec[i][0][j]), 2.*np.sqrt(varXYVec[i][1][j]))
-            ell.set_alpha(.2)
-            ell.set_facecolor('g')
+            ell = Ellipse(xy,varXYVec[i][0][j], varXYVec[i][1][j])
+            ell.set_lw(1.5)
+            ell.set_fill(0)
+            ell.set_edgecolor(color[i])
             ax.add_patch(ell)        
         #final point
         xy = [predictedXYVec[i][0][predictedN-1],predictedXYVec[i][1][predictedN-1]]
         ell = Ellipse(xy,finalPointElipse[0], finalPointElipse[1])
         ell.set_alpha(.4)
-        ell.set_facecolor('g')
+        ell.set_facecolor(color[i])
         ax.add_patch(ell)
         
     v = [0,1920,1080,0]
