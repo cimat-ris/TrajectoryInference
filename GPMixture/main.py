@@ -6,12 +6,10 @@ Created on Mon Oct 24 00:50:28 2016
 """
 from GPRlib import *
 from path import *
+from testing import *
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-from numpy.linalg import inv
-import string
-import path
 import matplotlib.image as mpimg
 from matplotlib.patches import Ellipse
 from copy import copy
@@ -81,44 +79,7 @@ def most_likely_goals(likelihood, nGoals):
         next_goals.append(maxInd)
         likely[maxInd] = 0
     return next_goals
-   
-#start, goals, last know (x,y,l), nextGoal
-def getPredictionSet(x,y,l,start,nextGoal,goals):
-    #calcula en centro del area siguiente
-    dx, dy = goals[nextGoal][6]-goals[nextGoal][0], goals[nextGoal][7]-goals[nextGoal][1]
-    end = [goals[nextGoal][0] + dx/2., goals[nextGoal][1] + dy/2.]
-    dist = math.sqrt( (end[0]-x)**2 + (end[1]-y)**2 )
     
-    steps =30#num de pasos
-    step = dist/float(steps)
-    newset = []
-    for i in range(steps+1):
-        newset.append( l + i*step )
-        
-    return end, newset, l + dist
-    
-def get_prediction_set_from_data(z,knownN):
-    N = len(z)
-    newZ = []
-    knownN = int(knownN)
-    for j in range(knownN-1, N): #numero de datos conocidos
-        newZ.append(z[j])
-    return newZ
-
-#recibe: datos conocidos, valores por predecir, areas de inicio y final
-def prediction_test_over_time(x,y,z,knownN,start,end,goals):
-    kernelX = kernelMat_x[start][end]
-    kernelY = kernelMat_y[start][end]
-    
-    trueX, trueY, trueZ = get_known_set(x,y,z,knownN)
-    final_xy = middle_of_area(goals[end])
-    N = len(x)
-    trueX.append(final_xy[0])        
-    trueY.append(final_xy[1])
-    trueZ.append(z[N-1])
-    newZ = get_prediction_set_from_data(z,knownN) 
-    newX, newY,varX,varY = prediction_XY(trueX,trueY,trueZ,newZ,kernelX,kernelY) 
-    plot_prediction(img,x,y,knownN,newX,newY,varX,varY)
 
 def goal_to_subgoal_prediction_test(x,y,l,knownN,startG,finishG,goals,subgoals,unitMat,stepUnit,kernelMatX,kernelMatY,subgoalsUnitMat,subgoalsKernelMatX,subgoalsKernelMatY):
     trueX, trueY, trueL = get_known_set(x,y,l,knownN)
@@ -166,77 +127,7 @@ def goal_to_subgoal_prediction_test(x,y,l,knownN,startG,finishG,goals,subgoals,u
     v = [0,1920,1080,0]
     plt.axis(v)
     plt.show() 
-
-def goal_to_4subgoal_prediction_test(x,y,l,knownN,startG,finishG,goals,subgoals,unitMat,stepUnit,kernelMatX,kernelMatY,subgoalsUnitMat,subgoalsKernelMatX,subgoalsKernelMatY):
-    trueX, trueY, trueL = get_known_set(x,y,l,knownN)
-    fig,ax = plt.subplots(1)
-    ax.set_aspect('equal')
-    ax.imshow(img)
     
-    predictedX, predictedY, varX, varY = trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,goalSamplingAxis) 
-    #plot_prediction(img,x,y,knownN,predictedX, predictedY,varX,varY)
-    plt.plot(trueX,trueY,'c')
-    subG = 4*finishG    
-    predictedX_0, predictedY_0, varX_0, varY_0 = trajectory_prediction_test(x,y,l,knownN,startG,subG,subgoals,subgoalsUnitMat,stepUnit,subgoalsKernelMatX,subgoalsKernelMatY,subgoalSamplingAxis)
-
-    subG = 4*finishG +1    
-    predictedX_1, predictedY_1, varX_1, varY_1 = trajectory_prediction_test(x,y,l,knownN,startG,subG,subgoals,subgoalsUnitMat,stepUnit,subgoalsKernelMatX,subgoalsKernelMatY,subgoalSamplingAxis)    #plot_prediction(img,x,y,knownN,predictedX, predictedY,varX,varY)
-    
-    subG = 4*finishG +2  
-    predictedX_2, predictedY_2, varX_2, varY_2 = trajectory_prediction_test(x,y,l,knownN,startG,subG,subgoals,subgoalsUnitMat,stepUnit,subgoalsKernelMatX,subgoalsKernelMatY,subgoalSamplingAxis)
-
-    subG = 4*finishG +3    
-    predictedX_3, predictedY_3, varX_3, varY_3 = trajectory_prediction_test(x,y,l,knownN,startG,subG,subgoals,subgoalsUnitMat,stepUnit,subgoalsKernelMatX,subgoalsKernelMatY,subgoalSamplingAxis)    #plot_prediction(img,x,y,knownN,predictedX, predictedY,varX,varY)
-    
-    plt.plot(predictedX,predictedY,'b')
-    for j in range(len(predictedX)):
-        xy = [predictedX[j],predictedY[j]]
-        ell = Ellipse(xy,2.*np.sqrt(varX[j]),2.*np.sqrt(varY[j]))
-        ell.set_alpha(.4)
-        ell.set_lw(0)
-        ell.set_facecolor('g')
-        ax.add_patch(ell)    
-    
-    plt.plot(predictedX_0,predictedY_0,'r--')
-    for j in range(len(predictedX_0)):
-        xy = [predictedX_0[j],predictedY_0[j]]
-        ell = Ellipse(xy,2.*np.sqrt(varX_0[j]),2.*np.sqrt(varY_0[j]))
-        ell.set_alpha(.4)
-        ell.set_lw(0)
-        ell.set_facecolor('m')
-        ax.add_patch(ell)    
-        
-    plt.plot(predictedX_1,predictedY_1,'r--')
-    for j in range(len(predictedX_1)):
-        xy = [predictedX_1[j],predictedY_1[j]]
-        ell = Ellipse(xy,2.*np.sqrt(varX_1[j]),2.*np.sqrt(varY_1[j]))
-        ell.set_alpha(.4)
-        ell.set_lw(0)
-        ell.set_facecolor('m')
-        ax.add_patch(ell) 
-        
-    plt.plot(predictedX_2,predictedY_2,'r--')
-    for j in range(len(predictedX_2)):
-        xy = [predictedX_2[j],predictedY_2[j]]
-        ell = Ellipse(xy,2.*np.sqrt(varX_2[j]),2.*np.sqrt(varY_2[j]))
-        ell.set_alpha(.4)
-        ell.set_lw(0)
-        ell.set_facecolor('m')
-        ax.add_patch(ell)    
-        
-    plt.plot(predictedX_3,predictedY_3,'r--')
-    for j in range(len(predictedX_3)):
-        xy = [predictedX_3[j],predictedY_3[j]]
-        ell = Ellipse(xy,2.*np.sqrt(varX_3[j]),2.*np.sqrt(varY_3[j]))
-        ell.set_alpha(.4)
-        ell.set_lw(0)
-        ell.set_facecolor('m')
-        ax.add_patch(ell)
-    
-    v = [0,1920,1080,0]
-    plt.axis(v)
-    plt.show() 
-
 def single_goal_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,goalSamplingAxis): 
     predictedX, predictedY, varX, varY = trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY) 
     lenX = goals[finishG][len(goals[finishG]) -2] - goals[finishG][0]
@@ -516,53 +407,10 @@ R4 = [100,950,500,950,100,1080,500,1080] #naranja
 R5 = [300,210,450,210,300,400,450,400] #rosa
 goalSamplingAxis = ['x','x','y','x','x','y']
 #R6 = [750,460,1050,460,750,730,1050,730] #rojo
-"""***Subgoals***"""
-"""
-r00 = [400,10,540,10,400,130,540,130]
-r01 = [540,10,680,10,540,130,680,130]
-r10 = [1100,10,1250,10,1100,130,1250,130]
-r11 = [1250,10,1400,10,1250,130,1400,130]
-r20 = [1680,490,1800,490,1680,615,1800,615]
-r21 = [1680,615,1800,615,1680,740,1800,740]
-r30 = [1450,950,1625,950,1450,1100,1625,1100]
-r31 = [1625,950,1800,950,1625,1100,1800,1100]
-r40 = [100,950,300,950,100,1100,300,1100]
-r41 = [300,950,500,950,300,1100,500,1100]
-r50 = [320,190,430,190,320,305,430,305]
-r51 = [320,305,430,305,320,420,430,420]
-"""
-r00 = [400,10,470,10,400,150,470,150]
-r01 = [470,10,540,10,470,150,540,150]
-r02 = [540,10,610,10,540,150,610,150]
-r03 = [610,10,680,10,610,150,680,150]
-
-r10 = [1100,10,1175,10,1100,150,1175,150]
-r11 = [1175,10,1250,10,1175,150,1250,150]
-r12 = [1250,10,1325,10,1250,150,1325,150]
-r13 = [1325,10,1400,10,1325,150,1400,150]
-
-r20 = [1650,490,1810,490,1650,527,1810,527]
-r21 = [1650,527,1810,527,1650,564,1810,564]
-r22 = [1650,564,1810,564,1650,601,1810,601]
-r23 = [1650,601,1810,601,1650,740,1810,740]
-
-r30 = [1450,950,1537,950,1450,1100,1537,1100]
-r31 = [1537,950,1624,950,1537,1100,1624,1100]
-r32 = [1624,950,1711,950,1624,1100,1711,1100]
-r33 = [1711,950,1800,950,1711,1100,1800,1100]
-
-r40 = [100,950,200,950,100,1100,200,1100]
-r41 = [200,950,300,950,200,1100,300,1100]
-r42 = [300,950,400,950,300,1100,400,1100]
-r43 = [400,950,500,950,400,1100,500,1100]
-
-r50 = [300,210,450,210,300,257,450,257]
-r51 = [300,257,450,257,300,304,450,304]
-r52 = [300,304,450,304,300,351,450,351]
-r53 = [300,351,450,351,300,400,450,400]
 #Arreglo que contiene las areas de interes
 areas = [R0,R1,R2,R3,R4,R5]
 nGoals = len(areas)
+"""
 subgoals =[r00,r01,r02,r03, r10,r11,r12,r13, r20,r21,r22,r23, r30,r31,r32,r33, r40,r41,r42,r43, r50,r51,r52,r53] #[r00,r01,r10,r11,r20,r21,r30,r31,r40,r41,r50,r51]
 nSubgoals = len(subgoals)
 subgoalSamplingAxis = []
@@ -570,12 +418,13 @@ for i in range(nGoals):
     for j in range(4):
         subgoalSamplingAxis.append(goalSamplingAxis[i])
 #print("subG sampling axis:", subgoalSamplingAxis)
+"""
 img = mpimg.imread('imgs/goals.jpg')  
 
 #Al leer cortamos las trayectorias multiobjetivos por pares consecutivos 
 #y las agregamos como trayectorias independientes 
 true_paths, multigoal = get_paths_from_file('datasets/CentralStation_paths_10000.txt',areas)
-usefulPaths = path.getUsefulPaths(true_paths,areas)
+usefulPaths = getUsefulPaths(true_paths,areas)
 #path.plotPaths(usefulPaths, img)
 #print("useful paths: ",len(usefulPaths))
 #Histograma    
@@ -661,7 +510,6 @@ for i in range(1,part_num-1):
     #single_goal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
     #goal_to_4subgoal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,subgoals,unitMat,stepUnit,kernelMat_x,kernelMat_y,subgoalsUnitMat,subgoalsKernelMat_x,subgoalsKernelMat_y)    
     trajectory_subgoal_prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
-    #trajectory_subgoal_prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
     #prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,meanLenMat,steps)
     """Multigoal prediction test"""    
     #multigoal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorLikelihoodMat)
