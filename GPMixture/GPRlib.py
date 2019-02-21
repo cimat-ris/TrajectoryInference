@@ -658,6 +658,15 @@ def get_finish_point_singleGP(knownX, knownY, knownL, finishGoal, goals, kernelX
             min_id = i
     return [_x[min_id], _y[min_id]]
     
+
+def get_prediction_set_from_data(z,knownN):
+    N = len(z)
+    newZ = []
+    knownN = int(knownN)
+    for j in range(knownN-1, N): #numero de datos conocidos
+        newZ.append(z[j])
+    return newZ
+
 #usa una unidad de distancia segun el promedio de la arc-len de las trayectorias
 #start, last know (x,y,l), indices del los goals de inicio y fin, unitMat, numero de pasos
 def get_prediction_set(lastKnownPoint, finishPoint, unit, stepUnit):
@@ -743,7 +752,7 @@ def prediction_XY_of_set(x, y, z, newZ, kernel_x, kernel_y):#prediction
         predicted_y.append(new_y)
         variance_y.append(var_y)
     return predicted_x, predicted_y,variance_x, variance_y
-    
+"""
 def trajectory_prediction_test_using_sampling(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,samplingAxis):
     kernelX = kernelMatX[startG][finishG]
     kernelY = kernelMatY[startG][finishG]
@@ -761,7 +770,7 @@ def trajectory_prediction_test_using_sampling(x,y,l,knownN,startG,finishG,goals,
     
     newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
     return newX, newY, varX, varY
-
+"""
 def get_goal_center_and_boundaries(goal):
     points = []
     p = middle_of_area(goal)
@@ -777,7 +786,7 @@ def get_goal_center_and_boundaries(goal):
     points.append(q3)
     points.append(q4)
     return points
-
+""" 
 def trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY):
     kernelX = kernelMatX[startG][finishG]
     kernelY = kernelMatY[startG][finishG]
@@ -801,79 +810,7 @@ def trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUni
     #print("[final arclen]:",finalArcLen)
     newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
     return newX, newY, varX, varY
-
-def subgoal_prediction(x,y,l,knownN,subgoal,unit,stepUnit,kernelX,kernelY):
-    trueX, trueY, trueL = get_known_set(x,y,l,knownN)
-    lastKnownPoint = [x[knownN-1], y[knownN-1], l[knownN-1] ]
-    
-    finalPoints = get_goal_center_and_boundaries(subgoal)
-    
-    newL, finalL = get_prediction_set(lastKnownPoint,finalPoints[0],unit,stepUnit)
-    finalArcLen = []
-    
-    for i in range(len(finalPoints)):
-        finalArcLen.append(get_arclen_to_finish_point(lastKnownPoint,finalPoints[i],unit))
-        trueX.append(finalPoints[i][0])    
-        trueY.append(finalPoints[i][1])
-        trueL.append(finalArcLen[i])
-        
-    #print("[final points]:",finalPoints)
-    #print("[final arclen]:",finalArcLen)
-    newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
-    return newX, newY, varX, varY
-
-def trajectory_subgoal_prediction_test(img,x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,samplingAxis):
-    kernelX = kernelMatX[startG][finishG]
-    kernelY = kernelMatY[startG][finishG]
-    
-    trueX, trueY, trueL = get_known_set(x,y,l,knownN)
-    lastKnownPoint = [x[knownN-1], y[knownN-1], l[knownN-1] ]
-    unit = unitMat[startG][finishG]
-    #goalCenter = middle_of_area(goals[finishG])
-    nSubgoals = 2
-    subgoalsXY, size = get_subgoals_center_and_size(nSubgoals,goals[finishG],samplingAxis[finishG])
-    predictedXYVec, varXYVec = [], []    
-    for i in range(nSubgoals):
-        _x, _y = subgoalsXY[i][0], subgoalsXY[i][1]
-        lx, ly = size[0]/2, size[1]/2
-        subgoal = [_x -lx, _y -ly, _x +lx, _y -ly,_x -lx, _y +ly, _x +lx, _y +ly]
-        predX, predY, varX, varY = subgoal_prediction(x,y,l,knownN,subgoal,unit,stepUnit,kernelX,kernelY)
-        predictedXYVec.append([predX,predY])
-        varXYVec.append([varX,varY])
-    
-    """
-    sampleX, sampleY, axis = uniform_sampling_1D(nSubgoals,goals[finishG],samplingAxis[finishG])
-    subgoalsXY = []
-    for i in range(nSubgoals):
-        subgoalsXY.append([sampleX[i], sampleY[i]])
-    
-    predictedXYVec, varXYVec = [],[]
-    for i in range(nSubgoals):
-        newL, finalL = get_prediction_set(lastKnownPoint,subgoalsXY[i],unit,stepUnit)
-        trueX.append(subgoalsXY[i][0])    
-        trueY.append(subgoalsXY[i][1])
-        trueL.append(finalL)
-        newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
-        predictedXYVec.append([newX,newY])
-        varXYVec.append([varX,varY])
-        trueX.pop()
-        trueY.pop()
-        trueL.pop()
-        
-    subgoalElipseX, subgoalElipseY = 0,0
-    if samplingAxis[finishG] == 'x':
-        subgoalElipseX = (goals[finishG][len(goals[finishG]) -2] - goals[finishG][0])/nSubgoals 
-        subgoalElipseY = (goals[finishG][len(goals[finishG]) -1] - goals[finishG][1])/2
-    
-    if samplingAxis[finishG] == 'y':
-        subgoalElipseX = (goals[finishG][len(goals[finishG]) -2] - goals[finishG][0])/2 
-        subgoalElipseY = (goals[finishG][len(goals[finishG]) -1] - goals[finishG][1])/nSubgoals
-    """
-    
-    elipse = size#[subgoalElipseX,subgoalElipseY]
-    print("[Elipse]:", elipse)
-    plot_subgoal_prediction(img,trueX,trueY,knownN,nSubgoals,predictedXYVec,varXYVec,elipse)
-
+"""
 #Mean error (mx,my) de los valores reales con los predichos
 def meanError(trueX, trueY, predX, predY):
     e = [0,0]
