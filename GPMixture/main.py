@@ -238,7 +238,7 @@ def goal_to_4subgoal_prediction_test(x,y,l,knownN,startG,finishG,goals,subgoals,
     plt.show() 
 
 def single_goal_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,goalSamplingAxis): 
-    predictedX, predictedY, varX, varY = trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,goalSamplingAxis) 
+    predictedX, predictedY, varX, varY = trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY) 
     lenX = goals[finishG][len(goals[finishG]) -2] - goals[finishG][0]
     lenY = goals[finishG][len(goals[finishG]) -1] - goals[finishG][1]
     elipse = [lenX, lenY]
@@ -658,8 +658,9 @@ for i in range(1,part_num-1):
     likely_goals = most_likely_goals(likelihood, nGoals)
     #print("likely goals:", likely_goals)
     """Simple prediction test"""
-    single_goal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
+    #single_goal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
     #goal_to_4subgoal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,subgoals,unitMat,stepUnit,kernelMat_x,kernelMat_y,subgoalsUnitMat,subgoalsKernelMat_x,subgoalsKernelMat_y)    
+    trajectory_subgoal_prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
     #trajectory_subgoal_prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
     #prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,meanLenMat,steps)
     """Multigoal prediction test"""    
