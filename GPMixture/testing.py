@@ -7,6 +7,7 @@ Testing functions
 
 from GPRlib import *
 from path import *
+from plotting import *
 import numpy as np
 import math
 import GPRlib
@@ -143,3 +144,100 @@ def prediction_test_over_time(x,y,z,knownN,start,end,goals):
     newZ = get_prediction_set_from_data(z,knownN) 
     newX, newY,varX,varY = prediction_XY(trueX,trueY,trueZ,newZ,kernelX,kernelY) 
     plot_prediction(img,x,y,knownN,newX,newY,varX,varY)
+
+#recibe: datos conocidos, valores por predecir, areas de inicio y final
+def prediction_test(x,y,z,knownN,startG,finishG,goals,unitMat,meanLenMat,steps):
+    kernelX = kernelMat_x[startG][finishG]
+    kernelY = kernelMat_y[startG][finishG]
+    
+    trueX, trueY, trueZ = get_known_set(x,y,z,knownN)
+    lastKnownPoint = [x[knownN-1], y[knownN-1], z[knownN-1] ]
+    unit = unitMat[startG][finishG]
+    meanLen = meanLenMat[startG][finishG]
+    
+    final_xy = get_finish_point(trueX,trueY,trueZ,finishG,goals,kernelX,kernelY,unit,goalSamplingAxis)
+    #final_xy = get_finish_point_singleGP(trueX,trueY,trueZ,finishG,goals,kernelX,kernelY,unit,img)
+    newZ, final_z = get_prediction_set(lastKnownPoint,final_xy,unit,steps)  
+    trueX.append(final_xy[0])    
+    trueY.append(final_xy[1])
+    trueZ.append(final_z)
+    
+    newX,newY,varX,varY = prediction_XY(trueX,trueY,trueZ,newZ,kernelX,kernelY) 
+    plot_prediction(img,x,y,knownN,newX,newY,varX,varY)
+    
+#recibe: datos reales, num de datos conocidos, area de inicio, vec de areas objetivo, vec de areas 
+def _multigoal_prediction_test(x,y,z,knownN,startG,finishG,goals,unitMat,steps,kernelMat_x,kernelMat_y):
+    trueX, trueY, trueZ = get_known_set(x,y,z,knownN)
+    lastKnownPoint = [x[knownN-1], y[knownN-1], z[knownN-1] ]
+    
+    fig,ax = plt.subplots(1)
+    ax.set_aspect('equal')
+    ax.imshow(img) # Show the image
+    
+    for i in range(len(finishG)):
+        nextGoal = finishG[i]
+        kernelX = kernelMat_x[startG][nextGoal]
+        kernelY = kernelMat_y[startG][nextGoal]
+        auxX = copy(trueX) 
+        auxY = copy(trueY) 
+        auxZ = copy(trueZ)
+        final_point = middle_of_area(goals[nextGoal])      
+        auxX.append(final_point[0])
+        auxY.append(final_point[1])
+        #steps = 20
+        end_, newZ, l_ = getPredictionSet(trueX[knownN-1],trueY[knownN-1],trueZ[knownN-1],start,nextGoal,goals)     
+        auxZ.append(l_)          
+        newX, newY, varX, varY = prediction_XY(auxX,auxY,auxZ,newZ,kernelX,kernelY) 
+         
+        plt.plot(trueX,trueY,'r')
+        plt.plot(newX,newY,'b')
+        #elipses
+        for j in range(len(newX)):
+            xy = [newX[j],newY[j]]
+            ell = Ellipse(xy,2.*np.sqrt(varX[j]),2.*np.sqrt(varY[j]))
+            ell.set_alpha(.4)
+            ell.set_lw(0)
+            ell.set_facecolor('g')
+            ax.add_patch(ell)
+            
+    v = [0,1920,1080,0]
+    plt.axis(v)
+    plt.show() 
+    
+def multigoal_prediction_test(x,y,l,knownN,startG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,priorLikelihood):
+    fig,ax = plt.subplots(1)
+    ax.set_aspect('equal')
+    ax.imshow(img)
+    
+    trueX, trueY, trueL = get_known_set(x,y,l,knownN) 
+    likelyGoals = []    
+    goalsLikelihood = [] 
+    errorG = []
+    for i in range(len(goals)):
+        error = get_goal_likelihood(trueX,trueY,trueL,startG,i,goals,unitMat,kernelMatX,kernelMatY)
+        errorG.append(error)
+        val = priorLikelihood[startG][i]*(1./error)
+        if(val > 0):
+            likelyGoals.append(i)        
+        goalsLikelihood.append(val)
+    
+    for i in range(len(likelyGoals)):
+        nextGoal = likelyGoals[i]
+        predictedX, predictedY, varX, varY = trajectory_prediction_test(x,y,l,knownN,startG,nextGoal,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
+        trueX, trueY, trueL = get_known_set(x,y,l,knownN)
+        
+        linewidth = 1500*goalsLikelihood[nextGoal]
+        plt.plot(trueX,trueY,'c',predictedX,predictedY,'b', lw= linewidth)
+        #elipses
+        for j in range(len(predictedX)):
+            xy = [predictedX[j],predictedY[j]]
+            ell = Ellipse(xy,2.*np.sqrt(varX[j]),2.*np.sqrt(varY[j]))
+            ell.set_alpha(.4)
+            ell.set_lw(0)
+            ell.set_facecolor('g')
+            ax.add_patch(ell)
+        
+    v = [0,1920,1080,0]
+    plt.axis(v)
+    plt.show() 
+    
