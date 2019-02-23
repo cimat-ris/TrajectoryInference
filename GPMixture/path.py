@@ -19,23 +19,7 @@ class path:
             self.v = self.length/self.duration
         else:
             self.v = -1.
-#**************************PLOT*******************************#
-#recibe: un conjunto de trayectorias
-def plotPaths(vec, img):
-    n = len(vec)
-    if(n == 0):
-        return
-    #print("num de trayectorias:", n)
-    fig,ax = plt.subplots(1)
-    ax.set_aspect('equal')
-    # Show the image
-    ax.imshow(img)
-    for i in range(n):
-        plt.plot(vec[i].x,vec[i].y)
-    
-    v = [0,1920,1080,0]
-    plt.axis(v)
-    plt.show() 
+
 #************************************************************#
 
 def write_useful_paths_file(paths): #paths es un vector de indices
