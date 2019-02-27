@@ -233,6 +233,9 @@ def regression(x,y,xnew,kernel):  #regresion sin recibir los parametros, el kern
     # compute c       
     c = kernel.k(xnew,xnew)
     # Estimate the mean
+    #print("[kernel Matrix]\n",K)
+    #print("[kernel vector]\n",k)
+    
     K_1 = inv(K)
     ynew = k.dot(K_1.dot(y)) 
     # Estimate the variance
@@ -264,7 +267,7 @@ def arclength(x,y):
         
 #******************************************************************************#    
 """ LEARNING """
-nsigma = 8.0 #error de las observaciones 
+nsigma = 5.0 #error de las observaciones 
 #Parametros: theta, vector de vectores: x,y
     
 def setKernel(name):
@@ -353,8 +356,8 @@ def neg_sum_log_p(theta,x,y,kernel):
     
 #elegir parametros que funcionen para un conjunto de trayectorias
 def optimize_kernel_parameters_XY(t,x,y,theta,kernel):#creo que eran 14 it pobar
-    parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='Nelder-Mead', options={'maxiter':25,'disp': False})
-    parametersY = minimize(neg_sum_log_p,theta,(t,y,kernel),method='Nelder-Mead', options={'maxiter':25,'disp': False})
+    parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='Nelder-Mead', options={'maxiter':17,'disp': False})
+    parametersY = minimize(neg_sum_log_p,theta,(t,y,kernel),method='Nelder-Mead', options={'maxiter':17,'disp': False})
         
     return parametersX.x, parametersY.x
   
@@ -373,8 +376,8 @@ def optimize_parameters_between_2goals(learnSet, kernelMat, parametersMat, start
     paramX, paramY = learning(z,x,y,k,parameters)
     kernelX.setParameters(paramX)
     kernelY.setParameters(paramY)
-    print("x:",paramX)
-    print("y:",paramY)
+    #print("x:",paramX)
+    #print("y:",paramY)
     
 #Aprendizaje para cada par de trayectorias 
 #Regresa una matriz de kernels con los parametros optimizados  
@@ -390,19 +393,13 @@ def optimize_parameters_between_goals_(learnSet, parametersMat, nGoals):
             paths = learnSet[i][j]
             if len(paths) > 0:
                 x,y,z = get_data_from_paths(paths,"length") 
-                ker, theta = setKernel("combined")       #checar si funciona         
-                #ker = #kernelMat[i][j]
-                #theta = ker.get_parameters()#parametersMat[i][j]
-                
+                ker, theta = setKernel("combined")
                 thetaX, thetaY = learning(z,x,y,ker,theta)
                 print("[",i,"][",j,"]")
                 print("x: ",thetaX)
                 print("y: ",thetaY)
                 kernelMatX[i][j].setParameters(thetaX)                
                 kernelMatY[i][j].setParameters(thetaY)
-                #print("after setting parameters")
-                #print("[",kernelMatX[i][j].s,",",kernelMatX[i][j].l,"]")
-                #print("[",kernelMatY[i][j].s,",",kernelMatY[i][j].l,"]")
                 r.append([thetaX, thetaY])                
         #parameters.append(r)
     return kernelMatX, kernelMatY
@@ -414,23 +411,16 @@ def optimize_parameters_between_goals(learnSet, parametersMat, rows, columns):
     for i in range(rows):
         r = []
         for j in range(columns):
-            #print("[",i,"][",j,"]")
             paths = learnSet[i][j]
             if len(paths) > 0:
                 x,y,z = get_data_from_paths(paths,"length") 
-                ker, theta = setKernel("combined")       #checar si funciona         
-                #ker = #kernelMat[i][j]
-                #theta = ker.get_parameters()#parametersMat[i][j]
-                
+                ker, theta = setKernel("combined")        
                 thetaX, thetaY = learning(z,x,y,ker,theta)
                 print("[",i,"][",j,"]")
                 print("x: ",thetaX)
                 print("y: ",thetaY)
                 kernelMatX[i][j].setParameters(thetaX)                
                 kernelMatY[i][j].setParameters(thetaY)
-                print("after setting parameters")
-                print("[",kernelMatX[i][j].s,",",kernelMatX[i][j].l,"]")
-                print("[",kernelMatY[i][j].s,",",kernelMatY[i][j].l,"]")
                 r.append([thetaX, thetaY])                
         #parameters.append(r)
     return kernelMatX, kernelMatY
@@ -457,10 +447,6 @@ def _write_parameters(matrix,nGoals,flag):
     
 #recibe una matriz de kernel [[kij]], con parametros [s,l]
 def write_parameters(matrix,rows,columns,fileName):
-    #if flag == "x": 
-    #    f = open("parameters_x.txt","w")
-    #if flag == "y": 
-    #    f = open("parameters_y.txt","w")
     f = open(fileName,"w")
     for i in range(rows):
         for j in range(columns):
@@ -678,7 +664,19 @@ def get_prediction_set(lastKnownPoint, finishPoint, unit, stepUnit):
         for i in range(steps+1):
             newset.append( l + i*step*unit )
         
-    return newset, l + dist*unit     
+    return newset, l + dist*unit 
+    
+def get_prediction_set_given_size(lastKnownPoint, finishPoint, unit, steps):
+    x, y, l = lastKnownPoint[0], lastKnownPoint[1], lastKnownPoint[2] 
+    _x, _y = finishPoint[0], finishPoint[1]
+    dist = math.sqrt( (_x-x)**2 + (_y-y)**2 )
+    newset = []
+    if(steps > 0):    
+        step = dist/float(steps)
+        for i in range(steps+1):
+            newset.append( l + i*step*unit )
+        
+    return newset, l + dist*unit  
     
 def get_arclen_to_finish_point(lastKnownPoint, finishPoint, unit):
     x, y, l = lastKnownPoint[0], lastKnownPoint[1], lastKnownPoint[2] 
