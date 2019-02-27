@@ -237,7 +237,6 @@ stepUnit = 0.0438780780171 #get_number_of_steps_unit(pathMat, nGoals)
 #print("***unidades de distancia***\n", unitMat)
 priorLikelihoodMat = next_goal_probability_matrix(pathMat, nGoals)
 #print("likelihood mat:", priorLikelihoodMat)
-
 """
 #***********APRENDIZAJE***********
 print("***********INICIO APRENDIZAJE*********")
@@ -277,32 +276,35 @@ kernelY = kernelMat_y[startG][nextG]
 
 traj_id = 0 #indice de la trayectoria a predecir
 traj = pathMat[startG][nextG][traj_id]
-traj_len = len(pathMat[startG][nextG][traj_id].x) #total de observaciones de la trayectoria
-traj_arclen = pathMat[startG][nextG][traj_id].length #arreglo de la longitud de arco correspondiente a las observaciones 
+traj_len = len(traj.x) #total de observaciones de la trayectoria
+traj_arclen = traj.length #arreglo de la longitud de arco correspondiente a las observaciones 
 #likelihoodVector, error_vector = [], []
 arclen_vec = []
 
 #El conjunto de datos observados se parte en part_num
 #al hacer la prediccion se toma el porcentaje k/part_num como datos conocidos y se predice el resto
-part_num = 4 
-steps = 15
+part_num = 8
+steps = 10
 
-for i in range(1,part_num-1):
+for i in range(3,part_num-1):
     arclen_vec.append( (i+1)*(traj_arclen/float(part_num))  )
     knownN = int((i+1)*(traj_len/part_num)) #numero de datos conocidos
+    #print("num de datos conocidos:", knownN)
     #trueX,trueY,trueL = get_known_set(traj.x,traj.y,traj.l,knownN)
     #likelihood, error = get_goals_likelihood(trueX,trueY,trueL,startG,kernelMat_x,kernelMat_x,areas,nGoals)
     #likelihoodVector.append(likelihood)  
     #error_vector.append(error)
     #likely_goals = most_likely_goals(likelihood, nGoals)
-    #print("likely goals:", likely_goals)
     """Simple prediction test"""
     #single_goal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
     trajectory_subgoal_prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
-    #prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,meanLenMat,steps)
+    #prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,meanLenMat,steps,kernelMat_x,kernelMat_y)
     """Multigoal prediction test"""    
     #multigoal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorLikelihoodMat)
     #prediction_test_over_time(traj.x,traj.y,traj.t,knownN,start[0],nextG[0],areas)
+
+#compare_error_goal_to_subgoal_test(img,traj.x,traj.y,traj.l,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
+
 
 """
 for i in range(0):#1,nGoals):
