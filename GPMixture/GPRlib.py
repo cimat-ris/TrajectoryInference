@@ -376,8 +376,6 @@ def optimize_parameters_between_2goals(learnSet, kernelMat, parametersMat, start
     paramX, paramY = learning(z,x,y,k,parameters)
     kernelX.setParameters(paramX)
     kernelY.setParameters(paramY)
-    #print("x:",paramX)
-    #print("y:",paramY)
     
 #Aprendizaje para cada par de trayectorias 
 #Regresa una matriz de kernels con los parametros optimizados  
@@ -727,15 +725,15 @@ def estimate_new_set_of_values(known_x,known_y,newX,kernel):
 
 #prediccion en X y en Y
 #Recibe los datos conocidos (x,y,z) y los puntos para la regresion.
-def prediction_XY(x, y, z, newZ, kernel_x, kernel_y):#prediction 
-    new_x, var_x = estimate_new_set_of_values(z,x,newZ,kernel_x)#prediccion para x
-    new_y, var_y = estimate_new_set_of_values(z,y,newZ,kernel_y)#prediccion para y
+def prediction_XY(x, y, z, newZ, kernelX, kernelY):#prediction 
+    newX, varX = estimate_new_set_of_values(z,x,newZ,kernelX)#prediccion para x
+    newY, varY = estimate_new_set_of_values(z,y,newZ,kernelX)#prediccion para y
 
-    return new_x, new_y, var_x, var_y
+    return newX, newY, varX, varY
     
 #necesita recibir el kernel para X y el kernel para Y
 #Recibe los datos conocidos [(x,y,z)] y los puntos para la regresion. x, y, z,... son vectores de vectores
-def prediction_XY_of_set(x, y, z, newZ, kernel_x, kernel_y):#prediction 
+def prediction_XY_of_set_of_trajectories(x, y, z, newZ, kernel_x, kernel_y):#prediction 
     numPred = len(newZ)   
     predicted_x, predicted_y = [], []
     variance_x, variance_y = [], []
@@ -817,8 +815,40 @@ def average_displacement_error(true_XY, prediction_XY):
 def final_displacement_error(final, predicted_final):
     error = math.sqrt((final[0]-predicted_final[0])**2 + (final[1]-predicted_final[1])**2)
     return error
+    
+def prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goal,unit,stepUnit,kernelX,kernelY):
+    knownN = len(knownX)    
+    trueX, trueY, trueL = [], [], []
+    for i in range(knownN -nPoints):
+        trueX.append(knownX[i])
+        trueY.append(knownY[i])
+        trueL.append(knownL[i])
+    
+    finishXY = middle_of_area(goal)        
+    finishD = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
+    trueX.append(finishXY[0])
+    trueY.append(finishXY[1])
+    trueL.append(finishD*unit)
+    
+    lastX, lastY, predictionSet = [],[],[]
+    for i in range(knownN -nPoints, knownN):
+        lastX.append(knownX[i])
+        lastY.append(knownY[i])
+        predictionSet.append(knownL[i])
+    
+    predX, predY, varX,varY = prediction_XY(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
+    #print("[Prediccion]\n",predX)
+    #print(predY)
+    error = average_displacement_error([lastX,lastY],[predX,predY])
+    #print("[Error]:",error)
+    return error
+        
 
 #******************************************************************************#
+
+def euclidean_distance(pointA, pointB):
+    dist = math.sqrt( (pointA[0]-pointB[0])**2 + (pointA[1]-pointB[1])**2 )
+    return dist
 
 def middle_of_area(rectangle):
     dx, dy = rectangle[6]-rectangle[0], rectangle[7]-rectangle[1]
