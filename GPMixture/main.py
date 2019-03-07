@@ -60,7 +60,15 @@ def getKnownData(x,y,z,percent):
     
     return trueX, trueY, trueZ
          
-
+def get_known_data(x,y,z,N):
+    trueX, trueY, trueZ = [],[],[]
+    for i in range(N):
+        trueX.append(x[i])
+        trueY.append(y[i])
+        trueZ.append(z[i])
+    
+    return trueX, trueY, trueZ
+    
 def most_likely_goals(likelihood, nGoals):
     next_goals = []
     likely = copy(likelihood)
@@ -283,22 +291,23 @@ arclen_vec = []
 
 #El conjunto de datos observados se parte en part_num
 #al hacer la prediccion se toma el porcentaje k/part_num como datos conocidos y se predice el resto
-part_num = 8
+part_num = 6
 steps = 10
 
 for i in range(3,part_num-1):
     arclen_vec.append( (i+1)*(traj_arclen/float(part_num))  )
     knownN = int((i+1)*(traj_len/part_num)) #numero de datos conocidos
     #print("num de datos conocidos:", knownN)
-    #trueX,trueY,trueL = get_known_set(traj.x,traj.y,traj.l,knownN)
+    trueX,trueY,trueL = get_known_set(traj.x,traj.y,traj.l,knownN)
     #likelihood, error = get_goals_likelihood(trueX,trueY,trueL,startG,kernelMat_x,kernelMat_x,areas,nGoals)
     #likelihoodVector.append(likelihood)  
     #error_vector.append(error)
     #likely_goals = most_likely_goals(likelihood, nGoals)
     """Simple prediction test"""
     #single_goal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
-    trajectory_subgoal_prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
-    #prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,meanLenMat,steps,kernelMat_x,kernelMat_y)
+    #trajectory_subgoal_prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
+    goal_weight_test(trueX,trueY,trueL,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y)
+   #prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,meanLenMat,steps,kernelMat_x,kernelMat_y)
     """Multigoal prediction test"""    
     #multigoal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorLikelihoodMat)
     #prediction_test_over_time(traj.x,traj.y,traj.t,knownN,start[0],nextG[0],areas)
