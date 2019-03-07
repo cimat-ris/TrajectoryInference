@@ -262,3 +262,29 @@ def multigoal_prediction_test(x,y,l,knownN,startG,goals,unitMat,stepUnit,kernelM
     plt.axis(v)
     plt.show() 
     
+def goal_weight_test(knownX,knownY,knownL,knownN,startG,goals,unitMat,stepUnit,kernelMatX,kernelMatY):
+    nPoints = 4
+    maxError = 0.
+    errorVec = []
+    for i in range(len(goals)):
+        #print("[",startG,",",i,"]")
+        unit = unitMat[startG][i]
+        kernelX = kernelMatX[startG][i]
+        kernelY = kernelMatY[startG][i]
+        error = prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goals[i],unit,stepUnit,kernelX,kernelY)
+        errorVec.append(error)
+        if(error > maxError):
+            maxError = error
+        
+    for i in range(len(goals)):
+        errorVec[i] = errorVec[i]/maxError
+    
+    print("[Error vec]:\n",errorVec)
+    
+    
+    
+    
+    
+    
+    
+    
