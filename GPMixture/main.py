@@ -277,12 +277,12 @@ subgoalsKernelMat_y = read_and_set_parameters("subgoalsParameters_y.txt",nGoals,
 subgoalsUnitMat = copy_unitMat(unitMat, nGoals, nSubgoals); 
 """
 #Test dado el goal de inicio y fin
-startG = 0
+startG = 1
 nextG = 2
 kernelX = kernelMat_x[startG][nextG]
 kernelY = kernelMat_y[startG][nextG]
 
-traj_id = 0 #indice de la trayectoria a predecir
+traj_id = 1 #indice de la trayectoria a predecir
 traj = pathMat[startG][nextG][traj_id]
 traj_len = len(traj.x) #total de observaciones de la trayectoria
 traj_arclen = traj.length #arreglo de la longitud de arco correspondiente a las observaciones 
@@ -291,7 +291,7 @@ arclen_vec = []
 
 #El conjunto de datos observados se parte en part_num
 #al hacer la prediccion se toma el porcentaje k/part_num como datos conocidos y se predice el resto
-part_num = 6
+part_num = 8
 steps = 10
 
 for i in range(3,part_num-1):
@@ -306,10 +306,10 @@ for i in range(3,part_num-1):
     """Simple prediction test"""
     #single_goal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
     #trajectory_subgoal_prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
-    goal_weight_test(trueX,trueY,trueL,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y)
-   #prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,meanLenMat,steps,kernelMat_x,kernelMat_y)
+    #goal_weight_test(trueX,trueY,trueL,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y)
+    #prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,meanLenMat,steps,kernelMat_x,kernelMat_y)
     """Multigoal prediction test"""    
-    #multigoal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorLikelihoodMat)
+    multigoal_prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorLikelihoodMat,goalSamplingAxis)
     #prediction_test_over_time(traj.x,traj.y,traj.t,knownN,start[0],nextG[0],areas)
 
 #compare_error_goal_to_subgoal_test(img,traj.x,traj.y,traj.l,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
