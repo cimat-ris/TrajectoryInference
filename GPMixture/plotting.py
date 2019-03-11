@@ -177,3 +177,40 @@ def plot_straight_line_to_finish_point(img,trueX,trueY,nUsedData,predictedX,pred
     v = [0,1920,1080,0]
     plt.axis(v)
     plt.show()     
+
+def plot_multiple_predictions(img,x,y,nUsedData,nGoals,predictedXYVec,varXYVec): 
+    realX, realY = [],[]
+    partialX, partialY = [], []
+    N = int(len(x))
+    
+    for i in range(int(nUsedData)):
+        partialX.append(x[i])
+        partialY.append(y[i])
+    
+    for i in range(int(nUsedData-1),N):
+        realX.append(x[i])
+        realY.append(y[i])
+    
+    fig,ax = plt.subplots(1)
+    ax.set_aspect('equal')
+    ax.imshow(img) # Show the image 
+    
+    plt.plot(partialX,partialY,'c')
+    
+    for i in range(nGoals): #pinta la prediccion para cada subgoal
+        plt.plot(predictedXYVec[i][0],predictedXYVec[i][1],'b--')    
+        predictedN = len(predictedXYVec[i][0])
+        for j in range(predictedN):
+            xy = [predictedXYVec[i][0][j],predictedXYVec[i][1][j]]
+            ell = Ellipse(xy,varXYVec[i][0][j], varXYVec[i][1][j])
+            ell.set_lw(1.)
+            ell.set_fill(0)
+            ell.set_edgecolor(color[i])
+            ax.add_patch(ell)      
+            
+    plt.plot(realX,realY,'c--')
+    
+    v = [0,1920,1080,0]
+    plt.axis(v)
+    plt.show() 
+    
