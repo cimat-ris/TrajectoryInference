@@ -267,7 +267,7 @@ def arclength(x,y):
         
 #******************************************************************************#    
 """ LEARNING """
-nsigma = 5.0 #error de las observaciones 
+nsigma = 7.0 #error de las observaciones 
 #Parametros: theta, vector de vectores: x,y
     
 def setKernel(name):
@@ -356,8 +356,8 @@ def neg_sum_log_p(theta,x,y,kernel):
     
 #elegir parametros que funcionen para un conjunto de trayectorias
 def optimize_kernel_parameters_XY(t,x,y,theta,kernel):#creo que eran 14 it pobar
-    parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='Nelder-Mead', options={'maxiter':17,'disp': False})
-    parametersY = minimize(neg_sum_log_p,theta,(t,y,kernel),method='Nelder-Mead', options={'maxiter':17,'disp': False})
+    parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='Nelder-Mead', options={'maxiter':15,'disp': False})
+    parametersY = minimize(neg_sum_log_p,theta,(t,y,kernel),method='Nelder-Mead', options={'maxiter':15,'disp': False})
         
     return parametersX.x, parametersY.x
   
