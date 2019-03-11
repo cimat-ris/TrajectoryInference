@@ -9,6 +9,7 @@ from GPRlib import *
 from path import *
 from plotting import *
 from kernels import *
+from statistics import*
 import matplotlib.pyplot as plt
 import numpy as np
 import math
@@ -225,43 +226,80 @@ def _multigoal_prediction_test(x,y,z,knownN,startG,finishG,goals,unitMat,steps,k
     plt.axis(v)
     plt.show() 
     
-def multigoal_prediction_test(x,y,l,knownN,startG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,priorLikelihood):
-    fig,ax = plt.subplots(1)
-    ax.set_aspect('equal')
-    ax.imshow(img)
+def prediction_to_goal_center(trueX,trueY,trueL,knownN,goalCenter,unit,stepUnit,kernelX,kernelY):
+    lastKnownPoint = [trueX[knownN-1], trueY[knownN-1], trueL[knownN-1] ]
+    newL, finalL = get_prediction_set(lastKnownPoint,goalCenter,unit,stepUnit)
+
+    trueX.append(goalCenter[0])    
+    trueY.append(goalCenter[1])
+    trueL.append(finalL)
+        
+    newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
     
+    trueX.pop()    
+    trueY.pop()
+    trueL.pop()
+    return newX, newY, varX, varY   
+    
+def multigoal_prediction_test(img,x,y,l,knownN,startG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,priorLikelihood,subgoalAxis):
     trueX, trueY, trueL = get_known_set(x,y,l,knownN) 
-    likelyGoals = []    
-    goalsLikelihood = [] 
+    likelyGoals, goalsLikelihood = [],[]   
     errorG = []
+    nPoints = 4
+    maxError = 0.
     for i in range(len(goals)):
-        error = get_goal_likelihood(trueX,trueY,trueL,startG,i,goals,unitMat,kernelMatX,kernelMatY)
+        unit = unitMat[startG][i]
+        kernelX = kernelMatX[startG][i]
+        kernelY = kernelMatY[startG][i]
+        error = prediction_error_of_last_known_points(nPoints,trueX,trueY,trueL,goals[i],unit,stepUnit,kernelX,kernelY)
+        #error = get_goal_likelihood(trueX,trueY,trueL,startG,i,goals,unitMat,kernelMatX,kernelMatY)
         errorG.append(error)
-        val = priorLikelihood[startG][i]*(1./error)
-        if(val > 0):
-            likelyGoals.append(i)        
+        
+    norma = np.linalg.norm(errorG)
+    print("norm:",norma)
+    errorG = errorG/norma
+    
+    for i in range(len(goals)):
+        val = priorLikelihood[startG][i]*(1.-errorG[i])   
         goalsLikelihood.append(val)
-    
+        
+    meanLikelihood = mean(goalsLikelihood)
+    for i in range(len(goals)):
+        if(goalsLikelihood[i] > meanLikelihood):
+            likelyGoals.append(i)   
+        
+    print("\n[Prior likelihood]\n",priorLikelihood[startG])
+    print("[Prediction Error]\n",errorG)
+    print("[Goals likelihood]\n",goalsLikelihood)
+    print("[Media likelihood]:", mean(goalsLikelihood))
+    nSubgoals = 2
+    goalCount = 0
+    predictedXYVec, varXYVec = [], []
     for i in range(len(likelyGoals)):
-        nextGoal = likelyGoals[i]
-        predictedX, predictedY, varX, varY = trajectory_prediction_test(x,y,l,knownN,startG,nextGoal,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
-        trueX, trueY, trueL = get_known_set(x,y,l,knownN)
-        
-        linewidth = 1500*goalsLikelihood[nextGoal]
-        plt.plot(trueX,trueY,'c',predictedX,predictedY,'b', lw= linewidth)
-        #elipses
-        for j in range(len(predictedX)):
-            xy = [predictedX[j],predictedY[j]]
-            ell = Ellipse(xy,2.*np.sqrt(varX[j]),2.*np.sqrt(varY[j]))
-            ell.set_alpha(.4)
-            ell.set_lw(0)
-            ell.set_facecolor('g')
-            ax.add_patch(ell)
-        
-    v = [0,1920,1080,0]
-    plt.axis(v)
-    plt.show() 
-    
+        nextG = likelyGoals[i]
+        unit = unitMat[startG][nextG]
+        kernelX = kernelMatX[startG][nextG]
+        kernelY = kernelMatY[startG][nextG]
+        goalCenter = middle_of_area(goals[nextG])
+        distToGoal = euclidean_distance([trueX[knownN-1],trueY[knownN-1]], goalCenter)
+        dist = euclidean_distance([trueX[0],trueY[0]], goalCenter)
+        if(distToGoal < 0.4*dist):
+            subgoalsCenter, size = get_subgoals_center_and_size(nSubgoals, goals[nextG], subgoalAxis[nextG])
+            for j in range(nSubgoals):
+                predictedX, predictedY, varX, varY = prediction_to_goal_center(trueX,trueY,trueL,knownN,subgoalsCenter[j],unit,stepUnit,kernelX,kernelY)#trajectory_prediction_test(x,y,l,knownN,startG,nextGoal,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
+                predictedXYVec.append([predictedX, predictedY])
+                varXYVec.append([varX, varY])
+            goalCount += nSubgoals
+        else:
+            predictedX, predictedY, varX, varY = prediction_to_goal_center(trueX,trueY,trueL,knownN,goalCenter,unit,stepUnit,kernelX,kernelY)#trajectory_prediction_test(x,y,l,knownN,startG,nextGoal,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
+            predictedXYVec.append([predictedX, predictedY])
+            varXYVec.append([varX, varY])
+            goalCount += 1
+            
+    plot_multiple_predictions(img,x,y,knownN,goalCount,predictedXYVec,varXYVec)
+
+ 
+#compara el error de las predicciones hacia cada goal de los ultimos puntos observados   
 def goal_weight_test(knownX,knownY,knownL,knownN,startG,goals,unitMat,stepUnit,kernelMatX,kernelMatY):
     nPoints = 4
     maxError = 0.
