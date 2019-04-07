@@ -8,212 +8,13 @@ from numpy.linalg import inv
 from scipy.optimize import minimize
 import kernels
 import path
+from dataManagement import *
+import dataManagement
 import matplotlib.image as mpimg
 from matplotlib.patches import Ellipse
 from copy import copy
 import random
 
-""" READ DATA """
-def get_paths_from_file(path_file,areas):
-    
-    paths, multigoal_paths = [],[] 
-    # Open file
-    with open(path_file) as f:
-        # Each line should contain a path
-        for line in f:
-            auxX, auxY, auxT = [],[],[]
-            # Split the line into sub-strings
-            data    = line.split()
-            for i in range(0, len(data), 3):
-                x_ = int(data[i])
-                y_ = int(data[i+1])
-                t_ = int(data[i+2])
-                if equal(auxX,auxY,x_,y_) == 0:
-                    auxX.append(x_)
-                    auxY.append(y_)
-                    auxT.append(t_)
-            auxPath = path.path(auxT,auxX,auxY)
-            gi = get_goal_sequence(auxPath,areas)
-            if len(gi) > 2:
-                multigoal_paths.append(auxPath)
-                new_paths = break_multigoal_path(auxPath,gi,areas)   
-                for j in range(len(new_paths)):
-                    paths.append(new_paths[j])
-            else:
-                paths.append(auxPath) 
-    return paths, multigoal_paths
-    
-"""Recibe un conjunto de paths y obtiene los puntos (x,y,z)
-con z = {tiempo, long de arco} si flag = {"time", "length"}"""
-def get_data_from_paths(paths, flag):
-    for i in range(len(paths)):
-        auxX, auxY, auxT = paths[i].x, paths[i].y, paths[i].t
-        auxL = arclength(auxX, auxY)
-        if(i==0):
-            x, y, t = [auxX], [auxY], [auxT]
-            l = [auxL]
-        else:
-            x.append(auxX)
-            y.append(auxY)
-            t.append(auxT) 
-            l.append(auxL)
-           
-    if(flag == "time"):
-        z = t
-    if(flag == "length"):
-        z = l
-    return x, y, z
-
-"""
-Lee la lista de archivos y obtiene los puntos (x,y,z),
-con z = {tiempo, long de arco} si flag = {"time", "length"}
-"""
-def get_data_from_files(files, flag):
-    for i in range(len(files)):
-        auxX, auxY, auxT = read_file(files[i])
-        auxL = arclength(auxX, auxY)
-        if(i==0):
-            x, y, t = [auxX], [auxY], [auxT]
-            l = [auxL]
-        else:
-            x.append(auxX)
-            y.append(auxY)
-            t.append(auxT) 
-            l.append(auxL)
-           
-    if(flag == "time"):
-        z = t
-    if(flag == "length"):
-        z = l
-    return x, y, z
-    
-""" FILTER PATHS """    
-#Calcula la mediana m, y la desviacion estandar s de un vector de paths
-#si alguna trayectoria difiere de la mediana en 4s o mas, se descarta
-def filter_path_vec(vec):
-    arclen = getArcLength(vec)    
-    m = np.median(arclen)
-    var = np.sqrt(np.var(arclen))
-    #print("mean len:", m)
-    learnSet = []
-    for i in range(len(arclen)):
-        if abs(arclen[i] - m) < 1.0*var:
-            learnSet.append(vec[i])
-            
-    return learnSet
-
-#Arreglo de NxNxM_ij
-#N = num de goals, M_ij = num de paths de g_i a g_j
-def filter_path_matrix(M, nRows, nColumns):#nGoals):
-    learnSet = []
-    mat = np.empty((nRows, nColumns),dtype=object) 
-    for i in range(nRows):
-        for j in range(nColumns):
-            mat[i][j]=[]    
-    
-    for i in range(nRows):
-        for j in range(nColumns):
-            if(len(M[i][j]) > 0):
-                aux = filter_path_vec(M[i][j])
-            for m in range(len(aux)):
-                mat[i][j].append(aux[m])
-            for k in range(len(aux)):
-                learnSet.append(aux[k])
-    return mat, learnSet
-
-#matriz de goalsxgoalsxN_ij
-"""Regresa una matriz con la arc-len primedio de las trayectorias de g_i a g_j"""
-def get_mean_length(M, nGoals):
-    mat = []
-    for i in range(nGoals):
-        row = []
-        for j in range(nGoals):
-            if(len(M[i][j]) > 0):        
-                arclen = getArcLength(M[i][j])    
-                m = np.median(arclen)
-            else:
-                m = 0
-            row.append(m)
-        mat.append(row)
-    return mat
-    
-def get_euclidean_goal_distance(goals, nGoals):
-    mat = []
-    for i in range(nGoals):
-        row = []
-        p = middle_of_area(goals[i])
-        for j in range(nGoals):            
-            q = middle_of_area(goals[j])
-            d = np.sqrt((p[0]-q[0])**2 + (p[1]-q[1])**2)
-            row.append(d)
-        mat.append(row)
-    return mat
-    
-def get_unit(mean, euclidean, nGoals):
-    mat = []    
-    for i in range(nGoals):
-        row = []
-        for j in range(nGoals):
-            if(euclidean[i][j] == 0 or mean[i][j] == 0):
-                u = 1
-            else:
-                u = mean[i][j]/euclidean[i][j]
-            row.append(u)
-        mat.append(row)
-    return mat
-
-def get_goal_sequence(p, goals):
-    g = []
-    for i in range(len(p.x)):
-        for j in range(len(goals)):
-            if isInArea(p.x[i], p.y[i], goals[j])==1:
-                if len(g) == 0:
-                    g.append(j)
-                else:
-                    if j != g[len(g)-1]:
-                        g.append(j)
-    return g
-    
-def getGoalSeqSet(vec,goals):
-    x,y,z = get_data_from_paths(vec,"length")
-    g = []
-    for i in range(len(vec)):
-        gi = get_goal_sequence(vec[i],goals)
-        g.append(gi)
-        
-    return g
-
-def getMultigoalPaths(paths,goals):
-    N = len(paths)
-    p = []
-    g = []
-    for i in range(N):
-        gi = getGoalSeq(paths[i],goals)
-        if len(gi) > 2:
-            p.append(i)
-            g.append(gi)
-    return p, g
-    
-def break_multigoal_path(multigoalPath, goalVec, goals):
-    newPath = []
-    p = multigoalPath
-    g = goalVec
-    newX, newY, newT = [], [], []
-    goalInd = 0
-    for j in range(len(p.x)):
-        newX.append(p.x[j])
-        newY.append(p.y[j])
-        newT.append(p.t[j])
-        
-        if goalInd < len(g)-1:
-            nextgoal = g[goalInd+1]
-            if isInArea(p.x[j],p.y[j],goals[nextgoal]):
-                new = path.path(newT,newX,newY)
-                newPath.append(new)
-                newX, newY, newT = [p.x[j]], [p.y[j]], [p.t[j]]
-                goalInd += 1
-    return newPath  
-    
 #******************************************************************************#
 """ REGRESSION FUNCTIONS """
 # The main regression function 
@@ -243,31 +44,12 @@ def regression(x,y,xnew,kernel):  #regresion sin recibir los parametros, el kern
     kK_1kt = k.dot(K_1kt)
     var = c - kK_1kt
     return ynew, var 
-    
-def equal(vx,vy,x,y):
-    N = len(vx)
-    if N == 0:
-        return 0
-    
-    if vx[N-1] == x and vy[N-1] == y:
-        return 1
-    else:
-        return 0
 
-#calcula la longitud de arco de un conjunto de puntos (x,y)
-def arclength(x,y):
-    l = [0]
-    for i in range(len(x)):
-        if i > 0:
-            l.append(np.sqrt( (x[i]-x[i-1])**2 + (y[i]-y[i-1])**2 ) )
-    for i in range(len(x)):
-        if(i>0):
-            l[i] = l[i] +l[i-1]
-    return l
+
         
 #******************************************************************************#    
 """ LEARNING """
-nsigma = 7.0 #error de las observaciones 
+nsigma = 7.50 #error de las observaciones 
 #Parametros: theta, vector de vectores: x,y
     
 def setKernel(name):
@@ -424,7 +206,7 @@ def optimize_parameters_between_goals(learnSet, parametersMat, rows, columns):
     return kernelMatX, kernelMatY
     
 #recibe una matriz de kernel [[kij]], con parametros [gamma,s,l]
-def _write_parameters(matrix,nGoals,flag):
+def write_squared_matrix_parameters(matrix,nGoals,flag):
     if flag == "x": 
         f = open("parameters_x.txt","w")
     if flag == "y": 
@@ -816,6 +598,7 @@ def final_displacement_error(final, predicted_final):
     error = math.sqrt((final[0]-predicted_final[0])**2 + (final[1]-predicted_final[1])**2)
     return error
     
+#Toma N-nPoints como datos conocidos y predice los ultimos nPoints, regresa el error de la prediccion
 def prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goal,unit,stepUnit,kernelX,kernelY):
     knownN = len(knownX)    
     trueX, trueY, trueL = [], [], []
@@ -842,115 +625,34 @@ def prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goal,unit
     error = average_displacement_error([lastX,lastY],[predX,predY])
     #print("[Error]:",error)
     return error
+
+#Toma la mitad de los datos observados como conocidos y predice nPoints en la mitad restante, regresa el error de la prediccion
+def prediction_error_of_points_along_the_path(nPoints,knownX,knownY,knownL,goal,unit,stepUnit,kernelX,kernelY):
+    knownN = len(knownX)
+    halfN = int(knownN/2)
+    trueX, trueY, trueL = [], [], []
+    for i in range(halfN):
+        trueX.append(knownX[i])
+        trueY.append(knownY[i])
+        trueL.append(knownL[i])
+    
+    finishXY = middle_of_area(goal)        
+    finishD = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
+    trueX.append(finishXY[0])
+    trueY.append(finishXY[1])
+    trueL.append(finishD*unit)
+    
+    d = int(halfN/nPoints)
+    realX, realY, predictionSet = [],[],[]
+    for i in range(nPoints):
+        realX.append(knownX[halfN + i*d])
+        realY.append(knownY[halfN + i*d])
+        predictionSet.append(knownL[halfN + i*d])
+    
+    predX, predY, varX,varY = prediction_XY(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
+    error = average_displacement_error([realX,realY],[predX,predY])
+
+    return error
         
 
 #******************************************************************************#
-
-def euclidean_distance(pointA, pointB):
-    dist = math.sqrt( (pointA[0]-pointB[0])**2 + (pointA[1]-pointB[1])**2 )
-    return dist
-
-def middle_of_area(rectangle):
-    dx, dy = rectangle[6]-rectangle[0], rectangle[7]-rectangle[1]
-    middle = [rectangle[0] + dx/2., rectangle[1] + dy/2.]
-    return middle
-    
-def get_goals_likelihood(x,y,l,start,kernelMat_x,kernelMat_y, goals, nGoals):
-    known_data = 1
-    likelihood = []
-    var, error =[], []
-
-    known_x, known_y, known_l = [], [],[]
-    for i in range(known_data):
-        known_x.append(x[i])
-        known_y.append(y[i])
-        known_l.append(l[i])
-        
-    N = len(x)
-    l_ = l[N-1]
-    sum_likelihood = 0.
-    for i in range(nGoals):
-        kernel_x = kernelMat_x[start][i]
-        kernel_y = kernelMat_y[start][i]
-        
-        end = middle_of_area(goals[i])
-        dist = math.sqrt( (end[0]-x[N-1])**2 + (end[1]-y[N-1])**2 )
-        aux_known_l = copy(known_l)
-        aux_known_x = copy(known_x) 
-        aux_known_y = copy(known_y)
-        
-        aux_known_l.append(l[N-1]+dist)
-        aux_known_x.append(end[0])
-        aux_known_y.append(end[1])
-        
-        x_, var_x = regression(aux_known_l,aux_known_x,l_,kernel_x)
-        y_, var_y = regression(aux_known_l,aux_known_y,l_,kernel_y)
-        var.append([var_x,var_y])
-        likelihood_gi = math.exp( (-1./2.)*( math.fabs(x_ - x[N-1])/var_x + math.fabs(y_ - y[N-1])/var_y )  )
-        likelihood.append(likelihood_gi)
-        sum_likelihood += likelihood_gi
-        error_x = math.fabs(x_ - x[N-1])
-        error_y = math.fabs(y_ - y[N-1])
-        error.append(math.sqrt(error_x*2 + error_y**2))
-       
-    for i in range(nGoals): 
-        likelihood[i] = likelihood[i]/sum_likelihood
-    
-    return likelihood, error
-
-# Recibe un punto (x,y) y un area de interes R
-def isInArea(x,y,R):
-    if(x >= R[0] and x <= R[2]):
-        if(y >= R[1] and y <= R[len(R)-1]):
-            return 1
-        else:
-            return 0
-    else: 
-        return 0
-
-def startGoal(p,goals):
-    x, y = p.x[0], p.y[0]
-    for i in range(len(goals)):
-        if isInArea(x,y,goals[i]):
-            return i
-
-#Recibe un vector de trayectorias y regresa un vector con las longitudes de arco correspondientes
-def getArcLength(paths):
-    x,y,z = get_data_from_paths(paths,"length")
-    l = []
-    for i in range(len(paths)):
-        N = len(z[i])
-        l.append(z[i][N-1])
-    
-    return l
-
-#regresa la duracion minima y maxima de un conjunto de trayectorias
-def get_min_and_max_Duration(paths):
-    n = len(paths)
-    duration = np.zeros(n)
-    maxDuration = 0
-    minDuration = 10000
-    
-    for i in range(n):
-        duration[i] = paths[i].duration
-        if(duration[i] > maxDuration):
-            # Determine max. duration
-            maxDuration = duration[i]
-        if(duration[i] < minDuration):
-            # Determine min. duration
-            minDuration = duration[i]
-    return duration, minDuration, maxDuration
-    
-def get_min_and_max_arcLength(paths):
-    n = len(paths)
-    arcLen = []
-    maxl = 0
-    minl = 10000
-    
-    for i in range(n):
-        arcLen.append(paths[i].length)
-        if(arcLen[i] > maxl):
-            maxl = arcLen[i]
-        if(arcLen[i] < minl):
-            minl = arcLen[i]   
-    return arcLen, minl, maxl
