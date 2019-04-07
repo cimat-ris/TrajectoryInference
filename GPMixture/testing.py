@@ -45,7 +45,7 @@ def trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUni
     
     finalPoints = get_goal_center_and_boundaries(goals[finishG])
     
-    newL, finalL = get_prediction_set(lastKnownPoint,finalPoints[0],unit,stepUnit)
+    newL, finalL = get_prediction_set_given_size(lastKnownPoint,finalPoints[0],unit,20)#get_prediction_set(lastKnownPoint,finalPoints[0],unit,stepUnit)
     finalArcLen = []
     for i in range(1):#len(finalPoints)):
         finalArcLen.append(get_arclen_to_finish_point(lastKnownPoint,finalPoints[i],unit))
@@ -245,35 +245,35 @@ def multigoal_prediction_test(img,x,y,l,knownN,startG,goals,unitMat,stepUnit,ker
     trueX, trueY, trueL = get_known_set(x,y,l,knownN) 
     likelyGoals, goalsLikelihood = [],[]   
     errorG = []
-    nPoints = 4
-    maxError = 0.
+    nPoints = 5
     for i in range(len(goals)):
         unit = unitMat[startG][i]
         kernelX = kernelMatX[startG][i]
         kernelY = kernelMatY[startG][i]
-        error = prediction_error_of_last_known_points(nPoints,trueX,trueY,trueL,goals[i],unit,stepUnit,kernelX,kernelY)
+        error = prediction_error_of_points_along_the_path(nPoints,trueX,trueY,trueL,goals[i],unit,stepUnit,kernelX,kernelY)
+        #error = prediction_error_of_last_known_points(nPoints,trueX,trueY,trueL,goals[i],unit,stepUnit,kernelX,kernelY)
         #error = get_goal_likelihood(trueX,trueY,trueL,startG,i,goals,unitMat,kernelMatX,kernelMatY)
         errorG.append(error)
         
     norma = np.linalg.norm(errorG)
-    print("norm:",norma)
     errorG = errorG/norma
-    
+    D = 20.
     for i in range(len(goals)):
-        val = priorLikelihood[startG][i]*(1.-errorG[i])   
+        val = priorLikelihood[startG][i]*(math.exp(-1.*(errorG[i]**2)/D**2 ))#   *(1.-errorG[i])
         goalsLikelihood.append(val)
         
-    meanLikelihood = mean(goalsLikelihood)
+    meanLikelihood = 0.#0.85*mean(goalsLikelihood)
     for i in range(len(goals)):
         if(goalsLikelihood[i] > meanLikelihood):
             likelyGoals.append(i)   
         
-    print("\n[Prior likelihood]\n",priorLikelihood[startG])
-    print("[Prediction Error]\n",errorG)
+    #print("\n[Prior likelihood]\n",priorLikelihood[startG])
+    #print("[Prediction Error]\n",errorG)
     print("[Goals likelihood]\n",goalsLikelihood)
-    print("[Media likelihood]:", mean(goalsLikelihood))
+    print("[Mean likelihood]:", meanLikelihood)
     nSubgoals = 2
     goalCount = 0
+    plotLikelihood = []
     predictedXYVec, varXYVec = [], []
     for i in range(len(likelyGoals)):
         nextG = likelyGoals[i]
@@ -289,39 +289,17 @@ def multigoal_prediction_test(img,x,y,l,knownN,startG,goals,unitMat,stepUnit,ker
                 predictedX, predictedY, varX, varY = prediction_to_goal_center(trueX,trueY,trueL,knownN,subgoalsCenter[j],unit,stepUnit,kernelX,kernelY)#trajectory_prediction_test(x,y,l,knownN,startG,nextGoal,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
                 predictedXYVec.append([predictedX, predictedY])
                 varXYVec.append([varX, varY])
+                plotLikelihood.append(goalsLikelihood[nextG])
             goalCount += nSubgoals
         else:
             predictedX, predictedY, varX, varY = prediction_to_goal_center(trueX,trueY,trueL,knownN,goalCenter,unit,stepUnit,kernelX,kernelY)#trajectory_prediction_test(x,y,l,knownN,startG,nextGoal,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
             predictedXYVec.append([predictedX, predictedY])
             varXYVec.append([varX, varY])
+            plotLikelihood.append(goalsLikelihood[nextG])
             goalCount += 1
-            
-    plot_multiple_predictions(img,x,y,knownN,goalCount,predictedXYVec,varXYVec)
+    plot_multiple_predictions_and_goal_likelihood(img,x,y,knownN,goalCount,plotLikelihood,predictedXYVec,varXYVec)
+    #plot_multiple_predictions(img,x,y,knownN,goalCount,predictedXYVec,varXYVec)
 
- 
-#compara el error de las predicciones hacia cada goal de los ultimos puntos observados   
-def goal_weight_test(knownX,knownY,knownL,knownN,startG,goals,unitMat,stepUnit,kernelMatX,kernelMatY):
-    nPoints = 4
-    maxError = 0.
-    errorVec = []
-    for i in range(len(goals)):
-        #print("[",startG,",",i,"]")
-        unit = unitMat[startG][i]
-        kernelX = kernelMatX[startG][i]
-        kernelY = kernelMatY[startG][i]
-        error = prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goals[i],unit,stepUnit,kernelX,kernelY)
-        errorVec.append(error)
-        if(error > maxError):
-            maxError = error
-        
-    for i in range(len(goals)):
-        errorVec[i] = errorVec[i]/maxError
-    
-    print("[Error vec]:\n",errorVec)
-    
-    
-    
-    
     
     
     
