@@ -19,24 +19,6 @@ def readDataset(name):
     for i in range(len(lines)):
         lines[i] = lines[i].strip("\n")
     return lines
-
-#Regresa una matriz con la probabilidad de ir de g_i a g_j en cada entrada
-def next_goal_probability_matrix(M, nGoals):
-    probMat = []
-    for i in range(nGoals):
-        p = []
-        n = 0.
-        for j in range(nGoals):
-            n += len(M[i][j])
-        
-        for j in range(nGoals):
-            if n == 0:
-                p.append(0.)
-            else:
-                p.append(float(len(M[i][j])/n))
-        probMat.append(p)
-        
-    return probMat
     
 def getKnownData(x,y,z,percent):
     trueX, trueY, trueZ = [],[],[]
@@ -195,9 +177,9 @@ def goal_to_subgoal_prediction_error(x,y,l,knownN,startG,finishG,goals,subgoals,
 # Areas de interes [x1,y1,x2,y2,...]
 #R0 = [400,40,680,40,400,230,680,230] #azul
 #R1 = [1110,40,1400,40,1110,230,1400,230] #cian
-R0 = [400,10,680,10,400,150,680,150] #azul
-R1 = [1100,10,1400,10,1100,150,1400,150] #cian
-R2 = [1650,490,1810,490,1650,740,1810,740] #verde
+R0 = [410,10,680,10,410,150,680,150] #azul
+R1 = [1120,30,1400,30,1120,150,1400,150] #cian
+R2 = [1650,460,1810,460,1650,740,1810,740] #verde
 R3 = [1450,950,1800,950,1450,1080,1800,1080]#amarillo
 R4 = [100,950,500,950,100,1080,500,1080] #naranja
 R5 = [300,210,450,210,300,400,450,400] #rosa
@@ -243,7 +225,7 @@ stepUnit = 0.0438780780171 #get_number_of_steps_unit(pathMat, nGoals)
 #print("***arc-len promedio***\n", meanLenMat)
 #print("***distancia euclidiana entre goals***\n", euclideanDistMat)
 #print("***unidades de distancia***\n", unitMat)
-priorLikelihoodMat = next_goal_probability_matrix(pathMat, nGoals)
+priorLikelihoodMat = prior_probability_matrix(pathMat, nGoals)
 #print("likelihood mat:", priorLikelihoodMat)
 """
 #***********APRENDIZAJE***********
@@ -277,12 +259,12 @@ subgoalsKernelMat_y = read_and_set_parameters("subgoalsParameters_y.txt",nGoals,
 subgoalsUnitMat = copy_unitMat(unitMat, nGoals, nSubgoals); 
 """
 #Test dado el goal de inicio y fin
-startG = 1
+startG = 0
 nextG = 2
 kernelX = kernelMat_x[startG][nextG]
 kernelY = kernelMat_y[startG][nextG]
 
-traj_id = 1 #indice de la trayectoria a predecir
+traj_id = 3 #indice de la trayectoria a predecir
 traj = pathMat[startG][nextG][traj_id]
 traj_len = len(traj.x) #total de observaciones de la trayectoria
 traj_arclen = traj.length #arreglo de la longitud de arco correspondiente a las observaciones 
@@ -294,7 +276,7 @@ arclen_vec = []
 part_num = 8
 steps = 10
 
-for i in range(3,part_num-1):
+for i in range(3,part_num-4):
     arclen_vec.append( (i+1)*(traj_arclen/float(part_num))  )
     knownN = int((i+1)*(traj_len/part_num)) #numero de datos conocidos
     #print("num de datos conocidos:", knownN)
@@ -306,14 +288,15 @@ for i in range(3,part_num-1):
     """Simple prediction test"""
     #single_goal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
     #trajectory_subgoal_prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
-    #goal_weight_test(trueX,trueY,trueL,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y)
     #prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,meanLenMat,steps,kernelMat_x,kernelMat_y)
     """Multigoal prediction test"""    
-    multigoal_prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorLikelihoodMat,goalSamplingAxis)
+    #multigoal_prediction_test(img,trueX,trueY,trueL,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorLikelihoodMat,goalSamplingAxis)
+    plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,middle_of_area(areas[nextG]))
     #prediction_test_over_time(traj.x,traj.y,traj.t,knownN,start[0],nextG[0],areas)
 
 #compare_error_goal_to_subgoal_test(img,traj.x,traj.y,traj.l,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
 
+#plot_subgoals(img,areas[2],3,goalSamplingAxis[2])
 
 """
 for i in range(0):#1,nGoals):
