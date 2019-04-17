@@ -17,6 +17,15 @@ import random
 
 #manejo de data
 """ READ DATA """
+# Lectura de los nombres de los archivos de datos
+def readDataset(fileName):   
+    file = open(fileName,'r')
+    lines = file.readlines()
+    for i in range(len(lines)):
+        lines[i] = lines[i].strip("\n")
+    return lines
+    
+
 def get_paths_from_file(path_file,areas):
     paths, multigoal_paths = [],[] 
     # Open file
@@ -25,7 +34,7 @@ def get_paths_from_file(path_file,areas):
         for line in f:
             auxX, auxY, auxT = [],[],[]
             # Split the line into sub-strings
-            data    = line.split()
+            data = line.split()
             for i in range(0, len(data), 3):
                 x_ = int(data[i])
                 y_ = int(data[i+1])
@@ -109,8 +118,6 @@ def write_useful_paths_file(paths): #paths es un vector de indices
             f.write(s)  
     f.close()
     
-    
-    
 """ FILTER PATHS """
 """ Regresa una matriz de trayectorias:
 en la entrada (i,j) estan los caminos que comienzan en g_i y terminan en g_j"""
@@ -148,7 +155,7 @@ def define_trajectories_start_and_end_areas(startGoals, finishGoals, paths):
 #Calcula la mediana m, y la desviacion estandar s de un vector de paths
 #si alguna trayectoria difiere de la mediana en 4s o mas, se descarta
 def filter_path_vec(vec):
-    arclen = getArcLength(vec)    
+    arclen = get_paths_arcLength(vec)    
     m = np.median(arclen)
     var = np.sqrt(np.var(arclen))
     #print("mean len:", m)
@@ -196,22 +203,15 @@ def getUsefulPaths(paths, goals):
             
     return useful
     
-"""***********"""
-#matriz de goalsxgoalsxN_ij
-"""Regresa una matriz con la arc-len primedio de las trayectorias de g_i a g_j"""
-def get_mean_length(M, nGoals):
-    mat = []
-    for i in range(nGoals):
-        row = []
-        for j in range(nGoals):
-            if(len(M[i][j]) > 0):        
-                arclen = getArcLength(M[i][j])    
-                m = np.median(arclen)
-            else:
-                m = 0
-            row.append(m)
-        mat.append(row)
-    return mat
+    
+""" GOAL RELATED FUNCTIONS """
+
+def startGoal(p,goals):
+    x, y = p.x[0], p.y[0]
+    for i in range(len(goals)):
+        if isInArea(x,y,goals[i]):
+            return i    
+    return -1
     
 def get_euclidean_goal_distance(goals, nGoals):
     mat = []
@@ -225,19 +225,6 @@ def get_euclidean_goal_distance(goals, nGoals):
         mat.append(row)
     return mat
     
-def get_unit(mean, euclidean, nGoals):
-    mat = []    
-    for i in range(nGoals):
-        row = []
-        for j in range(nGoals):
-            if(euclidean[i][j] == 0 or mean[i][j] == 0):
-                u = 1
-            else:
-                u = mean[i][j]/euclidean[i][j]
-            row.append(u)
-        mat.append(row)
-    return mat
-
 def get_goal_sequence(p, goals):
     g = []
     for i in range(len(p.x)):
@@ -265,7 +252,7 @@ def getMultigoalPaths(paths,goals):
     p = []
     g = []
     for i in range(N):
-        gi = getGoalSeq(paths[i],goals)
+        gi = get_goal_sequence(paths[i],goals)
         if len(gi) > 2:
             p.append(i)
             g.append(gi)
@@ -290,39 +277,35 @@ def break_multigoal_path(multigoalPath, goalVec, goals):
                 newPath.append(new)
                 newX, newY, newT = [p.x[j]], [p.y[j]], [p.t[j]]
                 goalInd += 1
-    return newPath  
+    return newPath 
+      
 
-
-
-        
-
-def pathArcLength(x,y):
-    n = len(x)
-    l = [0]
-    for i in range(n):
-        if i > 0:
-            l.append(np.sqrt( (x[i]-x[i-1])**2 + (y[i]-y[i-1])**2 ) )
-    for i in range(n):
-        if(i>0):
-            l[i] = l[i] +l[i-1]
-    return l
-
-def statistics(t,x,y):
-    n = len(t)
-    duration = t[n-1] - t[0]        
-    l = pathArcLength(x,y)
-    length = l[len(l)-1]
-    return duration, length
-
+def get_goal_center_and_boundaries(goal):
+    points = []
+    p = middle_of_area(goal)
+    points.append(p)
+    lenX = goal[len(goal) -2] - goal[0]
+    lenY = goal[len(goal) -1] - goal[1]
+    q1 = [p[0]-lenX/2, p[1]]
+    q2 = [p[0], p[1]+lenY/2]
+    q3 = [p[0]+lenX/2, p[1]]
+    q4 = [p[0], p[1]-lenY/2]
+    points.append(q1)
+    points.append(q2)
+    points.append(q3)
+    points.append(q4)
+    return points
+    
+"""DATA RELATED FUNCTIONS"""
 
 def histogram(paths,flag):
-    n = len(paths)
     if flag == "duration":
-        vec, vmin, vmax = getDuration(paths)
+        vec = get_paths_duration(paths)
     if flag == "length":
-        vec, vmin, vmax = getLength(paths)
+        vec = get_paths_arcLength(paths)
+    _max = max(vec)
     # Taking bins of size 10
-    numBins = int( (vmax-vmin)/10)+1
+    numBins = int(_max/10)+1
     h = np.histogram(vec, bins = numBins)
     x = []
     ymin = []
@@ -331,8 +314,98 @@ def histogram(paths,flag):
         x.append(h[1][i])
         ymin.append(0)
         ymax.append(h[0][i])
-    plt.vlines(x,ymin,ymax,colors='m',linestyles='solid')
+    plt.vlines(x,ymin,ymax,colors='b',linestyles='solid')
+    
+def get_paths_duration(paths):
+    x,y,z = get_data_from_paths(paths,"time")
+    t = []
+    for i in range(len(paths)):
+        N = len(z[i])
+        t.append(z[i][N-1])
+    
+    return t
 
+#Recibe un vector de trayectorias y regresa un vector con las longitudes de arco correspondientes
+def get_paths_arcLength(paths):
+    x,y,z = get_data_from_paths(paths,"length")
+    l = []
+    for i in range(len(paths)):
+        N = len(z[i])
+        l.append(z[i][N-1])
+    
+    return l
+    
+#calcula la longitud de arco de un conjunto de puntos (x,y)
+def arclength(x,y):
+    l = [0]
+    for i in range(len(x)):
+        if i > 0:
+            l.append(np.sqrt( (x[i]-x[i-1])**2 + (y[i]-y[i-1])**2 ) )
+    for i in range(len(x)):
+        if(i>0):
+            l[i] = l[i] +l[i-1]
+    return l
+
+#matriz de goalsxgoalsxN_ij
+#Regresa una matriz con la arc-len primedio de las trayectorias de g_i a g_j
+def get_mean_length(M, nGoals):
+    mat = []
+    for i in range(nGoals):
+        row = []
+        for j in range(nGoals):
+            if(len(M[i][j]) > 0):        
+                arclen = get_paths_arcLength(M[i][j])    
+                m = np.median(arclen)
+            else:
+                m = 0
+            row.append(m)
+        mat.append(row)
+    return mat
+    
+#Unidad de distancia que camina una persona por unidad de distancia euclidiana
+def get_distance_unit(mean, euclidean, nGoals):
+    mat = []    
+    for i in range(nGoals):
+        row = []
+        for j in range(nGoals):
+            if(euclidean[i][j] == 0 or mean[i][j] == 0):
+                u = 1
+            else:
+                u = mean[i][j]/euclidean[i][j]
+            row.append(u)
+        mat.append(row)
+        
+    sumUnit = 0.
+    for i in range(nGoals):
+        for j in range(nGoals):
+            sumUnit += mat[i][j]
+    unit = sumUnit / nGoals**2
+    return mat, unit
+
+def get_number_of_steps_unit(Mat, nGoals):
+    unit = 0.0
+    numUnits = 0
+    for i in range(nGoals):
+        for j in range(nGoals):
+            numPaths = len(Mat[i][j])
+            meanU = 0.0
+            for k in range(numPaths):
+                path = Mat[i][j][k]
+                l = path.l[len(path.l)-1]
+                if(l == 0):
+                    numPaths -= 1
+                else: 
+                    stps = len(path.l)
+                    u = stps/l
+                    meanU += u
+            if(numPaths > 0):
+                meanU = meanU/numPaths
+            if(meanU >0):
+                unit += meanU
+                numUnits += 1
+    unit = unit/numUnits
+    return unit
+    
 #Regresa una matriz con la probabilidad de ir de g_i a g_j en cada entrada
 def prior_probability_matrix(pathMat, nGoals):
     priorMat = []
@@ -350,109 +423,6 @@ def prior_probability_matrix(pathMat, nGoals):
         priorMat.append(p)
         
     return priorMat
-
-def startGoal(p,goals):
-    x, y = p.x[0], p.y[0]
-    for i in range(len(goals)):
-        if isInArea(x,y,goals[i]):
-            return i
-
-#Recibe un vector de trayectorias y regresa un vector con las longitudes de arco correspondientes
-def getArcLength(paths):
-    x,y,z = get_data_from_paths(paths,"length")
-    l = []
-    for i in range(len(paths)):
-        N = len(z[i])
-        l.append(z[i][N-1])
-    
-    return l
-""" HELPFUL FUNCTIONS"""
-    
-def equal(vx,vy,x,y):
-    N = len(vx)
-    if N == 0:
-        return 0
-    
-    if vx[N-1] == x and vy[N-1] == y:
-        return 1
-    else:
-        return 0
-        
-# Recibe un punto (x,y) y un area de interes R
-def isInArea(p,R):
-    x = p[0]
-    y = p[1]
-    if(x >= R[0] and x <= R[len(R)-2]):
-        if(y >= R[1] and y <= R[len(R)-1]):
-            return 1
-        else:
-            return 0
-    else: 
-        return 0
-        
-#calcula la longitud de arco de un conjunto de puntos (x,y)
-def arclength(x,y):
-    l = [0]
-    for i in range(len(x)):
-        if i > 0:
-            l.append(np.sqrt( (x[i]-x[i-1])**2 + (y[i]-y[i-1])**2 ) )
-    for i in range(len(x)):
-        if(i>0):
-            l[i] = l[i] +l[i-1]
-    return l
-def euclidean_distance(pointA, pointB):
-    dist = math.sqrt( (pointA[0]-pointB[0])**2 + (pointA[1]-pointB[1])**2 )
-    return dist
-
-def middle_of_area(rectangle):
-    dx, dy = rectangle[6]-rectangle[0], rectangle[7]-rectangle[1]
-    middle = [rectangle[0] + dx/2., rectangle[1] + dy/2.]
-    return middle
-    
-def get_goals_likelihood(x,y,l,start,kernelMat_x,kernelMat_y, goals, nGoals):
-    known_data = 1
-    likelihood = []
-    var, error =[], []
-
-    known_x, known_y, known_l = [], [],[]
-    for i in range(known_data):
-        known_x.append(x[i])
-        known_y.append(y[i])
-        known_l.append(l[i])
-        
-    N = len(x)
-    l_ = l[N-1]
-    sum_likelihood = 0.
-    for i in range(nGoals):
-        kernel_x = kernelMat_x[start][i]
-        kernel_y = kernelMat_y[start][i]
-        
-        end = middle_of_area(goals[i])
-        dist = math.sqrt( (end[0]-x[N-1])**2 + (end[1]-y[N-1])**2 )
-        aux_known_l = copy(known_l)
-        aux_known_x = copy(known_x) 
-        aux_known_y = copy(known_y)
-        
-        aux_known_l.append(l[N-1]+dist)
-        aux_known_x.append(end[0])
-        aux_known_y.append(end[1])
-        
-        x_, var_x = regression(aux_known_l,aux_known_x,l_,kernel_x)
-        y_, var_y = regression(aux_known_l,aux_known_y,l_,kernel_y)
-        var.append([var_x,var_y])
-        likelihood_gi = math.exp( (-1./2.)*( math.fabs(x_ - x[N-1])/var_x + math.fabs(y_ - y[N-1])/var_y )  )
-        likelihood.append(likelihood_gi)
-        sum_likelihood += likelihood_gi
-        error_x = math.fabs(x_ - x[N-1])
-        error_y = math.fabs(y_ - y[N-1])
-        error.append(math.sqrt(error_x*2 + error_y**2))
-       
-    for i in range(nGoals): 
-        likelihood[i] = likelihood[i]/sum_likelihood
-    
-    return likelihood, error
-
-
 
 #regresa la duracion minima y maxima de un conjunto de trayectorias
 def get_min_and_max_Duration(paths):
@@ -485,5 +455,115 @@ def get_min_and_max_arcLength(paths):
             minl = arcLen[i]   
     return arcLen, minl, maxl
 
+def get_pedestrian_average_speed(paths):
+    speed, validPaths = 0., 0
+    for i in range(len(paths)):
+        if paths[i].duration > 0:
+            speed += paths[i].length / paths[i].duration
+            validPaths += 1
+    avSpeed = speed/ validPaths
+    return avSpeed
 
-""" ARC LEN TO TIME """
+""" HELPFUL FUNCTIONS"""    
+def equal(vx,vy,x,y):
+    N = len(vx)
+    if N == 0:
+        return 0
+    
+    if vx[N-1] == x and vy[N-1] == y:
+        return 1
+    else:
+        return 0
+        
+# Recibe un punto (x,y) y un area de interes R
+def isInArea(p,R):
+    x = p[0]
+    y = p[1]
+    if(x >= R[0] and x <= R[len(R)-2]):
+        if(y >= R[1] and y <= R[len(R)-1]):
+            return 1
+        else:
+            return 0
+    else: 
+        return 0
+        
+def euclidean_distance(pointA, pointB):
+    dist = math.sqrt( (pointA[0]-pointB[0])**2 + (pointA[1]-pointB[1])**2 )
+    return dist
+
+def middle_of_area(rectangle):
+    dx, dy = rectangle[6]-rectangle[0], rectangle[7]-rectangle[1]
+    middle = [rectangle[0] + dx/2., rectangle[1] + dy/2.]
+    return middle
+    
+def copy_unitMat(unitMat, nGoals, nSubgoals):
+    mat = []
+    m = int(nSubgoals/nGoals)
+    for i in range(nGoals):
+        r = []
+        for j in range(nSubgoals):
+            k = int(j/m)
+            r.append(unitMat[i][k])
+        mat.append(r)
+    return mat
+        
+
+"""ERROR FUNCTIONS"""
+def mean_error(u,v):
+    error = 0.
+    for i in range(len(u)):   
+        error += math.sqrt((u[i]- v[i])**2) 
+    return error/len(u)
+
+#Mean error (mx,my) de los valores reales con los predichos
+def meanError(trueX, trueY, predX, predY):
+    e = [0,0]
+    lp, l = len(predX), len(trueX)
+    for i in range(lp):
+        e[0] += abs(trueX[l-1-i]-predX[lp-1-i])
+        e[1] += abs(trueY[l-1-i]-predY[lp-1-i]) 
+    e[0] = e[0]/len(predX)
+    e[1] = e[1]/len(predY)   
+    return e
+    
+def geometricError(trueX, trueY, predX, predY):
+    e = 0
+    lp, l = len(predX), len(trueX)
+    for i in range(lp):
+        e += math.sqrt((trueX[l-1-i]-predX[lp-1-i])**2 + (trueY[l-1-i]-predY[lp-1-i])**2)
+    return e
+    
+def geomError(meanError):
+    Ex, Ey = 0, 0
+    for i in range(len(meanError)):
+        Ex += meanError[i][0]
+        Ey += meanError[i][1]
+    Ex = Ex/len(meanError) 
+    Ey = Ey/len(meanError)
+    return math.sqrt(Ex**2+Ey**2)
+
+def getError(trueX, trueY, predX,predY):
+    for i in range(len(predX)):
+        if(i == 0):
+            error = [meanError(trueX[i],trueY[i],predX[i],predY[i])]
+        else:
+            error.append(meanError(trueX[i],trueY[i],predX[i],predY[i]))    
+    return error
+   
+#Average L2 distance between ground truth and our prediction
+def average_displacement_error(true_XY, prediction_XY):
+    error = 0.
+    trueX, trueY = true_XY[0], true_XY[1]
+    predictionX, predictionY = prediction_XY[0], prediction_XY[1]
+    l = min(len(trueX),len(predictionX))
+    for i in range(l):
+        error += math.sqrt((trueX[i]-predictionX[i])**2 + (trueY[i]-predictionY[i])**2)
+    if(l>0):
+        error = error/l
+    return error
+    
+#The distance between the predicted final destination and the true final destination
+def final_displacement_error(final, predicted_final):
+    error = math.sqrt((final[0]-predicted_final[0])**2 + (final[1]-predicted_final[1])**2)
+    return error
+    
