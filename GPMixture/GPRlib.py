@@ -258,15 +258,17 @@ def read_and_set_parameters(file_name, rows, columns, nParameters):
     
 """ PREDICTION """
 def get_known_set(x,y,l,knownN):
-    trueX, trueY, trueL = [],[],[]
-    knownN = int(knownN)
-    for j in range(knownN): #numero de datos conocidos
-        trueX.append(x[j])
-        trueY.append(y[j])
-        trueL.append(l[j])
-        
+    trueX = x[0:knownN] 
+    trueY = y[0:knownN]
+    trueL = l[0:knownN]
     return trueX, trueY, trueL
   
+def get_known_data(x,y,z,knownN):
+    trueX = x[0:knownN] 
+    trueY = y[0:knownN]
+    trueZ = z[0:knownN]
+    return trueX, trueY, trueZ
+    
 def get_goal_likelihood(knownX,knownY,knownL,startG,finishG,goals,unitMat,kernelMatX,kernelMatY):  
     _knownX = knownX.copy()        
     _knownY = knownY.copy()
@@ -333,27 +335,22 @@ def uniform_sampling_1D(m, goal, axis):
 
 def get_finish_point(knownX, knownY, knownL, finishGoal, goals, kernelX, kernelY, unit, samplingAxis):
     n = len(knownX)
-    m = 9 #numero de muestras
-    _x, _y, flag = uniform_sampling_1D(m, goals[finishGoal], samplingAxis[finishGoal])
-    k = 3
-    
+    numSamples = 9 #numero de muestras
+    _x, _y, flag = uniform_sampling_1D(numSamples, goals[finishGoal], samplingAxis[finishGoal])
+    k = 3          #num de puntos por comparar
     if(n < 2*k):
         return middle_of_area(goals[finishGoal])
-        
-    _knownX, _knownY, _knownL = [], [], []
-    for i in range(n-k):
-        _knownX.append(knownX[i])
-        _knownY.append(knownY[i])
-        _knownL.append(knownL[i])
-
-    predSet, trueX, trueY = [], [], []
-    for i in range(k):
-        predSet.append(knownL[n-k+i])
-        trueX.append(knownX[n-k+i])
-        trueY.append(knownY[n-k+i])
-        
+           
+    _knownX = knownX[0:n-k]
+    _knownY = knownY[0:n-k]
+    _knownL = knownL[0:n-k]
+    
+    predSet = knownL[n-k:k]
+    trueX = knownX[n-k:k]
+    trueY = knownY[n-k:k]
+    
     error = []
-    for i in range(m):
+    for i in range(numSamples):
         auxX = _knownX.copy()
         auxY = _knownY.copy()
         auxL = _knownL.copy()
@@ -367,7 +364,7 @@ def get_finish_point(knownX, knownY, knownL, finishGoal, goals, kernelX, kernelY
         error.append(average_displacement_error([trueX,trueY],[predX,predY]))
     #encuentra el punto que genera el error minimo
     min_id, min_error = 0, error[0]
-    for i in range(m):
+    for i in range(numSamples):
         if(error[i] < min_error):
             min_error = error[i]
             min_id = i        
@@ -387,16 +384,13 @@ def get_finish_point_singleGP(knownX, knownY, knownL, finishGoal, goals, kernelX
     m = 10 #numero de muestras
     _x, _y, flag  = uniform_sampling_1D(m, goals[finishGoal], samplingAxis[finishGoal])
     k = 5 #numero de puntos por comparar
-    _knownX, _knownY = [], []
-    for i in range(n-k):
-        _knownX.append(knownX[i])
-        _knownY.append(knownY[i])
         
-    trueX, trueY = [], []
-    for i in range(k):
-        trueX.append(knownX[n-k+i])
-        trueY.append(knownY[n-k+i])
-        
+    _knownX = knownX[0:n-k]
+    _knownY = knownY[0:n-k]
+    
+    trueX = knownX[n-k:k]
+    trueY = knownY[n-k:k]
+    
     error = []
     for i in range(m):
         auxX = _knownX.copy()
@@ -420,31 +414,30 @@ def get_finish_point_singleGP(knownX, knownY, knownL, finishGoal, goals, kernelX
         if(error[i] < min_error):
             min_error = error[i]
             min_id = i
-    return [_x[min_id], _y[min_id]]
-    
+    return [_x[min_id], _y[min_id]] 
 
 def get_prediction_set_from_data(z,knownN):
     N = len(z)
-    newZ = []
-    knownN = int(knownN)
-    for j in range(knownN-1, N): #numero de datos conocidos
-        newZ.append(z[j])
+    newZ = z[knownN-1:N]
     return newZ
 
 #usa una unidad de distancia segun el promedio de la arc-len de las trayectorias
 #start, last know (x,y,l), indices del los goals de inicio y fin, unitMat, numero de pasos
-def get_prediction_set(lastKnownPoint, finishPoint, unit, stepUnit):
+def get_prediction_set(lastKnownPoint, finishPoint, distUnit, stepUnit):
     x, y, l = lastKnownPoint[0], lastKnownPoint[1], lastKnownPoint[2] 
     _x, _y = finishPoint[0], finishPoint[1]
-    dist = math.sqrt( (_x-x)**2 + (_y-y)**2 )
-    steps = int(dist*stepUnit)
+    
+    euclideanDist = euclidean_distance([x,y], [_x,_y])
+    dist = euclideanDist*distUnit
+    
+    numSteps = int(dist*stepUnit)    
     newset = []
-    if(steps > 0):    
-        step = dist/float(steps)
-        for i in range(steps+1):
-            newset.append( l + i*step*unit )
+    if(numSteps > 0):    
+        step = dist/float(numSteps)
+        for i in range(numSteps+1):
+            newset.append( l + i*step )
         
-    return newset, l + dist*unit 
+    return newset, l + dist
     
 def get_prediction_set_given_size(lastKnownPoint, finishPoint, unit, steps):
     x, y, l = lastKnownPoint[0], lastKnownPoint[1], lastKnownPoint[2] 
@@ -530,82 +523,12 @@ def prediction_XY_of_set_of_trajectories(x, y, z, newZ, kernel_x, kernel_y):#pre
     return predicted_x, predicted_y,variance_x, variance_y
 
 
-def get_goal_center_and_boundaries(goal):
-    points = []
-    p = middle_of_area(goal)
-    points.append(p)
-    lenX = goal[len(goal) -2] - goal[0]
-    lenY = goal[len(goal) -1] - goal[1]
-    q1 = [p[0]-lenX/2, p[1]]
-    q2 = [p[0], p[1]+lenY/2]
-    q3 = [p[0]+lenX/2, p[1]]
-    q4 = [p[0], p[1]-lenY/2]
-    points.append(q1)
-    points.append(q2)
-    points.append(q3)
-    points.append(q4)
-    return points
-    
-#Mean error (mx,my) de los valores reales con los predichos
-def meanError(trueX, trueY, predX, predY):
-    e = [0,0]
-    lp, l = len(predX), len(trueX)
-    for i in range(lp):
-        e[0] += abs(trueX[l-1-i]-predX[lp-1-i])
-        e[1] += abs(trueY[l-1-i]-predY[lp-1-i]) 
-    e[0] = e[0]/len(predX)
-    e[1] = e[1]/len(predY)   
-    return e
-    
-def geometricError(trueX, trueY, predX, predY):
-    e = 0
-    lp, l = len(predX), len(trueX)
-    for i in range(lp):
-        e += math.sqrt((trueX[l-1-i]-predX[lp-1-i])**2 + (trueY[l-1-i]-predY[lp-1-i])**2)
-    return e
-    
-def geomError(meanError):
-    Ex, Ey = 0, 0
-    for i in range(len(meanError)):
-        Ex += meanError[i][0]
-        Ey += meanError[i][1]
-    Ex = Ex/len(meanError) 
-    Ey = Ey/len(meanError)
-    return math.sqrt(Ex**2+Ey**2)
-
-def getError(trueX, trueY, predX,predY):
-    for i in range(len(predX)):
-        if(i == 0):
-            error = [meanError(trueX[i],trueY[i],predX[i],predY[i])]
-        else:
-            error.append(meanError(trueX[i],trueY[i],predX[i],predY[i]))    
-    return error
-   
-#Average L2 distance between ground truth and our prediction
-def average_displacement_error(true_XY, prediction_XY):
-    error = 0.
-    trueX, trueY = true_XY[0], true_XY[1]
-    predictionX, predictionY = prediction_XY[0], prediction_XY[1]
-    l = min(len(trueX),len(predictionX))
-    for i in range(l):
-        error += math.sqrt((trueX[i]-predictionX[i])**2 + (trueY[i]-predictionY[i])**2)
-    if(l>0):
-        error = error/l
-    return error
-    
-#The distance between the predicted final destination and the true final destination
-def final_displacement_error(final, predicted_final):
-    error = math.sqrt((final[0]-predicted_final[0])**2 + (final[1]-predicted_final[1])**2)
-    return error
-    
 #Toma N-nPoints como datos conocidos y predice los ultimos nPoints, regresa el error de la prediccion
 def prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goal,unit,stepUnit,kernelX,kernelY):
-    knownN = len(knownX)    
-    trueX, trueY, trueL = [], [], []
-    for i in range(knownN -nPoints):
-        trueX.append(knownX[i])
-        trueY.append(knownY[i])
-        trueL.append(knownL[i])
+    knownN = len(knownX)   
+    trueX = knownX[0:knownN -nPoints]
+    trueY = knownY[0:knownN -nPoints]
+    trueL = knownL[0:knownN -nPoints]
     
     finishXY = middle_of_area(goal)        
     finishD = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
@@ -613,11 +536,9 @@ def prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goal,unit
     trueY.append(finishXY[1])
     trueL.append(finishD*unit)
     
-    lastX, lastY, predictionSet = [],[],[]
-    for i in range(knownN -nPoints, knownN):
-        lastX.append(knownX[i])
-        lastY.append(knownY[i])
-        predictionSet.append(knownL[i])
+    lastX = knownX[knownN -nPoints: nPoints]
+    lastY = knownY[knownN -nPoints: nPoints]
+    predictionSet = knownL[knownN -nPoints: nPoints]
     
     predX, predY, varX,varY = prediction_XY(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
     #print("[Prediccion]\n",predX)
@@ -630,11 +551,10 @@ def prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goal,unit
 def prediction_error_of_points_along_the_path(nPoints,knownX,knownY,knownL,goal,unit,stepUnit,kernelX,kernelY):
     knownN = len(knownX)
     halfN = int(knownN/2)
-    trueX, trueY, trueL = [], [], []
-    for i in range(halfN):
-        trueX.append(knownX[i])
-        trueY.append(knownY[i])
-        trueL.append(knownL[i])
+    
+    trueX = knownX[0:halfN]
+    trueY = knownY[0:halfN]
+    trueL = knownL[0:halfN]
     
     finishXY = middle_of_area(goal)        
     finishD = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
@@ -654,5 +574,12 @@ def prediction_error_of_points_along_the_path(nPoints,knownX,knownY,knownL,goal,
 
     return error
         
+"""ARC LENGHT TO TIME"""
+def arclen_to_time(initTime,l,speed):
+    t = [initTime]
+    for i in range(1,len(l)):
+        time_i = int(t[i-1] +(l[i]-l[i-1])/speed)
+        t.append(time_i)
+    return t
 
 #******************************************************************************#
