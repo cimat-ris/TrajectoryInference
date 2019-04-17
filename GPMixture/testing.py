@@ -17,7 +17,7 @@ import GPRlib
 from copy import copy
 
     
-def trajectory_prediction_test_using_sampling(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,samplingAxis):
+def trajectory_prediction_test_using_sampling(img,x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,samplingAxis):
     kernelX = kernelMatX[startG][finishG]
     kernelY = kernelMatY[startG][finishG]
     
@@ -33,7 +33,7 @@ def trajectory_prediction_test_using_sampling(x,y,l,knownN,startG,finishG,goals,
     trueL.append(final_l)
     
     newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
-    return newX, newY, varX, varY
+    plot_prediction(img,x,y,knownN,newX,newY,varX,varY)
 
 def trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY):
     kernelX = kernelMatX[startG][finishG]
@@ -43,9 +43,11 @@ def trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUni
     lastKnownPoint = [x[knownN-1], y[knownN-1], l[knownN-1] ]
     unit = unitMat[startG][finishG]
     
+    print("last known point:",lastKnownPoint)
     finalPoints = get_goal_center_and_boundaries(goals[finishG])
     
-    newL, finalL = get_prediction_set_given_size(lastKnownPoint,finalPoints[0],unit,20)#get_prediction_set(lastKnownPoint,finalPoints[0],unit,stepUnit)
+    #newL, finalL = get_prediction_set_given_size(lastKnownPoint,finalPoints[0],unit,20)
+    newL, finalL = get_prediction_set(lastKnownPoint,finalPoints[0],unit,stepUnit)
     finalArcLen = []
     for i in range(1):#len(finalPoints)):
         finalArcLen.append(get_arclen_to_finish_point(lastKnownPoint,finalPoints[i],unit))
@@ -54,7 +56,7 @@ def trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUni
         trueL.append(finalArcLen[i])
         
     newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
-    return newX, newY, varX, varY
+    return newX, newY, varX, varY, newL
     
 
 def subgoal_prediction(x,y,l,knownN,subgoal,unit,stepUnit,kernelX,kernelY):
@@ -95,8 +97,7 @@ def trajectory_subgoal_prediction_test(img,x,y,l,knownN,startG,finishG,goals,uni
         predictedXYVec.append([predX,predY])
         varXYVec.append([varX,varY])
     
-    elipse = size
-    plot_subgoal_prediction(img,trueX,trueY,knownN,nSubgoals,predictedXYVec,varXYVec,elipse)
+    plot_subgoal_prediction(img,x,y,knownN,nSubgoals,predictedXYVec,varXYVec)
 
 def subgoal_prediction_test(nSubgoals,x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,samplingAxis):
     kernelX = kernelMatX[startG][finishG]
