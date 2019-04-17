@@ -12,109 +12,17 @@ from matplotlib.patches import Ellipse
 from copy import copy
     
 #******************************************************************************#
-# Lectura de los nombres de los archivos de datos
-def readDataset(name):   
-    file = open(name,'r')
-    lines = file.readlines()
-    for i in range(len(lines)):
-        lines[i] = lines[i].strip("\n")
-    return lines
-    
-def getKnownData(x,y,z,percent):
-    trueX, trueY, trueZ = [],[],[]
-    for j in range(len(x)):
-        M = int(len(x[j])*percent)  
-        if M == 0:
-            return [],[],[]
-        auxX, auxY, auxZ = np.zeros(M), np.zeros(M), np.zeros(M)
-        for i in range(M):
-            auxX[i] = x[j][i]
-            auxY[i] = y[j][i]
-            auxZ[i] = z[j][i]
-        if len(x[j]) > 0:
-            auxX[M-1] = x[j][len(x[j])-1]
-            auxY[M-1] = y[j][len(y[j])-1]
-            auxZ[M-1] = z[j][len(z[j])-1]
-
-        trueX.append(auxX)
-        trueY.append(auxY)
-        trueZ.append(auxZ)
-    
-    return trueX, trueY, trueZ
-         
-def get_known_data(x,y,z,N):
-    trueX, trueY, trueZ = [],[],[]
-    for i in range(N):
-        trueX.append(x[i])
-        trueY.append(y[i])
-        trueZ.append(z[i])
-    
-    return trueX, trueY, trueZ
-    
-def most_likely_goals(likelihood, nGoals):
-    next_goals = []
-    likely = copy(likelihood)
-    for i in range(2):
-        maxVal = 0
-        maxInd = 0
-        for j in range(nGoals):
-            if likely[j] > maxVal:
-                maxVal = likely[j]
-                maxInd = j
-        next_goals.append(maxInd)
-        likely[maxInd] = 0
-    return next_goals
-    
-def get_number_of_steps_unit(Mat, nGoals):
-    unit = 0.0
-    numUnits = 0
-    for i in range(nGoals):
-        for j in range(nGoals):
-            numPaths = len(Mat[i][j])
-            meanU = 0.0
-            for k in range(numPaths):
-                path = Mat[i][j][k]
-                l = path.l[len(path.l)-1]
-                if(l == 0):
-                    numPaths -= 1
-                else: 
-                    stps = len(path.l)
-                    u = stps/l
-                    meanU += u
-            if(numPaths > 0):
-                meanU = meanU/numPaths
-            if(meanU >0):
-                unit += meanU
-                numUnits += 1
-    unit = unit/numUnits
-    #print("mean mean unit:", unit)
-    return unit
-    
-def copy_unitMat(unitMat, nGoals, nSubgoals):
-    mat = []
-    m = int(nSubgoals/nGoals)
-    for i in range(nGoals):
-        r = []
-        for j in range(nSubgoals):
-            k = int(j/m)
-            r.append(unitMat[i][k])
-        mat.append(r)
-    return mat
-        
-#******************************************************************************#
     
 def single_goal_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,goalSamplingAxis): 
-    predictedX, predictedY, varX, varY = trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY) 
-    lenX = goals[finishG][len(goals[finishG]) -2] - goals[finishG][0]
-    lenY = goals[finishG][len(goals[finishG]) -1] - goals[finishG][1]
-    elipse = [lenX, lenY]
+    predictedX, predictedY, varX, varY, newL = trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY) 
+    initTime = knownTime[knownN-1]
+    time = arclen_to_time(initTime,newL,speed)
+    #print("[newL]:",newL)
+    #print("Predictions:\n x:",predictedX,"\ny:",predictedY,"\nl:",newL)
+    print("[Arclen to Time]:",time)
+    #plot_prediction(img,x,y,knownN,predictedX, predictedY,varX,varY)
     
-    plot_prediction(img,x,y,knownN,predictedX, predictedY,varX,varY,elipse)
-    
-def get_error_of_final_point_comparing_k_steps(k,trajectorySet,startG,finishG,goals,unitMat,meanLenMat):
-    kernelX = kernelMat_x[startG][finishG]
-    kernelY = kernelMat_y[startG][finishG]
-
+def get_error_of_final_point_comparing_k_steps(k,trajectorySet,startG,finishG,goals,unitMat,meanLenMat,kernelX,kernelY):
     meanError = 0.0    
     for i in range( len(trajectorySet) ):
         x = trajectorySet[i].x
@@ -133,7 +41,7 @@ def get_error_of_final_point_comparing_k_steps(k,trajectorySet,startG,finishG,go
     meanError /= len(trajectorySet)
     return meanError
     
-def choose_number_of_steps_and_samples(trajectorySet,startG,finishG,goals,unitMat,meanLenMat):
+def choose_number_of_steps_and_samples(trajectorySet,startG,finishG,goals,unitMat,meanLenMat,kernelX,kernelY):
     errorVec = []    
     stepsVec = []
     samplesVec = []
@@ -141,7 +49,7 @@ def choose_number_of_steps_and_samples(trajectorySet,startG,finishG,goals,unitMa
     samples = 1
     for i in range(20):
         samplesVec.append(samples)
-        error = get_error_of_final_point_comparing_k_steps(samples,trajectorySet,startG,finishG,goals,unitMat,meanLenMat)
+        error = get_error_of_final_point_comparing_k_steps(samples,trajectorySet,startG,finishG,goals,unitMat,meanLenMat,kernelX,kernelY)
         errorVec.append(error)
         samples += 1
         
@@ -184,29 +92,18 @@ R3 = [1450,950,1800,950,1450,1080,1800,1080]#amarillo
 R4 = [100,950,500,950,100,1080,500,1080] #naranja
 R5 = [300,210,450,210,300,400,450,400] #rosa
 goalSamplingAxis = ['x','x','y','x','x','y']
-#R6 = [750,460,1050,460,750,730,1050,730] #rojo
 #Arreglo que contiene las areas de interes
 areas = [R0,R1,R2,R3,R4,R5]
 nGoals = len(areas)
-"""
-subgoals =[r00,r01,r02,r03, r10,r11,r12,r13, r20,r21,r22,r23, r30,r31,r32,r33, r40,r41,r42,r43, r50,r51,r52,r53] #[r00,r01,r10,r11,r20,r21,r30,r31,r40,r41,r50,r51]
-nSubgoals = len(subgoals)
-subgoalSamplingAxis = []
-for i in range(nGoals):
-    for j in range(4):
-        subgoalSamplingAxis.append(goalSamplingAxis[i])
-#print("subG sampling axis:", subgoalSamplingAxis)
-"""
 img = mpimg.imread('imgs/goals.jpg')  
 
 #Al leer cortamos las trayectorias multiobjetivos por pares consecutivos 
 #y las agregamos como trayectorias independientes 
-true_paths, multigoal = get_paths_from_file('datasets/CentralStation_paths_10000.txt',areas)
-usefulPaths = getUsefulPaths(true_paths,areas)
+dataPaths, multigoal = get_paths_from_file('datasets/CentralStation_paths_10000.txt',areas)
+usefulPaths = getUsefulPaths(dataPaths,areas)
 #plotPaths(usefulPaths, img)
-#print("useful paths: ",len(usefulPaths))
-#Histograma    
-#histogram(true_paths,"duration")
+#print("number of useful paths: ",len(usefulPaths)) 
+#histogram(dataPaths,"duration")
 """
 Matrices útiles:
 - pathMat: Quita las trayectorias que se alejan de la media del conjunto que va de g_i a g_j
@@ -220,13 +117,14 @@ startToGoalPath, arclenMat = define_trajectories_start_and_end_areas(areas,areas
 pathMat, learnSet = filter_path_matrix(startToGoalPath, nGoals, nGoals)
 meanLenMat = get_mean_length(pathMat, nGoals)
 euclideanDistMat = get_euclidean_goal_distance(areas, nGoals)
-unitMat = get_unit(meanLenMat, euclideanDistMat, nGoals)
+unitMat, distUnit = get_distance_unit(meanLenMat, euclideanDistMat, nGoals)
 stepUnit = 0.0438780780171 #get_number_of_steps_unit(pathMat, nGoals)
+speed = 1.65033755511      #get_pedestrian_average_speed(dataPaths)
+priorLikelihoodMat = prior_probability_matrix(pathMat, nGoals)
+#print("speed:",speed)
 #print("***arc-len promedio***\n", meanLenMat)
 #print("***distancia euclidiana entre goals***\n", euclideanDistMat)
-#print("***unidades de distancia***\n", unitMat)
-priorLikelihoodMat = prior_probability_matrix(pathMat, nGoals)
-#print("likelihood mat:", priorLikelihoodMat)
+#print("Prior likelihood matrix:", priorLikelihoodMat)
 """
 #***********APRENDIZAJE***********
 print("***********INICIO APRENDIZAJE*********")
@@ -240,64 +138,46 @@ print("***********FIN DEL APRENDIZAJE*********")
 kernelMat_x = read_and_set_parameters("parameters_x.txt",nGoals,nGoals,2)
 kernelMat_y = read_and_set_parameters("parameters_y.txt",nGoals,nGoals,2)
 
-"""***********TRAYECTORIAS SUBGOALS***********"""
-"""
-subgoalStartToGoalPath, subgoalsArclenMat = define_trajectories_start_and_end_areas(areas,subgoals,usefulPaths)
-subgoalsPathMat, sublearnSet = filter_path_matrix(subgoalStartToGoalPath, nGoals, nSubgoals)
-
-#***********APRENDIZAJE SUBGOALS***********
-print("***********INICIO APRENDIZAJE*********")
-subgoalsKernelMat, subgoalsParametersMat = create_kernel_matrix("combined", nGoals, nSubgoals)
-subgoalsKernelMatX, subgoalsKernelMatY = optimize_parameters_between_goals(subgoalsPathMat, subgoalsParametersMat, nGoals, nSubgoals)
-write_parameters(subgoalsKernelMatX,nGoals,nSubgoals,"subgoalsParameters_x.txt")
-write_parameters(subgoalsKernelMatY,nGoals,nSubgoals,"subgoalsParameters_y.txt")
-print("***********FIN DEL APRENDIZAJE*********")
-
-#fijamos los parámetros para cada matriz de kernel
-subgoalsKernelMat_x = read_and_set_parameters("subgoalsParameters_x.txt",nGoals,nSubgoals,2)
-subgoalsKernelMat_y = read_and_set_parameters("subgoalsParameters_y.txt",nGoals,nSubgoals,2)
-subgoalsUnitMat = copy_unitMat(unitMat, nGoals, nSubgoals); 
-"""
 #Test dado el goal de inicio y fin
-startG = 0
-nextG = 2
+startG = 1
+nextG = 3
 kernelX = kernelMat_x[startG][nextG]
 kernelY = kernelMat_y[startG][nextG]
 
-traj_id = 3 #indice de la trayectoria a predecir
-traj = pathMat[startG][nextG][traj_id]
-traj_len = len(traj.x) #total de observaciones de la trayectoria
-traj_arclen = traj.length #arreglo de la longitud de arco correspondiente a las observaciones 
-#likelihoodVector, error_vector = [], []
-arclen_vec = []
-
+pathId = 3 #indice de la trayectoria a predecir
+_path = pathMat[startG][nextG][pathId]
+pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t #datos de la trayectoria
+pathSize = len(pathX)   #longitud total de la trayectoria
+#print("[pathT]",pathT)
+arcLenToTime = arclen_to_time(320,pathL,speed)
+#print("[time]",arcLenToTime)
+#print("mean error:", mean_error(pathT,arcLenToTime))
+#print("[path data]:\n [x]:",pathX,"\n[y]:",pathY,"\n[l]:",pathL,"\n[t]:",pathT)
 #El conjunto de datos observados se parte en part_num
-#al hacer la prediccion se toma el porcentaje k/part_num como datos conocidos y se predice el resto
+#al hacer la prediccion se toma el porcentaje i/part_num como datos conocidos y se predice el resto
 part_num = 8
 steps = 10
-
-for i in range(3,part_num-4):
-    arclen_vec.append( (i+1)*(traj_arclen/float(part_num))  )
-    knownN = int((i+1)*(traj_len/part_num)) #numero de datos conocidos
-    #print("num de datos conocidos:", knownN)
-    trueX,trueY,trueL = get_known_set(traj.x,traj.y,traj.l,knownN)
-    #likelihood, error = get_goals_likelihood(trueX,trueY,trueL,startG,kernelMat_x,kernelMat_x,areas,nGoals)
-    #likelihoodVector.append(likelihood)  
-    #error_vector.append(error)
-    #likely_goals = most_likely_goals(likelihood, nGoals)
+for i in range(5,part_num-2):
+    knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
+    trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
     """Simple prediction test"""
-    #single_goal_prediction_test(traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
-    #trajectory_subgoal_prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
-    #prediction_test(img,traj.x,traj.y,traj.l,knownN,startG,nextG,areas,unitMat,meanLenMat,steps,kernelMat_x,kernelMat_y)
+    knownTime = pathT[0:knownN]
+    #print("[known time]:",knownTime)
+    rT = pathT[knownN:pathSize]
+    print("[real time]:",rT)
+    single_goal_prediction_test(pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
+    
+    #trajectory_subgoal_prediction_test(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
+    #trajectory_prediction_test_using_sampling(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
+    #prediction_test(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,meanLenMat,steps,kernelMat_x,kernelMat_y)
     """Multigoal prediction test"""    
     #multigoal_prediction_test(img,trueX,trueY,trueL,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorLikelihoodMat,goalSamplingAxis)
-    plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,middle_of_area(areas[nextG]))
-    #prediction_test_over_time(traj.x,traj.y,traj.t,knownN,start[0],nextG[0],areas)
+    #plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,middle_of_area(areas[nextG]))
+    #prediction_test_over_time(pathX,pathY,pathT,knownN,start[0],nextG[0],areas)
 
-#compare_error_goal_to_subgoal_test(img,traj.x,traj.y,traj.l,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
+#compare_error_goal_to_subgoal_test(img,pathX,pathY,pathL,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
 
 #plot_subgoals(img,areas[2],3,goalSamplingAxis[2])
-
 """
 for i in range(0):#1,nGoals):
     for j in range(nGoals):
