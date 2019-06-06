@@ -13,7 +13,6 @@ from statistics import*
 import matplotlib.pyplot as plt
 import numpy as np
 import math
-import GPRlib
 from copy import copy
 
     
@@ -35,7 +34,7 @@ def trajectory_prediction_test_using_sampling(img,x,y,l,knownN,startG,finishG,go
     newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
     plot_prediction(img,x,y,knownN,newX,newY,varX,varY)
 
-def trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY):
+def trajectory_prediction_test(img,x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,linearPriorMatX,linearPriorMatY):
     kernelX = kernelMatX[startG][finishG]
     kernelY = kernelMatY[startG][finishG]
     
@@ -43,7 +42,7 @@ def trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUni
     lastKnownPoint = [x[knownN-1], y[knownN-1], l[knownN-1] ]
     unit = unitMat[startG][finishG]
     
-    print("last known point:",lastKnownPoint)
+    #print("last known point:",lastKnownPoint)
     finalPoints = get_goal_center_and_boundaries(goals[finishG])
     
     #newL, finalL = get_prediction_set_given_size(lastKnownPoint,finalPoints[0],unit,20)
@@ -56,6 +55,13 @@ def trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUni
         trueL.append(finalArcLen[i])
         
     newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
+    #line prior prediction
+    priorMeanX = linearPriorMatX[startG][finishG]
+    priorMeanY = linearPriorMatY[startG][finishG]
+    #newX,newY,varX,varY = prediction_XY_lp(trueX,trueY,trueL,newL,kernelX,kernelY,priorMeanX,priorMeanY) 
+        
+    
+    plot_prediction(img,x,y,knownN,newX,newY,varX,varY)
     return newX, newY, varX, varY, newL
     
 
@@ -135,7 +141,7 @@ def compare_error_goal_to_subgoal_test(img,x,y,l,startG,finishG,goals,unitMat,st
             trueX.append(x[j])
             trueY.append(y[j])
     
-        goalPredX, goalPredY, goalVarX, goalVarY = trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
+        goalPredX, goalPredY, goalVarX, goalVarY = trajectory_prediction_test(img,x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
         subPredXYVec, subVarXYVec = subgoal_prediction_test(nSubgoals,x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,samplingAxis)
         plot_prediction(img,x,y,knownN,goalPredX, goalPredY, goalVarX, goalVarY,[0,0])
         plot_subgoal_prediction(img,x,y,knownN,nSubgoals,subPredXYVec,subVarXYVec,[0,0])        
@@ -251,25 +257,25 @@ def multigoal_prediction_test(img,x,y,l,knownN,startG,goals,unitMat,stepUnit,ker
         unit = unitMat[startG][i]
         kernelX = kernelMatX[startG][i]
         kernelY = kernelMatY[startG][i]
-        error = prediction_error_of_points_along_the_path(nPoints,trueX,trueY,trueL,goals[i],unit,stepUnit,kernelX,kernelY)
+        error = prediction_error_of_points_along_the_path(nPoints,trueX,trueY,trueL,goals[i],unit,kernelX,kernelY)
         #error = prediction_error_of_last_known_points(nPoints,trueX,trueY,trueL,goals[i],unit,stepUnit,kernelX,kernelY)
         #error = get_goal_likelihood(trueX,trueY,trueL,startG,i,goals,unitMat,kernelMatX,kernelMatY)
         errorG.append(error)
         
+    print("[Prediction Error]\n",errorG)
     norma = np.linalg.norm(errorG)
-    errorG = errorG/norma
-    D = 20.
+    #errorG = errorG/norma
+    D = 150.
     for i in range(len(goals)):
-        val = priorLikelihood[startG][i]*(math.exp(-1.*(errorG[i]**2)/D**2 ))#   *(1.-errorG[i])
+        val = priorLikelihood[startG][i]*(math.exp(-1.*( errorG[i]**2)/D**2 ))#   *(1.-errorG[i])
         goalsLikelihood.append(val)
         
-    meanLikelihood = 0.#0.85*mean(goalsLikelihood)
+    meanLikelihood = 0.85*mean(goalsLikelihood)
     for i in range(len(goals)):
         if(goalsLikelihood[i] > meanLikelihood):
             likelyGoals.append(i)   
         
     #print("\n[Prior likelihood]\n",priorLikelihood[startG])
-    #print("[Prediction Error]\n",errorG)
     print("[Goals likelihood]\n",goalsLikelihood)
     print("[Mean likelihood]:", meanLikelihood)
     nSubgoals = 2
