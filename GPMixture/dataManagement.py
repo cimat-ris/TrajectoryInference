@@ -168,15 +168,15 @@ def filter_path_vec(vec):
 
 #Arreglo de NxNxM_ij
 #N = num de goals, M_ij = num de paths de g_i a g_j
-def filter_path_matrix(M, nRows, nColumns):#nGoals):
+def filter_path_matrix(M, nRows, mColumns):#nGoals):
     learnSet = []
-    mat = np.empty((nRows, nColumns),dtype=object) 
+    mat = np.empty((nRows, mColumns),dtype=object) 
     for i in range(nRows):
-        for j in range(nColumns):
+        for j in range(mColumns):
             mat[i][j]=[]    
     
     for i in range(nRows):
-        for j in range(nColumns):
+        for j in range(mColumns):
             if(len(M[i][j]) > 0):
                 aux = filter_path_vec(M[i][j])
             for m in range(len(aux)):
@@ -464,6 +464,74 @@ def get_pedestrian_average_speed(paths):
     avSpeed = speed/ validPaths
     return avSpeed
 
+
+""" LINEAR PRIOR MEAN"""
+#f(l) = al + b, la funcion regresa a y b
+def get_line_parameters(path, flag):
+    n = len(path.l)
+    ln = path.l[n-1]
+    if(ln == 0):
+        return 0., 0.
+    if(flag == 'x'):
+        b = path.x[0]
+        a = (path.x[n-1]-b)/ln
+    if(flag == 'y'):
+        b = path.y[0]
+        a = (path.y[n-1]-b)/ln
+    return a, b
+    
+def get_line_covariance(lineParameters, mean):
+    n = len(lineParameters)
+    sum_ = 0.
+    for i in range(n):
+        sum_ += (lineParameters[i][0] - mean[0])*(lineParameters[i][1] - mean[1])
+    cov = sum_/n-1
+    return cov
+
+def get_line_precision(lineParameters, mean):
+    n = len(lineParameters)
+    sum_a, sum_b = 0., 0.
+    for i in range(n):
+        sum_a += (lineParameters[i][0] - mean[0])**2
+        sum_b += (lineParameters[i][1] - mean[1])**2
+    var = [sum_a/n, sum_b/n]
+    precision = [1./var[0],1./var[1]]
+    return precision
+    
+#Recibe un conjunto de trayectorias y una bandera que indica si el GP es en x o y
+def get_linear_prior_mean(paths, flag):
+    n = len(paths)
+    if(n == 0):
+        #print("[mean]:",[0.,0.])
+        return [0.,0.]
+    
+    lineParameters = []
+    sum_a = 0.
+    sum_b = 0.  
+    for i in range(n):
+        a, b = get_line_parameters(paths[i], flag)
+        lineParameters.append([a,b])        
+        sum_a += a
+        sum_b += b
+    mean = [sum_a/n, sum_b/n]
+    cov = get_line_covariance(lineParameters, mean)
+    precision = get_line_precision(lineParameters, mean)
+    
+    #print("[mean]:",mean)
+    return mean
+    
+def get_linear_prior_mean_matrix(pathMat, nGoals, mGoals):    
+    matX = np.empty((nGoals, mGoals),dtype=object)     
+    matY = np.empty((nGoals, mGoals),dtype=object) 
+    for i in range(nGoals):     #rows
+        for j in range(mGoals): #columns
+            #print("[",i,",",j,"]")
+            meanX = get_linear_prior_mean(pathMat[i][j], 'x')
+            meanY = get_linear_prior_mean(pathMat[i][j], 'y')
+            matX[i][j] = meanX
+            matY[i][j] = meanY
+    return matX, matY
+
 """ HELPFUL FUNCTIONS"""    
 def equal(vx,vy,x,y):
     N = len(vx)
@@ -553,11 +621,14 @@ def getError(trueX, trueY, predX,predY):
 #Average L2 distance between ground truth and our prediction
 def average_displacement_error(true_XY, prediction_XY):
     error = 0.
+    #print("\ntrue:",true_XY)
+    #print("pred:",prediction_XY)
     trueX, trueY = true_XY[0], true_XY[1]
     predictionX, predictionY = prediction_XY[0], prediction_XY[1]
     l = min(len(trueX),len(predictionX))
     for i in range(l):
         error += math.sqrt((trueX[i]-predictionX[i])**2 + (trueY[i]-predictionY[i])**2)
+        #print("error:",math.sqrt((trueX[i]-predictionX[i])**2 + (trueY[i]-predictionY[i])**2))
     if(l>0):
         error = error/l
     return error
