@@ -53,12 +53,13 @@ def trajectory_prediction_test(img,x,y,l,knownN,startG,finishG,goals,unitMat,ste
         trueX.append(finalPoints[i][0])    
         trueY.append(finalPoints[i][1])
         trueL.append(finalArcLen[i])
-        
-    newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
+     
+    #regular prediction
+    #newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY) 
     #line prior prediction
     priorMeanX = linearPriorMatX[startG][finishG]
     priorMeanY = linearPriorMatY[startG][finishG]
-    #newX,newY,varX,varY = prediction_XY_lp(trueX,trueY,trueL,newL,kernelX,kernelY,priorMeanX,priorMeanY) 
+    newX,newY,varX,varY = prediction_XY_lp(trueX,trueY,trueL,newL,kernelX,kernelY,priorMeanX,priorMeanY) 
         
     
     plot_prediction(img,x,y,knownN,newX,newY,varX,varY)
