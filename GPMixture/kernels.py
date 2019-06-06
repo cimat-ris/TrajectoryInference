@@ -67,7 +67,7 @@ class noiseKernel(Kernel):
             
 #kernel del Trautman
 #kernel combinado: matern + lineal + ruido
-class _combinedKernel(Kernel):
+class combinedKernel(Kernel):
     def __init__(self, gamma, s, l, sigma):
         self.gamma = gamma
         self.s = s
@@ -87,12 +87,16 @@ class _combinedKernel(Kernel):
     def k(self,x,y):
         return self.matern.k(x,y) + self.linear.k(x,y) + self.noise.k(x,y) 
         
+    def get_parameters(self):
+        parameters = [self.gamma, self.s, self.l]
+        return parameters
+        
     def print_parameters(self):
         print("combined kernel parameters\n gamma =",self.gamma,"\n s =",self.s,", l = ",self.l)
         
 #kernel modificado para la optimizacion, quitamos el parametro gamma
 #kernel combinado:  lineal + matern + ruido
-class combinedKernel(Kernel):
+class combinedKernelModified(Kernel):
     def __init__(self, s, l, sigma):
         self.s = s
         self.l = l
@@ -209,4 +213,69 @@ class expKernel(Kernel):
     def k(self,x,y):
         return self.exponential.k(x,y) + self.noise.k(x,y)
         
-     
+"""************************************"""
+#kernel considerando el line prior
+
+#kernel Trautman
+class linePriorLinearKernel(Kernel):
+    def __init__(self, gamma_a, gamma_0):
+        self.gamma_a = gamma_a
+        self.gamma_0 = gamma_0
+        self.gamma_non_zero()
+        
+    def setParameters(self,vec):
+        self.gamma_a = vec[0]   
+        self.gamma_0 = vec[1] 
+        self.gamma_non_zero()
+
+    def gamma_non_zero(self):
+        if(self.gamma_a == 0.):
+            self.gamma_a = 0.05
+        if(self.gamma_0 == 0.):
+            self.gamma_0 = 0.05
+            
+    def k(self,x,y):
+        return (1./self.gamma_a)*x*y + 1./self.gamma_0
+        
+    def get_parameters(self):
+        parameters = [self.gamma_a, self.gamma_0]
+        return parameters
+        
+#kernel combinado considerando el line prior
+class linePriorCombinedKernel(Kernel):
+    def __init__(self, gamma_a, gamma_0, s, l, sigma):
+        self.gamma_a = gamma_a
+        self.gamma_0 = gamma_0
+        self.gamma_non_zero()
+        self.s = s
+        self.l = l
+        self.linear = linePriorLinearKernel(gamma_a, gamma_0)
+        self.matern = maternKernel(s,l)
+        self.noise = noiseKernel(sigma)
+        
+    def setParameters(self,vec):
+        self.gamma_a = vec[0]
+        self.gamma_0 = vec[1]
+        self.gamma_non_zero()
+        self.s = vec[2]
+        self.l = vec[3]
+        self.linear.setParameters(vec)
+        mV = [self.s, self.l]
+        self.matern.setParameters(mV)
+
+    def gamma_non_zero(self):
+        if(self.gamma_a == 0.):
+            self.gamma_a = 0.05
+        if(self.gamma_0 == 0.):
+            self.gamma_0 = 0.05
+
+    def k(self,x,y):
+        return self.matern.k(x,y) + self.linear.k(x,y) + self.noise.k(x,y) 
+    
+    def get_parameters(self):
+        parameters = [self.gamma_a, self.gamma_0, self.s, self.l]
+        return parameters
+        
+    def print_parameters(self):
+        print("combined kernel parameters\n gamma_a =",self.gamma_a,"\n gamma_0",self.gamma_0,"\n s =",self.s,", l = ",self.l)
+      
