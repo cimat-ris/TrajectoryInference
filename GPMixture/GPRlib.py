@@ -56,10 +56,10 @@ def setKernel(name):
     if(name == "squaredExponential"):
         parameters = [80., 80.] #{sigma_f, l}
         kernel = kernels.squaredExponentialKernel(parameters[0],parameters[1],nsigma)
-    elif(name == "_combined"): #kernel de Trautman
+    elif(name == "combined"): #kernel de Trautman
         parameters = [60., 80., 80.]#{gamma, sMatern, lMatern}, sigma
-        kernel = kernels._combinedKernel(parameters[0],parameters[1],parameters[2],nsigma)
-    elif(name == "combined"): #kernel simplificado para la optimizacion
+        kernel = kernels.combinedKernel(parameters[0],parameters[1],parameters[2],nsigma)
+    elif(name == "combinedModified"): #kernel simplificado para la optimizacion
         parameters = [50., 50.]#{sMatern, lMatern}, sigma
         kernel = kernels.combinedKernel(parameters[0],parameters[1],nsigma)
     elif(name == "exponential"):
@@ -77,6 +77,10 @@ def setKernel(name):
     elif(name == "expCombined"):
         parameters = [80., 80.] #{s,l}
         kernel = kernels.expKernel(parameters[0],parameters[1],nsigma)
+    elif(name == "linePriorCombined"):
+        parameters = [60., 60., 80., 80.]#{gamma, sMatern, lMatern}, sigma
+        kernel = kernels.linePriorCombinedKernel(parameters[0],parameters[1],parameters[2],parameters[3],nsigma)
+        
     
     return kernel, parameters
 
@@ -138,8 +142,8 @@ def neg_sum_log_p(theta,x,y,kernel):
     
 #elegir parametros que funcionen para un conjunto de trayectorias
 def optimize_kernel_parameters_XY(t,x,y,theta,kernel):#creo que eran 14 it pobar
-    parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='Nelder-Mead', options={'maxiter':15,'disp': False})
-    parametersY = minimize(neg_sum_log_p,theta,(t,y,kernel),method='Nelder-Mead', options={'maxiter':15,'disp': False})
+    parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='Nelder-Mead', options={'maxiter':16,'disp': False})
+    parametersY = minimize(neg_sum_log_p,theta,(t,y,kernel),method='Nelder-Mead', options={'maxiter':16,'disp': False})
         
     return parametersX.x, parametersY.x
   
@@ -162,18 +166,17 @@ def optimize_parameters_between_2goals(learnSet, kernelMat, parametersMat, start
 #Aprendizaje para cada par de trayectorias 
 #Regresa una matriz de kernels con los parametros optimizados  
 #learnSet = [[(start_i,goal_j)]], kernelMat = [[k_ij]], thetaMat = [[parametros del kernel_ij]]
-def optimize_parameters_between_goals_(learnSet, parametersMat, nGoals):
+def optimize_parameters_between_goals_(kernelType, learnSet, nGoals):
     #parameters = []
-    kernelMatX, parametersX = create_kernel_matrix("combined", nGoals)
-    kernelMatY, parametersY = create_kernel_matrix("combined", nGoals)#,  kernelMat, kernelMat 
+    kernelMatX, parametersX = create_kernel_matrix(kernelType, nGoals)
+    kernelMatY, parametersY = create_kernel_matrix(kernelType, nGoals)#,  kernelMat, kernelMat 
     for i in range(nGoals):
         r = []
         for j in range(nGoals):
-            #print("[",i,"][",j,"]")
             paths = learnSet[i][j]
             if len(paths) > 0:
                 x,y,z = get_data_from_paths(paths,"length") 
-                ker, theta = setKernel("combined")
+                ker, theta = setKernel(kernelType)
                 thetaX, thetaY = learning(z,x,y,ker,theta)
                 print("[",i,"][",j,"]")
                 print("x: ",thetaX)
@@ -184,25 +187,23 @@ def optimize_parameters_between_goals_(learnSet, parametersMat, nGoals):
         #parameters.append(r)
     return kernelMatX, kernelMatY
     
-def optimize_parameters_between_goals(learnSet, parametersMat, rows, columns):
-    #parameters = []
-    kernelMatX, parametersX = create_kernel_matrix("combined", rows, columns)
-    kernelMatY, parametersY = create_kernel_matrix("combined", rows, columns)
+def optimize_parameters_between_goals(kernelType, learnSet, rows, columns):
+    kernelMatX, parametersX = create_kernel_matrix(kernelType, rows, columns)
+    kernelMatY, parametersY = create_kernel_matrix(kernelType, rows, columns)
     for i in range(rows):
         r = []
         for j in range(columns):
             paths = learnSet[i][j]
             if len(paths) > 0:
                 x,y,z = get_data_from_paths(paths,"length") 
-                ker, theta = setKernel("combined")        
+                ker, theta = setKernel(kernelType)        
                 thetaX, thetaY = learning(z,x,y,ker,theta)
                 print("[",i,"][",j,"]")
                 print("x: ",thetaX)
                 print("y: ",thetaY)
                 kernelMatX[i][j].setParameters(thetaX)                
                 kernelMatY[i][j].setParameters(thetaY)
-                r.append([thetaX, thetaY])                
-        #parameters.append(r)
+                r.append([thetaX, thetaY])  
     return kernelMatX, kernelMatY
     
 #recibe una matriz de kernel [[kij]], con parametros [gamma,s,l]
@@ -231,6 +232,23 @@ def write_parameters(matrix,rows,columns,fileName):
     for i in range(rows):
         for j in range(columns):
             ker = matrix[i][j]
+            parameters = ker.get_parameters()
+            for k in range(len(parameters)):
+                val = "%d "%(parameters[k])
+                f.write(val)  
+            skip = "\n"
+            f.write(skip) 
+    f.close()  
+    
+#recibe una matriz de kernel [[kij]], con parametros [s,l]
+def _write_parameters(matrix,rows,columns,fileName):
+    f = open(fileName,"w")
+    for i in range(rows):
+        for j in range(columns):
+            ker = matrix[i][j]
+            parameters = ker.get_parameters()
+            gamma = "%d "%(ker.gamma)
+            f.write(gamma)    
             s = "%d "%(ker.s)
             f.write(s)    
             l = "%d "%(ker.l)
@@ -239,8 +257,8 @@ def write_parameters(matrix,rows,columns,fileName):
             f.write(skip) 
     f.close()  
     
-def read_and_set_parameters(file_name, rows, columns, nParameters):
-    matrix, parametersMat = create_kernel_matrix("combined", rows, columns)
+def read_and_set_parameters(file_name, rows, columns, kernelType, nParameters):
+    matrix, parametersMat = create_kernel_matrix(kernelType, rows, columns)
     f = open(file_name,'r')
        
     for i in range(rows):
@@ -490,8 +508,9 @@ def get_subgoals_center_and_size(nSubgoals, goal, axis):
 def estimate_new_set_of_values(known_x,known_y,newX,kernel):
     lenNew = len(newX)
     predicted_y, variance_y = [], []
-    
+        
     for i in range(lenNew):
+        #new_y, var_y = line_prior_regression(known_x,known_y,newX[i],kernel) #line prior regression
         new_y, var_y = regression(known_x,known_y,newX[i],kernel)
         predicted_y.append(new_y)
         variance_y.append(var_y)
@@ -502,7 +521,7 @@ def estimate_new_set_of_values(known_x,known_y,newX,kernel):
 #Recibe los datos conocidos (x,y,z) y los puntos para la regresion.
 def prediction_XY(x, y, z, newZ, kernelX, kernelY):#prediction 
     newX, varX = estimate_new_set_of_values(z,x,newZ,kernelX)#prediccion para x
-    newY, varY = estimate_new_set_of_values(z,y,newZ,kernelX)#prediccion para y
+    newY, varY = estimate_new_set_of_values(z,y,newZ,kernelY)#prediccion para y
 
     return newX, newY, varX, varY
     
@@ -548,7 +567,7 @@ def prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goal,unit
     return error
 
 #Toma la mitad de los datos observados como conocidos y predice nPoints en la mitad restante, regresa el error de la prediccion
-def prediction_error_of_points_along_the_path(nPoints,knownX,knownY,knownL,goal,unit,stepUnit,kernelX,kernelY):
+def prediction_error_of_points_along_the_path(nPoints,knownX,knownY,knownL,goal,unit,kernelX,kernelY):
     knownN = len(knownX)
     halfN = int(knownN/2)
     
@@ -569,7 +588,9 @@ def prediction_error_of_points_along_the_path(nPoints,knownX,knownY,knownL,goal,
         realY.append(knownY[halfN + i*d])
         predictionSet.append(knownL[halfN + i*d])
     
+    #predX, predY, varX,varY = prediction_XY(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
     predX, predY, varX,varY = prediction_XY(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
+    
     error = average_displacement_error([realX,realY],[predX,predY])
 
     return error
@@ -583,3 +604,88 @@ def arclen_to_time(initTime,l,speed):
     return t
 
 #******************************************************************************#
+"""***REGRESSION USING LINE PRIOR ***"""
+#TODO
+def linear_mean(l, priorMean):
+    m = priorMean[0]*l + priorMean[1]
+    return m
+
+def line_prior_regression(l,x_meanl,lnew,kernel,priorMean):  #regresion sin recibir los parametros, el kernel ya los trae fijos  
+    n = len(l) # Number of observed data
+    # Compute K, k and c
+    K  = np.zeros((n,n))
+    k = np.zeros(n)
+    # Fill in K
+    for i in range(n):
+        for j in range(n):
+            K[i][j] = kernel.k(l[i],l[j])
+    # Fill in k
+    for i in range(n):
+        k[i] = kernel.k(lnew,l[i])
+        
+    K_1 = inv(K)
+    xnew = linear_mean(lnew,priorMean) + k.dot(K_1.dot(x_meanl)) 
+    # Estimate the variance
+    K_1kt = K_1.dot(k.transpose())
+    kK_1kt = k.dot(K_1kt)
+    var = kernel.k(lnew,lnew) - kK_1kt
+    
+    return xnew, var     
+
+#lp = line prior
+def estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMean):
+    lenNew = len(newL)
+    predictedX, varianceX = [], []
+    X_meanL = []
+    for i in range(len(knownL)):
+        X_meanL.append(knownX[i] - linear_mean(knownL[i], priorMean))
+    
+    for i in range(lenNew):
+        val, var = line_prior_regression(knownL,X_meanL,newL[i],kernel,priorMean) #line prior regression
+        #new_y, var_y = regression(known_x,known_y,newX[i],kernel)
+        predictedX.append(val)
+        varianceX.append(var)
+    
+    return predictedX, varianceX
+
+#lp = line prior
+#prediccion en X y en Y
+#Recibe los datos conocidos (x,y,z) y los puntos para la regresion.
+def prediction_XY_lp(x, y, l, newL, kernelX, kernelY, priorMeanX, priorMeanY):#prediction 
+    newX, varX = estimate_new_set_of_values_lp(l,x,newL,kernelX,priorMeanX)#prediccion para x
+    newY, varY = estimate_new_set_of_values_lp(l,y,newL,kernelY,priorMeanY)#prediccion para y
+
+    return newX, newY, varX, varY
+
+#Toma la mitad de los datos observados como conocidos y predice nPoints en la mitad restante, regresa el error de la prediccion
+def prediction_error_of_points_along_the_path_lp(nPoints,knownX,knownY,knownL,goal,unit,kernelX,kernelY,priorMeanX,priorMeanY):
+    knownN = len(knownX)
+    halfN = int(knownN/2)
+    
+    trueX = knownX[0:halfN]
+    trueY = knownY[0:halfN]
+    trueL = knownL[0:halfN]
+    
+    finishXY = middle_of_area(goal)        
+    finishD = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
+    trueX.append(finishXY[0])
+    trueY.append(finishXY[1])
+    trueL.append(finishD*unit)
+    
+    d = int(halfN/nPoints)
+    realX, realY, predictionSet = [],[],[]
+    for i in range(nPoints):
+        realX.append(knownX[halfN + i*d])
+        realY.append(knownY[halfN + i*d])
+        predictionSet.append(knownL[halfN + i*d])
+    
+    #predX, predY, varX,varY = prediction_XY(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
+    predX, predY, varX,varY = prediction_XY_lp(trueX,trueY,trueL, predictionSet, kernelX, kernelY,priorMeanX,priorMeanY)
+    
+    error = average_displacement_error([realX,realY],[predX,predY])
+
+    return error
+
+
+
+
