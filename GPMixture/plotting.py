@@ -14,7 +14,7 @@ from copy import copy
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
-color = ['m','m','r','b','c','y','k','w']
+color = ['g','m','r','b','c','y','w','k']
 
 #******************************************************************************#
 """ PLOT FUNCTIONS """
@@ -50,7 +50,7 @@ def plot_prediction(img,trueX,trueY,knownN,predictedX,predictedY,varX,varY):
     ax.set_aspect('equal')
     ax.imshow(img) # Show the image 
     
-    plt.plot(knownX,knownY,'c',predictedX,predictedY,'bo')
+    plt.plot(knownX,knownY,'c',predictedX,predictedY,'b')
     
     predictedN = len(predictedX)
     for i in range(predictedN):
@@ -207,13 +207,15 @@ def plot_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goals
     
     plt.plot(partialX,partialY,'c')
     
+    maxLikelihood = max(goalsLikelihood)
+    maxLW = 2    
     for i in range(nGoals): #pinta la prediccion para cada subgoal
         plt.plot(predictedXYVec[i][0],predictedXYVec[i][1],'b--')    
         predictedN = len(predictedXYVec[i][0])
         for j in range(predictedN):
             xy = [predictedXYVec[i][0][j],predictedXYVec[i][1][j]]
             ell = Ellipse(xy,varXYVec[i][0][j], varXYVec[i][1][j])
-            lw = goalsLikelihood[i]*7.
+            lw = (goalsLikelihood[i]/maxLikelihood)*maxLW
             ell.set_lw(lw)
             ell.set_fill(0)
             ell.set_edgecolor(color[i])
