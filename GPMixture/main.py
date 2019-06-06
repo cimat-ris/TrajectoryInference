@@ -128,7 +128,8 @@ linearPriorMatX, linearPriorMatY = get_linear_prior_mean_matrix(pathMat, nGoals,
 #print("***arc-len promedio***\n", meanLenMat)
 #print("***distancia euclidiana entre goals***\n", euclideanDistMat)
 #print("Prior likelihood matrix:", priorLikelihoodMat)
-kernelType = "combined"#"linePriorCombined"
+kernelType = "linePriorCombined"#"combined"
+nParameters = 4
 """
 #***********APRENDIZAJE***********
 print("***********INICIO APRENDIZAJE*********")
@@ -139,13 +140,12 @@ write_parameters(kernelMat_y,nGoals,nGoals,"parameters_y.txt")
 print("***********FIN DEL APRENDIZAJE*********")
 """
 #fijamos los parámetros para cada matriz de kernel
-nParameters = 3
-kernelMat_x = read_and_set_parameters("parameters_x.txt",nGoals,nGoals,kernelType,nParameters)
-kernelMat_y = read_and_set_parameters("parameters_y.txt",nGoals,nGoals,kernelType,nParameters)
+kernelMat_x = read_and_set_parameters("linePriorParameters_x.txt",nGoals,nGoals,kernelType,nParameters)
+kernelMat_y = read_and_set_parameters("linePriorParameters_y.txt",nGoals,nGoals,kernelType,nParameters)
 
 #Test dado el goal de inicio y fin
-startG = 1
-nextG = 4
+startG = 0
+nextG = 3
 kernelX = kernelMat_x[startG][nextG]
 kernelY = kernelMat_y[startG][nextG]
 
@@ -182,7 +182,6 @@ for i in range(1,part_num-1):
 
 #compare_error_goal_to_subgoal_test(img,pathX,pathY,pathL,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
 
-#plot_subgoals(img,areas[2],3,goalSamplingAxis[2])
 """
 for i in range(0):#1,nGoals):
     for j in range(nGoals):
