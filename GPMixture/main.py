@@ -13,8 +13,8 @@ from copy import copy
     
 #******************************************************************************#
     
-def single_goal_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,goalSamplingAxis): 
-    predictedX, predictedY, varX, varY, newL = trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY) 
+def single_goal_prediction_test(img,x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,goalSamplingAxis): 
+    predictedX, predictedY, varX, varY, newL = trajectory_prediction_test(img,x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY) 
     initTime = knownTime[knownN-1]
     time = arclen_to_time(initTime,newL,speed)
     #print("[newL]:",newL)
@@ -121,26 +121,31 @@ unitMat, distUnit = get_distance_unit(meanLenMat, euclideanDistMat, nGoals)
 stepUnit = 0.0438780780171 #get_number_of_steps_unit(pathMat, nGoals)
 speed = 1.65033755511      #get_pedestrian_average_speed(dataPaths)
 priorLikelihoodMat = prior_probability_matrix(pathMat, nGoals)
+linearPriorMatX, linearPriorMatY = get_linear_prior_mean_matrix(pathMat, nGoals, nGoals)
+#print("Linear prior mean Mat X:\n", linearPriorMatX) 
+#print("Linear prior mean Mat Y:\n", linearPriorMatY)
 #print("speed:",speed)
 #print("***arc-len promedio***\n", meanLenMat)
 #print("***distancia euclidiana entre goals***\n", euclideanDistMat)
 #print("Prior likelihood matrix:", priorLikelihoodMat)
+kernelType = "combined"#"linePriorCombined"
 """
 #***********APRENDIZAJE***********
 print("***********INICIO APRENDIZAJE*********")
-kernelMat, parametersMat = create_kernel_matrix("combined", nGoals, nGoals)
-kernelMat_x, kernelMat_y = optimize_parameters_between_goals(pathMat, parametersMat, nGoals, nGoals)
+#kernelMat, parametersMat = create_kernel_matrix("linePriorCombined", nGoals, nGoals)
+kernelMat_x, kernelMat_y = optimize_parameters_between_goals(kernelType, pathMat, nGoals, nGoals)
 write_parameters(kernelMat_x,nGoals,nGoals,"parameters_x.txt")
 write_parameters(kernelMat_y,nGoals,nGoals,"parameters_y.txt")
 print("***********FIN DEL APRENDIZAJE*********")
 """
 #fijamos los parámetros para cada matriz de kernel
-kernelMat_x = read_and_set_parameters("parameters_x.txt",nGoals,nGoals,2)
-kernelMat_y = read_and_set_parameters("parameters_y.txt",nGoals,nGoals,2)
+nParameters = 3
+kernelMat_x = read_and_set_parameters("parameters_x.txt",nGoals,nGoals,kernelType,nParameters)
+kernelMat_y = read_and_set_parameters("parameters_y.txt",nGoals,nGoals,kernelType,nParameters)
 
 #Test dado el goal de inicio y fin
 startG = 1
-nextG = 3
+nextG = 4
 kernelX = kernelMat_x[startG][nextG]
 kernelY = kernelMat_y[startG][nextG]
 
@@ -157,16 +162,16 @@ arcLenToTime = arclen_to_time(320,pathL,speed)
 #al hacer la prediccion se toma el porcentaje i/part_num como datos conocidos y se predice el resto
 part_num = 8
 steps = 10
-for i in range(5,part_num-2):
+for i in range(1,part_num-1):
     knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
     trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
     """Simple prediction test"""
     knownTime = pathT[0:knownN]
     #print("[known time]:",knownTime)
     rT = pathT[knownN:pathSize]
-    print("[real time]:",rT)
-    single_goal_prediction_test(pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
-    
+    #print("[real time]:",rT)
+    #single_goal_prediction_test(pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
+    trajectory_prediction_test(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
     #trajectory_subgoal_prediction_test(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
     #trajectory_prediction_test_using_sampling(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
     #prediction_test(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,meanLenMat,steps,kernelMat_x,kernelMat_y)
