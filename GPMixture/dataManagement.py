@@ -203,7 +203,23 @@ def getUsefulPaths(paths, goals):
             
     return useful
     
-    
+def get_path_set_given_time_interval(paths, startT, finishT):
+    if(len(paths) == 0):
+        print("empty set")
+        return []
+    pathSet = []
+    i = 0
+    t = startT
+    while(t <= finishT):
+        t = paths[i].t[0]
+        if(startT <= t and t <= finishT):
+            pathSet.append(paths[i])
+        i+=1
+    n = len(pathSet)
+    for j in range(0):#n):
+        print("[pathTime]:", paths[j].t)
+    return pathSet
+
 """ GOAL RELATED FUNCTIONS """
 
 def startGoal(p,goals):
@@ -575,6 +591,8 @@ def copy_unitMat(unitMat, nGoals, nSubgoals):
         mat.append(r)
     return mat
         
+def time_compare(path):
+    return path.t[0]
 
 """ERROR FUNCTIONS"""
 def mean_error(u,v):
