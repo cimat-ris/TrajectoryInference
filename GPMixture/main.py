@@ -103,6 +103,9 @@ dataPaths, multigoal = get_paths_from_file('datasets/CentralStation_paths_10000.
 usefulPaths = getUsefulPaths(dataPaths,areas)
 #plotPaths(usefulPaths, img)
 #print("number of useful paths: ",len(usefulPaths)) 
+sortedPaths = sorted(usefulPaths, key=time_compare)
+pathSet = get_path_set_given_time_interval(sortedPaths,0,100)
+#plotPaths(pathSet, img)
 #histogram(dataPaths,"duration")
 """
 Matrices útiles:
@@ -144,8 +147,8 @@ kernelMat_x = read_and_set_parameters("linePriorParameters_x.txt",nGoals,nGoals,
 kernelMat_y = read_and_set_parameters("linePriorParameters_y.txt",nGoals,nGoals,kernelType,nParameters)
 
 #Test dado el goal de inicio y fin
-startG = 0
-nextG = 3
+startG = 1
+nextG = 4
 kernelX = kernelMat_x[startG][nextG]
 kernelY = kernelMat_y[startG][nextG]
 
@@ -160,7 +163,7 @@ arcLenToTime = arclen_to_time(320,pathL,speed)
 #print("[path data]:\n [x]:",pathX,"\n[y]:",pathY,"\n[l]:",pathL,"\n[t]:",pathT)
 #El conjunto de datos observados se parte en part_num
 #al hacer la prediccion se toma el porcentaje i/part_num como datos conocidos y se predice el resto
-part_num = 8
+part_num = 5
 steps = 10
 for i in range(1,part_num-1):
     knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
@@ -171,12 +174,13 @@ for i in range(1,part_num-1):
     rT = pathT[knownN:pathSize]
     #print("[real time]:",rT)
     #single_goal_prediction_test(pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
-    trajectory_prediction_test(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
+    #trajectory_prediction_test(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
     #trajectory_subgoal_prediction_test(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
     #trajectory_prediction_test_using_sampling(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
     #prediction_test(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,meanLenMat,steps,kernelMat_x,kernelMat_y)
     """Multigoal prediction test"""    
     #multigoal_prediction_test(img,trueX,trueY,trueL,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorLikelihoodMat,goalSamplingAxis)
+    multigoal_prediction_test_lp(img,trueX,trueY,trueL,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorLikelihoodMat,linearPriorMatX,linearPriorMatY,goalSamplingAxis)
     #plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,middle_of_area(areas[nextG]))
     #prediction_test_over_time(pathX,pathY,pathT,knownN,start[0],nextG[0],areas)
 
