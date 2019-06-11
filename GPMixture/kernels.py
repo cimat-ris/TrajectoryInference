@@ -62,64 +62,72 @@ class linearKernelTrautman(Kernel):
 
 # Derived class: the squared exponential kernel
 class squaredExponentialKernel(Kernel):
-    def __init__(self, fsigma, fl, nsigma):
-        self.fsigma = fsigma
+    def __init__(self, fsigma, fl, sigmaNoise):
+        # Covariance magnitude factor
+        self.sigmaSq      = sigmaSq
         # Characteristic length
         self.length       = length
-        self.nsigma = nsigma
+        # Standard deviation of the noise
+        self.sigmaNoise   = sigmaNoise
         # Type of kernel
-        self.type      = "squaredExponential"
+        self.type         = "squaredExponential"
 
     def setParameters(self,vec):
-        self.fsigma = vec[0]
-        self.fl     = vec[1]
+        # Covariance magnitude factor
+        self.sigmaSq = vec[0]
+        # Characteristic length
+        self.length  = vec[1]
 
     def __call__(self,x,y):
-        return (self.fsigma**2)*m.exp(-1.*(x-y)**2/(2*self.length**2)) + self.nsigma**2*delta(x,y)
+        return (self.sigmaSq**2)*m.exp(-1.*(x-y)**2/(2*self.length**2)) + self.sigmaNoise**2*delta(x,y)
 
 # Matern kernel
 class maternKernel(Kernel):
-    def __init__(self, s, length):
-        self.s = s
+    def __init__(self, sigmaSq, length):
+        # Covariance magnitude factor
+        self.sigmaSq      = sigmaSq
         # Characteristic length
         self.length       = length
         # Type of kernel
-        self.type      = "matern"
+        self.type         = "matern"
 
     def setParameters(self,vec):
-        self.s      = vec[0]
+        # Covariance magnitude factor
+        self.sigmaSq= vec[0]
         # Characteristic length
         self.length = vec[1]
 
     def __call__(self,x,y):
-        r = m.fabs(x-y)
-        val = self.s*(1. + m.sqrt(5)*r/self.length + 5.*r**2/(3*self.length**2) )*m.exp(-1.*m.sqrt(5)*r/self.length)
+        rn  = m.fabs(x-y)/self.length
+        val = self.sigmaSq*(1. + m.sqrt(5)*rn + 5.*rn**2/(3.0) )*m.exp(-1.*m.sqrt(5)*rn)
         return val
 
 # Matern kernel from Rasmussen
 class maternRasmussenKernel(Kernel):
-    def __init__(self, s, length):
+    def __init__(self, sigmaSq, length):
         # Characteristic length
         self.length = length
-        self.s      = s
+        # Covariance magnitude factor
+        self.sigmaSq= sigmaSq
         # Type of kernel
-        self.type      = "maternRasmussen"
+        self.type   = "maternRasmussen"
 
     def setParameters(self,vec):
-        self.s      = vec[0]
+        self.sigmaSq      = vec[0]
         # Characteristic length
-        self.length = vec[1]/self.length
+        self.length       = vec[1]
 
     def __call__(self,x,y):
         rn = m.fabs(x-y)/self.length
-        val = self.s*(1. + m.sqrt(3)*rn)*m.exp(-1.*m.sqrt(3)*rn)
+        val = self.sigmaSq*(1. + m.sqrt(3)*rn)*m.exp(-1.*m.sqrt(3)*rn)
         return val
 
 class noiseKernel(Kernel):
     def __init__(self, sigmaNoise):
+        # Standard deviation of the noise
         self.sigmaNoise = sigmaNoise
         # Type of kernel
-        self.type      = "noise"
+        self.type       = "noise"
 
     def __call__(self,x,y):
         if(x == y):
@@ -129,20 +137,22 @@ class noiseKernel(Kernel):
 
 # The combination used in the Trautman paper
 class combinedTrautmanKernel(Kernel):
-    def __init__(self, gamma, s, length, sigmaNoise):
+    def __init__(self, gamma, sigmaSq, length, sigmaNoise):
         self.gamma = gamma
-        self.s = s
+        # Covariance magnitude factor
+        self.sigmaSq= sigmaSq
         # Characteristic length
         self.length = length
         self.linear = linearKernel(gamma)
-        self.matern = maternKernel(s,length)
+        self.matern = maternKernel(sigmaSq,length)
         self.noise  = noiseKernel(sigmaNoise)
         # Type of kernel
         self.type      = "combinedTrautman"
 
     def setParameters(self,vec):
         self.gamma  = vec[0]
-        self.s      = vec[1]
+        # Covariance magnitude factor
+        self.sigmaSq= vec[1]
         # Characteristic length
         self.length = vec[2]
         self.linear.setParameters(vec)
@@ -161,25 +171,27 @@ class combinedTrautmanKernel(Kernel):
 
 
 class exponentialKernel(Kernel):
-    def __init__(self, s, length):
-        self.s = s
+    def __init__(self, sigmaSq, length):
+        # Covariance magnitude factor
+        self.sigmaSq   = sigmaSq
         # Characteristic length
-        self.length       = length
+        self.length    = length
         # Type of kernel
         self.type      = "exponential"
 
     def setParameters(self,vec):
-        self.s = vec[0]
+        self.sigmaSq = vec[0]
         # Characteristic length
-        self.length = vec[1]
+        self.length  = vec[1]
 
     def __call__(self,x,y):
-        return self.s*m.exp(-m.fabs(x-y)/self.length)
+        return self.sigmaSq*m.exp(-m.fabs(x-y)/self.length)
 
 class gammaExponentialKernel(Kernel):
     def __init__(self, length, gamma):
         # Characteristic length
         self.length       = length
+        # Gamma exponent
         self.gamma = gamma
         # Type of kernel
         self.type      = "gammaExponential"
@@ -187,6 +199,7 @@ class gammaExponentialKernel(Kernel):
     def setParameters(self,vec):
         # Characteristic length
         self.length= vec[0]
+        # Gamma exponent
         self.gamma = vec[1]
 
     def __call__(self,x,y):
@@ -194,18 +207,22 @@ class gammaExponentialKernel(Kernel):
         return m.exp(-rn**self.gamma)
 
 class rationalQuadraticKernel(Kernel):
-    def __init__(self, l, alpha, sigmaNoise):
+    def __init__(self, sigmaSq,length, alpha, sigmaNoise):
+        # Covariance magnitude factor
+        self.sigmaSq = sigmaSq
         # Characteristic length
-        self.length       = length
-        self.alpha = alpha
-        self.noise = noiseKernel(sigmaNoise)
+        self.length  = length
+        self.alpha   = alpha
+        self.noise   = noiseKernel(sigmaNoise)
         # Type of kernel
-        self.type      = "rationalQuadratic"
+        self.type    = "rationalQuadratic"
 
     def setParameters(self,vec):
+        # Covariance magnitude factor
+        self.sigmaSq = vec[0]
         # Characteristic length
-        self.length= vec[0]
-        self.alpha = vec[1]
+        self.length  = vec[1]
+        self.alpha   = vec[2]
 
     def __call__(self,x,y):
         rn = m.fabs(x-y)/self.alpha*self.length
@@ -241,11 +258,13 @@ class SQKernel(Kernel):
         return SQker(x,y) + noise(x,y)
 
 
-#kernel combinado: exponencial + ruido
-class expKernel(Kernel):
-    def __init__(self, s, length, sigma):
-        self.exponential = exponentialKernel(s,length)
-        self.noise = noiseKernel(sigma)
+# Combined kernel: exponential and noise
+class exponentialAndNoiseKernel(Kernel):
+    def __init__(self, sigmaSq, length, sigmaNoise):
+        self.exponential = exponentialKernel(sigmaSq,length)
+        self.noise       = noiseKernel(sigmaNoise)
+        # Type of kernel
+        self.type    = "exponentialAndNoise"
 
     def setParameters(self,vec):
         self.exponential.setParameters(vec)
@@ -258,26 +277,28 @@ class expKernel(Kernel):
 
 #kernel combinado considerando el line prior
 class linePriorCombinedKernel(Kernel):
-    def __init__(self, gamma_a, gamma_0, s, length, sigmaNoise):
+    def __init__(self, gamma_a, gamma_0, sigmaSq, length, sigmaNoise):
         self.gamma_a = gamma_a
         self.gamma_0 = gamma_0
         self.gamma_non_zero()
-        self.s = s
+        # Covariance magnitude factor
+        self.sigmaSq= sigmaSq
         # Characteristic length
         self.length = length
         self.linear = linearKernel(gamma_a, gamma_0)
-        self.matern = maternKernel(s,length)
+        self.matern = maternKernel(sigmaSq,length)
         self.noise  = noiseKernel(sigmaNoise)
 
     def setParameters(self,vec):
         self.gamma_a = vec[0]
         self.gamma_0 = vec[1]
         self.gamma_non_zero()
-        self.s = vec[2]
+        # Covariance magnitude factor
+        self.sigmaSq = vec[2]
         # Characteristic length
-        self.length = vec[3]
+        self.length  = vec[3]
         self.linear.setParameters(vec)
-        mV = [self.s, self.length]
+        mV = [self.sigmaSq, self.length]
         self.matern.setParameters(mV)
 
     def gamma_non_zero(self):
@@ -290,8 +311,8 @@ class linePriorCombinedKernel(Kernel):
         return self.matern(x,y) + self.linear(x,y) + self.noise(x,y)
 
     def get_parameters(self):
-        parameters = [self.gamma_a, self.gamma_0, self.s, self.length]
+        parameters = [self.gamma_a, self.gamma_0, self.sigmaSq, self.length]
         return parameters
 
     def print_parameters(self):
-        print("combined kernel parameters\n gamma_a =",self.gamma_a,"\n gamma_0",self.gamma_0,"\n s =",self.s,", l = ",self.length)
+        print("combined kernel parameters\n gamma_a =",self.gamma_a,"\n gamma_0",self.gamma_0,"\n s =",self.sigmaSq,", l = ",self.length)
