@@ -16,6 +16,7 @@ class Kernel:
         # Type of kernel
         self.type      = "generic"
 
+    # Overload the operator ()
     @abstractmethod
     def __call__(self,x,y): pass
 
@@ -39,6 +40,7 @@ class linearKernel(Kernel):
         if(self.gamma_0 == 0.):
             self.gamma_0 = 0.05
 
+    # Overload the operator ()
     def __call__(self,x,y):
         return (1./self.gamma_a)*x*y + 1./self.gamma_0
 
@@ -57,18 +59,17 @@ class linearKernelTrautman(Kernel):
     def setParameters(self,vec):
         self.gamma = vec[0]
 
+    # Overload the operator ()
     def __call__(self,x,y):
         return x*y+(1./(self.gamma**2))
 
 # Derived class: the squared exponential kernel
 class squaredExponentialKernel(Kernel):
-    def __init__(self, fsigma, fl, sigmaNoise):
+    def __init__(self, sigmaSq, length):
         # Covariance magnitude factor
         self.sigmaSq      = sigmaSq
         # Characteristic length
         self.length       = length
-        # Standard deviation of the noise
-        self.sigmaNoise   = sigmaNoise
         # Type of kernel
         self.type         = "squaredExponential"
 
@@ -78,8 +79,9 @@ class squaredExponentialKernel(Kernel):
         # Characteristic length
         self.length  = vec[1]
 
+    # Overload the operator ()
     def __call__(self,x,y):
-        return (self.sigmaSq**2)*m.exp(-1.*(x-y)**2/(2*self.length**2)) + self.sigmaNoise**2*delta(x,y)
+        return (self.sigmaSq**2)*m.exp(-1.*(x-y)**2/(2*self.length**2))
 
 # Matern kernel
 class maternKernel(Kernel):
@@ -97,6 +99,7 @@ class maternKernel(Kernel):
         # Characteristic length
         self.length = vec[1]
 
+    # Overload the operator ()
     def __call__(self,x,y):
         rn  = m.fabs(x-y)/self.length
         val = self.sigmaSq*(1. + m.sqrt(5)*rn + 5.*rn**2/(3.0) )*m.exp(-1.*m.sqrt(5)*rn)
@@ -117,6 +120,7 @@ class maternRasmussenKernel(Kernel):
         # Characteristic length
         self.length       = vec[1]
 
+    # Overload the operator ()
     def __call__(self,x,y):
         rn = m.fabs(x-y)/self.length
         val = self.sigmaSq*(1. + m.sqrt(3)*rn)*m.exp(-1.*m.sqrt(3)*rn)
@@ -129,6 +133,7 @@ class noiseKernel(Kernel):
         # Type of kernel
         self.type       = "noise"
 
+    # Overload the operator ()
     def __call__(self,x,y):
         if(x == y):
             return self.sigmaNoise**2.
@@ -159,11 +164,12 @@ class combinedTrautmanKernel(Kernel):
         mV = [vec[1], vec[2]]
         self.matern.setParameters(mV)
 
+    # Overload the operator ()
     def __call__(self,x,y):
         return self.matern(x,y) + self.linear(x,y) + self.noise(x,y)
 
     def get_parameters(self):
-        parameters = [self.gamma, self.s, self.length]
+        parameters = [self.gamma, self.sigmaSq, self.length]
         return parameters
 
     def print_parameters(self):
@@ -180,15 +186,19 @@ class exponentialKernel(Kernel):
         self.type      = "exponential"
 
     def setParameters(self,vec):
+        # Covariance magnitude factor
         self.sigmaSq = vec[0]
         # Characteristic length
         self.length  = vec[1]
 
+    # Overload the operator ()
     def __call__(self,x,y):
         return self.sigmaSq*m.exp(-m.fabs(x-y)/self.length)
 
 class gammaExponentialKernel(Kernel):
-    def __init__(self, length, gamma):
+    def __init__(self, sigmaSq, length, gamma):
+        # Covariance magnitude factor
+        self.sigmaSq = sigmaSq
         # Characteristic length
         self.length       = length
         # Gamma exponent
@@ -197,17 +207,20 @@ class gammaExponentialKernel(Kernel):
         self.type      = "gammaExponential"
 
     def setParameters(self,vec):
+        # Covariance magnitude factor
+        self.sigmaSq = vec[0]
         # Characteristic length
-        self.length= vec[0]
+        self.length= vec[1]
         # Gamma exponent
-        self.gamma = vec[1]
+        self.gamma = vec[2]
 
+    # Overload the operator ()
     def __call__(self,x,y):
         rn = m.fabs(x-y)/self.length
-        return m.exp(-rn**self.gamma)
+        return self.sigmaSq*m.exp(-rn**self.gamma)
 
 class rationalQuadraticKernel(Kernel):
-    def __init__(self, sigmaSq,length, alpha, sigmaNoise):
+    def __init__(self, sigmaSq, length, alpha, sigmaNoise):
         # Covariance magnitude factor
         self.sigmaSq = sigmaSq
         # Characteristic length
@@ -224,38 +237,34 @@ class rationalQuadraticKernel(Kernel):
         self.length  = vec[1]
         self.alpha   = vec[2]
 
+    # Overload the operator ()
     def __call__(self,x,y):
         rn = m.fabs(x-y)/self.alpha*self.length
         return pow(1. + 0.5*(rn**2), -self.alpha) + self.noise(x,y)
 
-class sqrExpKernel(Kernel):
-    def __init__(self, l, sigma):
+# Combined kernel: squared exponential and noise
+class squaredExponentialAndNoiseKernel(Kernel):
+    def __init__(self, sigmaSq, length, sigmaNoise):
+        # Covariance magnitude factor
+        self.sigmaSq      = sigmaSq
         # Characteristic length
-        self.length= length
-        self.sigma = sigma
+        self.length      = length
+        # Standard deviation of the noise
+        self.sigmaNoise  = sigmaNoise
+        # Type of kernel
+        self.type    = "squaredExponentialAndNoise"
 
     def setParameters(self,vec):
+        # Covariance magnitude factor
+        self.sigmaSq = vec[0]
         # Characteristic length
-        self.length= vec[0]
+        self.length  = vec[1]
+
+    # Overload the operator ()
     def __call__(self,x,y):
-        return m.exp(-1.*((x-y)**2) / (2*self.l**2))
-
-
-#kenel combinado: exponencial cuadrado + ruido
-class SQKernel(Kernel):
-    def __init__(self, length, sigma):
-        # Characteristic length
-        self.length = length
-        self.sigma  = sigma
-
-    def setParameters(self,vec):
-        # Characteristic length
-        self.length = vec[0]
-
-    def __call__(self,x,y):
-        SQker = sqrExpKernel(self.length,self.sigma)
-        noise = noiseKernel(self.sigma)
-        return SQker(x,y) + noise(x,y)
+        sqe   = squaredExponentialKernel(self.sigmaSq,self.length)
+        noise = noiseKernel(self.sigmaNoise)
+        return sqe(x,y) + noise(x,y)
 
 
 # Combined kernel: exponential and noise
