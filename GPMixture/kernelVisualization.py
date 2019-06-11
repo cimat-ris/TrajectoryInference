@@ -19,7 +19,7 @@ def evaluateCovarianceMatrix(kernel,length):
     return C
 
 s = 1000
-parameters = [0.1,0.1, 80., 80.,10.0]
+parameters = [1000.0,0.01, 80., 80.,10.0]
 kernel = kernels.squaredExponentialKernel(parameters[2],parameters[3])
 CSqe = evaluateCovarianceMatrix(kernel,s)
 
