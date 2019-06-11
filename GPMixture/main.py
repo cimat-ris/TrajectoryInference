@@ -111,7 +111,8 @@ usefulPaths = getUsefulPaths(dataPaths,areas)
 
 plotPaths(usefulPaths, img)
 print("[INF] Number of useful paths: ",len(usefulPaths))
-histogram(dataPaths,"duration")
+sortedPaths = sorted(usefulPaths, key=time_compare)
+pathSet     = get_path_set_given_time_interval(sortedPaths,0,100)
 
 """
 Useful matrices:
