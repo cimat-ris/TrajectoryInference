@@ -6,6 +6,7 @@ import math
 import matplotlib.pyplot as plt
 from numpy.linalg import inv
 from scipy.optimize import minimize
+from scipy.linalg import *
 import kernels
 import path
 from dataManagement import *
@@ -14,6 +15,7 @@ import matplotlib.image as mpimg
 from matplotlib.patches import Ellipse
 from copy import copy
 import random
+import timeit
 
 #******************************************************************************#
 """ REGRESSION FUNCTIONS """
@@ -114,43 +116,42 @@ def create_kernel_matrix(kerType, rows, columns):
         parameters.append(auxP)
     return kerMatrix, parameters
 
-def log_p(theta,x,y,kernel):
+# Evaluate the minus log-likelihood
+def mlog_p(theta,x,y,kernel):
     kernel.setParameters(theta)
     n = len(x)
     K = np.zeros((n,n))
     for i in range(n):
-        for j in range(n):
+        for j in range(i+1):
             K[i][j] = kernel(x[i],x[j])
-    invK = inv(K)
-    invKy = invK.dot(y)
+            K[j][i] = K[i][j]
+    # Use Cholesky to solve x = K^{-1} y
+    c_and_lower = cho_factor(K, overwrite_a=True)
+    invKy       = cho_solve(c_and_lower, y)
     yKy = np.inner(y,invKy)
-    detK = np.linalg.det(K)
-
-    val = (-1/2.)*yKy-(1/2.)*np.log(detK)-(n/2.)*np.log(2*math.pi)
+    # Get the determinant as the square of the product of the diagonal elements in C
+    detK = c_and_lower[0].diagonal().prod()
+    # I removed the constant terms (they do not depend on theta)
+    val = 0.5*yKy+np.log(detK)
     return val
 
-def sum_log_p(theta,x,y,kernel):
-    size = len(x)
-    s = 0
-    for i in range(size):
-        s += log_p(theta,x[i],y[i],kernel)
+
+# Evaluate minus sum of the log-likelihoods
+def neg_sum_log_p(theta,t,x,kernel):
+    s = 0.0
+    for i in range(len(t)):
+        s += mlog_p(theta,t[i],x[i],kernel)
     return s
 
-def neg_sum_log_p(theta,x,y,kernel):
-    s = sum_log_p(theta,x,y,kernel)
-    return (-1.)*s
-
-#elegir parametros que funcionen para un conjunto de trayectorias
-def optimize_kernel_parameters_XY(t,x,y,theta,kernel):#creo que eran 14 it pobar
+# Opimization of the parameters, in x then in y
+def optimize_kernel_parameters_XY(t,x,y,theta,kernel):
     parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='Nelder-Mead', options={'maxiter':16,'disp': False})
     parametersY = minimize(neg_sum_log_p,theta,(t,y,kernel),method='Nelder-Mead', options={'maxiter':16,'disp': False})
-
     return parametersX.x, parametersY.x
 
-def learning(l,x,y,kernel,parameters):
-    thetaX, thetaY = optimize_kernel_parameters_XY(l,x,y,parameters,kernel)
-
-    return thetaX, thetaY
+# Learn parameters of the kernel, given l,x,y as data (will maximize likelihood)
+def learn_parameters(l,x,y,kernel,parameters):
+    return optimize_kernel_parameters_XY(l,x,y,parameters,kernel)
 
 def optimize_parameters_between_2goals(learnSet, kernelMat, parametersMat, startGoal, finishGoal):
     kernelX = kernelMat[startGoal][finishGoal]
@@ -177,7 +178,7 @@ def optimize_parameters_between_goals_(kernelType, learnSet, nGoals):
             if len(paths) > 0:
                 x,y,z = get_data_from_paths(paths,"length")
                 ker, theta = setKernel(kernelType)
-                thetaX, thetaY = learning(z,x,y,ker,theta)
+                thetaX, thetaY = learn_parameters(z,x,y,ker,theta)
                 print("[",i,"][",j,"]")
                 print("x: ",thetaX)
                 print("y: ",thetaY)
@@ -187,23 +188,36 @@ def optimize_parameters_between_goals_(kernelType, learnSet, nGoals):
         #parameters.append(r)
     return kernelMatX, kernelMatY
 
+# For each pair of goals, realize the optimization of the kernel parameters
 def optimize_parameters_between_goals(kernelType, learnSet, rows, columns):
+    # Build the kernel matrices
     kernelMatX, parametersX = create_kernel_matrix(kernelType, rows, columns)
     kernelMatY, parametersY = create_kernel_matrix(kernelType, rows, columns)
+    # For goal i
     for i in range(rows):
         r = []
+        # For goal j
         for j in range(columns):
+            # Get the paths that go from i to j
             paths = learnSet[i][j]
             if len(paths) > 0:
+                start = timeit.default_timer()
+                # Get the path data as x,y,z (z is arclength)
                 x,y,z = get_data_from_paths(paths,"length")
+                # Build a kernel with the specified type and initial parameters theta
                 ker, theta = setKernel(kernelType)
-                thetaX, thetaY = learning(z,x,y,ker,theta)
-                print("[",i,"][",j,"]")
-                print("x: ",thetaX)
-                print("y: ",thetaY)
+                # Learn parameters
+                thetaX, thetaY = learn_parameters(z,x,y,ker,theta)
+                print("[OPT] [",i,"][",j,"]")
+                print("[OPT] x: ",thetaX)
+                print("[OPT] y: ",thetaY)
+                print("[OPT] #trajectories: ",len(z))
                 kernelMatX[i][j].setParameters(thetaX)
                 kernelMatY[i][j].setParameters(thetaY)
                 r.append([thetaX, thetaY])
+                stop = timeit.default_timer()
+                execution_time = stop - start
+                print("[INF] Learning in %.2f seconds"%execution_time)
     return kernelMatX, kernelMatY
 
 #recibe una matriz de kernel [[kij]], con parametros [gamma,s,l]
@@ -226,16 +240,17 @@ def write_squared_matrix_parameters(matrix,nGoals,flag):
             f.write(skip)
     f.close()
 
-#recibe una matriz de kernel [[kij]], con parametros [s,l]
+# Takes as an input a matrix of kernels. Exports the parameters, line by line
 def write_parameters(matrix,rows,columns,fileName):
     f = open(fileName,"w")
+    f.write('%d %d %s\n' % (rows,columns,matrix[0][0].type))
     for i in range(rows):
         for j in range(columns):
             ker = matrix[i][j]
+            f.write('{:d} {:d} '.format(i,j))
             parameters = ker.get_parameters()
             for k in range(len(parameters)):
-                val = "%d "%(parameters[k])
-                f.write(val)
+                f.write('{:07.4f} '.format(parameters[k]))
             skip = "\n"
             f.write(skip)
     f.close()

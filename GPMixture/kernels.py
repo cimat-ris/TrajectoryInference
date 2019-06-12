@@ -22,31 +22,29 @@ class Kernel:
 
 # Linear kernel
 class linearKernel(Kernel):
-    def __init__(self, gamma_a, gamma_0):
-        self.gamma_a = gamma_a
-        self.gamma_0 = gamma_0
-        self.gamma_non_zero()
+    def __init__(self, sigma_a,sigma_c):
+        # Variance on the slope
+        self.sigma_a   = sigma_a
+        self.sigmaSq_a = sigma_a**2
+        # Variance on the constant
+        self.sigma_c   = sigma_c
+        self.sigmaSq_c = sigma_c**2
         # Type of kernel
         self.type      = "linear"
 
     def setParameters(self,vec):
-        self.gamma_a = vec[0]
-        self.gamma_0 = vec[1]
-        self.gamma_non_zero()
+        # Variance on the slope
+        self.sigmaSq_a = vec[0]**2
+        # Variance on the constant
+        self.sigmaSq_c = vec[1]**2
 
-    def gamma_non_zero(self):
-        if(self.gamma_a == 0.):
-            self.gamma_a = 0.05
-        if(self.gamma_0 == 0.):
-            self.gamma_0 = 0.05
+    def get_parameters(self):
+        parameters = [self.sigma_a, self.sigma_c]
+        return parameters
 
     # Overload the operator ()
     def __call__(self,x,y):
-        return (1./self.gamma_a)*x*y + 1./self.gamma_0
-
-    def get_parameters(self):
-        parameters = [self.gamma_a, self.gamma_0]
-        return parameters
+        return self.sigmaSq_a*x*y+self.sigmaSq_c
 
 
 #kernel Trautman
@@ -148,7 +146,7 @@ class combinedTrautmanKernel(Kernel):
         self.sigmaSq= sigmaSq
         # Characteristic length
         self.length = length
-        self.linear = linearKernel(gamma)
+        self.linear = linearKernelTrautman(gamma)
         self.matern = maternKernel(sigmaSq,length)
         self.noise  = noiseKernel(sigmaNoise)
         # Type of kernel
@@ -286,35 +284,29 @@ class exponentialAndNoiseKernel(Kernel):
 
 #kernel combinado considerando el line prior
 class linePriorCombinedKernel(Kernel):
-    def __init__(self, gamma_a, gamma_0, sigmaSq, length, sigmaNoise):
-        self.gamma_a = gamma_a
-        self.gamma_0 = gamma_0
-        self.gamma_non_zero()
+    def __init__(self, sigmaSlope, sigmaConstant, sigmaSq, length, sigmaNoise):
+        self.sigmaSlope    = sigmaSlope
+        self.sigmaConstant = sigmaConstant
         # Covariance magnitude factor
         self.sigmaSq= sigmaSq
         # Characteristic length
         self.length = length
-        self.linear = linearKernel(gamma_a, gamma_0)
+        self.linear = linearKernel(sigmaSlope, sigmaConstant)
         self.matern = maternKernel(sigmaSq,length)
         self.noise  = noiseKernel(sigmaNoise)
+        # Type of kernel
+        self.type    = "linePriorCombined"
 
     def setParameters(self,vec):
-        self.gamma_a = vec[0]
-        self.gamma_0 = vec[1]
-        self.gamma_non_zero()
+        self.sigmaSlope    = vec[0]
+        self.sigmaConstant = vec[1]
         # Covariance magnitude factor
-        self.sigmaSq = vec[2]
+        self.sigmaSq       = vec[2]
         # Characteristic length
-        self.length  = vec[3]
+        self.length        = vec[3]
         self.linear.setParameters(vec)
         mV = [self.sigmaSq, self.length]
         self.matern.setParameters(mV)
-
-    def gamma_non_zero(self):
-        if(self.gamma_a == 0.):
-            self.gamma_a = 0.05
-        if(self.gamma_0 == 0.):
-            self.gamma_0 = 0.05
 
     def __call__(self,x,y):
         return self.matern(x,y) + self.linear(x,y) + self.noise(x,y)
