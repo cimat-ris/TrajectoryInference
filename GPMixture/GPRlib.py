@@ -16,6 +16,7 @@ from matplotlib.patches import Ellipse
 from copy import copy
 import random
 import timeit
+from termcolor import colored
 
 #******************************************************************************#
 """ REGRESSION FUNCTIONS """
@@ -130,12 +131,13 @@ def mlog_p(theta,x,y,kernel):
     c_and_lower = cho_factor(K, overwrite_a=True)
     invKy       = cho_solve(c_and_lower, y)
     yKy = np.inner(y,invKy)
-    # Get the determinant as the square of the product of the diagonal elements in C
-    detK = c_and_lower[0].diagonal().prod()
+    # Get the log-determinant as the sum of the log of the diagonal elements in C
+    logDetK = 0.0
+    for i in range(n):
+        logDetK += np.log(abs(c_and_lower[0].diagonal()[i]))
     # I removed the constant terms (they do not depend on theta)
-    val = 0.5*yKy+np.log(detK)
+    val = max(0,0.5*yKy+logDetK)
     return val
-
 
 # Evaluate minus sum of the log-likelihoods
 def neg_sum_log_p(theta,t,x,kernel):
@@ -146,9 +148,26 @@ def neg_sum_log_p(theta,t,x,kernel):
 
 # Opimization of the parameters, in x then in y
 def optimize_kernel_parameters_XY(t,x,y,theta,kernel):
-    parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='Nelder-Mead', options={'maxiter':16,'disp': False})
-    parametersY = minimize(neg_sum_log_p,theta,(t,y,kernel),method='Nelder-Mead', options={'maxiter':16,'disp': False})
-    return parametersX.x, parametersY.x
+    # TODO: set these bounds elswhere
+    bnds = ((0.00001, 0.1), (1.0, 100.0), (100.0, 500.0), (10.0, 100.0))
+    try:
+        parametersX = minimize(neg_sum_log_p, theta,(t,x,kernel), method='TNC', bounds=bnds,options={'maxiter':20,'disp': False})
+        #parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='Nelder-Mead', options={'maxiter':16,'disp': False})
+        px          = parametersX.x
+    except Exception as e:
+        print(colored("[ERR] {:s} ".format(e),'red'))
+        px = theta
+
+    #parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='L-BFGS-B', options={'maxiter':16,'disp': True})
+    try:
+        parametersY = minimize(neg_sum_log_p, theta,(t,y,kernel), method='TNC', bounds=bnds,options={'maxiter':36,'disp': False})
+        #parametersY = minimize(neg_sum_log_p,theta,(t,y,kernel),method='Nelder-Mead', options={'maxiter':16,'disp': False})
+        py          =  parametersY.x
+    except Exception as e:
+         print(colored("[ERR] {:s} ".format(e),'red'))
+         py = theta
+
+    return px, py
 
 # Learn parameters of the kernel, given l,x,y as data (will maximize likelihood)
 def learn_parameters(l,x,y,kernel,parameters):
@@ -207,6 +226,7 @@ def optimize_parameters_between_goals(kernelType, learnSet, rows, columns):
                 x,y,z = get_data_from_paths(paths,"length")
                 # Build a kernel with the specified type and initial parameters theta
                 ker, theta = setKernel(kernelType)
+                print("[OPT] Init parameters ",theta)
                 # Learn parameters
                 print("[OPT] [",i,"][",j,"]")
                 print("[OPT] #trajectories: ",len(z))
@@ -273,20 +293,28 @@ def _write_parameters(matrix,rows,columns,fileName):
             f.write(skip)
     f.close()
 
-def read_and_set_parameters(file_name, rows, columns, kernelType, nParameters):
+# Read a parameter file and return the matrix of kernels corresponding to this file
+def read_and_set_parameters(file_name, nParameters):
+    file = open(file_name,'r')
+    firstline = file.readline()
+    header    = firstline.split()
+    # Get rows, columns, kernelType from the header
+    rows      = int(header[0])
+    columns   = int(header[1])
+    kernelType= header[2]
+    print("[INF] Opening ",file_name," to read parameters of ",rows,"x",columns," kernels of type: ",kernelType)
     matrix, parametersMat = create_kernel_matrix(kernelType, rows, columns)
-    f = open(file_name,'r')
 
-    for i in range(rows):
-        for j in range(columns):
-            parameters = []#el kernel combinado usa 2 parametros: [s,l]
-            line = f.readline()
-            parameters_str = line.split()
-            for k in range(nParameters):
-                parameters.append(float(parameters_str[k]))
-            matrix[i][j].setParameters(parameters)
-
-    f.close()
+    for line in file:
+        parameters = []
+        parameters_str = line.split()
+        i = int(parameters_str[0])
+        j = int(parameters_str[1])
+        for k in range(2,len(parameters_str)):
+            parameters.append(float(parameters_str[k]))
+        print("[INF] From goal ",i," to ", j, " parameters: ",parameters)
+        matrix[i][j].setParameters(parameters)
+    file.close()
     return matrix
 
 
