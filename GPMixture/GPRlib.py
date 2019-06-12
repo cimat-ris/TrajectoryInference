@@ -79,13 +79,17 @@ def setKernel(name):
 
     return kernel, parameters
 
-#ngoals = numero de areas de interes
+# Returns two nGoalsxnGoals matrices:
+# - the matrix of kernels with the default parameters
+# - the matrix of kernel parameters (with default values)
 def create_kernel_matrix_(kerType, ngoals):
     kerMatrix = []
     parameters = []
+    # For goal i
     for i in range(ngoals):
         aux = []
         auxP = []
+        # For goal j
         for j in range(ngoals):
             kernel, theta = setKernel(kerType)
             aux.append(kernel)
@@ -94,13 +98,17 @@ def create_kernel_matrix_(kerType, ngoals):
         parameters.append(auxP)
     return kerMatrix, parameters
 
-
+# Returns two rowsxcolumns matrices:
+# - the matrix of kernels with the default parameters
+# - the matrix of kernel parameters (with default values)
 def create_kernel_matrix(kerType, rows, columns):
     kerMatrix = []
     parameters = []
+    # For goal i
     for i in range(rows):
         aux = []
         auxP = []
+        # For goal j
         for j in range(columns):
             kernel, theta = setKernel(kerType)
             aux.append(kernel)
@@ -200,11 +208,11 @@ def optimize_parameters_between_goals(kernelType, learnSet, rows, columns):
                 # Build a kernel with the specified type and initial parameters theta
                 ker, theta = setKernel(kernelType)
                 # Learn parameters
-                thetaX, thetaY = learn_parameters(z,x,y,ker,theta)
                 print("[OPT] [",i,"][",j,"]")
+                print("[OPT] #trajectories: ",len(z))
+                thetaX, thetaY = learn_parameters(z,x,y,ker,theta)
                 print("[OPT] x: ",thetaX)
                 print("[OPT] y: ",thetaY)
-                print("[OPT] #trajectories: ",len(z))
                 kernelMatX[i][j].setParameters(thetaX)
                 kernelMatY[i][j].setParameters(thetaY)
                 r.append([thetaX, thetaY])

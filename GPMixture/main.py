@@ -109,7 +109,6 @@ img = mpimg.imread('imgs/goals.jpg')
 dataPaths, multigoal = get_paths_from_file('datasets/CentralStation_paths_10000.txt',areas)
 usefulPaths = getUsefulPaths(dataPaths,areas)
 
-plotPaths(usefulPaths, img)
 print("[INF] Number of useful paths: ",len(usefulPaths))
 sortedPaths = sorted(usefulPaths, key=time_compare)
 pathSet     = get_path_set_given_time_interval(sortedPaths,0,100)
@@ -126,6 +125,8 @@ startToGoalPath, arclenMat = define_trajectories_start_and_end_areas(areas,areas
 
 # Remove the trajectories that are either too short or too long
 pathMat, learnSet = filter_path_matrix(startToGoalPath, nGoals, nGoals)
+plotPaths(pathMat, img)
+
 print("[INF] Number of filtered paths: ",len(learnSet))
 
 # Compute the mean lengths
@@ -151,14 +152,13 @@ linearPriorMatX, linearPriorMatY = get_linear_prior_mean_matrix(pathMat, nGoals,
 kernelType = "linePriorCombined"#"combined"
 nParameters = 4
 
-# learningParameters = True
-# if learningParameters==True:
-#     print("[INF] Starting the learning phase")
-#     #kernelMat, parametersMat = create_kernel_matrix("linePriorCombined", nGoals, nGoals)
-#     kernelMat_x, kernelMat_y = optimize_parameters_between_goals(kernelType, pathMat, nGoals, nGoals)
-#     write_parameters(kernelMat_x,nGoals,nGoals,"parameters_x.txt")
-#     write_parameters(kernelMat_y,nGoals,nGoals,"parameters_y.txt")
-#     print("[INF] End of the learning phase")
+learningParameters = True
+if learningParameters==True:
+    print("[INF] Starting the learning phase")
+    kernelMat_x, kernelMat_y = optimize_parameters_between_goals(kernelType, pathMat, nGoals, nGoals)
+    write_parameters(kernelMat_x,nGoals,nGoals,"parameters_x.txt")
+    write_parameters(kernelMat_y,nGoals,nGoals,"parameters_y.txt")
+    print("[INF] End of the learning phase")
 # else:
 #     # Read the kernel parameters from file
 #     kernelMat_x = read_and_set_parameters("combined1010_x.txt",nParameters)
