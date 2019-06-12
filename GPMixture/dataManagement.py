@@ -191,7 +191,7 @@ def filter_path_matrix(M, nRows, mColumns):#nGoals):
             # Add the filtered trajectories to the element list M[i][j]
             for m in range(len(aux)):
                 mat[i][j].append(aux[m])
-            # Add the filtered trajectories to the list learnSet                
+            # Add the filtered trajectories to the list learnSet
             for k in range(len(aux)):
                 learnSet.append(aux[k])
     return mat, learnSet
@@ -240,13 +240,17 @@ def startGoal(p,goals):
             return i
     return -1
 
+# Returns a nGoalsxnGoals matrix with the Euclidean distances between goals
 def get_euclidean_goal_distance(goals, nGoals):
     mat = []
     for i in range(nGoals):
         row = []
+        # Take the centroid of the ROI i
         p = middle_of_area(goals[i])
         for j in range(nGoals):
+            # Take the centroid of the ROI j
             q = middle_of_area(goals[j])
+            # Compute the euclidean distance between the two centroids i and j            
             d = np.sqrt((p[0]-q[0])**2 + (p[1]-q[1])**2)
             row.append(d)
         mat.append(row)
