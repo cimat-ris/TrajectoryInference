@@ -122,24 +122,26 @@ def write_useful_paths_file(paths): #paths es un vector de indices
 """ Regresa una matriz de trayectorias:
 en la entrada (i,j) estan los caminos que comienzan en g_i y terminan en g_j"""
 def define_trajectories_start_and_end_areas(startGoals, finishGoals, paths):
+    # Number of starting goals
     nRows = len(startGoals)
+    # Number of ending goals
     nColumns = len(finishGoals)
-    #goalNum = len(goals)
+    # Matrix to be built
     mat = np.empty((nRows,nColumns),dtype=object)
     arclenMat = np.empty((nRows,nColumns),dtype=object)
-    #usefulPaths = []
+    # Initialize the matrix elements to empty lists
     for i in range(nRows):
         for j in range(nColumns):
             mat[i][j]=[]
             arclenMat[i][j] = []
-
+    # For all trajectories
     for i in range(len(paths)):
         lenData = len(paths[i].x) # Number of data for each trajectory
         # Start and finish points
         startX, startY = paths[i].x[0], paths[i].y[0]
         endX, endY = paths[i].x[lenData-1], paths[i].y[lenData-1]
         startIndex, endIndex = -1, -1
-
+        # Determine which starting/ending indices they correspond to
         for j in range(nRows):
             if(isInArea([startX,startY], startGoals[j])):
                 startIndex = j
@@ -147,29 +149,35 @@ def define_trajectories_start_and_end_areas(startGoals, finishGoals, paths):
             if(isInArea([endX,endY], finishGoals[k])):
                 endIndex = k
         if(startIndex > -1 and endIndex > -1):
-            #usefulPaths.append(i+1)
+            # Keep the trajectory
             mat[startIndex][endIndex].append(paths[i])
+            # Keep the trajectory length
             arclenMat[startIndex][endIndex].append(paths[i].length)
-    return mat, arclenMat#, usefulPaths
+    return mat, arclenMat
 
-#Calcula la mediana m, y la desviacion estandar s de un vector de paths
-#si alguna trayectoria difiere de la mediana en 4s o mas, se descarta
+# Computes the median m and the standard deviation s of a list of paths
+# If any trajectory within this list differs with more than s from m, it is filtered out
 def filter_path_vec(vec):
+    # Get the list of arclengths
     arclen = get_paths_arcLength(vec)
+    # Median
     m = np.median(arclen)
+    # Standard deviation
     var = np.sqrt(np.var(arclen))
-    #print("mean len:", m)
+    # Resulting filtered set
     learnSet = []
     for i in range(len(arclen)):
-        if abs(arclen[i] - m) < 1.0*var:
+        if abs(arclen[i] - m) <= var:
             learnSet.append(vec[i])
-
     return learnSet
 
-#Arreglo de NxNxM_ij
-#N = num de goals, M_ij = num de paths de g_i a g_j
+# Takes the start-goal matrix of lists of trajectories and filter them
+# Output is:
+# - matrix of filtered lists of trajectories
+# - one big list of all the remaining trajectories
 def filter_path_matrix(M, nRows, mColumns):#nGoals):
     learnSet = []
+    # Initialize a nRowsxnCols matrix with empty lists
     mat = np.empty((nRows, mColumns),dtype=object)
     for i in range(nRows):
         for j in range(mColumns):
@@ -177,10 +185,13 @@ def filter_path_matrix(M, nRows, mColumns):#nGoals):
 
     for i in range(nRows):
         for j in range(mColumns):
+            # If the list of trajectories is non-empty, filter it
             if(len(M[i][j]) > 0):
                 aux = filter_path_vec(M[i][j])
+            # Add the filtered trajectories to the element list M[i][j]
             for m in range(len(aux)):
                 mat[i][j].append(aux[m])
+            # Add the filtered trajectories to the list learnSet                
             for k in range(len(aux)):
                 learnSet.append(aux[k])
     return mat, learnSet
