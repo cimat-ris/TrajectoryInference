@@ -52,37 +52,30 @@ def regression(x,y,xnew,kernel):  #regresion sin recibir los parametros, el kern
 #******************************************************************************#
 """ LEARNING """
 nsigma = 7.50 #error de las observaciones
-#Parametros: theta, vector de vectores: x,y
 
+# Set kernel: a function that creates a kernel, given its type name
 def setKernel(name):
     if(name == "squaredExponential"):
-        parameters = [80., 80.] #{sigma_f, l}
+        parameters = [80., 80.]  #{Covariance magnitude factor, Characteristic length}
         kernel = kernels.squaredExponentialKernel(parameters[0],parameters[1],nsigma)
-    elif(name == "combined"): #kernel de Trautman
-        parameters = [60., 80., 80.]#{gamma, sMatern, lMatern}, sigma
+    elif(name == "combinedTrautman"):
+        parameters = [60., 80., 80.]  #{Precision of the line constant, Covariance magnitude factor, Characteristic length}
         kernel = kernels.combinedKernel(parameters[0],parameters[1],parameters[2],nsigma)
-    elif(name == "combinedModified"): #kernel simplificado para la optimizacion
-        parameters = [50., 50.]#{sMatern, lMatern}, sigma
-        kernel = kernels.combinedKernel(parameters[0],parameters[1],nsigma)
     elif(name == "exponential"):
-        parameters = [80., 80.] #{s,l}
+        parameters = [80., 80.]  #{Covariance magnitude factor, Characteristic length}
         kernel = kernels.exponentialKernel(parameters[0],parameters[1])
     elif(name == "gammaExponential"):
-        parameters = [80., 8.] #{l, gamma}
+        parameters = [80., 80., 8.]  #{Covariance magnitude factor, Characteristic length, Gamma exponent}
         kernel = kernels.gammaExponentialKernel(parameters[0],parameters[1])
     elif(name == "rationalQuadratic"):
-        parameters = [10., 5.] #{l, alpha}
+        parameters = [80.0,10., 5.] #{Covariance magnitude factor, Characteristic length, Alpha parameter}
         kernel = kernels.rationalQuadraticKernel(parameters[0],parameters[1],nsigma)
-    elif(name == "SQ"):
-        parameters = [80.0, nsigma] #{l, sigma}
-        kernel = kernels.SQKernel(parameters[0],parameters[1])
-    elif(name == "expCombined"):
-        parameters = [80., 80.] #{s,l}
+    elif(name == "squaredExponentialAndNoise"):
+        parameters = [80., 80.] #{Covariance magnitude factor, Characteristic length}
         kernel = kernels.expKernel(parameters[0],parameters[1],nsigma)
     elif(name == "linePriorCombined"):
-        parameters = [60., 60., 80., 80.]#{gamma, sMatern, lMatern}, sigma
+        parameters = [0.01,1.0, 80., 80.]  #{Standard deviation slope, Standard deviation constant, Covariance magnitude factor, Characteristic length}
         kernel = kernels.linePriorCombinedKernel(parameters[0],parameters[1],parameters[2],parameters[3],nsigma)
-
 
     return kernel, parameters
 

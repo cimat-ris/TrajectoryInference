@@ -173,7 +173,7 @@ class combinedTrautmanKernel(Kernel):
     def print_parameters(self):
         print("combined kernel parameters\n gamma =",self.gamma,"\n s =",self.s,", l = ",self.length)
 
-
+# Exponential kernel
 class exponentialKernel(Kernel):
     def __init__(self, sigmaSq, length):
         # Covariance magnitude factor
@@ -193,6 +193,7 @@ class exponentialKernel(Kernel):
     def __call__(self,x,y):
         return self.sigmaSq*m.exp(-m.fabs(x-y)/self.length)
 
+# Gamma exponential kernel
 class gammaExponentialKernel(Kernel):
     def __init__(self, sigmaSq, length, gamma):
         # Covariance magnitude factor
@@ -217,6 +218,7 @@ class gammaExponentialKernel(Kernel):
         rn = m.fabs(x-y)/self.length
         return self.sigmaSq*m.exp(-rn**self.gamma)
 
+# Rational quadratic kernel
 class rationalQuadraticKernel(Kernel):
     def __init__(self, sigmaSq, length, alpha, sigmaNoise):
         # Covariance magnitude factor
