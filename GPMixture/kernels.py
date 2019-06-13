@@ -22,7 +22,7 @@ class Kernel:
 
 # Linear kernel
 class linearKernel(Kernel):
-    def __init__(self, sigma_a,sigma_c):
+    def __init__(self, sigma_a, sigma_c):
         # Variance on the slope
         self.sigma_a   = sigma_a
         self.sigmaSq_a = sigma_a**2
@@ -34,8 +34,10 @@ class linearKernel(Kernel):
 
     def setParameters(self,vec):
         # Variance on the slope
+        self.sigma_a   = vec[0]
         self.sigmaSq_a = vec[0]**2
         # Variance on the constant
+        self.sigma_c   = vec[1]
         self.sigmaSq_c = vec[1]**2
 
     def get_parameters(self):
@@ -90,7 +92,7 @@ class maternKernel(Kernel):
         self.length       = length
         # Type of kernel
         self.type         = "matern"
-
+        self.sqrootof5    = m.sqrt(5)
     def setParameters(self,vec):
         # Covariance magnitude factor
         self.sigmaSq= vec[0]
@@ -99,8 +101,13 @@ class maternKernel(Kernel):
 
     # Overload the operator ()
     def __call__(self,x,y):
-        rn  = m.fabs(x-y)/self.length
-        val = self.sigmaSq*(1. + m.sqrt(5)*rn + 5.*rn**2/(3.0) )*m.exp(-1.*m.sqrt(5)*rn)
+        rn  = m.fabs((x-y)/self.length)
+        # To avoid overflow
+        if rn>20.0:
+            val = 0.0
+        else:
+            rn2 = rn**2
+            val = self.sigmaSq*(1. + self.sqrootof5*rn + 1.67*rn2)*m.exp(-self.sqrootof5*rn)
         return val
 
 # Matern kernel from Rasmussen
@@ -281,10 +288,7 @@ class exponentialAndNoiseKernel(Kernel):
     def __call__(self,x,y):
         return self.exponential(x,y) + self.noise(x,y)
 
-"""************************************"""
-#kernel considerando el line prior
-
-#kernel combinado considerando el line prior
+# A combined kernel that considers a prior on the line parameters
 class linePriorCombinedKernel(Kernel):
     def __init__(self, sigmaSlope, sigmaConstant, sigmaSq, length, sigmaNoise):
         self.sigmaSlope    = sigmaSlope
@@ -299,7 +303,7 @@ class linePriorCombinedKernel(Kernel):
         # Type of kernel
         self.type    = "linePriorCombined"
 
-    def setParameters(self,vec):
+    def set_parameters(self,vec):
         self.sigmaSlope    = vec[0]
         self.sigmaConstant = vec[1]
         # Covariance magnitude factor
@@ -310,12 +314,23 @@ class linePriorCombinedKernel(Kernel):
         mV = [self.sigmaSq, self.length]
         self.matern.setParameters(mV)
 
+    def set_optimizable_parameters(self,vec):
+        # Covariance magnitude factor
+        self.sigmaSq       = vec[0]
+        # Characteristic length
+        self.length        = vec[1]
+        self.matern.setParameters(vec)
+
     def __call__(self,x,y):
         return self.matern(x,y) + self.linear(x,y) + self.noise(x,y)
 
     def get_parameters(self):
-        parameters = [self.gamma_a, self.gamma_0, self.sigmaSq, self.length]
+        parameters = [self.sigmaSlope, self.sigmaConstant, self.sigmaSq, self.length]
+        return parameters
+
+    def get_optimizable_parameters(self):
+        parameters = [self.sigmaSq, self.length]
         return parameters
 
     def print_parameters(self):
-        print("combined kernel parameters\n gamma_a =",self.gamma_a,"\n gamma_0",self.gamma_0,"\n s =",self.sigmaSq,", l = ",self.length)
+        print("combined kernel parameters\n gamma_a =",self.sigmaSlope,"\n gamma_0",self.sigmaConstant,"\n s =",self.sigmaSq,", l = ",self.length)

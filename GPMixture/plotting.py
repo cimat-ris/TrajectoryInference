@@ -18,6 +18,7 @@ color = ['g','m','r','b','c','y','w','k']
 
 #******************************************************************************#
 """ PLOT FUNCTIONS """
+
 # Takes as an input a set of paths and plot them all on img
 def plotPaths(vec, img):
     n = len(vec)
@@ -27,6 +28,7 @@ def plotPaths(vec, img):
     ax.set_aspect('equal')
     # Show the image
     ax.imshow(img)
+    # Plot each trajectory
     for i in range(n):
         plt.plot(vec[i].x,vec[i].y)
     s = img.shape
@@ -38,7 +40,6 @@ def plotPaths(vec, img):
 def plotPaths(pathSetMat, img):
 
     s         = pathSetMat.shape
-    print(s)
     fig, axes = plt.subplots(s[0], s[1])
     for i in range(s[0]):
         for j in range(s[1]):
@@ -46,11 +47,10 @@ def plotPaths(pathSetMat, img):
             axes[i,j].set_aspect('equal')
             # Show the image
             axes[i,j].imshow(img)
+            # Plot each trajectory
             for k in range(n):
                 axes[i,j].plot(pathSetMat[i][j][k].x,pathSetMat[i][j][k].y)
-            simg = img.shape
-            v = [0,simg[1],simg[0],0]
-            axes[i,j].axis(v)
+            axes[i,j].axis('off')
     plt.show()
 
 #Grafica los datos reales, los datos conocidos y los calculados

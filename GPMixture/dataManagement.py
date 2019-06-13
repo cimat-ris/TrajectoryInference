@@ -250,7 +250,7 @@ def get_euclidean_goal_distance(goals, nGoals):
         for j in range(nGoals):
             # Take the centroid of the ROI j
             q = middle_of_area(goals[j])
-            # Compute the euclidean distance between the two centroids i and j            
+            # Compute the euclidean distance between the two centroids i and j
             d = np.sqrt((p[0]-q[0])**2 + (p[1]-q[1])**2)
             row.append(d)
         mat.append(row)
@@ -496,7 +496,8 @@ def get_pedestrian_average_speed(paths):
 
 
 """ LINEAR PRIOR MEAN"""
-#f(l) = al + b, la funcion regresa a y b
+# Linear regression: for data l,f(l), the function returns a, b for the line between the
+# starting and ending points
 def get_line_parameters(path, flag):
     n = len(path.l)
     ln = path.l[n-1]
@@ -522,8 +523,8 @@ def get_line_covariance(lineParameters, mean):
         cov=0.0
     return cov
 
-# Determine the variance on line parameters, for a pair of goals
-def get_line_stddeviation(lineParameters, mean):
+# Determine the variances on line parameters, for a pair of goals
+def get_line_variances(lineParameters, mean):
     n = len(lineParameters)
     sum_a, sum_b = 0., 0.
     for i in range(n):
@@ -531,12 +532,11 @@ def get_line_stddeviation(lineParameters, mean):
         sum_b += (lineParameters[i][1] - mean[1])**2
     var = [sum_a/n, sum_b/n]
     # TODO: change this hard-coded value
-    if var[0]<0.1:
-        var[0]=0.1
-    if var[1]<0.1:
-        var[1]=0.1
-    stddevs = [np.sqrt(var[0]),np.sqrt(var[1])]
-    return stddevs
+    if var[0]<0.001:
+        var[0]=0.001
+    if var[1]<0.001:
+        var[1]=0.001
+    return var
 
 # Takes as an input a set of trajectories (between goals) and a flag that says whether the orientation
 # is in x or y
@@ -557,9 +557,10 @@ def get_linear_prior_mean(paths, flag):
         sum_b += b
     # Get the mean parameters
     mean = [sum_a/n, sum_b/n]
-    cov       = get_line_covariance(lineParameters, mean)
-    precision = get_line_stddeviation(lineParameters, mean)
-    return mean
+    # Get the covariance and standard deviations
+    cov          = get_line_covariance(lineParameters, mean)
+    vars         = get_line_variances(lineParameters, mean)
+    return mean, cov, vars
 
 # Compute, for X and Y, for each pair of goals, the matrix of the linear prior means
 def get_linear_prior_mean_matrix(pathMat, nGoals, mGoals):
@@ -567,10 +568,10 @@ def get_linear_prior_mean_matrix(pathMat, nGoals, mGoals):
     matY = np.empty((nGoals, mGoals),dtype=object)
     for i in range(nGoals):     #rows
         for j in range(mGoals): #columns
-            meanX = get_linear_prior_mean(pathMat[i][j], 'x')
-            meanY = get_linear_prior_mean(pathMat[i][j], 'y')
-            matX[i][j] = meanX
-            matY[i][j] = meanY
+            meanX, covX, varX  = get_linear_prior_mean(pathMat[i][j], 'x')
+            meanY, covY, varY  = get_linear_prior_mean(pathMat[i][j], 'y')
+            matX[i][j] = (meanX,varX)
+            matY[i][j] = (meanY,varY)
     return matX, matY
 
 """ HELPFUL FUNCTIONS"""
@@ -584,7 +585,7 @@ def equal(vx,vy,x,y):
     else:
         return 0
 
-# Recibe un punto (x,y) y un area de interes R
+# Test if a point (x,y) belongs to an area R
 def isInArea(p,R):
     x = p[0]
     y = p[1]
@@ -596,10 +597,12 @@ def isInArea(p,R):
     else:
         return 0
 
+# Euclidean distance
 def euclidean_distance(pointA, pointB):
     dist = math.sqrt( (pointA[0]-pointB[0])**2 + (pointA[1]-pointB[1])**2 )
     return dist
 
+# Centroid of an area
 def middle_of_area(rectangle):
     dx, dy = rectangle[6]-rectangle[0], rectangle[7]-rectangle[1]
     middle = [rectangle[0] + dx/2., rectangle[1] + dy/2.]

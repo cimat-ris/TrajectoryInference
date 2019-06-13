@@ -152,40 +152,30 @@ linearPriorMatX, linearPriorMatY = get_linear_prior_mean_matrix(pathMat, nGoals,
 kernelType = "linePriorCombined"#"combined"
 nParameters = 4
 
+"""******************************************************************************"""
+"""**************    Learning / reading parameters     **************************"""
 learningParameters = True
 if learningParameters==True:
     print("[INF] Starting the learning phase")
-    kernelMat_x, kernelMat_y = optimize_parameters_between_goals(kernelType, pathMat, nGoals, nGoals)
+    kernelMat_x, kernelMat_y = optimize_parameters_between_goals(kernelType, pathMat, nGoals, nGoals, linearPriorMatX, linearPriorMatY)
     write_parameters(kernelMat_x,nGoals,nGoals,"parameters_x.txt")
     write_parameters(kernelMat_y,nGoals,nGoals,"parameters_y.txt")
     print("[INF] End of the learning phase")
-# else:
-#     # Read the kernel parameters from file
-#     kernelMat_x = read_and_set_parameters("combined1010_x.txt",nParameters)
-#     kernelMat_y = read_and_set_parameters("combined1010_y.txt",nParameters)
-# quit()
+else:
+     # Read the kernel parameters from file
+     kernelMat_x = read_and_set_parameters("linearpriorcombined6x6_x.txt",nParameters)
+     kernelMat_y = read_and_set_parameters("linearpriorcombined6x6_y.txt",nParameters)
 
-"""
-#***********APRENDIZAJE***********
-print("***********INICIO APRENDIZAJE*********")
-#kernelMat, parametersMat = create_kernel_matrix("linePriorCombined", nGoals, nGoals)
-kernelMat_x, kernelMat_y = optimize_parameters_between_goals(kernelType, pathMat, nGoals, nGoals)
-write_parameters(kernelMat_x,nGoals,nGoals,"parameters_x.txt")
-write_parameters(kernelMat_y,nGoals,nGoals,"parameters_y.txt")
-print("***********FIN DEL APRENDIZAJE*********")
-"""
-#fijamos los parámetros para cada matriz de kernel
-kernelMat_x = read_and_set_parameters("linePriorParameters_x.txt",nGoals,nGoals,kernelType,nParameters)
-kernelMat_y = read_and_set_parameters("linePriorParameters_y.txt",nGoals,nGoals,kernelType,nParameters)
-
+"""******************************************************************************"""
+"""**************    Testing                           **************************"""
 #Test dado el goal de inicio y fin
 startG = 1
 nextG = 4
 
 kernelX = kernelMat_x[startG][nextG]
 kernelY = kernelMat_y[startG][nextG]
-kernelX.setParameters([0.01,1.0, 80., 80., 1.0])
-kernelY.setParameters([0.01,1.0, 80., 80., 1.0])
+kernelX.set_parameters([0.01,1.0, 80., 80., 1.0])
+kernelY.set_parameters([0.01,1.0, 80., 80., 1.0])
 
 pathId = 3 #indice de la trayectoria a predecir
 _path = pathMat[startG][nextG][pathId]

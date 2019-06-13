@@ -21,7 +21,7 @@ def evaluateCovarianceMatrix(kernel,length):
 s = 1000
 
 
-parameters = [0.01,-0.5, 280., 280., 1.0]
+parameters = [0.01, 2000, 500., 200., 1.0]
 kernel = kernels.squaredExponentialKernel(parameters[2],parameters[3])
 CSqe = evaluateCovarianceMatrix(kernel,s)
 

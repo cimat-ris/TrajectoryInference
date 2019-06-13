@@ -54,7 +54,7 @@ def regression(x,y,xnew,kernel):  #regresion sin recibir los parametros, el kern
 """ LEARNING """
 nsigma = 7.50 #error de las observaciones
 
-# Set kernel: a function that creates a kernel, given its type name
+# Set kernel: a function that creates a kernel with default parameters, given its type name
 def setKernel(name):
     if(name == "squaredExponential"):
         parameters = [80., 80.]  #{Covariance magnitude factor, Characteristic length}
@@ -78,7 +78,7 @@ def setKernel(name):
         parameters = [0.01,1.0, 80., 80.]  #{Standard deviation slope, Standard deviation constant, Covariance magnitude factor, Characteristic length}
         kernel = kernels.linePriorCombinedKernel(parameters[0],parameters[1],parameters[2],parameters[3],nsigma)
 
-    return kernel, parameters
+    return kernel
 
 # Returns two nGoalsxnGoals matrices:
 # - the matrix of kernels with the default parameters
@@ -92,7 +92,8 @@ def create_kernel_matrix_(kerType, ngoals):
         auxP = []
         # For goal j
         for j in range(ngoals):
-            kernel, theta = setKernel(kerType)
+            kernel = setKernel(kerType)
+            theta  = kernel.get_parameters()
             aux.append(kernel)
             auxP.append(theta)
         kerMatrix.append(aux)
@@ -111,7 +112,8 @@ def create_kernel_matrix(kerType, rows, columns):
         auxP = []
         # For goal j
         for j in range(columns):
-            kernel, theta = setKernel(kerType)
+            kernel = setKernel(kerType)
+            theta  = kernel.get_parameters()
             aux.append(kernel)
             auxP.append(theta)
         kerMatrix.append(aux)
@@ -120,7 +122,7 @@ def create_kernel_matrix(kerType, rows, columns):
 
 # Evaluate the minus log-likelihood
 def mlog_p(theta,x,y,kernel):
-    kernel.setParameters(theta)
+    kernel.set_optimizable_parameters(theta)
     n = len(x)
     K = np.zeros((n,n))
     for i in range(n):
@@ -147,75 +149,30 @@ def neg_sum_log_p(theta,t,x,kernel):
     return s
 
 # Opimization of the parameters, in x then in y
-def optimize_kernel_parameters_XY(t,x,y,theta,kernel):
+def optimize_kernel_parameters(t,x,theta,kernel):
     # TODO: set these bounds elswhere
-    bnds = ((0.00001, 0.1), (1.0, 100.0), (100.0, 500.0), (10.0, 100.0))
+    bnds = ((100.0, 5000.0), (10.0, 200.0))
     try:
-        parametersX = minimize(neg_sum_log_p, theta,(t,x,kernel), method='TNC', bounds=bnds,options={'maxiter':20,'disp': False})
-        #parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='Nelder-Mead', options={'maxiter':16,'disp': False})
+        #parametersX = minimize(neg_sum_log_p, theta,(t,x,kernel), method='SLSQP', bounds=bnds,options={'maxiter':40,'disp': False})
+        parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='Nelder-Mead', options={'maxiter':16,'disp': False})
         px          = parametersX.x
     except Exception as e:
         print(colored("[ERR] {:s} ".format(e),'red'))
         px = theta
-
-    #parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='L-BFGS-B', options={'maxiter':16,'disp': True})
-    try:
-        parametersY = minimize(neg_sum_log_p, theta,(t,y,kernel), method='TNC', bounds=bnds,options={'maxiter':36,'disp': False})
-        #parametersY = minimize(neg_sum_log_p,theta,(t,y,kernel),method='Nelder-Mead', options={'maxiter':16,'disp': False})
-        py          =  parametersY.x
-    except Exception as e:
-         print(colored("[ERR] {:s} ".format(e),'red'))
-         py = theta
-
-    return px, py
+    kernel.set_optimizable_parameters(px)
+    return px
 
 # Learn parameters of the kernel, given l,x,y as data (will maximize likelihood)
-def learn_parameters(l,x,y,kernel,parameters):
-    return optimize_kernel_parameters_XY(l,x,y,parameters,kernel)
-
-def optimize_parameters_between_2goals(learnSet, kernelMat, parametersMat, startGoal, finishGoal):
-    kernelX = kernelMat[startGoal][finishGoal]
-    kernelY = kernelMat[startGoal][finishGoal]
-
-    x,y,z = get_data_from_paths(learnSet,"length")
-    k = kernelMat[startGoal][finishGoal]
-    parameters = parametersMat[startGoal][finishGoal]
-    paramX, paramY = learning(z,x,y,k,parameters)
-    kernelX.setParameters(paramX)
-    kernelY.setParameters(paramY)
-
-#Aprendizaje para cada par de trayectorias
-#Regresa una matriz de kernels con los parametros optimizados
-#learnSet = [[(start_i,goal_j)]], kernelMat = [[k_ij]], thetaMat = [[parametros del kernel_ij]]
-def optimize_parameters_between_goals_(kernelType, learnSet, nGoals):
-    #parameters = []
-    kernelMatX, parametersX = create_kernel_matrix(kernelType, nGoals)
-    kernelMatY, parametersY = create_kernel_matrix(kernelType, nGoals)#,  kernelMat, kernelMat
-    for i in range(nGoals):
-        r = []
-        for j in range(nGoals):
-            paths = learnSet[i][j]
-            if len(paths) > 0:
-                x,y,z = get_data_from_paths(paths,"length")
-                ker, theta = setKernel(kernelType)
-                thetaX, thetaY = learn_parameters(z,x,y,ker,theta)
-                print("[",i,"][",j,"]")
-                print("x: ",thetaX)
-                print("y: ",thetaY)
-                kernelMatX[i][j].setParameters(thetaX)
-                kernelMatY[i][j].setParameters(thetaY)
-                r.append([thetaX, thetaY])
-        #parameters.append(r)
-    return kernelMatX, kernelMatY
+def learn_parameters(l,x,kernel,parameters):
+    return optimize_kernel_parameters(l,x,parameters,kernel)
 
 # For each pair of goals, realize the optimization of the kernel parameters
-def optimize_parameters_between_goals(kernelType, learnSet, rows, columns):
-    # Build the kernel matrices
+def optimize_parameters_between_goals(kernelType, learnSet, rows, columns, linearPriorMatX, linearPriorMatY):
+    # Build the kernel matrices with the default values
     kernelMatX, parametersX = create_kernel_matrix(kernelType, rows, columns)
     kernelMatY, parametersY = create_kernel_matrix(kernelType, rows, columns)
     # For goal i
     for i in range(rows):
-        r = []
         # For goal j
         for j in range(columns):
             # Get the paths that go from i to j
@@ -225,20 +182,29 @@ def optimize_parameters_between_goals(kernelType, learnSet, rows, columns):
                 # Get the path data as x,y,z (z is arclength)
                 x,y,z = get_data_from_paths(paths,"length")
                 # Build a kernel with the specified type and initial parameters theta
-                ker, theta = setKernel(kernelType)
+                ker   = setKernel(kernelType)
+                params= ker.get_parameters()
+                theta = ker.get_optimizable_parameters()
                 print("[OPT] Init parameters ",theta)
-                # Learn parameters
                 print("[OPT] [",i,"][",j,"]")
                 print("[OPT] #trajectories: ",len(z))
-                thetaX, thetaY = learn_parameters(z,x,y,ker,theta)
+                # Learn parameters in X
+                params[0] = linearPriorMatX[i][j][1][0]
+                params[1] = linearPriorMatX[i][j][1][1]
+                ker.set_parameters(params)
+                thetaX  = learn_parameters(z,x,ker,theta)
                 print("[OPT] x: ",thetaX)
+                kernelMatX[i][j].set_parameters(ker.get_parameters())
+                # Learn parameters in Y
+                params[0] = linearPriorMatY[i][j][1][0]
+                params[1] = linearPriorMatY[i][j][1][1]
+                ker.set_parameters(params)
+                thetaY  = learn_parameters(z,y,ker,theta)
                 print("[OPT] y: ",thetaY)
-                kernelMatX[i][j].setParameters(thetaX)
-                kernelMatY[i][j].setParameters(thetaY)
-                r.append([thetaX, thetaY])
+                kernelMatY[i][j].set_parameters(ker.get_parameters())
                 stop = timeit.default_timer()
                 execution_time = stop - start
-                print("[INF] Learning in %.2f seconds"%execution_time)
+                print("[OPT] Parameter optimization done in %.2f seconds"%execution_time)
     return kernelMatX, kernelMatY
 
 #recibe una matriz de kernel [[kij]], con parametros [gamma,s,l]
@@ -649,7 +615,7 @@ def arclen_to_time(initTime,l,speed):
 
 #******************************************************************************#
 """***REGRESSION USING LINE PRIOR ***"""
-#TODO
+# Mean of the Gaussian process with a linear prior
 def linear_mean(l, priorMean):
     m = priorMean[0]*l + priorMean[1]
     return m
@@ -668,7 +634,7 @@ def line_prior_regression(l,x_meanl,lnew,kernel,priorMean):  #regresion sin reci
         k[i] = kernel(lnew,l[i])
 
     K_1 = inv(K)
-    xnew = linear_mean(lnew,priorMean) + k.dot(K_1.dot(x_meanl))
+    xnew = linear_mean(lnew,priorMean[0]) + k.dot(K_1.dot(x_meanl))
     # Estimate the variance
     K_1kt = K_1.dot(k.transpose())
     kK_1kt = k.dot(K_1kt)
@@ -682,7 +648,7 @@ def estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMean):
     predictedX, varianceX = [], []
     X_meanL = []
     for i in range(len(knownL)):
-        X_meanL.append(knownX[i] - linear_mean(knownL[i], priorMean))
+        X_meanL.append(knownX[i] - linear_mean(knownL[i], priorMean[0]))
 
     for i in range(lenNew):
         val, var = line_prior_regression(knownL,X_meanL,newL[i],kernel,priorMean) #line prior regression
