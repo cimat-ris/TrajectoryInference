@@ -620,8 +620,10 @@ def linear_mean(l, priorMean):
     m = priorMean[0]*l + priorMean[1]
     return m
 
-def line_prior_regression(l,x_meanl,lnew,kernel,priorMean):  #regresion sin recibir los parametros, el kernel ya los trae fijos
-    n = len(l) # Number of observed data
+# Regression with line prior
+def line_prior_regression(l,x_meanl,lnew,kernel,priorMean):
+    # Number of observed data
+    n = len(l)
     # Compute K, k and c
     K  = np.zeros((n,n))
     k = np.zeros(n)
@@ -632,39 +634,41 @@ def line_prior_regression(l,x_meanl,lnew,kernel,priorMean):  #regresion sin reci
     # Fill in k
     for i in range(n):
         k[i] = kernel(lnew,l[i])
-
     K_1 = inv(K)
+    # Predictive mean
     xnew = linear_mean(lnew,priorMean[0]) + k.dot(K_1.dot(x_meanl))
     # Estimate the variance
     K_1kt = K_1.dot(k.transpose())
     kK_1kt = k.dot(K_1kt)
+    # Variance
     var = kernel(lnew,lnew) - kK_1kt
-
+    if var<0.1: 
+        var = 0.1
     return xnew, var
 
-#lp = line prior
+# Applies regression for a whole set newL of values L, given knownL, knownX
 def estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMean):
     lenNew = len(newL)
     predictedX, varianceX = [], []
     X_meanL = []
     for i in range(len(knownL)):
         X_meanL.append(knownX[i] - linear_mean(knownL[i], priorMean[0]))
-
     for i in range(lenNew):
-        val, var = line_prior_regression(knownL,X_meanL,newL[i],kernel,priorMean) #line prior regression
-        #new_y, var_y = regression(known_x,known_y,newX[i],kernel)
+        # For each i, applies regression for newL[i]
+        val, var = line_prior_regression(knownL,X_meanL,newL[i],kernel,priorMean)
+        # Predictive mean
         predictedX.append(val)
+        # Variance
         varianceX.append(var)
-
     return predictedX, varianceX
 
-#lp = line prior
-#prediccion en X y en Y
-#Recibe los datos conocidos (x,y,z) y los puntos para la regresion.
-def prediction_XY_lp(x, y, l, newL, kernelX, kernelY, priorMeanX, priorMeanY):#prediction
-    newX, varX = estimate_new_set_of_values_lp(l,x,newL,kernelX,priorMeanX)#prediccion para x
-    newY, varY = estimate_new_set_of_values_lp(l,y,newL,kernelY,priorMeanY)#prediccion para y
-
+# Performs prediction in X and Y with a line prior
+# Takes as input known values (x,y,l) and the points at which we want to perform regression (newL)
+def prediction_XY_lp(x, y, l, newL, kernelX, kernelY, priorMeanX, priorMeanY):
+    # Regression for X
+    newX, varX = estimate_new_set_of_values_lp(l,x,newL,kernelX,priorMeanX)
+    # Regression for Y
+    newY, varY = estimate_new_set_of_values_lp(l,y,newL,kernelY,priorMeanY)
     return newX, newY, varX, varY
 
 #Toma la mitad de los datos observados como conocidos y predice nPoints en la mitad restante, regresa el error de la prediccion

@@ -53,7 +53,7 @@ def plotPaths(pathSetMat, img):
             axes[i,j].axis('off')
     plt.show()
 
-#Grafica los datos reales, los datos conocidos y los calculados
+# Grafica los datos reales, los datos conocidos y los calculados
 def plot_prediction(img,trueX,trueY,knownN,predictedX,predictedY,varX,varY):
     realX, realY = [],[]
     N = int(len(trueX))
@@ -232,7 +232,10 @@ def plot_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goals
         predictedN = len(predictedXYVec[i][0])
         for j in range(predictedN):
             xy = [predictedXYVec[i][0][j],predictedXYVec[i][1][j]]
-            ell = Ellipse(xy,varXYVec[i][0][j], varXYVec[i][1][j])
+            print(varXYVec[i][0][j],varXYVec[i][1][j])
+            # 6.0 = 2.0 x 3.0
+            # It is: to have 3.0 sigmas. Then, the Ellipse constructor asks for the diameter, hence the 2.0
+            ell = Ellipse(xy,6.0*math.sqrt(varXYVec[i][0][j]),6.0*math.sqrt(varXYVec[i][1][j]))
             lw = (goalsLikelihood[i]/maxLikelihood)*maxLW
             ell.set_lw(lw)
             ell.set_fill(0)
