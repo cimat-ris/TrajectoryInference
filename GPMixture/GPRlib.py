@@ -279,7 +279,7 @@ def read_and_set_parameters(file_name, nParameters):
         for k in range(2,len(parameters_str)):
             parameters.append(float(parameters_str[k]))
         print("[INF] From goal ",i," to ", j, " parameters: ",parameters)
-        matrix[i][j].setParameters(parameters)
+        matrix[i][j].set_parameters(parameters)
     file.close()
     return matrix
 

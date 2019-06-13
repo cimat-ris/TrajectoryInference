@@ -154,7 +154,7 @@ nParameters = 4
 
 """******************************************************************************"""
 """**************    Learning / reading parameters     **************************"""
-learningParameters = True
+learningParameters = False
 if learningParameters==True:
     print("[INF] Starting the learning phase")
     kernelMat_x, kernelMat_y = optimize_parameters_between_goals(kernelType, pathMat, nGoals, nGoals, linearPriorMatX, linearPriorMatY)
@@ -174,8 +174,8 @@ nextG = 4
 
 kernelX = kernelMat_x[startG][nextG]
 kernelY = kernelMat_y[startG][nextG]
-kernelX.set_parameters([0.01,1.0, 80., 80., 1.0])
-kernelY.set_parameters([0.01,1.0, 80., 80., 1.0])
+#kernelX.set_parameters([0.01,1.0, 80., 80., 1.0])
+#kernelY.set_parameters([0.01,1.0, 80., 80., 1.0])
 
 pathId = 3 #indice de la trayectoria a predecir
 _path = pathMat[startG][nextG][pathId]
