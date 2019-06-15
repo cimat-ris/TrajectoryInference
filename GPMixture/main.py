@@ -168,27 +168,33 @@ else:
 
 """******************************************************************************"""
 """**************    Testing                           **************************"""
-#Test dado el goal de inicio y fin
+# We give the start and ending goals
 startG = 1
 nextG = 4
 
+# Kernels for this pair of goals
 kernelX = kernelMat_x[startG][nextG]
 kernelY = kernelMat_y[startG][nextG]
-#kernelX.set_parameters([0.01,1.0, 80., 80., 1.0])
-#kernelY.set_parameters([0.01,1.0, 80., 80., 1.0])
 
-pathId = 3 #indice de la trayectoria a predecir
+# Index of the trajectory to predict
+pathId = 3
+# Get the ground truth path
 _path = pathMat[startG][nextG][pathId]
-pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t #datos de la trayectoria
-pathSize = len(pathX)   #longitud total de la trayectoria
-#print("[pathT]",pathT)
+# Get the path data
+pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t
+# Total path length
+pathSize = len(pathX)
+
 arcLenToTime = arclen_to_time(320,pathL,speed)
 #print("[time]",arcLenToTime)
 #print("mean error:", mean_error(pathT,arcLenToTime))
 #print("[path data]:\n [x]:",pathX,"\n[y]:",pathY,"\n[l]:",pathL,"\n[t]:",pathT)
-#El conjunto de datos observados se parte en part_num
-#al hacer la prediccion se toma el porcentaje i/part_num como datos conocidos y se predice el resto
-part_num = 1
+
+
+# The dataset of observations is split into part_num subsets
+# When predicting, one takes the percentge i/part_num as known,
+# and the second part is predicted
+part_num = 10
 steps = 10
 for i in range(1,part_num-1):
     knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
@@ -208,7 +214,7 @@ for i in range(1,part_num-1):
     multigoal_prediction_test_lp(img,trueX,trueY,trueL,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorTransitionMat,linearPriorMatX,linearPriorMatY,goalSamplingAxis)
     #plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,middle_of_area(areas[nextG]))
     #prediction_test_over_time(pathX,pathY,pathT,knownN,start[0],nextG[0],areas)
-
+quit()
 nSamples = 10
 startGoal, finishGoal = 0,2
 path_sampling_between_goals_test(img,nSamples,areas,startGoal,finishGoal,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)

@@ -294,22 +294,25 @@ def multigoal_prediction_test(img,x,y,l,knownN,startG,goals,unitMat,stepUnit,ker
     plot_multiple_predictions_and_goal_likelihood(img,x,y,knownN,goalCount,plotLikelihood,predictedXYVec,varXYVec)
     #plot_multiple_predictions(img,x,y,knownN,goalCount,predictedXYVec,varXYVec)
 
-"""Line prior tests"""
+# Prediction with multiple goals and line priors
 def multigoal_prediction_test_lp(img,x,y,l,knownN,startG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,priorLikelihood,linearPriorMatX,linearPriorMatY,subgoalAxis):
+    # Ground truth
     trueX, trueY, trueL = get_known_set(x,y,l,knownN)
+    # Goals
     likelyGoals, goalsLikelihood = [],[]
     errorG = []
     nPoints = 5
     for i in range(len(goals)):
+        # Length/euclidean distance ratio
         unit = unitMat[startG][i]
+        # Kernels
         kernelX = kernelMatX[startG][i]
         kernelY = kernelMatY[startG][i]
-        priorMeanX = linearPriorMatX[startG][i] #line prior prediction
+        # Linear priors
+        priorMeanX = linearPriorMatX[startG][i]
         priorMeanY = linearPriorMatY[startG][i]
-
+        # Evaluate the error
         error = prediction_error_of_points_along_the_path_lp(nPoints,trueX,trueY,trueL,goals[i],unit,kernelX,kernelY,priorMeanX,priorMeanY)
-        #error = prediction_error_of_last_known_points(nPoints,trueX,trueY,trueL,goals[i],unit,stepUnit,kernelX,kernelY)
-        #error = get_goal_likelihood(trueX,trueY,trueL,startG,i,goals,unitMat,kernelMatX,kernelMatY)
         errorG.append(error)
 
     print("[RES] [Prediction Error]\n",errorG)
@@ -365,8 +368,8 @@ def multigoal_prediction_test_lp(img,x,y,l,knownN,startG,goals,unitMat,stepUnit,
     plot_multiple_predictions_and_goal_likelihood(img,x,y,knownN,goalCount,plotLikelihood,predictedXYVec,varXYVec)
     #plot_multiple_predictions(img,x,y,knownN,goalCount,predictedXYVec,varXYVec)
 
-    
-def path_sampling_test(img,goals,nGoals,samplingAxis,unitMat,stepUnit,kernelMatX,kernelMatY,priorMeanMatX,priorMeanMatY):        
+
+def path_sampling_test(img,goals,nGoals,samplingAxis,unitMat,stepUnit,kernelMatX,kernelMatY,priorMeanMatX,priorMeanMatY):
     vecX, vecY = [], []
     for i in range(nGoals):
         for j in range(i,nGoals):
@@ -377,18 +380,12 @@ def path_sampling_test(img,goals,nGoals,samplingAxis,unitMat,stepUnit,kernelMatX
                     vecX.append(x)
                     vecY.append(y)
     plot_path_samples(img, vecX,vecY)
-    
+
 def path_sampling_between_goals_test(img,nSamples,goals,startG,finishG,samplingAxis,unitMat,stepUnit,kernelMatX,kernelMatY,priorMeanMatX,priorMeanMatY):
-    vecX, vecY = [], []    
+    vecX, vecY = [], []
     for k in range(nSamples):
         x, y = sample_path(goals,startG,finishG,samplingAxis,unitMat[startG][finishG],stepUnit,kernelMatX[startG][finishG],kernelMatY[startG][finishG],priorMeanMatX[startG][finishG],priorMeanMatY[startG][finishG])
         vecX.append(x)
         vecY.append(y)
-    
+
     plot_path_samples(img, vecX,vecY)
-    
-    
-    
-    
-    
-    

@@ -551,7 +551,7 @@ def prediction_XY_of_set_of_trajectories(x, y, z, newZ, kernel_x, kernel_y):#pre
         variance_y.append(var_y)
     return predicted_x, predicted_y,variance_x, variance_y
 
-    
+
 # Prediction to a given finish point
 def prediction_to_finish_point(trueX,trueY,trueL,knownN,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
     lastKnownPoint = [trueX[knownN-1], trueY[knownN-1], trueL[knownN-1] ]
@@ -638,10 +638,12 @@ def linear_mean(l, priorMean):
     m = priorMean[0]*l + priorMean[1]
     return m
 
-# Regression with line prior for a single value l
-def line_prior_regression(l,x_meanl,lnew,kernel,priorMean):
+# Joint regression with line prior for a single value l
+def joint_regression_with_lineprior(l,x_meanl,lnew,kernel,priorMean):
     # Number of observed data
     n = len(l)
+    # Number of predicted data
+    nnew = len(lnew)
     # Compute K (nxn), k (nxnnew), C (nnewxnnew)
     K  = np.zeros((n,n))
     k  = np.zeros((n,nnew))
@@ -670,12 +672,10 @@ def line_prior_regression(l,x_meanl,lnew,kernel,priorMean):
         var = 0.1
     return xnew, var
 
-# Joint regression with line prior for a vector of values l
-def line_prior_regression(l,x_meanl,lnew,kernel,priorMean):
+# Individual regression with line prior for a vector of values l
+def regression_with_lineprior(l,x_meanl,lnew,kernel,priorMean):
     # Number of observed data
     n    = len(l)
-    # Number of predicted data
-    nnew = len(lnew)
     # Compute K, k and c
     K  = np.zeros((n,n))
     k  = np.zeros(n)
@@ -699,7 +699,7 @@ def line_prior_regression(l,x_meanl,lnew,kernel,priorMean):
     return xnew, var
 
 
-# Applies independent regression for a whole set newL of values L, given knownL, knownX
+# Applies independently regression for a whole set newL of values L, given knownL, knownX
 def independent_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMean):
     lenNew = len(newL)
     predictedX, varianceX = [], []
@@ -709,7 +709,7 @@ def independent_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMea
     # TODO: applies regression for the joint values predictedX (not independently)
     for i in range(lenNew):
         # For each i, applies regression for newL[i]
-        val, var = line_prior_regression(knownL,X_meanL,newL[i],kernel,priorMean)
+        val, var = regression_with_lineprior(knownL,X_meanL,newL[i],kernel,priorMean)
         # Predictive mean
         predictedX.append(val)
         # Variance
@@ -719,22 +719,21 @@ def independent_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMea
 
 # Applies joint regression for a whole set newL of values L, given knownL, knownX
 def joint_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMean):
-    lenNew = len(newL)
     predictedX, varianceX = [], []
     X_meanL = []
     for i in range(len(knownL)):
         X_meanL.append(knownX[i] - linear_mean(knownL[i], priorMean[0]))
     # Applies regression for the joint values predictedX (not independently)
-    predictedX, varianceX = line_prior_joint_regression(knownL,X_meanL,newL[i],kernel,priorMean)
+    predictedX, varianceX = line_prior_regression(knownL,X_meanL,newL[i],kernel,priorMean)
     return predictedX, varianceX
 
 # Performs prediction in X and Y with a line prior
 # Takes as input known values (x,y,l) and the points at which we want to perform regression (newL)
-def prediction_XY_lp(x, y, l, newL, kernelX, kernelY, priorMeanX, priorMeanY):
+def prediction_xy_lp(x, y, l, newL, kernelX, kernelY, priorMeanX, priorMeanY):
     # Regression for X
-    newX, varX = estimate_new_set_of_values_lp(l,x,newL,kernelX,priorMeanX)
+    newX, varX = independent_estimate_new_set_of_values_lp(l,x,newL,kernelX,priorMeanX)
     # Regression for Y
-    newY, varY = estimate_new_set_of_values_lp(l,y,newL,kernelY,priorMeanY)
+    newY, varY = independent_estimate_new_set_of_values_lp(l,y,newL,kernelY,priorMeanY)
     return newX, newY, varX, varY
 
 # Prediction to a given finish point
@@ -748,36 +747,40 @@ def prediction_to_finish_point_lp(trueX,trueY,trueL,knownN,finishPoint,unit,step
     trueL.append(finalL)
 
     # Performs regression for newL
-    newX,newY,varX,varY = prediction_XY_lp(trueX,trueY,trueL,newL,kernelX,kernelY,priorMeanX,priorMeanY)
+    newX,newY,varX,varY = prediction_xy_lp(trueX,trueY,trueL,newL,kernelX,kernelY,priorMeanX,priorMeanY)
 
     trueX.pop()
     trueY.pop()
     trueL.pop()
     return newX, newY, varX, varY
+
 #Toma la mitad de los datos observados como conocidos y predice nPoints en la mitad restante, regresa el error de la prediccion
 def prediction_error_of_points_along_the_path_lp(nPoints,knownX,knownY,knownL,goal,unit,kernelX,kernelY,priorMeanX,priorMeanY):
+    # Known data
     knownN = len(knownX)
     halfN = int(knownN/2)
 
+    # First half of the know data
     trueX = knownX[0:halfN]
     trueY = knownY[0:halfN]
     trueL = knownL[0:halfN]
 
+    # Get the last point and add it to the observed data
     finishXY = middle_of_area(goal)
-    finishD = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
+    finishD  = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
     trueX.append(finishXY[0])
     trueY.append(finishXY[1])
     trueL.append(finishD*unit)
 
     d = int(halfN/nPoints)
     realX, realY, predictionSet = [],[],[]
+    # Prepare the ground truths and the list of l to evaluate
     for i in range(nPoints):
         realX.append(knownX[halfN + i*d])
         realY.append(knownY[halfN + i*d])
         predictionSet.append(knownL[halfN + i*d])
-
-    #predX, predY, varX,varY = prediction_XY(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
-    predX, predY, varX,varY = prediction_XY_lp(trueX,trueY,trueL, predictionSet, kernelX, kernelY,priorMeanX,priorMeanY)
+    # Get the prediction
+    predX, predY, varX,varY = prediction_xy_lp(trueX,trueY,trueL, predictionSet, kernelX, kernelY,priorMeanX,priorMeanY)
 
     error = average_displacement_error([realX,realY],[predX,predY])
 
