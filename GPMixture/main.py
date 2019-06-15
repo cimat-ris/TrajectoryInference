@@ -134,7 +134,7 @@ meanLenMat = get_mean_length(pathMat, nGoals)
 # Compute the distances between pairs of goals (as a nGoalsxnGoals matrix)
 euclideanDistMat = get_euclidean_goal_distance(areas, nGoals)
 # Compute the ratios between average path lengths and inter-goal distances
-matUnit,  meanUnit = get_distance_unit(meanLenMat, euclideanDistMat, nGoals)
+unitMat,  meanUnit = get_distance_unit(meanLenMat, euclideanDistMat, nGoals)
 
 stepUnit = 0.0438780780171 #get_number_of_steps_unit(pathMat, nGoals)
 speed    = 1.65033755511      #get_pedestrian_average_speed(dataPaths)
@@ -158,8 +158,8 @@ learningParameters = False
 if learningParameters==True:
     print("[INF] Starting the learning phase")
     kernelMat_x, kernelMat_y = optimize_parameters_between_goals(kernelType, pathMat, nGoals, nGoals, linearPriorMatX, linearPriorMatY)
-    write_parameters(kernelMat_x,nGoals,nGoals,"parameters_x.txt")
-    write_parameters(kernelMat_y,nGoals,nGoals,"parameters_y.txt")
+    write_parameters(kernelMat_x,nGoals,nGoals,"linearpriorcombined6x6_x.txt")
+    write_parameters(kernelMat_y,nGoals,nGoals,"linearpriorcombined6x6_y.txt")
     print("[INF] End of the learning phase")
 else:
      # Read the kernel parameters from file
@@ -188,7 +188,7 @@ arcLenToTime = arclen_to_time(320,pathL,speed)
 #print("[path data]:\n [x]:",pathX,"\n[y]:",pathY,"\n[l]:",pathL,"\n[t]:",pathT)
 #El conjunto de datos observados se parte en part_num
 #al hacer la prediccion se toma el porcentaje i/part_num como datos conocidos y se predice el resto
-part_num = 5
+part_num = 1
 steps = 10
 for i in range(1,part_num-1):
     knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
@@ -205,11 +205,16 @@ for i in range(1,part_num-1):
     #prediction_test(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,meanLenMat,steps,kernelMat_x,kernelMat_y)
     """Multigoal prediction test"""
     #multigoal_prediction_test(img,trueX,trueY,trueL,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorLikelihoodMat,goalSamplingAxis)
-    multigoal_prediction_test_lp(img,trueX,trueY,trueL,knownN,startG,areas,matUnit,stepUnit,kernelMat_x,kernelMat_y,priorTransitionMat,linearPriorMatX,linearPriorMatY,goalSamplingAxis)
+    multigoal_prediction_test_lp(img,trueX,trueY,trueL,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorTransitionMat,linearPriorMatX,linearPriorMatY,goalSamplingAxis)
     #plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,middle_of_area(areas[nextG]))
     #prediction_test_over_time(pathX,pathY,pathT,knownN,start[0],nextG[0],areas)
 
+nSamples = 10
+startGoal, finishGoal = 0,2
+path_sampling_between_goals_test(img,nSamples,areas,startGoal,finishGoal,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
+
 #compare_error_goal_to_subgoal_test(img,pathX,pathY,pathL,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
+#path_sampling_test(img,areas,nGoals,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
 
 """
 for i in range(0):#1,nGoals):
