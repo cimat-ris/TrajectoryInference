@@ -20,7 +20,7 @@ color = ['g','m','r','b','c','y','w','k']
 """ PLOT FUNCTIONS """
 
 # Takes as an input a set of paths and plot them all on img
-def plotPaths(vec, img):
+def plotPathSet(vec, img):
     n = len(vec)
     if(n == 0):
         return
@@ -264,5 +264,20 @@ def plot_subgoals(img, goal, numSubgoals, axis):
         ax.add_patch(ell)
 
     v = [0,1920,1080,0]
+    plt.axis(v)
+    plt.show()
+
+def plot_path_samples(img,x,y):
+    n = len(x)
+    if(n == 0):
+        return
+    fig,ax = plt.subplots(1)
+    ax.set_aspect('equal')
+    # Show the image
+    ax.imshow(img)
+    for i in range(n):
+        plt.plot(x[i],y[i])
+    s = img.shape
+    v = [0,s[1],s[0],0]
     plt.axis(v)
     plt.show()
