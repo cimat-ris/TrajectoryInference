@@ -243,7 +243,6 @@ def plot_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goals
             ax.add_patch(ell)
 
     plt.plot(realX,realY,'c--')
-
     v = [0,1920,1080,0]
     plt.axis(v)
     plt.show()
@@ -263,6 +262,6 @@ def plot_subgoals(img, goal, numSubgoals, axis):
         ell.set_edgecolor(color[i])
         ax.add_patch(ell)
 
-    v = [0,1920,1080,0]
+    v = [0,img.columns,img.rows,0]
     plt.axis(v)
     plt.show()
