@@ -154,7 +154,7 @@ def optimize_kernel_parameters(t,x,theta,kernel):
     bnds = ((100.0, 5000.0), (10.0, 200.0))
     try:
         #parametersX = minimize(neg_sum_log_p, theta,(t,x,kernel), method='SLSQP', bounds=bnds,options={'maxiter':40,'disp': False})
-        parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='Nelder-Mead', options={'maxiter':16,'disp': False})
+        parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='Nelder-Mead', options={'maxiter':18,'disp': False})
         px          = parametersX.x
     except Exception as e:
         print(colored("[ERR] {:s} ".format(e),'red'))
@@ -551,6 +551,24 @@ def prediction_XY_of_set_of_trajectories(x, y, z, newZ, kernel_x, kernel_y):#pre
         variance_y.append(var_y)
     return predicted_x, predicted_y,variance_x, variance_y
 
+    
+# Prediction to a given finish point
+def prediction_to_finish_point(trueX,trueY,trueL,knownN,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
+    lastKnownPoint = [trueX[knownN-1], trueY[knownN-1], trueL[knownN-1] ]
+    newL, finalL = get_prediction_set(lastKnownPoint,finishPoint,unit,stepUnit)
+
+    # One point at the final of the path
+    trueX.append(finishPoint[0])
+    trueY.append(finishPoint[1])
+    trueL.append(finalL)
+
+    # Performs regression for newL
+    newX,newY,varX,varY = prediction_XY_lp(trueX,trueY,trueL,newL,kernelX,kernelY,priorMeanX,priorMeanY)
+
+    trueX.pop()
+    trueY.pop()
+    trueL.pop()
+    return newX, newY, varX, varY
 
 #Toma N-nPoints como datos conocidos y predice los ultimos nPoints, regresa el error de la prediccion
 def prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goal,unit,stepUnit,kernelX,kernelY):
@@ -671,6 +689,23 @@ def prediction_XY_lp(x, y, l, newL, kernelX, kernelY, priorMeanX, priorMeanY):
     newY, varY = estimate_new_set_of_values_lp(l,y,newL,kernelY,priorMeanY)
     return newX, newY, varX, varY
 
+# Prediction to a given finish point
+def prediction_to_finish_point_lp(trueX,trueY,trueL,knownN,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
+    lastKnownPoint = [trueX[knownN-1], trueY[knownN-1], trueL[knownN-1] ]
+    newL, finalL = get_prediction_set(lastKnownPoint,finishPoint,unit,stepUnit)
+
+    # One point at the final of the path
+    trueX.append(finishPoint[0])
+    trueY.append(finishPoint[1])
+    trueL.append(finalL)
+
+    # Performs regression for newL
+    newX,newY,varX,varY = prediction_XY_lp(trueX,trueY,trueL,newL,kernelX,kernelY,priorMeanX,priorMeanY)
+
+    trueX.pop()
+    trueY.pop()
+    trueL.pop()
+    return newX, newY, varX, varY
 #Toma la mitad de los datos observados como conocidos y predice nPoints en la mitad restante, regresa el error de la prediccion
 def prediction_error_of_points_along_the_path_lp(nPoints,knownX,knownY,knownL,goal,unit,kernelX,kernelY,priorMeanX,priorMeanY):
     knownN = len(knownX)
