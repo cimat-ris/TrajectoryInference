@@ -620,13 +620,47 @@ def linear_mean(l, priorMean):
     m = priorMean[0]*l + priorMean[1]
     return m
 
-# Regression with line prior
+# Regression with line prior for a single value l
 def line_prior_regression(l,x_meanl,lnew,kernel,priorMean):
     # Number of observed data
     n = len(l)
+    # Compute K (nxn), k (nxnnew), C (nnewxnnew)
+    K  = np.zeros((n,n))
+    k  = np.zeros((n,nnew))
+    # Fill in K
+    for i in range(n):
+        for j in range(n):
+            K[i][j] = kernel(l[i],l[j])
+    # Fill in k
+    for i in range(n):
+        for j in range(nnew):
+            k[i][j] = kernel(l[i],lnew[j])
+    K_1 = inv(K)
+    # Fill in C
+    for i in range(nnew):
+        for j in range(nnew):
+            C[i][j] = kernel(lnew[i],lnew[j])
+
+    # Predictive mean
+    xnew = linear_mean(lnew,priorMean[0]) + k.dot(K_1.dot(x_meanl))
+    # Estimate the variance
+    K_1kt = K_1.dot(k.transpose())
+    kK_1kt = k.dot(K_1kt)
+    # Variance
+    var = kernel(lnew,lnew) - kK_1kt
+    if var<0.1:
+        var = 0.1
+    return xnew, var
+
+# Joint regression with line prior for a vector of values l
+def line_prior_regression(l,x_meanl,lnew,kernel,priorMean):
+    # Number of observed data
+    n    = len(l)
+    # Number of predicted data
+    nnew = len(lnew)
     # Compute K, k and c
     K  = np.zeros((n,n))
-    k = np.zeros(n)
+    k  = np.zeros(n)
     # Fill in K
     for i in range(n):
         for j in range(n):
@@ -642,17 +676,19 @@ def line_prior_regression(l,x_meanl,lnew,kernel,priorMean):
     kK_1kt = k.dot(K_1kt)
     # Variance
     var = kernel(lnew,lnew) - kK_1kt
-    if var<0.1: 
+    if var<0.1:
         var = 0.1
     return xnew, var
 
-# Applies regression for a whole set newL of values L, given knownL, knownX
-def estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMean):
+
+# Applies independent regression for a whole set newL of values L, given knownL, knownX
+def independent_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMean):
     lenNew = len(newL)
     predictedX, varianceX = [], []
     X_meanL = []
     for i in range(len(knownL)):
         X_meanL.append(knownX[i] - linear_mean(knownL[i], priorMean[0]))
+    # TODO: applies regression for the joint values predictedX (not independently)
     for i in range(lenNew):
         # For each i, applies regression for newL[i]
         val, var = line_prior_regression(knownL,X_meanL,newL[i],kernel,priorMean)
@@ -660,6 +696,18 @@ def estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMean):
         predictedX.append(val)
         # Variance
         varianceX.append(var)
+    return predictedX, varianceX
+
+
+# Applies joint regression for a whole set newL of values L, given knownL, knownX
+def joint_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMean):
+    lenNew = len(newL)
+    predictedX, varianceX = [], []
+    X_meanL = []
+    for i in range(len(knownL)):
+        X_meanL.append(knownX[i] - linear_mean(knownL[i], priorMean[0]))
+    # Applies regression for the joint values predictedX (not independently)
+    predictedX, varianceX = line_prior_joint_regression(knownL,X_meanL,newL[i],kernel,priorMean)
     return predictedX, varianceX
 
 # Performs prediction in X and Y with a line prior
