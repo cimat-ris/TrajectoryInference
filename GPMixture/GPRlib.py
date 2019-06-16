@@ -641,35 +641,36 @@ def linear_mean(l, priorMean):
 # Joint regression with line prior for a single value l
 def joint_regression_with_lineprior(l,x_meanl,lnew,kernel,priorMean):
     # Number of observed data
-    n = len(l)
+    n    = len(l)
     # Number of predicted data
     nnew = len(lnew)
     # Compute K (nxn), k (nxnnew), C (nnewxnnew)
     K  = np.zeros((n,n))
     k  = np.zeros((n,nnew))
+    C  = np.zeros((nnew,nnew))
     # Fill in K
     for i in range(n):
         for j in range(n):
             K[i][j] = kernel(l[i],l[j])
+    K_1 = inv(K)
     # Fill in k
     for i in range(n):
         for j in range(nnew):
             k[i][j] = kernel(l[i],lnew[j])
-    K_1 = inv(K)
     # Fill in C
     for i in range(nnew):
         for j in range(nnew):
             C[i][j] = kernel(lnew[i],lnew[j])
 
     # Predictive mean
-    xnew = linear_mean(lnew,priorMean[0]) + k.dot(K_1.dot(x_meanl))
+    xnew = k.transpose().dot(K_1.dot(x_meanl))
+    for j in range(nnew):
+        xnew[j] += linear_mean(lnew[j],priorMean[0])
     # Estimate the variance
-    K_1kt = K_1.dot(k.transpose())
-    kK_1kt = k.dot(K_1kt)
+    K_1kt = K_1.dot(k)
+    kK_1kt = k.transpose().dot(K_1kt)
     # Variance
-    var = kernel(lnew,lnew) - kK_1kt
-    if var<0.1:
-        var = 0.1
+    var = C - kK_1kt
     return xnew, var
 
 # Individual regression with line prior for a vector of values l
@@ -719,28 +720,27 @@ def independent_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMea
 
 # Applies joint regression for a whole set newL of values L, given knownL, knownX
 def joint_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMean):
-    predictedX, varianceX = [], []
-    X_meanL = []
+    X_meanL = np.zeros((len(knownL),1),dtype=float)
     for i in range(len(knownL)):
-        X_meanL.append(knownX[i] - linear_mean(knownL[i], priorMean[0]))
+        X_meanL[i][0] = knownX[i] - linear_mean(knownL[i], priorMean[0])
     # Applies regression for the joint values predictedX (not independently)
-    predictedX, varianceX = line_prior_regression(knownL,X_meanL,newL[i],kernel,priorMean)
-    return predictedX, varianceX
+    predictedX, covarianceX = joint_regression_with_lineprior(knownL,X_meanL,newL,kernel,priorMean)
+    return predictedX, covarianceX
 
 # Performs prediction in X and Y with a line prior
 # Takes as input known values (x,y,l) and the points at which we want to perform regression (newL)
 def prediction_xy_lp(x, y, l, newL, kernelX, kernelY, priorMeanX, priorMeanY):
     # Regression for X
-    newX, varX = independent_estimate_new_set_of_values_lp(l,x,newL,kernelX,priorMeanX)
+    #newX, varX = independent_estimate_new_set_of_values_lp(l,x,newL,kernelX,priorMeanX)
+    newX, varX = joint_estimate_new_set_of_values_lp(l,x,newL,kernelX,priorMeanX)
     # Regression for Y
-    newY, varY = independent_estimate_new_set_of_values_lp(l,y,newL,kernelY,priorMeanY)
+    newY, varY = joint_estimate_new_set_of_values_lp(l,y,newL,kernelY,priorMeanY)
     return newX, newY, varX, varY
 
 # Prediction to a given finish point
 def prediction_to_finish_point_lp(trueX,trueY,trueL,knownN,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
     lastKnownPoint = [trueX[knownN-1], trueY[knownN-1], trueL[knownN-1] ]
     newL, finalL = get_prediction_set(lastKnownPoint,finishPoint,unit,stepUnit)
-
     # One point at the final of the path
     trueX.append(finishPoint[0])
     trueY.append(finishPoint[1])
@@ -782,6 +782,8 @@ def prediction_error_of_points_along_the_path_lp(nPoints,knownX,knownY,knownL,go
     # Get the prediction
     predX, predY, varX,varY = prediction_xy_lp(trueX,trueY,trueL, predictionSet, kernelX, kernelY,priorMeanX,priorMeanY)
 
+    # Evaluate the error
+    print('[INF] Evaluate the error')
     error = average_displacement_error([realX,realY],[predX,predY])
 
     return error

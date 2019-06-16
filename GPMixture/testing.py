@@ -300,7 +300,7 @@ def multigoal_prediction_test_lp(img,x,y,l,knownN,startG,goals,unitMat,stepUnit,
     trueX, trueY, trueL = get_known_set(x,y,l,knownN)
     # Goals
     likelyGoals, goalsLikelihood = [],[]
-    errorG = []
+    errorG  = []
     nPoints = 5
     for i in range(len(goals)):
         # Length/euclidean distance ratio
@@ -319,22 +319,24 @@ def multigoal_prediction_test_lp(img,x,y,l,knownN,startG,goals,unitMat,stepUnit,
     norma = np.linalg.norm(errorG)
     #errorG = errorG/norma
     D = 150.
+    # Compute the likelihoods
     for i in range(len(goals)):
         val = priorLikelihood[startG][i]*(math.exp(-1.*( errorG[i]**2)/D**2 ))#   *(1.-errorG[i])
         goalsLikelihood.append(val)
-
+    # Consider the mean likelihood
     meanLikelihood = 0.85*mean(goalsLikelihood)
     for i in range(len(goals)):
         if(goalsLikelihood[i] > meanLikelihood):
             likelyGoals.append(i)
 
-    #print("\n[Prior likelihood]\n",priorLikelihood[startG])
     print("[RES] [Goals likelihood]\n",goalsLikelihood)
     print("[RES] [Mean likelihood]:", meanLikelihood)
     nSubgoals = 2
     goalCount = 0
     plotLikelihood = []
     predictedXYVec, varXYVec = [], []
+
+    # For all likely goals
     for i in range(len(likelyGoals)):
         nextG = likelyGoals[i]
         unit = unitMat[startG][nextG]
@@ -342,14 +344,15 @@ def multigoal_prediction_test_lp(img,x,y,l,knownN,startG,goals,unitMat,stepUnit,
         kernelY = kernelMatY[startG][nextG]
         priorMeanX = linearPriorMatX[startG][nextG] #line prior prediction
         priorMeanY = linearPriorMatY[startG][nextG]
-        #newX,newY,varX,varY = prediction_XY_lp(trueX,trueY,trueL,newL,kernelX,kernelY,priorMeanX,priorMeanY)
 
         goalCenter = middle_of_area(goals[nextG])
         distToGoal = euclidean_distance([trueX[knownN-1],trueY[knownN-1]], goalCenter)
         dist = euclidean_distance([trueX[0],trueY[0]], goalCenter)
+        # When close to the goal, define sub-goals
         if(distToGoal < 0.4*dist):
             subgoalsCenter, size = get_subgoals_center_and_size(nSubgoals, goals[nextG], subgoalAxis[nextG])
             for j in range(nSubgoals):
+                # Generate prediction to this goal
                 predictedX, predictedY, varX, varY = prediction_to_finish_point_lp(trueX,trueY,trueL,knownN,subgoalsCenter[j],unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)#trajectory_prediction_test(x,y,l,knownN,startG,nextGoal,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
                 # Lists of predictive means
                 predictedXYVec.append([predictedX, predictedY])
@@ -358,13 +361,16 @@ def multigoal_prediction_test_lp(img,x,y,l,knownN,startG,goals,unitMat,stepUnit,
                 plotLikelihood.append(goalsLikelihood[nextG])
             goalCount += nSubgoals
         else:
+            # Evaluate the prediction and the corresponding covariance matrices
             predictedX, predictedY, varX, varY = prediction_to_finish_point_lp(trueX,trueY,trueL,knownN,goalCenter,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)#trajectory_prediction_test(x,y,l,knownN,startG,nextGoal,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
             # Lists of predictive means
             predictedXYVec.append([predictedX, predictedY])
-            # Lost of variances
+            # Covariance matrices
             varXYVec.append([varX, varY])
             plotLikelihood.append(goalsLikelihood[nextG])
             goalCount += 1
+    # Plot everything
+    print('[INF] Plotting')    
     plot_multiple_predictions_and_goal_likelihood(img,x,y,knownN,goalCount,plotLikelihood,predictedXYVec,varXYVec)
     #plot_multiple_predictions(img,x,y,knownN,goalCount,predictedXYVec,varXYVec)
 
