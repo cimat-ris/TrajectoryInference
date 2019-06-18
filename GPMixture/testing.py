@@ -370,7 +370,7 @@ def multigoal_prediction_test_lp(img,x,y,l,knownN,startG,goals,unitMat,stepUnit,
             plotLikelihood.append(goalsLikelihood[nextG])
             goalCount += 1
     # Plot everything
-    print('[INF] Plotting')    
+    print('[INF] Plotting')
     plot_multiple_predictions_and_goal_likelihood(img,x,y,knownN,goalCount,plotLikelihood,predictedXYVec,varXYVec)
     #plot_multiple_predictions(img,x,y,knownN,goalCount,predictedXYVec,varXYVec)
 
@@ -393,5 +393,8 @@ def path_sampling_between_goals_test(img,nSamples,goals,startG,finishG,samplingA
         x, y = sample_path(goals,startG,finishG,samplingAxis,unitMat[startG][finishG],stepUnit,kernelMatX[startG][finishG],kernelMatY[startG][finishG],priorMeanMatX[startG][finishG],priorMeanMatY[startG][finishG])
         vecX.append(x)
         vecY.append(y)
-
+        # For debugging
+        plt.plot(x)
+        plt.plot(y)
+        plt.show()
     plot_path_samples(img, vecX,vecY)

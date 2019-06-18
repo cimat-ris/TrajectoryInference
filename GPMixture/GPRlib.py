@@ -553,21 +553,24 @@ def prediction_XY_of_set_of_trajectories(x, y, z, newZ, kernel_x, kernel_y):#pre
 
 
 # Prediction to a given finish point
-def prediction_to_finish_point(trueX,trueY,trueL,knownN,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
-    lastKnownPoint = [trueX[knownN-1], trueY[knownN-1], trueL[knownN-1] ]
-    newL, finalL = get_prediction_set(lastKnownPoint,finishPoint,unit,stepUnit)
+def prediction_to_finish_point(observedX,observedY,observedL,nObservations,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
+    # Last observed point
+    lastObservedPoint = [observedX[nObservations-1], observedY[nObservations-1], observedL[nObservations-1] ]
+    # From this point, deduced the set of arclengths at which x and y should be predicted
+    newL, finalL = get_prediction_set(lastObservedPoint,finishPoint,unit,stepUnit)
 
-    # One point at the final of the path
+    # One point at the final of the path is set
     trueX.append(finishPoint[0])
     trueY.append(finishPoint[1])
     trueL.append(finalL)
 
     # Performs regression for newL
-    newX,newY,varX,varY = prediction_XY_lp(trueX,trueY,trueL,newL,kernelX,kernelY,priorMeanX,priorMeanY)
+    newX,newY,varX,varY = prediction_XY_lp(observedX,trueY,trueL,newL,kernelX,kernelY,priorMeanX,priorMeanY)
 
-    trueX.pop()
-    trueY.pop()
-    trueL.pop()
+    # Removes the last observed point (which was artificially added)
+    observedX.pop()
+    observedY.pop()
+    observedY.pop()
     return newX, newY, varX, varY
 
 #Toma N-nPoints como datos conocidos y predice los ultimos nPoints, regresa el error de la prediccion
@@ -728,30 +731,30 @@ def joint_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMean):
     return predictedX, covarianceX
 
 # Performs prediction in X and Y with a line prior
-# Takes as input known values (x,y,l) and the points at which we want to perform regression (newL)
-def prediction_xy_lp(x, y, l, newL, kernelX, kernelY, priorMeanX, priorMeanY):
+# Takes as input observed values (x,y,l) and the points at which we want to perform regression (newL)
+def prediction_xy_lp(observedX, observedY, observedL, newL, kernelX, kernelY, priorMeanX, priorMeanY):
     # Regression for X
-    #newX, varX = independent_estimate_new_set_of_values_lp(l,x,newL,kernelX,priorMeanX)
-    newX, varX = joint_estimate_new_set_of_values_lp(l,x,newL,kernelX,priorMeanX)
+    newX, varX = joint_estimate_new_set_of_values_lp(observedL,observedX,newL,kernelX,priorMeanX)
     # Regression for Y
-    newY, varY = joint_estimate_new_set_of_values_lp(l,y,newL,kernelY,priorMeanY)
+    newY, varY = joint_estimate_new_set_of_values_lp(observedL,observedY,newL,kernelY,priorMeanY)
     return newX, newY, varX, varY
 
 # Prediction to a given finish point
-def prediction_to_finish_point_lp(trueX,trueY,trueL,knownN,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
-    lastKnownPoint = [trueX[knownN-1], trueY[knownN-1], trueL[knownN-1] ]
-    newL, finalL = get_prediction_set(lastKnownPoint,finishPoint,unit,stepUnit)
+def prediction_to_finish_point_lp(observedX,observedY,observedL,nObservations,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
+    lastObservedPoint = [observedX[nObservations-1], observedY[nObservations-1], observedL[nObservations-1] ]
+    newL, finalL = get_prediction_set(lastObservedPoint,finishPoint,unit,stepUnit)
     # One point at the final of the path
-    trueX.append(finishPoint[0])
-    trueY.append(finishPoint[1])
-    trueL.append(finalL)
+    observedX.append(finishPoint[0])
+    observedY.append(finishPoint[1])
+    observedL.append(finalL)
 
     # Performs regression for newL
-    newX,newY,varX,varY = prediction_xy_lp(trueX,trueY,trueL,newL,kernelX,kernelY,priorMeanX,priorMeanY)
+    newX,newY,varX,varY = prediction_xy_lp(observedX,observedY,observedL,newL,kernelX,kernelY,priorMeanX,priorMeanY)
 
-    trueX.pop()
-    trueY.pop()
-    trueL.pop()
+    # Removes the last point
+    observedX.pop()
+    observedY.pop()
+    observedL.pop()
     return newX, newY, varX, varY
 
 #Toma la mitad de los datos observados como conocidos y predice nPoints en la mitad restante, regresa el error de la prediccion

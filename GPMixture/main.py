@@ -125,7 +125,8 @@ startToGoalPath, arclenMat = define_trajectories_start_and_end_areas(areas,areas
 
 # Remove the trajectories that are either too short or too long
 pathMat, learnSet = filter_path_matrix(startToGoalPath, nGoals, nGoals)
-plotPaths(pathMat, img)
+#plotPaths(pathMat, img)
+plotPathSet(pathMat[0][2], img)
 
 print("[INF] Number of filtered paths: ",len(learnSet))
 
@@ -190,35 +191,29 @@ arcLenToTime = arclen_to_time(320,pathL,speed)
 #print("mean error:", mean_error(pathT,arcLenToTime))
 #print("[path data]:\n [x]:",pathX,"\n[y]:",pathY,"\n[l]:",pathL,"\n[t]:",pathT)
 
+predictionTest = False
+if predictionTest==True:
+    # The dataset of observations is split into part_num subsets
+    # When predicting, one takes the percentge i/part_num as known,
+    # and the second part is predicted
+    part_num = 10
+    steps = 10
+    for i in range(1,part_num-1):
+        knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
+        trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
+        """Simple prediction test"""
+        knownTime = pathT[0:knownN]
+        rT = pathT[knownN:pathSize]
+        """Multigoal prediction test"""
+        multigoal_prediction_test_lp(img,trueX,trueY,trueL,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorTransitionMat,linearPriorMatX,linearPriorMatY,goalSamplingAxis)
+        #plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,middle_of_area(areas[nextG]))
+        #prediction_test_over_time(pathX,pathY,pathT,knownN,start[0],nextG[0],areas)
 
-# The dataset of observations is split into part_num subsets
-# When predicting, one takes the percentge i/part_num as known,
-# and the second part is predicted
-part_num = 10
-steps = 10
-for i in range(1,part_num-1):
-    knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
-    trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
-    """Simple prediction test"""
-    knownTime = pathT[0:knownN]
-    #print("[known time]:",knownTime)
-    rT = pathT[knownN:pathSize]
-    #print("[real time]:",rT)
-    #single_goal_prediction_test(pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
-    #trajectory_prediction_test(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
-    #trajectory_subgoal_prediction_test(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
-    #trajectory_prediction_test_using_sampling(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
-    #prediction_test(img,pathX,pathY,pathL,knownN,startG,nextG,areas,unitMat,meanLenMat,steps,kernelMat_x,kernelMat_y)
-    """Multigoal prediction test"""
-    #multigoal_prediction_test(img,trueX,trueY,trueL,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorLikelihoodMat,goalSamplingAxis)
-    multigoal_prediction_test_lp(img,trueX,trueY,trueL,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorTransitionMat,linearPriorMatX,linearPriorMatY,goalSamplingAxis)
-    #plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,middle_of_area(areas[nextG]))
-    #prediction_test_over_time(pathX,pathY,pathT,knownN,start[0],nextG[0],areas)
-quit()
-nSamples = 10
+nSamples = 40
 startGoal, finishGoal = 0,2
 path_sampling_between_goals_test(img,nSamples,areas,startGoal,finishGoal,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
 
+quit()
 #compare_error_goal_to_subgoal_test(img,pathX,pathY,pathL,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
 #path_sampling_test(img,areas,nGoals,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
 

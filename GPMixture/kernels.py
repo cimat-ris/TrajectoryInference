@@ -91,7 +91,7 @@ class maternKernel(Kernel):
         # Characteristic length
         self.length       = length
         # Type of kernel
-        self.type         = "matern"
+        self.type         = "matobservedern"
         self.sqrootof5    = m.sqrt(5)
     def setParameters(self,vec):
         # Covariance magnitude factor

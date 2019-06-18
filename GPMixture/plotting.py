@@ -38,7 +38,7 @@ def plotPathSet(vec, img):
 
 # Takes as an input a matrix of sets of paths and plot them all on img
 def plotPaths(pathSetMat, img):
-
+    print(pathSetMat)
     s         = pathSetMat.shape
     fig, axes = plt.subplots(s[0], s[1])
     for i in range(s[0]):
