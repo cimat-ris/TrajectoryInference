@@ -398,3 +398,116 @@ def path_sampling_between_goals_test(img,nSamples,goals,startG,finishG,samplingA
         plt.plot(y)
         plt.show()
     plot_path_samples(img, vecX,vecY)
+
+#Devuelve el punto con menor error de n muestras comparando k pasos
+def sample_finish_point(nSamples,kSteps,knownX, knownY, knownL, finishGoal, goals, kernelX, kernelY, unit, samplingAxis):
+    n = len(knownX)
+    _x, _y, flag = uniform_sampling_1D(nSamples, goals[finishGoal], samplingAxis[finishGoal])
+    if(n < 2*kSteps):
+        return middle_of_area(goals[finishGoal])
+
+    _knownX = knownX[0:n-kSteps]
+    _knownY = knownY[0:n-kSteps]
+    _knownL = knownL[0:n-kSteps]
+
+    predSet = knownL[n-kSteps:kSteps]
+    trueX = knownX[n-kSteps:kSteps]
+    trueY = knownY[n-kSteps:kSteps]
+
+    error = []
+    for i in range(nSamples):
+        auxX = _knownX.copy()
+        auxY = _knownY.copy()
+        auxL = _knownL.copy()
+        auxX.append(_x[i])
+        auxY.append(_y[i])
+        dist = math.sqrt( (knownX[n-1] - _x[i])**2 + (knownY[n-1] - _y[i])**2 )
+        lastL = knownL[n-1] + dist*unit
+        auxL.append(lastL)
+        predX, predY, vx, vy = prediction_XY(auxX, auxY, auxL, predSet, kernelX, kernelY)
+        #error.append(geometricError(trueX,trueY,predX,predY))
+        error.append(average_displacement_error([trueX,trueY],[predX,predY]))
+    #encuentra el punto que genera el error minimo
+    min_id, min_error = 0, error[0]
+    for i in range(nSamples):
+        if(error[i] < min_error):
+            min_error = error[i]
+            min_id = i
+    return [_x[min_id], _y[min_id]]
+    
+def get_error_of_final_point_comparing_k_steps(samples,steps,trajectorySet,startG,finishG,goals,unitMat,meanLenMat,samplingAxis,kernelSetX,kernelSetY):
+    meanError = 0.0
+    for i in range( len(trajectorySet) ):
+        x = trajectorySet[i].x
+        y = trajectorySet[i].y
+        l = trajectorySet[i].l
+        final = [x[len(x)-1], y[len(y)-1]]
+        knownN = int(len(x)* (0.9))
+        trueX, trueY, trueZ = get_known_set(x,y,l,knownN)
+        #lastKnownPoint = [x[knownN-1], y[knownN-1], l[knownN-1] ]
+        unit = unitMat[startG][finishG]
+
+        predicted_final = sample_finish_point(samples,steps,trueX,trueY,trueZ,finishG,goals,kernelSetX[i],kernelSetY[i],unit,samplingAxis)
+        error = final_displacement_error(final,predicted_final)
+        #print("FDE: ",error)
+        meanError += error
+    meanError /= len(trajectorySet)
+    return meanError
+    
+def choose_number_of_steps_to_compare(trajectorySet,startG,finishG,goals,unitMat,meanLenMat,samplingAxis,kernelSetX,kernelSetY):
+    errorVec = []
+    stepsVec = []
+    samples = 9
+    steps = 1
+    for i in range(20):
+        stepsVec.append(steps)
+        error = get_error_of_final_point_comparing_k_steps(samples,steps,trajectorySet,startG,finishG,goals,unitMat,meanLenMat,samplingAxis,kernelSetX,kernelSetY)
+        errorVec.append(error)
+        steps += 1
+
+    #print("error: ", errorVec)
+    plt.plot(stepsVec, errorVec, 'g')
+    plt.xlabel('Number of steps to compare')
+    plt.ylabel('Mean FDE')
+    plt.show()
+    #para ambos el error sera FDE
+    #en 2 te detienes cuando el error deje de disminuir significativamente
+
+def choose_number_of_destination_samples(trajectorySet,startG,finishG,goals,unitMat,meanLenMat,samplingAxis,kernelSetX,kernelSetY):
+    errorVec = []
+    samplesVec = []
+    samples = 1
+    steps = 4
+    for i in range(20):
+        samplesVec.append(samples)
+        error = get_error_of_final_point_comparing_k_steps(samples,steps,trajectorySet,startG,finishG,goals,unitMat,meanLenMat,samplingAxis,kernelSetX,kernelSetY)
+        errorVec.append(error)
+        samples += 1
+
+    #print("error: ", errorVec)
+    plt.plot(samplesVec, errorVec,'b')
+    plt.xlabel('Size of sample')
+    plt.ylabel('Mean FDE')
+    plt.show()
+    #para ambos el error sera FDE
+    #en 2 te detienes cuando el error deje de disminuir significativamente
+
+def number_of_samples_and_points_to_compare_to_destination(goals,pathMat,rows,columns,unitMat,meanLenMat,samplingAxis,kernelMatX,kernelMatY):
+    #test para encontrar los valores de k y m al elegir el punto final
+    trajectorySet, kernelSetX, kernelSetY = [], [], []
+    for i in range(rows):
+        for j in range(columns):
+            startGoal, finishGoal = i,j    
+            numOfPaths = len(pathMat[startGoal][finishGoal])
+            lenTrainingSet = min(20,int(numOfPaths/2))
+            #print( len(pathMat[startGoal][finalGoal]) )
+            for k in range(lenTrainingSet):
+                trajectorySet.append(pathMat[startGoal][finishGoal][k])
+                kernelSetX.append(kernelMatX[startGoal][finishGoal])
+                kernelSetY.append(kernelMatY[startGoal][finishGoal])
+    #choose_number_of_steps_and_samples(trajectorySet,startGoal,finishGoal,areas,unitMat,meanLenMat)
+    print("Test: number of steps to compare")
+    choose_number_of_steps_to_compare(trajectorySet,startGoal,finishGoal,goals,unitMat,meanLenMat,samplingAxis,kernelSetX,kernelSetY)
+    print("Test: number of destination samples")    
+    choose_number_of_destination_samples(trajectorySet,startGoal,finishGoal,goals,unitMat,meanLenMat,samplingAxis,kernelSetX,kernelSetY)
+    
