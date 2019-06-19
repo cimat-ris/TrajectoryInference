@@ -489,7 +489,7 @@ def get_pedestrian_average_speed(paths):
     speed, validPaths = 0., 0
     for i in range(len(paths)):
         if paths[i].duration > 0:
-            speed += paths[i].length / paths[i].duration
+            speed += paths[i].speed
             validPaths += 1
     avSpeed = speed/ validPaths
     return avSpeed
