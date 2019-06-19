@@ -88,7 +88,6 @@ startToGoalPath, arclenMat = define_trajectories_start_and_end_areas(areas,areas
 # Remove the trajectories that are either too short or too long
 pathMat, learnSet = filter_path_matrix(startToGoalPath, nGoals, nGoals)
 #plotPaths(pathMat, img)
-plotPathSet(pathMat[0][2], img)
 
 print("[INF] Number of filtered paths: ",len(learnSet))
 
@@ -99,8 +98,8 @@ euclideanDistMat = get_euclidean_goal_distance(areas, nGoals)
 # Compute the ratios between average path lengths and inter-goal distances
 unitMat,  meanUnit = get_distance_unit(meanLenMat, euclideanDistMat, nGoals)
 
-stepUnit = 0.0438780780171 #get_number_of_steps_unit(pathMat, nGoals)
-speed    = 1.65033755511      #get_pedestrian_average_speed(dataPaths)
+stepUnit = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals) 
+speed    = 1.65033755511     #get_pedestrian_average_speed(dataPaths)
 # Computer prior probabilities between goals
 priorTransitionMat               = prior_probability_matrix(pathMat, nGoals)
 # For each pair of goals, determine the line prior
@@ -108,7 +107,6 @@ linearPriorMatX, linearPriorMatY = get_linear_prior_mean_matrix(pathMat, nGoals,
 
 #print("Linear prior mean Mat X:\n", linearPriorMatX)
 #print("Linear prior mean Mat Y:\n", linearPriorMatY)
-#print("speed:",speed)
 #print("***arc-len promedio***\n", meanLenMat)
 #print("***distancia euclidiana entre goals***\n", euclideanDistMat)
 #print("Prior likelihood matrix:", priorLikelihoodMat)
