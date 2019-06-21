@@ -5,6 +5,7 @@ from GPRlib import *
 from path import *
 from testing import *
 from plotting import *
+from multipleAgents import *
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -70,10 +71,9 @@ img = mpimg.imread('imgs/goals.jpg')
 # y las agregamos como trayectorias independientes
 dataPaths, multigoal = get_paths_from_file('datasets/CentralStation_paths_10000.txt',areas)
 usefulPaths = getUsefulPaths(dataPaths,areas)
+sortedPaths = sorted(usefulPaths, key=time_compare)
 
 print("[INF] Number of useful paths: ",len(usefulPaths))
-sortedPaths = sorted(usefulPaths, key=time_compare)
-pathSet     = get_path_set_given_time_interval(sortedPaths,0,100)
 
 """
 Useful matrices:
@@ -179,6 +179,14 @@ quit()
 # - el numero de muestras del punto final
 # - numero de pasos a comparar dado un objetivo final 
 #number_of_samples_and_points_to_compare_to_destination(areas,pathMat,nGoals,nGoals,unitMat,meanLenMat,goalSamplingAxis,kernelMat_x,kernelMat_y)
+
+interactionTest = False
+if interactionTest == True:
+    sortedSet     = get_path_set_given_time_interval(sortedPaths,0,200)
+    print("Numero de trayectorias en el conjunto:",len(sortedSet))
+    Ti, Tj = 1,0
+    interaction_potential(sortedSet[Ti], sortedSet[Tj])
+    plotPathSet([sortedSet[Ti],sortedSet[Tj]  ],img)
 
 #compare_error_goal_to_subgoal_test(img,pathX,pathY,pathL,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
 #path_sampling_test(img,areas,nGoals,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
