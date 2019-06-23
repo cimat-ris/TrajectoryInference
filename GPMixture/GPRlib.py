@@ -459,6 +459,7 @@ def get_prediction_set(lastKnownPoint, finishPoint, distUnit, stepUnit):
     dist = euclideanDist*distUnit
 
     numSteps = int(dist*stepUnit)
+    #numSteps = 1000
     newset = []
     if(numSteps > 0):
         step = dist/float(numSteps)
@@ -755,7 +756,7 @@ def prediction_to_finish_point_lp(observedX,observedY,observedL,nObservations,fi
     observedX.pop()
     observedY.pop()
     observedL.pop()
-    return newX, newY, varX, varY
+    return newX, newY, newL, varX, varY
 
 #Toma la mitad de los datos observados como conocidos y predice nPoints en la mitad restante, regresa el error de la prediccion
 def prediction_error_of_points_along_the_path_lp(nPoints,knownX,knownY,knownL,goal,unit,kernelX,kernelY,priorMeanX,priorMeanY):

@@ -390,11 +390,12 @@ def path_sampling_test(img,goals,nGoals,samplingAxis,unitMat,stepUnit,kernelMatX
 def path_sampling_between_goals_test(img,nSamples,goals,startG,finishG,samplingAxis,unitMat,stepUnit,kernelMatX,kernelMatY,priorMeanMatX,priorMeanMatY):
     vecX, vecY = [], []
     for k in range(nSamples):
-        x, y = sample_path(goals,startG,finishG,samplingAxis,unitMat[startG][finishG],stepUnit,kernelMatX[startG][finishG],kernelMatY[startG][finishG],priorMeanMatX[startG][finishG],priorMeanMatY[startG][finishG])
+        x, y, l, mx, my = sample_path(goals,startG,finishG,samplingAxis,unitMat[startG][finishG],stepUnit,kernelMatX[startG][finishG],kernelMatY[startG][finishG],priorMeanMatX[startG][finishG],priorMeanMatY[startG][finishG])
         vecX.append(x)
         vecY.append(y)
         # For debugging
-        plt.plot(x)
-        plt.plot(y)
-        plt.show()
+        plt.plot(l,x)
+        plt.plot(l,y)
+        plt.plot(l,mx)
+        plt.plot(l,mx)
     plot_path_samples(img, vecX,vecY)
