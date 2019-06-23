@@ -5,6 +5,7 @@ from GPRlib import *
 from path import *
 from testing import *
 from plotting import *
+from multipleAgents import *
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -21,45 +22,7 @@ def single_goal_prediction_test(img,x,y,l,knownN,startG,finishG,goals,unitMat,st
     #print("Predictions:\n x:",predictedX,"\ny:",predictedY,"\nl:",newL)
     print("[Arclen to Time]:",time)
     #plot_prediction(img,x,y,knownN,predictedX, predictedY,varX,varY)
-
-def get_error_of_final_point_comparing_k_steps(k,trajectorySet,startG,finishG,goals,unitMat,meanLenMat,kernelX,kernelY):
-    meanError = 0.0
-    for i in range( len(trajectorySet) ):
-        x = trajectorySet[i].x
-        y = trajectorySet[i].y
-        l = trajectorySet[i].l
-        final = [x[len(x)-1], y[len(y)-1]]
-        knownN = len(x)* (0.9)
-        trueX, trueY, trueZ = get_known_set(x,y,l,knownN)
-        #lastKnownPoint = [x[knownN-1], y[knownN-1], l[knownN-1] ]
-        unit = unitMat[startG][finishG]
-
-        predicted_final = get_finish_point(k,trueX,trueY,trueZ,finishG,goals,kernelX,kernelY,unit,img,goalSamplingAxis)
-        error = final_displacement_error(final,predicted_final)
-        #print("FDE: ",error)
-        meanError += error
-    meanError /= len(trajectorySet)
-    return meanError
-
-def choose_number_of_steps_and_samples(trajectorySet,startG,finishG,goals,unitMat,meanLenMat,kernelX,kernelY):
-    errorVec = []
-    stepsVec = []
-    samplesVec = []
-    steps = 1
-    samples = 1
-    for i in range(20):
-        samplesVec.append(samples)
-        error = get_error_of_final_point_comparing_k_steps(samples,trajectorySet,startG,finishG,goals,unitMat,meanLenMat,kernelX,kernelY)
-        errorVec.append(error)
-        samples += 1
-
-    print("error: ", errorVec)
-    plt.plot(samplesVec, errorVec)
-    plt.xlabel('size of sample')
-    plt.ylabel('mean FDE')
-    #para ambos el error sera FDE
-    #en 2 te detienes cuando el error deje de disminuir significativamente
-
+    
 def goal_to_subgoal_prediction_error(x,y,l,knownN,startG,finishG,goals,subgoals,unitMat,stepUnit,kernelMatX,kernelMatY,subgoalsUnitMat,subgoalsKernelMatX,subgoalsKernelMatY):
     trueX, trueY, trueL = get_known_set(x,y,l,knownN)
     predictedX, predictedY, varX, varY = trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
@@ -108,10 +71,9 @@ img = mpimg.imread('imgs/goals.jpg')
 # y las agregamos como trayectorias independientes
 dataPaths, multigoal = get_paths_from_file('datasets/CentralStation_paths_10000.txt',areas)
 usefulPaths = getUsefulPaths(dataPaths,areas)
+sortedPaths = sorted(usefulPaths, key=time_compare)
 
 print("[INF] Number of useful paths: ",len(usefulPaths))
-sortedPaths = sorted(usefulPaths, key=time_compare)
-pathSet     = get_path_set_given_time_interval(sortedPaths,0,100)
 
 """
 Useful matrices:
@@ -126,7 +88,6 @@ startToGoalPath, arclenMat = define_trajectories_start_and_end_areas(areas,areas
 # Remove the trajectories that are either too short or too long
 pathMat, learnSet = filter_path_matrix(startToGoalPath, nGoals, nGoals)
 #plotPaths(pathMat, img)
-plotPathSet(pathMat[0][2], img)
 
 print("[INF] Number of filtered paths: ",len(learnSet))
 
@@ -137,8 +98,8 @@ euclideanDistMat = get_euclidean_goal_distance(areas, nGoals)
 # Compute the ratios between average path lengths and inter-goal distances
 unitMat,  meanUnit = get_distance_unit(meanLenMat, euclideanDistMat, nGoals)
 
-stepUnit = 0.0438780780171 #get_number_of_steps_unit(pathMat, nGoals)
-speed    = 1.65033755511      #get_pedestrian_average_speed(dataPaths)
+stepUnit = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals) 
+speed    = 1.65033755511     #get_pedestrian_average_speed(dataPaths)
 # Computer prior probabilities between goals
 priorTransitionMat               = prior_probability_matrix(pathMat, nGoals)
 # For each pair of goals, determine the line prior
@@ -146,7 +107,6 @@ linearPriorMatX, linearPriorMatY = get_linear_prior_mean_matrix(pathMat, nGoals,
 
 #print("Linear prior mean Mat X:\n", linearPriorMatX)
 #print("Linear prior mean Mat Y:\n", linearPriorMatY)
-#print("speed:",speed)
 #print("***arc-len promedio***\n", meanLenMat)
 #print("***distancia euclidiana entre goals***\n", euclideanDistMat)
 #print("Prior likelihood matrix:", priorLikelihoodMat)
@@ -214,6 +174,20 @@ startGoal, finishGoal = 0,2
 path_sampling_between_goals_test(img,nSamples,areas,startGoal,finishGoal,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
 
 quit()
+
+#Prueba el error de la prediccion variando:
+# - el numero de muestras del punto final
+# - numero de pasos a comparar dado un objetivo final 
+#number_of_samples_and_points_to_compare_to_destination(areas,pathMat,nGoals,nGoals,unitMat,meanLenMat,goalSamplingAxis,kernelMat_x,kernelMat_y)
+
+interactionTest = False
+if interactionTest == True:
+    sortedSet     = get_path_set_given_time_interval(sortedPaths,0,200)
+    print("Numero de trayectorias en el conjunto:",len(sortedSet))
+    Ti, Tj = 1,0
+    interaction_potential(sortedSet[Ti], sortedSet[Tj])
+    plotPathSet([sortedSet[Ti],sortedSet[Tj]  ],img)
+
 #compare_error_goal_to_subgoal_test(img,pathX,pathY,pathL,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
 #path_sampling_test(img,areas,nGoals,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
 
@@ -231,26 +205,3 @@ for i in range(0):#1,nGoals):
             test_prediction_goal_to_subgoal(trajectorySet,startG,finishG,areas,subgoals,unitMat,stepUnit,kernelMat_x,kernelMat_y,subgoalsUnitMat,subgoalsKernelMat_x,subgoalsKernelMat_y)
 """
 
-"""
-#test para encontrar los valores de k y m al elegir el punto final
-trajectorySet = []
-startGoal, finishGoal = 4,0
-#x_, y_, flag = uniform_sampling_1D(15, areas[finishGoal])
-#print("_x=",x_)
-#print("_y=",y_)
-#plotPaths(pathMat[startGoal][finishGoal], img)
-numOfPaths = len(pathMat[startGoal][finishGoal])
-lenTrainingSet = int(numOfPaths/2)
-if(lenTrainingSet > 50):
-    lenTrainingSet = 50
-#print( len(pathMat[startGoal][finalGoal]) )
-for i in range(lenTrainingSet):
-    trajectorySet.append(pathMat[startGoal][finishGoal][i])
-#choose_number_of_steps_and_samples(trajectorySet,startGoal,finishGoal,areas,unitMat,meanLenMat)
-
-kVec = []
-mVec = []
-for i in range(20):
-    mVec.append(i+1)
-    kVec.append(i+1)
-"""

@@ -10,15 +10,15 @@ from dataManagement import *
 
 class path:
     def __init__(self,vecT,vecX,vecY):
-        self.t = vecT
-        self.x = vecX
-        self.y = vecY
+        self.t = vecT.copy()
+        self.x = vecX.copy()
+        self.y = vecY.copy()
         self.l = path_arcLength(self.x,self.y)
         self.duration, self.length = statistics(self.t,self.x,self.y)
         if self.duration > 0:            
-            self.v = self.length/self.duration
+            self.speed = self.length/self.duration
         else:
-            self.v = -1.
+            self.speed = 0.
 
 def statistics(t,x,y):
     duration = t[len(t)-1] - t[0]

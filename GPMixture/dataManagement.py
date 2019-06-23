@@ -489,7 +489,7 @@ def get_pedestrian_average_speed(paths):
     speed, validPaths = 0., 0
     for i in range(len(paths)):
         if paths[i].duration > 0:
-            speed += paths[i].length / paths[i].duration
+            speed += paths[i].speed
             validPaths += 1
     avSpeed = speed/ validPaths
     return avSpeed
@@ -598,8 +598,8 @@ def isInArea(p,R):
         return 0
 
 # Euclidean distance
-def euclidean_distance(pointA, pointB):
-    dist = math.sqrt( (pointA[0]-pointB[0])**2 + (pointA[1]-pointB[1])**2 )
+def euclidean_distance(p, q): #p = (x,y)
+    dist = math.sqrt( (p[0]-q[0])**2 + (p[1]-q[1])**2 )
     return dist
 
 # Centroid of an area
