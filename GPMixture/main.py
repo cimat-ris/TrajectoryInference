@@ -23,27 +23,6 @@ def single_goal_prediction_test(img,x,y,l,knownN,startG,finishG,goals,unitMat,st
     print("[Arclen to Time]:",time)
     #plot_prediction(img,x,y,knownN,predictedX, predictedY,varX,varY)
 
-def goal_to_subgoal_prediction_error(x,y,l,knownN,startG,finishG,goals,subgoals,unitMat,stepUnit,kernelMatX,kernelMatY,subgoalsUnitMat,subgoalsKernelMatX,subgoalsKernelMatY):
-    trueX, trueY, trueL = get_known_set(x,y,l,knownN)
-    predictedX, predictedY, varX, varY = trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
-
-    subG = 2*finishG
-    predictedX_0, predictedY_0, varX_0, varY_0 = trajectory_prediction_test(x,y,l,knownN,startG,subG,subgoals,subgoalsUnitMat,stepUnit,subgoalsKernelMatX,subgoalsKernelMatY)
-
-    subG = 2*finishG +1
-    predictedX_1, predictedY_1, varX_1, varY_1 = trajectory_prediction_test(x,y,l,knownN,startG,subG,subgoals,subgoalsUnitMat,stepUnit,subgoalsKernelMatX,subgoalsKernelMatY)    #plot_prediction(img,x,y,knownN,predictedX, predictedY,varX,varY)
-    #errores
-    N = len(x)
-    realX, realY = [], []
-    for i in range(knownN,N):
-        realX.append(x[i])
-        realY.append(y[i])
-    #print("longitudes de vec:",len(realX), len(predictedX))
-    error = average_displacement_error([realX,realY],[predictedX,predictedY])
-    error0 = average_displacement_error([realX,realY],[predictedX_0,predictedY_0])
-    error1 = average_displacement_error([realX,realY],[predictedX_1,predictedY_1])
-    return error, error0, error1
-
 """******************************************************************************"""
 """**************    Main function starts here      *****************************"""
 
@@ -175,32 +154,25 @@ path_sampling_between_goals_test(img,nSamples,areas,startGoal,finishGoal,goalSam
 
 quit()
 
+interactionTest = False
+if interactionTest == True:
+    sortedSet     = get_path_set_given_time_interval(sortedPaths,300,700)
+    print("Numero de trayectorias en el conjunto:",len(sortedSet))
+    plotPathSet(sortedSet,img)
+    
+    interaction_potential_for_a_set_of_pedestrians(sortedSet)
+    #Test para un par de trayectorias:
+    #Ti, Tj = 1,0
+    #plotPathSet([sortedSet[Ti],sortedSet[Tj]],img)
+    #interaction_potential(sortedSet[Ti], sortedSet[Tj]) 
+
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
 # - numero de pasos a comparar dado un objetivo final
 #number_of_samples_and_points_to_compare_to_destination(areas,pathMat,nGoals,nGoals,unitMat,meanLenMat,goalSamplingAxis,kernelMat_x,kernelMat_y)
 
-interactionTest = False
-if interactionTest == True:
-    sortedSet     = get_path_set_given_time_interval(sortedPaths,0,200)
-    print("Numero de trayectorias en el conjunto:",len(sortedSet))
-    Ti, Tj = 1,0
-    interaction_potential(sortedSet[Ti], sortedSet[Tj])
-    plotPathSet([sortedSet[Ti],sortedSet[Tj]  ],img)
-
+#Compara el error de la prediccion hacia el centro del goal contra la prediccion hacia los subgoales
 #compare_error_goal_to_subgoal_test(img,pathX,pathY,pathL,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
+
 #path_sampling_test(img,areas,nGoals,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
 
-"""
-for i in range(0):#1,nGoals):
-    for j in range(nGoals):
-        startG, finishG = i,j
-        _trajectorySet = pathMat[startG][finishG]
-        if(len(_trajectorySet) > 0):
-            trajectorySet = []
-            _min = min(100, len(_trajectorySet))
-            for k in range(_min):
-                trajectorySet.append(_trajectorySet[k])
-            print("[",i,",",j,"]")
-            test_prediction_goal_to_subgoal(trajectorySet,startG,finishG,areas,subgoals,unitMat,stepUnit,kernelMat_x,kernelMat_y,subgoalsUnitMat,subgoalsKernelMat_x,subgoalsKernelMat_y)
-"""
