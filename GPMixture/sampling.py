@@ -24,20 +24,25 @@ def goal_sequence(L, n):
     return s
 
 def sample_path(goals,startG,finishG,samplingAxis,distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
-    #sample start and finish point
+    # Sample start point
     startX, startY, axis   = uniform_sampling_1D(1, goals[startG],  samplingAxis[startG])
+    # Sample end point
     finishX, finishY, axis = uniform_sampling_1D(1, goals[finishG], samplingAxis[finishG])
     startL = [0]
+    # Number of known points
     knownN = 1
+    # Prediction of the whole trajectory given the # start and finish points
     newX, newY, newL, varX, varY = prediction_to_finish_point_lp(startX,startY,startL,knownN,[finishX[0], finishY[0]],distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)
-    
+
+    # Number of predicted points
     nPredictions = newX.shape[0]
     # Regularization to avoid singular matrices
-    varX = varX + 0.000001*np.eye(newX.shape[0])
-    varY = varY + 0.000001*np.eye(newX.shape[0])
+    varX = varX + 0.1*np.eye(newX.shape[0])
+    varY = varY + 0.1*np.eye(newX.shape[0])
     # Cholesky on varX
     LX = cholesky(varX,lower=True)
     LY = cholesky(varY,lower=True)
+    # Noise from a normal distribution
     sX = np.random.normal(size=(nPredictions,1))
     sY = np.random.normal(size=(nPredictions,1))
     return newX+LX.dot(sX), newY+LY.dot(sY), newL, newX, newY

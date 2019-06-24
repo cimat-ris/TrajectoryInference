@@ -327,7 +327,7 @@ def get_goal_likelihood(knownX,knownY,knownL,startG,finishG,goals,unitMat,kernel
 
     return error
 
-#Elige m puntos (x,y) de un area usando muestreo uniforme
+# Sample m points (x,y) in an area, with uniform sampling
 def uniform_sampling_2D(m, goal):
     _x, _y = [], []
     xmin, xmax = goal[0], goal[2]
@@ -343,6 +343,7 @@ def uniform_sampling_2D(m, goal):
 
     return _x, _y
 
+# Sample m points (x,y) along a line segment, with uniform sampling
 def uniform_sampling_1D(m, goal, axis):
     _x, _y = [], []
     xmin, xmax = goal[0], goal[2]
@@ -458,8 +459,8 @@ def get_prediction_set(lastKnownPoint, finishPoint, distUnit, stepUnit):
     euclideanDist = euclidean_distance([x,y], [_x,_y])
     dist = euclideanDist*distUnit
 
-    numSteps = int(dist*stepUnit)
-    #numSteps = 1000
+    #numSteps = int(dist*stepUnit)
+    numSteps = 1000
     newset = []
     if(numSteps > 0):
         step = dist/float(numSteps)
@@ -533,7 +534,6 @@ def estimate_new_set_of_values(known_x,known_y,newX,kernel):
 def prediction_XY(x, y, z, newZ, kernelX, kernelY):#prediction
     newX, varX = estimate_new_set_of_values(z,x,newZ,kernelX)#prediccion para x
     newY, varY = estimate_new_set_of_values(z,y,newZ,kernelY)#prediccion para y
-
     return newX, newY, varX, varY
 
 #necesita recibir el kernel para X y el kernel para Y
@@ -642,7 +642,7 @@ def linear_mean(l, priorMean):
     m = priorMean[0]*l + priorMean[1]
     return m
 
-# Joint regression with line prior for a single value l
+# Joint regression with line prior for a set of values l
 def joint_regression_with_lineprior(l,x_meanl,lnew,kernel,priorMean):
     # Number of observed data
     n    = len(l)
@@ -660,11 +660,11 @@ def joint_regression_with_lineprior(l,x_meanl,lnew,kernel,priorMean):
     # Fill in k
     for i in range(n):
         for j in range(nnew):
-            k[i][j] = kernel(l[i],lnew[j])
+            k[i][j] = kernel(l[i],lnew[j],False)
     # Fill in C
     for i in range(nnew):
         for j in range(nnew):
-            C[i][j] = kernel(lnew[i],lnew[j])
+            C[i][j] = kernel(lnew[i],lnew[j],False)
 
     # Predictive mean
     xnew = k.transpose().dot(K_1.dot(x_meanl))

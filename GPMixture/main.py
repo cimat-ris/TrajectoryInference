@@ -22,7 +22,7 @@ def single_goal_prediction_test(img,x,y,l,knownN,startG,finishG,goals,unitMat,st
     #print("Predictions:\n x:",predictedX,"\ny:",predictedY,"\nl:",newL)
     print("[Arclen to Time]:",time)
     #plot_prediction(img,x,y,knownN,predictedX, predictedY,varX,varY)
-    
+
 def goal_to_subgoal_prediction_error(x,y,l,knownN,startG,finishG,goals,subgoals,unitMat,stepUnit,kernelMatX,kernelMatY,subgoalsUnitMat,subgoalsKernelMatX,subgoalsKernelMatY):
     trueX, trueY, trueL = get_known_set(x,y,l,knownN)
     predictedX, predictedY, varX, varY = trajectory_prediction_test(x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
@@ -98,7 +98,7 @@ euclideanDistMat = get_euclidean_goal_distance(areas, nGoals)
 # Compute the ratios between average path lengths and inter-goal distances
 unitMat,  meanUnit = get_distance_unit(meanLenMat, euclideanDistMat, nGoals)
 
-stepUnit = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals) 
+stepUnit = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals)
 speed    = 1.65033755511     #get_pedestrian_average_speed(dataPaths)
 # Computer prior probabilities between goals
 priorTransitionMat               = prior_probability_matrix(pathMat, nGoals)
@@ -169,7 +169,7 @@ if predictionTest==True:
         #plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,middle_of_area(areas[nextG]))
         #prediction_test_over_time(pathX,pathY,pathT,knownN,start[0],nextG[0],areas)
 
-nSamples = 40
+nSamples = 4
 startGoal, finishGoal = 0,2
 path_sampling_between_goals_test(img,nSamples,areas,startGoal,finishGoal,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
 
@@ -177,7 +177,7 @@ quit()
 
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
-# - numero de pasos a comparar dado un objetivo final 
+# - numero de pasos a comparar dado un objetivo final
 #number_of_samples_and_points_to_compare_to_destination(areas,pathMat,nGoals,nGoals,unitMat,meanLenMat,goalSamplingAxis,kernelMat_x,kernelMat_y)
 
 interactionTest = False
@@ -204,4 +204,3 @@ for i in range(0):#1,nGoals):
             print("[",i,",",j,"]")
             test_prediction_goal_to_subgoal(trajectorySet,startG,finishG,areas,subgoals,unitMat,stepUnit,kernelMat_x,kernelMat_y,subgoalsUnitMat,subgoalsKernelMat_x,subgoalsKernelMat_y)
 """
-

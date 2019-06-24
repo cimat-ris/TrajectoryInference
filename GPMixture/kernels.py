@@ -18,7 +18,7 @@ class Kernel:
 
     # Overload the operator ()
     @abstractmethod
-    def __call__(self,x,y): pass
+    def __call__(self,x,y,n=True): pass
 
 # Linear kernel
 class linearKernel(Kernel):
@@ -321,8 +321,11 @@ class linePriorCombinedKernel(Kernel):
         self.length        = vec[1]
         self.matern.setParameters(vec)
 
-    def __call__(self,x,y):
-        return self.matern(x,y) + self.linear(x,y) + self.noise(x,y)
+    def __call__(self,x,y,n=True):
+        if (n):
+            return self.matern(x,y) + self.linear(x,y) + self.noise(x,y)
+        else:
+            return self.matern(x,y) + self.linear(x,y)
 
     def get_parameters(self):
         parameters = [self.sigmaSlope, self.sigmaConstant, self.sigmaSq, self.length]
