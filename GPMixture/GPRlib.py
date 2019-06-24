@@ -445,8 +445,10 @@ def get_finish_point_singleGP(knownX, knownY, knownL, finishGoal, goals, kernelX
             min_id = i
     return [_x[min_id], _y[min_id]]
 
+# Determines the set of z values to predict from a given set of data,
+# where knownN are specified as known
 def get_prediction_set_from_data(z,knownN):
-    N = len(z)
+    N    = len(z)
     newZ = z[knownN-1:N]
     return newZ
 
@@ -454,19 +456,16 @@ def get_prediction_set_from_data(z,knownN):
 #start, last know (x,y,l), indices del los goals de inicio y fin, unitMat, numero de pasos
 def get_prediction_set(lastKnownPoint, finishPoint, distUnit, stepUnit):
     x, y, l = lastKnownPoint[0], lastKnownPoint[1], lastKnownPoint[2]
-    _x, _y = finishPoint[0], finishPoint[1]
+    _x, _y  = finishPoint[0], finishPoint[1]
 
     euclideanDist = euclidean_distance([x,y], [_x,_y])
-    dist = euclideanDist*distUnit
-
-    #numSteps = int(dist*stepUnit)
-    numSteps = 1000
+    dist          = euclideanDist*distUnit
+    numSteps      = int(dist*stepUnit)
     newset = []
     if(numSteps > 0):
         step = dist/float(numSteps)
         for i in range(numSteps+1):
             newset.append( l + i*step )
-
     return newset, l + dist
 
 def get_prediction_set_given_size(lastKnownPoint, finishPoint, unit, steps):
@@ -665,7 +664,6 @@ def joint_regression_with_lineprior(l,x_meanl,lnew,kernel,priorMean):
     for i in range(nnew):
         for j in range(nnew):
             C[i][j] = kernel(lnew[i],lnew[j],False)
-
     # Predictive mean
     xnew = k.transpose().dot(K_1.dot(x_meanl))
     for j in range(nnew):
@@ -690,7 +688,7 @@ def regression_with_lineprior(l,x_meanl,lnew,kernel,priorMean):
             K[i][j] = kernel(l[i],l[j])
     # Fill in k
     for i in range(n):
-        k[i] = kernel(lnew,l[i])
+        k[i] = kernel(lnew,l[i],False)
     K_1 = inv(K)
     # Predictive mean
     xnew = linear_mean(lnew,priorMean[0]) + k.dot(K_1.dot(x_meanl))
@@ -698,11 +696,10 @@ def regression_with_lineprior(l,x_meanl,lnew,kernel,priorMean):
     K_1kt = K_1.dot(k.transpose())
     kK_1kt = k.dot(K_1kt)
     # Variance
-    var = kernel(lnew,lnew) - kK_1kt
+    var = kernel(lnew,lnew,False) - kK_1kt
     if var<0.1:
         var = 0.1
     return xnew, var
-
 
 # Applies independently regression for a whole set newL of values L, given knownL, knownX
 def independent_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMean):
@@ -720,7 +717,6 @@ def independent_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMea
         # Variance
         varianceX.append(var)
     return predictedX, varianceX
-
 
 # Applies joint regression for a whole set newL of values L, given knownL, knownX
 def joint_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMean):

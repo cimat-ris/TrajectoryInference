@@ -169,7 +169,7 @@ if predictionTest==True:
         #plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,middle_of_area(areas[nextG]))
         #prediction_test_over_time(pathX,pathY,pathT,knownN,start[0],nextG[0],areas)
 
-nSamples = 4
+nSamples = 100
 startGoal, finishGoal = 0,2
 path_sampling_between_goals_test(img,nSamples,areas,startGoal,finishGoal,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
 
