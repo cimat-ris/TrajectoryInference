@@ -318,7 +318,7 @@ def multigoal_prediction_test_lp(img,x,y,l,knownN,startG,stepUnit,goalsData):
             subgoalsCenter, size = get_subgoals_center_and_size(nSubgoals, goalsData.areas[nextG], goalsData.areasAxis[nextG])
             for j in range(nSubgoals):
                 # Generate prediction to this goal
-                predictedX, predictedY, predictedL, varX, varY = prediction_to_finish_point_lp(trueX,trueY,trueL,knownN,subgoalsCenter[j],unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)#trajectory_prediction_test(x,y,l,knownN,startG,nextGoal,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
+                predictedX, predictedY, predictedL, varX, varY = prediction_to_finish_point(trueX,trueY,trueL,knownN,subgoalsCenter[j],unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)#trajectory_prediction_test(x,y,l,knownN,startG,nextGoal,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
                 # Lists of predictive means
                 predictedXYVec.append([predictedX, predictedY])
                 # Lost of variances
@@ -327,7 +327,7 @@ def multigoal_prediction_test_lp(img,x,y,l,knownN,startG,stepUnit,goalsData):
             goalCount += nSubgoals
         else:
             # Evaluate the prediction and the corresponding covariance matrices
-            predictedX, predictedY, predictedL,varX, varY = prediction_to_finish_point_lp(trueX,trueY,trueL,knownN,goalCenter,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)#trajectory_prediction_test(x,y,l,knownN,startG,nextGoal,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
+            predictedX, predictedY, predictedL,varX, varY = prediction_to_finish_point(trueX,trueY,trueL,knownN,goalCenter,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)#trajectory_prediction_test(x,y,l,knownN,startG,nextGoal,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
             # Lists of predictive means
             predictedXYVec.append([predictedX, predictedY])
             # Covariance matrices

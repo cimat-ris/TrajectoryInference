@@ -30,7 +30,7 @@ def sample_predictive_distribution(observedX,observedY,observedL,nObservations,f
     # Number of known points
     knownN = len(observedX)
     # Prediction of the whole trajectory given the # start and finish points
-    newX, newY, newL, varX, varY = prediction_to_finish_point_lp(observedX,observedY,observedL,knownN,[finishX[0], finishY[0]],distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)
+    newX, newY, newL, varX, varY = prediction_to_finish_point(observedX,observedY,observedL,knownN,[finishX[0], finishY[0]],distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)
 
     return newX, newY, newL, varX, varY
 
@@ -44,7 +44,7 @@ def sample_path(goals,startG,finishG,samplingAxis,distUnit,stepUnit,kernelX,kern
     # Number of known points
     knownN = 1
     # Prediction of the whole trajectory given the # start and finish points
-    newX, newY, newL, varX, varY = prediction_to_finish_point_lp(startX,startY,startL,knownN,[finishX[0], finishY[0]],distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)
+    newX, newY, newL, varX, varY = prediction_to_finish_point(startX,startY,startL,knownN,[finishX[0], finishY[0]],distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)
 
     # Number of predicted points
     nPredictions = newX.shape[0]
@@ -65,7 +65,7 @@ def sample_path_to_goal(observedX,observedY,observedL,knownN,goals,finishG,sampl
     # Sample end point
     finishX, finishY, axis = uniform_sampling_1D(1, goals[finishG], samplingAxis[finishG])
     # Prediction of the whole trajectory given the # start and finish points
-    newX, newY, newL, varX, varY = prediction_to_finish_point_lp(observedX,observedY,observedL,knownN,[finishX[0], finishY[0]],distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)
+    newX, newY, newL, varX, varY = prediction_to_finish_point(observedX,observedY,observedL,knownN,[finishX[0], finishY[0]],distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)
 
     # Number of predicted points
     nPredictions = newX.shape[0]

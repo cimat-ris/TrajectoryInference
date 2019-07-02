@@ -537,18 +537,19 @@ def prediction_XY_of_set_of_trajectories(x, y, z, newZ, kernel_x, kernel_y):#pre
 
 
 # Prediction of future positions towards a given finish point, given observations
-def prediction_to_finish_point(observedX,observedY,observedL,nObservations,finishPoint,unit,stepUnit,kernelX,kernelY):
+def prediction_to_finish_point(observedX,observedY,observedL,nObservations,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX=None,priorMeanY=None):
     # Last observed point
     lastObservedPoint = [observedX[nObservations-1], observedY[nObservations-1], observedL[nObservations-1] ]
     # Generate the set of l values at which to predict x,y
     newL, finalL = get_prediction_set(lastObservedPoint,finishPoint,unit,stepUnit)
-    # One point at the final of the path is set
+    # One point at the final of the path
     observedX.append(finishPoint[0])
     observedY.append(finishPoint[1])
     observedL.append(finalL)
 
     # Performs regression for newL
-    newX,newY,varX,varY = prediction_xy(observedX,observedY,observedL,newL,kernelX,kernelY)
+    newX,newY,varX,varY = prediction_xy(observedX,observedY,observedL,newL,kernelX,kernelY,priorMeanX,priorMeanY)
+
     # Removes the last observed point (which was artificially added)
     observedX.pop()
     observedY.pop()
@@ -623,7 +624,7 @@ def linear_mean(l, priorMean):
     m = priorMean[0]*l + priorMean[1]
     return m
 
-# Individual regression with line prior for a vector of values l
+# Individual regression with line prior for a single lnew
 def single_regression_with_lineprior(l,x_meanl,lnew,kernel,priorMean):
     # Number of observed data
     n    = len(l)
@@ -649,23 +650,7 @@ def single_regression_with_lineprior(l,x_meanl,lnew,kernel,priorMean):
         var = 0.1
     return xnew, var
 
-# Applies independently regression for a whole set newL of values L, given knownL, knownX
-def independent_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMean):
-    lenNew = len(newL)
-    predictedX, varianceX = [], []
-    X_meanL = []
-    for i in range(len(knownL)):
-        X_meanL.append(knownX[i] - linear_mean(knownL[i], priorMean[0]))
-    for i in range(lenNew):
-        # For each i, applies regression for newL[i]
-        val, var = single_regression_with_lineprior(knownL,X_meanL,newL[i],kernel,priorMean)
-        # Predictive mean
-        predictedX.append(val)
-        # Variance
-        varianceX.append(var)
-    return predictedX, varianceX
-
-# Performs prediction in X and Y with a line prior
+# Performs prediction in X and Y
 # Takes as input observed values (x,y,l) and the points at which we want to perform regression (newL)
 def prediction_xy(observedX, observedY, observedL, newL, kernelX, kernelY, priorMeanX=None, priorMeanY=None):
     # Regression for X
@@ -673,26 +658,6 @@ def prediction_xy(observedX, observedY, observedL, newL, kernelX, kernelY, prior
     # Regression for Y
     newY, varY = joint_estimate_new_set_of_values(observedL,observedY,newL,kernelY,priorMeanY)
     return newX, newY, varX, varY
-
-# Prediction towards a given finish point
-def prediction_to_finish_point_lp(observedX,observedY,observedL,nObservations,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
-    # Last observed point
-    lastObservedPoint = [observedX[nObservations-1], observedY[nObservations-1], observedL[nObservations-1] ]
-    # Generate the set of l values at which to predict x,y
-    newL, finalL = get_prediction_set(lastObservedPoint,finishPoint,unit,stepUnit)
-    # One point at the final of the path
-    observedX.append(finishPoint[0])
-    observedY.append(finishPoint[1])
-    observedL.append(finalL)
-
-    # Performs regression for newL
-    newX,newY,varX,varY = prediction_xy(observedX,observedY,observedL,newL,kernelX,kernelY,priorMeanX,priorMeanY)
-
-    # Removes the last observed point (which was artificially added)
-    observedX.pop()
-    observedY.pop()
-    observedL.pop()
-    return newX, newY, newL, varX, varY
 
 # For a given dataset (knownX,knownY,knownL), takes half of the data as known
 # and predicts the remaining half. Then, evaluate the prediction error.

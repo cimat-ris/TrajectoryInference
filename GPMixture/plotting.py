@@ -233,7 +233,6 @@ def plot_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goals
         # For the jth predicted element
         for j in range(predictedN):
             xy = [predictedXYVec[i][0][j],predictedXYVec[i][1][j]]
-            print(varXYVec[i][0][j][j],varXYVec[i][1][j][j])
             # 6.0 = 2.0 x 3.0
             # It is: to have 3.0 sigmas. Then, the Ellipse constructor asks for the diameter, hence the 2.0
             ell = Ellipse(xy,6.0*math.sqrt(math.fabs(varXYVec[i][0][j][j])),6.0*math.sqrt(math.fabs(varXYVec[i][1][j][j])))
