@@ -18,13 +18,16 @@ import random
 import timeit
 from termcolor import colored
 
+# Standard deviation for the observation noise
+nsigma = 7.50
+
 #******************************************************************************#
 """ REGRESSION FUNCTIONS """
 # The main regression function
-def regression(x,y,xnew,kernel):  #regresion sin recibir los parametros, el kernel ya los trae fijos
+def regression(x,y,xnew,kernel):
     n = len(x) # Number of observed data
     # Compute K, k and c
-    K  = np.zeros((n,n))
+    K = np.zeros((n,n))
     k = np.zeros(n)
     c = 0
     # Fill in K
@@ -33,13 +36,10 @@ def regression(x,y,xnew,kernel):  #regresion sin recibir los parametros, el kern
             K[i][j] = kernel(x[i],x[j])
     # Fill in k
     for i in range(n):
-        k[i] = kernel(xnew,x[i])
-    # compute c
-    c = kernel(xnew,xnew)
+        k[i] = kernel(xnew,x[i],False)
+    # Compute c
+    c = kernel(xnew,xnew,False)
     # Estimate the mean
-    #print("[kernel Matrix]\n",K)
-    #print("[kernel vector]\n",k)
-
     K_1 = inv(K)
     ynew = k.dot(K_1.dot(y))
     # Estimate the variance
@@ -49,10 +49,8 @@ def regression(x,y,xnew,kernel):  #regresion sin recibir los parametros, el kern
     return ynew, var
 
 
-
 #******************************************************************************#
 """ LEARNING """
-nsigma = 7.50 #error de las observaciones
 
 # Set kernel: a function that creates a kernel with default parameters, given its type name
 def setKernel(name):
@@ -132,14 +130,13 @@ def mlog_p(theta,x,y,kernel):
     # Use Cholesky to solve x = K^{-1} y
     c_and_lower = cho_factor(K, overwrite_a=True)
     invKy       = cho_solve(c_and_lower, y)
-    yKy = np.inner(y,invKy)
+    yKy         = np.inner(y,invKy)
     # Get the log-determinant as the sum of the log of the diagonal elements in C
     logDetK = 0.0
     for i in range(n):
         logDetK += np.log(abs(c_and_lower[0].diagonal()[i]))
     # I removed the constant terms (they do not depend on theta)
-    val = max(0,0.5*yKy+logDetK)
-    return val
+    return max(0,0.5*yKy+logDetK)
 
 # Evaluate minus sum of the log-likelihoods
 def neg_sum_log_p(theta,t,x,kernel):
@@ -242,23 +239,6 @@ def write_parameters(matrix,rows,columns,fileName):
             f.write(skip)
     f.close()
 
-#recibe una matriz de kernel [[kij]], con parametros [s,l]
-def _write_parameters(matrix,rows,columns,fileName):
-    f = open(fileName,"w")
-    for i in range(rows):
-        for j in range(columns):
-            ker = matrix[i][j]
-            parameters = ker.get_parameters()
-            gamma = "%d "%(ker.gamma)
-            f.write(gamma)
-            s = "%d "%(ker.s)
-            f.write(s)
-            l = "%d "%(ker.l)
-            f.write(l)
-            skip = "\n"
-            f.write(skip)
-    f.close()
-
 # Read a parameter file and return the matrix of kernels corresponding to this file
 def read_and_set_parameters(file_name, nParameters):
     file = open(file_name,'r')
@@ -283,14 +263,16 @@ def read_and_set_parameters(file_name, nParameters):
     file.close()
     return matrix
 
-
 """ PREDICTION """
+# Function to get the ground truth data: knownN data
 def get_known_set(x,y,l,knownN):
     trueX = x[0:knownN]
     trueY = y[0:knownN]
     trueL = l[0:knownN]
     return trueX, trueY, trueL
 
+# TODO: is this function really useful?
+# Function to get the ground truth data: knownN data
 def get_known_data(x,y,z,knownN):
     trueX = x[0:knownN]
     trueY = y[0:knownN]
@@ -298,6 +280,7 @@ def get_known_data(x,y,z,knownN):
     return trueX, trueY, trueZ
 
 def get_goal_likelihood(knownX,knownY,knownL,startG,finishG,goals,unitMat,kernelMatX,kernelMatY):
+    # All the observed data
     _knownX = knownX.copy()
     _knownY = knownY.copy()
     _knownL = knownL.copy()
@@ -327,7 +310,7 @@ def get_goal_likelihood(knownX,knownY,knownL,startG,finishG,goals,unitMat,kernel
 
     return error
 
-# Sample m points (x,y) in an area, with uniform sampling
+# Sample m points (x,y) in an area, with uniform sampling.
 def uniform_sampling_2D(m, goal):
     _x, _y = [], []
     xmin, xmax = goal[0], goal[2]
@@ -359,8 +342,8 @@ def uniform_sampling_1D(m, goal, axis):
             val = (1.-t)*ymin + t*ymax
             _y.append(val)
             _x.append( xmin + (xmax-xmin)/2 )
-
-    return _x, _y, axis #devuelve axis para las pruebas de single GP
+    # Returns the axis of sampling too
+    return _x, _y, axis
 
 def get_finish_point(knownX, knownY, knownL, finishGoal, goals, kernelX, kernelY, unit, samplingAxis):
     n = len(knownX)
@@ -480,11 +463,12 @@ def get_prediction_set_given_size(lastKnownPoint, finishPoint, unit, steps):
 
     return newset, l + dist*unit
 
-def get_arclen_to_finish_point(lastKnownPoint, finishPoint, unit):
-    x, y, l = lastKnownPoint[0], lastKnownPoint[1], lastKnownPoint[2]
+# Compute the arc-length from one point to the final points
+# given the unit
+def get_arclen_to_finish_point(point, finishPoint, unit):
+    x, y, l = point[0], point[1], point[2]
     _x, _y = finishPoint[0], finishPoint[1]
     dist = math.sqrt( (_x-x)**2 + (_y-y)**2 )
-
     return l + dist*unit
 
 def get_subgoals_center_and_size(nSubgoals, goal, axis):
@@ -552,7 +536,7 @@ def prediction_XY_of_set_of_trajectories(x, y, z, newZ, kernel_x, kernel_y):#pre
     return predicted_x, predicted_y,variance_x, variance_y
 
 
-# Prediction to a given finish point
+# Prediction of future positions towards a given finish point, given observations
 def prediction_to_finish_point(observedX,observedY,observedL,nObservations,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
     # Last observed point
     lastObservedPoint = [observedX[nObservations-1], observedY[nObservations-1], observedL[nObservations-1] ]
@@ -597,9 +581,10 @@ def prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goal,unit
     #print("[Error]:",error)
     return error
 
-#Toma la mitad de los datos observados como conocidos y predice nPoints en la mitad restante, regresa el error de la prediccion
+# For a given dataset (knownX,knownY,knownL), takes half of the data as known
+# and predicts the remaining half. Then, evaluate the prediction error.
 def prediction_error_of_points_along_the_path(nPoints,knownX,knownY,knownL,goal,unit,kernelX,kernelY):
-    knownN = len(knownX)
+    knownN= len(knownX)
     halfN = int(knownN/2)
 
     trueX = knownX[0:halfN]
@@ -607,7 +592,7 @@ def prediction_error_of_points_along_the_path(nPoints,knownX,knownY,knownL,goal,
     trueL = knownL[0:halfN]
 
     finishXY = middle_of_area(goal)
-    finishD = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
+    finishD  = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
     trueX.append(finishXY[0])
     trueY.append(finishXY[1])
     trueL.append(finishD*unit)
@@ -619,7 +604,6 @@ def prediction_error_of_points_along_the_path(nPoints,knownX,knownY,knownL,goal,
         realY.append(knownY[halfN + i*d])
         predictionSet.append(knownL[halfN + i*d])
 
-    #predX, predY, varX,varY = prediction_XY(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
     predX, predY, varX,varY = prediction_XY(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
 
     error = average_displacement_error([realX,realY],[predX,predY])
@@ -676,7 +660,7 @@ def joint_regression_with_lineprior(l,x_meanl,lnew,kernel,priorMean):
     return xnew, var
 
 # Individual regression with line prior for a vector of values l
-def regression_with_lineprior(l,x_meanl,lnew,kernel,priorMean):
+def single_regression_with_lineprior(l,x_meanl,lnew,kernel,priorMean):
     # Number of observed data
     n    = len(l)
     # Compute K, k and c
@@ -708,10 +692,9 @@ def independent_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMea
     X_meanL = []
     for i in range(len(knownL)):
         X_meanL.append(knownX[i] - linear_mean(knownL[i], priorMean[0]))
-    # TODO: applies regression for the joint values predictedX (not independently)
     for i in range(lenNew):
         # For each i, applies regression for newL[i]
-        val, var = regression_with_lineprior(knownL,X_meanL,newL[i],kernel,priorMean)
+        val, var = single_regression_with_lineprior(knownL,X_meanL,newL[i],kernel,priorMean)
         # Predictive mean
         predictedX.append(val)
         # Variance
@@ -736,9 +719,10 @@ def prediction_xy_lp(observedX, observedY, observedL, newL, kernelX, kernelY, pr
     newY, varY = joint_estimate_new_set_of_values_lp(observedL,observedY,newL,kernelY,priorMeanY)
     return newX, newY, varX, varY
 
-# Prediction to a given finish point
+# Prediction towards a given finish point
 def prediction_to_finish_point_lp(observedX,observedY,observedL,nObservations,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
     lastObservedPoint = [observedX[nObservations-1], observedY[nObservations-1], observedL[nObservations-1] ]
+    # Generate the set of l values at which to predict x,y
     newL, finalL = get_prediction_set(lastObservedPoint,finishPoint,unit,stepUnit)
     # One point at the final of the path
     observedX.append(finishPoint[0])
@@ -754,7 +738,8 @@ def prediction_to_finish_point_lp(observedX,observedY,observedL,nObservations,fi
     observedL.pop()
     return newX, newY, newL, varX, varY
 
-#Toma la mitad de los datos observados como conocidos y predice nPoints en la mitad restante, regresa el error de la prediccion
+# For a given dataset (knownX,knownY,knownL), takes half of the data as known
+# and predicts the remaining half. Then, evaluate the prediction error.
 def prediction_error_of_points_along_the_path_lp(nPoints,knownX,knownY,knownL,goal,unit,kernelX,kernelY,priorMeanX,priorMeanY):
     # Known data
     knownN = len(knownX)

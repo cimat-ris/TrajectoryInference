@@ -267,6 +267,7 @@ def plot_subgoals(img, goal, numSubgoals, axis):
     plt.axis(v)
     plt.show()
 
+# Plot a set of sample trajectories
 def plot_path_samples(img,x,y):
     n = len(x)
     if(n == 0):
@@ -275,6 +276,23 @@ def plot_path_samples(img,x,y):
     ax.set_aspect('equal')
     # Show the image
     ax.imshow(img)
+    for i in range(n):
+        plt.plot(x[i],y[i])
+    s = img.shape
+    v = [0,s[1],s[0],0]
+    plt.axis(v)
+    plt.show()
+
+# Plot a set of sample trajectories and an observed partial trajectories
+def plot_path_samples_with_observations(img,ox,oy,x,y):
+    n = len(x)
+    if(n == 0):
+        return
+    fig,ax = plt.subplots(1)
+    ax.set_aspect('equal')
+    # Show the image
+    ax.imshow(img)
+    plt.plot(ox,oy,'c')
     for i in range(n):
         plt.plot(x[i],y[i])
     s = img.shape

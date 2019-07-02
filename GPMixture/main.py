@@ -171,7 +171,11 @@ if predictionTest==True:
 
 nSamples = 100
 startGoal, finishGoal = 0,2
-path_sampling_between_goals_test(img,nSamples,areas,startGoal,finishGoal,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
+#path_sampling_between_goals_test(img,nSamples,areas,startGoal,finishGoal,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
+
+knownN = int(pathSize/2) #numero de datos conocidos
+trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
+path_sampling_to_goal_test(img,trueX,trueY,trueL,knownN,nSamples,areas,startGoal,finishGoal,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
 
 quit()
 

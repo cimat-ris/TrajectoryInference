@@ -12,16 +12,19 @@ def delta(x,y):
 class Kernel:
     __metaclass__ = ABCMeta
 
+    # Constructor
     def __init__(self):
         # Type of kernel
         self.type      = "generic"
 
     # Overload the operator ()
     @abstractmethod
-    def __call__(self,x,y,n=True): pass
+    def __call__(self,x,y): pass
 
 # Linear kernel
 class linearKernel(Kernel):
+
+    # Constructor
     def __init__(self, sigma_a, sigma_c):
         # Variance on the slope
         self.sigma_a   = sigma_a
@@ -32,6 +35,7 @@ class linearKernel(Kernel):
         # Type of kernel
         self.type      = "linear"
 
+    # Method to set parameters
     def setParameters(self,vec):
         # Variance on the slope
         self.sigma_a   = vec[0]
@@ -40,6 +44,7 @@ class linearKernel(Kernel):
         self.sigma_c   = vec[1]
         self.sigmaSq_c = vec[1]**2
 
+    # Method to get parameters
     def get_parameters(self):
         parameters = [self.sigma_a, self.sigma_c]
         return parameters
@@ -51,11 +56,13 @@ class linearKernel(Kernel):
 
 #kernel Trautman
 class linearKernelTrautman(Kernel):
+    # Constructor
     def __init__(self, gamma):
         self.gamma = gamma
         # Type of kernel
         self.type      = "linear"
 
+    # Method to set parameters
     def setParameters(self,vec):
         self.gamma = vec[0]
 
@@ -65,6 +72,7 @@ class linearKernelTrautman(Kernel):
 
 # Derived class: the squared exponential kernel
 class squaredExponentialKernel(Kernel):
+    # Constructor
     def __init__(self, sigmaSq, length):
         # Covariance magnitude factor
         self.sigmaSq      = sigmaSq
@@ -73,6 +81,7 @@ class squaredExponentialKernel(Kernel):
         # Type of kernel
         self.type         = "squaredExponential"
 
+    # Method to set parameters
     def setParameters(self,vec):
         # Covariance magnitude factor
         self.sigmaSq = vec[0]
@@ -85,6 +94,7 @@ class squaredExponentialKernel(Kernel):
 
 # Matern kernel
 class maternKernel(Kernel):
+    # Constructor
     def __init__(self, sigmaSq, length):
         # Covariance magnitude factor
         self.sigmaSq      = sigmaSq
@@ -93,6 +103,8 @@ class maternKernel(Kernel):
         # Type of kernel
         self.type         = "matobservedern"
         self.sqrootof5    = m.sqrt(5)
+
+    # Method to set parameters
     def setParameters(self,vec):
         # Covariance magnitude factor
         self.sigmaSq= vec[0]
@@ -112,6 +124,7 @@ class maternKernel(Kernel):
 
 # Matern kernel from Rasmussen
 class maternRasmussenKernel(Kernel):
+    # Constructor
     def __init__(self, sigmaSq, length):
         # Characteristic length
         self.length = length
@@ -120,6 +133,7 @@ class maternRasmussenKernel(Kernel):
         # Type of kernel
         self.type   = "maternRasmussen"
 
+    # Method to set parameters
     def setParameters(self,vec):
         self.sigmaSq      = vec[0]
         # Characteristic length
@@ -132,6 +146,7 @@ class maternRasmussenKernel(Kernel):
         return val
 
 class noiseKernel(Kernel):
+    # Constructor
     def __init__(self, sigmaNoise):
         # Standard deviation of the noise
         self.sigmaNoise = sigmaNoise
@@ -147,6 +162,7 @@ class noiseKernel(Kernel):
 
 # The combination used in the Trautman paper
 class combinedTrautmanKernel(Kernel):
+    # Constructor
     def __init__(self, gamma, sigmaSq, length, sigmaNoise):
         self.gamma = gamma
         # Covariance magnitude factor
@@ -159,6 +175,7 @@ class combinedTrautmanKernel(Kernel):
         # Type of kernel
         self.type      = "combinedTrautman"
 
+    # Method to set parameters
     def setParameters(self,vec):
         self.gamma  = vec[0]
         # Covariance magnitude factor
@@ -173,15 +190,18 @@ class combinedTrautmanKernel(Kernel):
     def __call__(self,x,y):
         return self.matern(x,y) + self.linear(x,y) + self.noise(x,y)
 
+    # Method to get parameters
     def get_parameters(self):
         parameters = [self.gamma, self.sigmaSq, self.length]
         return parameters
 
+    # Method to print parameters
     def print_parameters(self):
         print("combined kernel parameters\n gamma =",self.gamma,"\n s =",self.s,", l = ",self.length)
 
 # Exponential kernel
 class exponentialKernel(Kernel):
+    # Constructor
     def __init__(self, sigmaSq, length):
         # Covariance magnitude factor
         self.sigmaSq   = sigmaSq
@@ -190,6 +210,7 @@ class exponentialKernel(Kernel):
         # Type of kernel
         self.type      = "exponential"
 
+    # Method to set parameters
     def setParameters(self,vec):
         # Covariance magnitude factor
         self.sigmaSq = vec[0]
@@ -202,6 +223,7 @@ class exponentialKernel(Kernel):
 
 # Gamma exponential kernel
 class gammaExponentialKernel(Kernel):
+    # Constructor
     def __init__(self, sigmaSq, length, gamma):
         # Covariance magnitude factor
         self.sigmaSq = sigmaSq
@@ -212,6 +234,7 @@ class gammaExponentialKernel(Kernel):
         # Type of kernel
         self.type      = "gammaExponential"
 
+    # Method to set parameters
     def setParameters(self,vec):
         # Covariance magnitude factor
         self.sigmaSq = vec[0]
@@ -227,6 +250,7 @@ class gammaExponentialKernel(Kernel):
 
 # Rational quadratic kernel
 class rationalQuadraticKernel(Kernel):
+    # Constructor
     def __init__(self, sigmaSq, length, alpha, sigmaNoise):
         # Covariance magnitude factor
         self.sigmaSq = sigmaSq
@@ -237,6 +261,7 @@ class rationalQuadraticKernel(Kernel):
         # Type of kernel
         self.type    = "rationalQuadratic"
 
+    # Method to set parameters
     def setParameters(self,vec):
         # Covariance magnitude factor
         self.sigmaSq = vec[0]
@@ -251,6 +276,7 @@ class rationalQuadraticKernel(Kernel):
 
 # Combined kernel: squared exponential and noise
 class squaredExponentialAndNoiseKernel(Kernel):
+    # Constructor
     def __init__(self, sigmaSq, length, sigmaNoise):
         # Covariance magnitude factor
         self.sigmaSq      = sigmaSq
@@ -261,6 +287,7 @@ class squaredExponentialAndNoiseKernel(Kernel):
         # Type of kernel
         self.type    = "squaredExponentialAndNoise"
 
+    # Method to set parameters
     def setParameters(self,vec):
         # Covariance magnitude factor
         self.sigmaSq = vec[0]
@@ -276,20 +303,24 @@ class squaredExponentialAndNoiseKernel(Kernel):
 
 # Combined kernel: exponential and noise
 class exponentialAndNoiseKernel(Kernel):
+    # Constructor
     def __init__(self, sigmaSq, length, sigmaNoise):
         self.exponential = exponentialKernel(sigmaSq,length)
         self.noise       = noiseKernel(sigmaNoise)
         # Type of kernel
         self.type    = "exponentialAndNoise"
 
+    # Method to set parameters
     def setParameters(self,vec):
         self.exponential.setParameters(vec)
 
+    # Overload the operator ()
     def __call__(self,x,y):
         return self.exponential(x,y) + self.noise(x,y)
 
 # A combined kernel that considers a prior on the line parameters
 class linePriorCombinedKernel(Kernel):
+    # Constructor
     def __init__(self, sigmaSlope, sigmaConstant, sigmaSq, length, sigmaNoise):
         self.sigmaSlope    = sigmaSlope
         self.sigmaConstant = sigmaConstant
@@ -303,6 +334,7 @@ class linePriorCombinedKernel(Kernel):
         # Type of kernel
         self.type    = "linePriorCombined"
 
+    # Method to set parameters
     def set_parameters(self,vec):
         self.sigmaSlope    = vec[0]
         self.sigmaConstant = vec[1]
@@ -314,6 +346,7 @@ class linePriorCombinedKernel(Kernel):
         mV = [self.sigmaSq, self.length]
         self.matern.setParameters(mV)
 
+    # Method to set the optimizable parameters
     def set_optimizable_parameters(self,vec):
         # Covariance magnitude factor
         self.sigmaSq       = vec[0]
@@ -321,19 +354,23 @@ class linePriorCombinedKernel(Kernel):
         self.length        = vec[1]
         self.matern.setParameters(vec)
 
+    # Overload the operator ()
     def __call__(self,x,y,n=True):
         if (n):
             return self.matern(x,y) + self.linear(x,y) + self.noise(x,y)
         else:
             return self.matern(x,y) + self.linear(x,y)
 
+    # Method to get parameters
     def get_parameters(self):
         parameters = [self.sigmaSlope, self.sigmaConstant, self.sigmaSq, self.length]
         return parameters
 
+    # Method to get the optimizable parameters
     def get_optimizable_parameters(self):
         parameters = [self.sigmaSq, self.length]
         return parameters
 
+    # Method to print parameters
     def print_parameters(self):
         print("combined kernel parameters\n gamma_a =",self.sigmaSlope,"\n gamma_0",self.sigmaConstant,"\n s =",self.sigmaSq,", l = ",self.length)

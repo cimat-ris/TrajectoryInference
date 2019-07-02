@@ -372,9 +372,8 @@ def multigoal_prediction_test_lp(img,x,y,l,knownN,startG,goals,unitMat,stepUnit,
     # Plot everything
     print('[INF] Plotting')
     plot_multiple_predictions_and_goal_likelihood(img,x,y,knownN,goalCount,plotLikelihood,predictedXYVec,varXYVec)
-    #plot_multiple_predictions(img,x,y,knownN,goalCount,predictedXYVec,varXYVec)
 
-
+# Sampling 3 trajectories between all the pairs of goals
 def path_sampling_test(img,goals,nGoals,samplingAxis,unitMat,stepUnit,kernelMatX,kernelMatY,priorMeanMatX,priorMeanMatY):
     vecX, vecY = [], []
     for i in range(nGoals):
@@ -387,6 +386,7 @@ def path_sampling_test(img,goals,nGoals,samplingAxis,unitMat,stepUnit,kernelMatX
                     vecY.append(y)
     plot_path_samples(img, vecX,vecY)
 
+# Sampling trajectories between two goals
 def path_sampling_between_goals_test(img,nSamples,goals,startG,finishG,samplingAxis,unitMat,stepUnit,kernelMatX,kernelMatY,priorMeanMatX,priorMeanMatY):
     vecX, vecY = [], []
     for k in range(nSamples):
@@ -399,6 +399,29 @@ def path_sampling_between_goals_test(img,nSamples,goals,startG,finishG,samplingA
         plt.plot(l,mx)
         plt.plot(l,mx)
     plot_path_samples(img, vecX,vecY)
+
+# Sampling trajectories to a given goal
+def path_sampling_to_goal_test(img,observedX,observedY,observedL,knownN,nSamples,goals,startG,finishG,samplingAxis,unitMat,stepUnit,kernelMatX,kernelMatY,linearPriorMatX,linearPriorMatY):
+    # Ground truth
+    trueX, trueY, trueL = get_known_set(observedX,observedY,observedL,knownN)
+
+    # Length/euclidean distance ratio
+    unit = unitMat[startG][finishG]
+    # Kernels
+    kernelX = kernelMatX[startG][finishG]
+    kernelY = kernelMatY[startG][finishG]
+    # Linear priors
+    priorMeanX = linearPriorMatX[startG][finishG]
+    priorMeanY = linearPriorMatY[startG][finishG]
+
+    vecX, vecY = [], []
+    for k in range(nSamples):
+        x, y, l, mx, my = sample_path_to_goal(observedX,observedY,observedL,knownN,goals,finishG,samplingAxis,unitMat[startG][finishG],stepUnit,kernelMatX[startG][finishG],kernelMatY[startG][finishG],linearPriorMatX[startG][finishG],linearPriorMatY[startG][finishG])
+        vecX.append(x)
+        vecY.append(y)
+    plot_path_samples_with_observations(img,observedX,observedY,vecX,vecY)
+
+
 
 #Devuelve el punto con menor error de n muestras comparando k pasos
 def sample_finish_point(nSamples,kSteps,knownX, knownY, knownL, finishGoal, goals, kernelX, kernelY, unit, samplingAxis):
@@ -435,7 +458,7 @@ def sample_finish_point(nSamples,kSteps,knownX, knownY, knownL, finishGoal, goal
             min_error = error[i]
             min_id = i
     return [_x[min_id], _y[min_id]]
-    
+
 def get_error_of_final_point_comparing_k_steps(samples,steps,trajectorySet,startG,finishG,goals,unitMat,meanLenMat,samplingAxis,kernelSetX,kernelSetY):
     meanError = 0.0
     for i in range( len(trajectorySet) ):
@@ -454,7 +477,7 @@ def get_error_of_final_point_comparing_k_steps(samples,steps,trajectorySet,start
         meanError += error
     meanError /= len(trajectorySet)
     return meanError
-    
+
 def choose_number_of_steps_to_compare(trajectorySet,startG,finishG,goals,unitMat,meanLenMat,samplingAxis,kernelSetX,kernelSetY):
     errorVec = []
     stepsVec = []
@@ -498,7 +521,7 @@ def number_of_samples_and_points_to_compare_to_destination(goals,pathMat,rows,co
     trajectorySet, kernelSetX, kernelSetY = [], [], []
     for i in range(rows):
         for j in range(columns):
-            startGoal, finishGoal = i,j    
+            startGoal, finishGoal = i,j
             numOfPaths = len(pathMat[startGoal][finishGoal])
             lenTrainingSet = min(20,int(numOfPaths/2))
             #print( len(pathMat[startGoal][finalGoal]) )
@@ -509,6 +532,5 @@ def number_of_samples_and_points_to_compare_to_destination(goals,pathMat,rows,co
     #choose_number_of_steps_and_samples(trajectorySet,startGoal,finishGoal,areas,unitMat,meanLenMat)
     print("Test: number of steps to compare")
     choose_number_of_steps_to_compare(trajectorySet,startGoal,finishGoal,goals,unitMat,meanLenMat,samplingAxis,kernelSetX,kernelSetY)
-    print("Test: number of destination samples")    
+    print("Test: number of destination samples")
     choose_number_of_destination_samples(trajectorySet,startGoal,finishGoal,goals,unitMat,meanLenMat,samplingAxis,kernelSetX,kernelSetY)
-    
