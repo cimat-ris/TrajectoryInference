@@ -97,24 +97,24 @@ nParameters = 4
 learningParameters = False
 if learningParameters==True:
     print("[INF] Starting the learning phase")
-    kernelMat_x, kernelMat_y = optimize_parameters_between_goals(kernelType, pathMat, nGoals, nGoals, goalsData.linearPriorX, goalsData.linearPriorY)
+    goalsData.optimize_kernel_parameters(kernelType, pathMat)
     write_parameters(kernelMat_x,nGoals,nGoals,"linearpriorcombined6x6_x.txt")
     write_parameters(kernelMat_y,nGoals,nGoals,"linearpriorcombined6x6_y.txt")
     print("[INF] End of the learning phase")
 else:
      # Read the kernel parameters from file
-     kernelMat_x = read_and_set_parameters("linearpriorcombined6x6_x.txt",nParameters)
-     kernelMat_y = read_and_set_parameters("linearpriorcombined6x6_y.txt",nParameters)
+     goalsData.kernelsX = read_and_set_parameters("linearpriorcombined6x6_x.txt",nParameters)
+     goalsData.kernelsY = read_and_set_parameters("linearpriorcombined6x6_y.txt",nParameters)
 
 """******************************************************************************"""
 """**************    Testing                           **************************"""
 # We give the start and ending goals
-startG = 1
-nextG = 4
+startG = 0
+nextG = 2
 
 # Kernels for this pair of goals
-kernelX = kernelMat_x[startG][nextG]
-kernelY = kernelMat_y[startG][nextG]
+kernelX = goalsData.kernelsX[startG][nextG]
+kernelY = goalsData.kernelsY[startG][nextG]
 
 # Index of the trajectory to predict
 pathId = 3
@@ -126,9 +126,6 @@ pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t
 pathSize = len(pathX)
 
 arcLenToTime = arclen_to_time(320,pathL,speed)
-#print("[time]",arcLenToTime)
-#print("mean error:", mean_error(pathT,arcLenToTime))
-#print("[path data]:\n [x]:",pathX,"\n[y]:",pathY,"\n[l]:",pathL,"\n[t]:",pathT)
 
 predictionTest = False
 if predictionTest==True:
@@ -144,7 +141,7 @@ if predictionTest==True:
         knownTime = pathT[0:knownN]
         rT = pathT[knownN:pathSize]
         """Multigoal prediction test"""
-        multigoal_prediction_test_lp(img,trueX,trueY,trueL,knownN,startG,areas,goalsData.units,stepUnit,kernelMat_x,kernelMat_y,goalsData.priorTransitions,goalsData.linearPriorX,goalsData.linearPriorY,goalsData.areasAxis)
+        multigoal_prediction_test_lp(img,trueX,trueY,trueL,knownN,startG,areas,goalsData.units,stepUnit,goalsData.kernelsX,goalsData.kernelsY,goalsData.priorTransitions,goalsData.linearPriorX,goalsData.linearPriorY,goalsData.areasAxis)
         #prediction_test_over_time(pathX,pathY,pathT,knownN,start[0],nextG[0],areas)
 
 nSamples = 100
@@ -153,7 +150,7 @@ startGoal, finishGoal = 0,2
 
 knownN = int(pathSize/2) #numero de datos conocidos
 trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
-path_sampling_to_goal_test(img,trueX,trueY,trueL,knownN,nSamples,goalsData.areas,startGoal,finishGoal,goalsData.areasAxis,goalsData.units,stepUnit,kernelMat_x,kernelMat_y,goalsData.linearPriorsX,goalsData.linearPriorsY)
+path_sampling_to_goal_test(img,trueX,trueY,trueL,knownN,nSamples,goalsData.areas,startGoal,finishGoal,goalsData.areasAxis,goalsData.units,stepUnit,goalsData.kernelsX,goalsData.kernelsY,goalsData.linearPriorsX,goalsData.linearPriorsY)
 
 quit()
 

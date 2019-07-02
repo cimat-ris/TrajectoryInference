@@ -23,6 +23,8 @@ class goalsLearnedStructure:
         self.priorTransitions = np.zeros((self.nGoals,self.nGoals))
         self.linearPriorsX = np.empty((self.nGoals, self.nGoals),dtype=object)
         self.linearPriorsY = np.empty((self.nGoals, self.nGoals),dtype=object)
+        self.kernelsX = np.empty((self.nGoals, self.nGoals),dtype=object)
+        self.kernelsY = np.empty((self.nGoals, self.nGoals),dtype=object)
 
     # Fills in the matrix with the
     # mean length of the trajectories
@@ -72,7 +74,6 @@ class goalsLearnedStructure:
             paths_i = 0.
             for j in range(self.nGoals):
                 paths_i += len(pathMat[i][j])
-
             for j in range(self.nGoals):
                 if paths_i == 0:
                     self.priorTransitions[i][j] = 0.
@@ -87,3 +88,43 @@ class goalsLearnedStructure:
                 meanY, covY, varY  = get_linear_prior_mean(pathMat[i][j], 'y')
                 self.linearPriorsX[i][j] = (meanX,varX)
                 self.linearPriorsY[i][j] = (meanY,varY)
+
+    # For each pair of goals, realize the optimization of the kernel parameters
+    def optimize_kernel_parameters(self,kernelType, trainingSet):
+        # Build the kernel matrices with the default values
+        self.kernelsX, parametersX = create_kernel_matrix(kernelType, self.nGoals, self.nGoals)
+        self.kernelsY, parametersY = create_kernel_matrix(kernelType, self.nGoals, self.nGoals)
+        # For goal i
+        for i in range(self.nGoals):
+            # For goal j
+            for j in range(self.nGoals):
+                # Get the paths that go from i to j
+                paths = trainingSet[i][j]
+                if len(paths) > 0:
+                    start = timeit.default_timer()
+                    # Get the path data as x,y,z (z is arclength)
+                    x,y,z = get_data_from_paths(paths,"length")
+                    # Build a kernel with the specified type and initial parameters theta
+                    ker   = setKernel(kernelType)
+                    params= ker.get_parameters()
+                    theta = ker.get_optimizable_parameters()
+                    print("[OPT] Init parameters ",theta)
+                    print("[OPT] [",i,"][",j,"]")
+                    print("[OPT] #trajectories: ",len(z))
+                    # Learn parameters in X
+                    params[0] = self.linearPriorsX[i][j][1][0]
+                    params[1] = self.linearPriorsX[i][j][1][1]
+                    ker.set_parameters(params)
+                    thetaX  = learn_parameters(z,x,ker,theta)
+                    print("[OPT] x: ",thetaX)
+                    self.kernelsX[i][j].set_parameters(ker.get_parameters())
+                    # Learn parameters in Y
+                    params[0] = self.linearPriorsY[i][j][1][0]
+                    params[1] = self.linearPriorsY[i][j][1][1]
+                    ker.set_parameters(params)
+                    thetaY  = learn_parameters(z,y,ker,theta)
+                    print("[OPT] y: ",thetaY)
+                    self.kernelsY[i][j].set_parameters(ker.get_parameters())
+                    stop = timeit.default_timer()
+                    execution_time = stop - start
+                    print("[OPT] Parameter optimization done in %.2f seconds"%execution_time)
