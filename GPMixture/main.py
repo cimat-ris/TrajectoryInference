@@ -127,7 +127,7 @@ pathSize = len(pathX)
 
 arcLenToTime = arclen_to_time(320,pathL,speed)
 
-predictionTest = False
+predictionTest = True
 if predictionTest==True:
     # The dataset of observations is split into part_num subsets
     # When predicting, one takes the percentge i/part_num as known,
@@ -141,7 +141,7 @@ if predictionTest==True:
         knownTime = pathT[0:knownN]
         rT = pathT[knownN:pathSize]
         """Multigoal prediction test"""
-        multigoal_prediction_test_lp(img,trueX,trueY,trueL,knownN,startG,areas,goalsData.units,stepUnit,goalsData.kernelsX,goalsData.kernelsY,goalsData.priorTransitions,goalsData.linearPriorX,goalsData.linearPriorY,goalsData.areasAxis)
+        multigoal_prediction_test_lp(img,trueX,trueY,trueL,knownN,startG,areas,stepUnit,goalsData)
         #prediction_test_over_time(pathX,pathY,pathT,knownN,start[0],nextG[0],areas)
 
 nSamples = 100
