@@ -60,7 +60,6 @@ def joint_regression(l,x_meanl,lnew,kernel,linearPriorMean=None):
 
 #******************************************************************************#
 """ LEARNING """
-
 # Set kernel: a function that creates a kernel with default parameters, given its type name
 def setKernel(name):
     if(name == "squaredExponential"):
@@ -314,7 +313,7 @@ def get_goal_likelihood(knownX,knownY,knownL,startG,finishG,goals,unitMat,kernel
     _knownL.append(lastL)
     kernelX = kernelMatX[startG][i]
     kernelY = kernelMatY[startG][i]
-    predX, predY, vx, vy = prediction_XY(_knownX, _knownY, _knownL, predSet, kernelX, kernelY)
+    predX, predY, vx, vy = prediction_xy(_knownX, _knownY, _knownL, predSet, kernelX, kernelY)
     error = average_displacement_error([trueX,trueY],[predX,predY])
 
     return error
@@ -509,17 +508,16 @@ def get_subgoals_center_and_size(nSubgoals, goal, axis):
     return subgoalsCenter, [subgoalX, subgoalY]
 
 # Applies joint regression for a whole set newL of values L, given knownL, knownX
-def joint_estimate_new_set_of_values(observedL,observedX,newL,kernel):
+def joint_estimate_new_set_of_values(observedL,observedX,newL,kernel,linearPriorMean=None):
+    if linearPriorMean==None:
+        centeredX = observedX
+    else:
+        centeredX = np.zeros((len(observedL),1),dtype=float)
+        for i in range(len(observedL)):
+            centeredX[i][0] = observedX[i] - linear_mean(observedL[i], linearPriorMean[0])
     # Applies regression for the joint values predictedX (not independently)
-    predictedX, covarianceX = joint_regression(observedL,observedX,newL,kernel)
+    predictedX, covarianceX = joint_regression(observedL,centeredX,newL,kernel,linearPriorMean)
     return predictedX, covarianceX
-
-# Performs prediction in X and Y
-# Takes as input observed values (x,y,l) and the points at which we want to perform regression (newL)
-def prediction_xy(x, y, z, newZ, kernelX, kernelY):#prediction
-    newX, varX = joint_estimate_new_set_of_values(z,x,newZ,kernelX)#prediccion para x
-    newY, varY = joint_estimate_new_set_of_values(z,y,newZ,kernelY)#prediccion para y
-    return newX, newY, varX, varY
 
 #necesita recibir el kernel para X y el kernel para Y
 #Recibe los datos conocidos [(x,y,z)] y los puntos para la regresion. x, y, z,... son vectores de vectores
@@ -574,7 +572,7 @@ def prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goal,unit
     lastY = knownY[knownN -nPoints: nPoints]
     predictionSet = knownL[knownN -nPoints: nPoints]
 
-    predX, predY, varX,varY = prediction_XY(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
+    predX, predY, varX,varY = prediction_xy(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
     #print("[Prediccion]\n",predX)
     #print(predY)
     error = average_displacement_error([lastX,lastY],[predX,predY])
@@ -667,22 +665,13 @@ def independent_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMea
         varianceX.append(var)
     return predictedX, varianceX
 
-# Applies joint regression for a whole set newL of values L, given knownL, knownX
-def joint_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMean):
-    X_meanL = np.zeros((len(knownL),1),dtype=float)
-    for i in range(len(knownL)):
-        X_meanL[i][0] = knownX[i] - linear_mean(knownL[i], priorMean[0])
-    # Applies regression for the joint values predictedX (not independently)
-    predictedX, covarianceX = joint_regression(knownL,X_meanL,newL,kernel,priorMean)
-    return predictedX, covarianceX
-
 # Performs prediction in X and Y with a line prior
 # Takes as input observed values (x,y,l) and the points at which we want to perform regression (newL)
-def prediction_xy_lp(observedX, observedY, observedL, newL, kernelX, kernelY, priorMeanX, priorMeanY):
+def prediction_xy(observedX, observedY, observedL, newL, kernelX, kernelY, priorMeanX=None, priorMeanY=None):
     # Regression for X
-    newX, varX = joint_estimate_new_set_of_values_lp(observedL,observedX,newL,kernelX,priorMeanX)
+    newX, varX = joint_estimate_new_set_of_values(observedL,observedX,newL,kernelX,priorMeanX)
     # Regression for Y
-    newY, varY = joint_estimate_new_set_of_values_lp(observedL,observedY,newL,kernelY,priorMeanY)
+    newY, varY = joint_estimate_new_set_of_values(observedL,observedY,newL,kernelY,priorMeanY)
     return newX, newY, varX, varY
 
 # Prediction towards a given finish point
@@ -697,7 +686,7 @@ def prediction_to_finish_point_lp(observedX,observedY,observedL,nObservations,fi
     observedL.append(finalL)
 
     # Performs regression for newL
-    newX,newY,varX,varY = prediction_xy_lp(observedX,observedY,observedL,newL,kernelX,kernelY,priorMeanX,priorMeanY)
+    newX,newY,varX,varY = prediction_xy(observedX,observedY,observedL,newL,kernelX,kernelY,priorMeanX,priorMeanY)
 
     # Removes the last observed point (which was artificially added)
     observedX.pop()
@@ -732,7 +721,7 @@ def prediction_error_of_points_along_the_path_lp(nPoints,knownX,knownY,knownL,go
         realY.append(knownY[halfN + i*d])
         predictionSet.append(knownL[halfN + i*d])
     # Get the prediction
-    predX, predY, varX,varY = prediction_xy_lp(trueX,trueY,trueL, predictionSet, kernelX, kernelY,priorMeanX,priorMeanY)
+    predX, predY, varX,varY = prediction_xy(trueX,trueY,trueL, predictionSet, kernelX, kernelY,priorMeanX,priorMeanY)
 
     # Evaluate the error
     print('[INF] Evaluate the error')

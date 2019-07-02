@@ -196,45 +196,6 @@ def prediction_test(img,x,y,z,knownN,startG,finishG,goals,unitMat,meanLenMat,ste
     newX,newY,varX,varY = prediction_XY(trueX,trueY,trueZ,newZ,kernelX,kernelY)
     plot_prediction(img,x,y,knownN,newX,newY,varX,varY,[0,0])
 
-#recibe: datos reales, num de datos conocidos, area de inicio, vec de areas objetivo, vec de areas
-def _multigoal_prediction_test(x,y,z,knownN,startG,finishG,goals,unitMat,steps,kernelMat_x,kernelMat_y):
-    trueX, trueY, trueZ = get_known_set(x,y,z,knownN)
-    lastKnownPoint = [x[knownN-1], y[knownN-1], z[knownN-1] ]
-
-    fig,ax = plt.subplots(1)
-    ax.set_aspect('equal')
-    ax.imshow(img) # Show the image
-
-    for i in range(len(finishG)):
-        nextGoal = finishG[i]
-        kernelX = kernelMat_x[startG][nextGoal]
-        kernelY = kernelMat_y[startG][nextGoal]
-        auxX = copy(trueX)
-        auxY = copy(trueY)
-        auxZ = copy(trueZ)
-        final_point = middle_of_area(goals[nextGoal])
-        auxX.append(final_point[0])
-        auxY.append(final_point[1])
-        #steps = 20
-        end_, newZ, l_ = getPredictionSet(trueX[knownN-1],trueY[knownN-1],trueZ[knownN-1],start,nextGoal,goals)
-        auxZ.append(l_)
-        newX, newY, varX, varY = prediction_XY(auxX,auxY,auxZ,newZ,kernelX,kernelY)
-
-        plt.plot(trueX,trueY,'r')
-        plt.plot(newX,newY,'b')
-        #elipses
-        for j in range(len(newX)):
-            xy = [newX[j],newY[j]]
-            ell = Ellipse(xy,2.*np.sqrt(varX[j]),2.*np.sqrt(varY[j]))
-            ell.set_alpha(.4)
-            ell.set_lw(0)
-            ell.set_facecolor('g')
-            ax.add_patch(ell)
-
-    v = [0,1920,1080,0]
-    plt.axis(v)
-    plt.show()
-
 def multigoal_prediction_test(img,x,y,l,knownN,startG,stepUnit,goalsData):
     # Ground truth
     trueX, trueY, trueL = get_known_set(x,y,l,knownN)
