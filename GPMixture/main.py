@@ -141,8 +141,9 @@ if predictionTest==True:
         knownTime = pathT[0:knownN]
         rT = pathT[knownN:pathSize]
         """Multigoal prediction test"""
-        multigoal_prediction_test_lp(img,trueX,trueY,trueL,knownN,startG,areas,stepUnit,goalsData)
-        #prediction_test_over_time(pathX,pathY,pathT,knownN,start[0],nextG[0],areas)
+        #multigoal_prediction_test_lp(img,trueX,trueY,trueL,knownN,startG,stepUnit,goalsData)
+        multigoal_prediction_test(img,trueX,trueY,trueL,knownN,startG,stepUnit,goalsData)
+
 
 nSamples = 100
 startGoal, finishGoal = 0,2

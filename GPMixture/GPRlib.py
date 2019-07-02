@@ -24,29 +24,37 @@ nsigma = 7.50
 #******************************************************************************#
 """ REGRESSION FUNCTIONS """
 # The main regression function
-def regression(x,y,xnew,kernel):
-    n = len(x) # Number of observed data
-    # Compute K, k and c
-    K = np.zeros((n,n))
-    k = np.zeros(n)
-    c = 0
+def joint_regression(l,x,lnew,kernel):
+    # Number of observed data
+    n    = len(l)
+    # Number of predicted data
+    nnew = len(lnew)
+    # Compute K (nxn), k (nxnnew), C (nnewxnnew)
+    K  = np.zeros((n,n))
+    k  = np.zeros((n,nnew))
+    C  = np.zeros((nnew,nnew))
     # Fill in K
     for i in range(n):
         for j in range(n):
-            K[i][j] = kernel(x[i],x[j])
+            K[i][j] = kernel(l[i],l[j])
+    K_1 = inv(K)
     # Fill in k
     for i in range(n):
-        k[i] = kernel(xnew,x[i],False)
-    # Compute c
-    c = kernel(xnew,xnew,False)
-    # Estimate the mean
-    K_1 = inv(K)
-    ynew = k.dot(K_1.dot(y))
+        for j in range(nnew):
+            k[i][j] = kernel(l[i],lnew[j],False)
+    # Fill in C
+    for i in range(nnew):
+        for j in range(nnew):
+            C[i][j] = kernel(lnew[i],lnew[j],False)
+    # Predictive mean
+    xnew = k.transpose().dot(K_1.dot(x))
+
     # Estimate the variance
-    K_1kt = K_1.dot(k.transpose())
-    kK_1kt = k.dot(K_1kt)
-    var = c - kK_1kt
-    return ynew, var
+    K_1kt = K_1.dot(k)
+    kK_1kt = k.transpose().dot(K_1kt)
+    # Variance
+    var = C - kK_1kt
+    return xnew, var
 
 
 #******************************************************************************#
@@ -371,7 +379,7 @@ def get_finish_point(knownX, knownY, knownL, finishGoal, goals, kernelX, kernelY
         dist = math.sqrt( (knownX[n-1] - _x[i])**2 + (knownY[n-1] - _y[i])**2 )
         lastL = knownL[n-1] + dist*unit
         auxL.append(lastL)
-        predX, predY, vx, vy = prediction_XY(auxX, auxY, auxL, predSet, kernelX, kernelY)
+        predX, predY, vx, vy = prediction_xy(auxX, auxY, auxL, predSet, kernelX, kernelY)
         #error.append(geometricError(trueX,trueY,predX,predY))
         error.append(average_displacement_error([trueX,trueY],[predX,predY]))
     #encuentra el punto que genera el error minimo
@@ -499,24 +507,17 @@ def get_subgoals_center_and_size(nSubgoals, goal, axis):
 
     return subgoalsCenter, [subgoalX, subgoalY]
 
-#Recibe los puntos conocidos (x,y) el conjunto de puntos por predecir newX.
-def estimate_new_set_of_values(known_x,known_y,newX,kernel):
-    lenNew = len(newX)
-    predicted_y, variance_y = [], []
+# Applies joint regression for a whole set newL of values L, given knownL, knownX
+def joint_estimate_new_set_of_values(observedL,observedX,newL,kernel):
+    # Applies regression for the joint values predictedX (not independently)
+    predictedX, covarianceX = joint_regression(observedL,observedX,newL,kernel)
+    return predictedX, covarianceX
 
-    for i in range(lenNew):
-        #new_y, var_y = line_prior_regression(known_x,known_y,newX[i],kernel) #line prior regression
-        new_y, var_y = regression(known_x,known_y,newX[i],kernel)
-        predicted_y.append(new_y)
-        variance_y.append(var_y)
-
-    return predicted_y, variance_y
-
-#prediccion en X y en Y
-#Recibe los datos conocidos (x,y,z) y los puntos para la regresion.
-def prediction_XY(x, y, z, newZ, kernelX, kernelY):#prediction
-    newX, varX = estimate_new_set_of_values(z,x,newZ,kernelX)#prediccion para x
-    newY, varY = estimate_new_set_of_values(z,y,newZ,kernelY)#prediccion para y
+# Performs prediction in X and Y
+# Takes as input observed values (x,y,l) and the points at which we want to perform regression (newL)
+def prediction_xy(x, y, z, newZ, kernelX, kernelY):#prediction
+    newX, varX = joint_estimate_new_set_of_values(z,x,newZ,kernelX)#prediccion para x
+    newY, varY = joint_estimate_new_set_of_values(z,y,newZ,kernelY)#prediccion para y
     return newX, newY, varX, varY
 
 #necesita recibir el kernel para X y el kernel para Y
@@ -537,25 +538,23 @@ def prediction_XY_of_set_of_trajectories(x, y, z, newZ, kernel_x, kernel_y):#pre
 
 
 # Prediction of future positions towards a given finish point, given observations
-def prediction_to_finish_point(observedX,observedY,observedL,nObservations,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
+def prediction_to_finish_point(observedX,observedY,observedL,nObservations,finishPoint,unit,stepUnit,kernelX,kernelY):
     # Last observed point
     lastObservedPoint = [observedX[nObservations-1], observedY[nObservations-1], observedL[nObservations-1] ]
-    # From this point, deduced the set of arclengths at which x and y should be predicted
+    # Generate the set of l values at which to predict x,y
     newL, finalL = get_prediction_set(lastObservedPoint,finishPoint,unit,stepUnit)
-
     # One point at the final of the path is set
-    trueX.append(finishPoint[0])
-    trueY.append(finishPoint[1])
-    trueL.append(finalL)
+    observedX.append(finishPoint[0])
+    observedY.append(finishPoint[1])
+    observedL.append(finalL)
 
     # Performs regression for newL
-    newX,newY,varX,varY = prediction_XY_lp(observedX,trueY,trueL,newL,kernelX,kernelY,priorMeanX,priorMeanY)
-
+    newX,newY,varX,varY = prediction_xy(observedX,observedY,observedL,newL,kernelX,kernelY)
     # Removes the last observed point (which was artificially added)
     observedX.pop()
     observedY.pop()
-    observedY.pop()
-    return newX, newY, varX, varY
+    observedL.pop()
+    return newX, newY, newL, varX, varY
 
 #Toma N-nPoints como datos conocidos y predice los ultimos nPoints, regresa el error de la prediccion
 def prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goal,unit,stepUnit,kernelX,kernelY):
@@ -604,7 +603,7 @@ def prediction_error_of_points_along_the_path(nPoints,knownX,knownY,knownL,goal,
         realY.append(knownY[halfN + i*d])
         predictionSet.append(knownL[halfN + i*d])
 
-    predX, predY, varX,varY = prediction_XY(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
+    predX, predY, varX,varY = prediction_xy(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
 
     error = average_displacement_error([realX,realY],[predX,predY])
 
@@ -721,6 +720,7 @@ def prediction_xy_lp(observedX, observedY, observedL, newL, kernelX, kernelY, pr
 
 # Prediction towards a given finish point
 def prediction_to_finish_point_lp(observedX,observedY,observedL,nObservations,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
+    # Last observed point
     lastObservedPoint = [observedX[nObservations-1], observedY[nObservations-1], observedL[nObservations-1] ]
     # Generate the set of l values at which to predict x,y
     newL, finalL = get_prediction_set(lastObservedPoint,finishPoint,unit,stepUnit)
@@ -732,7 +732,7 @@ def prediction_to_finish_point_lp(observedX,observedY,observedL,nObservations,fi
     # Performs regression for newL
     newX,newY,varX,varY = prediction_xy_lp(observedX,observedY,observedL,newL,kernelX,kernelY,priorMeanX,priorMeanY)
 
-    # Removes the last point
+    # Removes the last observed point (which was artificially added)
     observedX.pop()
     observedY.pop()
     observedL.pop()
