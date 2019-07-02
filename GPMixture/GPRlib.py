@@ -24,7 +24,7 @@ nsigma = 7.50
 #******************************************************************************#
 """ REGRESSION FUNCTIONS """
 # The main regression function
-def joint_regression(l,x,lnew,kernel):
+def joint_regression(l,x_meanl,lnew,kernel,linearPriorMean=None):
     # Number of observed data
     n    = len(l)
     # Number of predicted data
@@ -47,15 +47,16 @@ def joint_regression(l,x,lnew,kernel):
         for j in range(nnew):
             C[i][j] = kernel(lnew[i],lnew[j],False)
     # Predictive mean
-    xnew = k.transpose().dot(K_1.dot(x))
-
+    xnew = k.transpose().dot(K_1.dot(x_meanl))
+    if linearPriorMean!=None:
+        for j in range(nnew):
+            xnew[j] += linear_mean(lnew[j],linearPriorMean[0])
     # Estimate the variance
     K_1kt = K_1.dot(k)
     kK_1kt = k.transpose().dot(K_1kt)
     # Variance
     var = C - kK_1kt
     return xnew, var
-
 
 #******************************************************************************#
 """ LEARNING """
@@ -624,40 +625,6 @@ def linear_mean(l, priorMean):
     m = priorMean[0]*l + priorMean[1]
     return m
 
-# Joint regression with line prior for a set of values l
-def joint_regression_with_lineprior(l,x_meanl,lnew,kernel,priorMean):
-    # Number of observed data
-    n    = len(l)
-    # Number of predicted data
-    nnew = len(lnew)
-    # Compute K (nxn), k (nxnnew), C (nnewxnnew)
-    K  = np.zeros((n,n))
-    k  = np.zeros((n,nnew))
-    C  = np.zeros((nnew,nnew))
-    # Fill in K
-    for i in range(n):
-        for j in range(n):
-            K[i][j] = kernel(l[i],l[j])
-    K_1 = inv(K)
-    # Fill in k
-    for i in range(n):
-        for j in range(nnew):
-            k[i][j] = kernel(l[i],lnew[j],False)
-    # Fill in C
-    for i in range(nnew):
-        for j in range(nnew):
-            C[i][j] = kernel(lnew[i],lnew[j],False)
-    # Predictive mean
-    xnew = k.transpose().dot(K_1.dot(x_meanl))
-    for j in range(nnew):
-        xnew[j] += linear_mean(lnew[j],priorMean[0])
-    # Estimate the variance
-    K_1kt = K_1.dot(k)
-    kK_1kt = k.transpose().dot(K_1kt)
-    # Variance
-    var = C - kK_1kt
-    return xnew, var
-
 # Individual regression with line prior for a vector of values l
 def single_regression_with_lineprior(l,x_meanl,lnew,kernel,priorMean):
     # Number of observed data
@@ -706,7 +673,7 @@ def joint_estimate_new_set_of_values_lp(knownL,knownX,newL,kernel,priorMean):
     for i in range(len(knownL)):
         X_meanL[i][0] = knownX[i] - linear_mean(knownL[i], priorMean[0])
     # Applies regression for the joint values predictedX (not independently)
-    predictedX, covarianceX = joint_regression_with_lineprior(knownL,X_meanL,newL,kernel,priorMean)
+    predictedX, covarianceX = joint_regression(knownL,X_meanL,newL,kernel,priorMean)
     return predictedX, covarianceX
 
 # Performs prediction in X and Y with a line prior
