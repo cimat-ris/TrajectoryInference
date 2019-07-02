@@ -232,29 +232,12 @@ def get_path_set_given_time_interval(paths, startT, finishT):
     return pathSet
 
 """ GOAL RELATED FUNCTIONS """
-
 def startGoal(p,goals):
     x, y = p.x[0], p.y[0]
     for i in range(len(goals)):
         if isInArea(x,y,goals[i]):
             return i
     return -1
-
-# Returns a nGoalsxnGoals matrix with the Euclidean distances between goals
-def get_euclidean_goal_distance(goals, nGoals):
-    mat = []
-    for i in range(nGoals):
-        row = []
-        # Take the centroid of the ROI i
-        p = middle_of_area(goals[i])
-        for j in range(nGoals):
-            # Take the centroid of the ROI j
-            q = middle_of_area(goals[j])
-            # Compute the euclidean distance between the two centroids i and j
-            d = np.sqrt((p[0]-q[0])**2 + (p[1]-q[1])**2)
-            row.append(d)
-        mat.append(row)
-    return mat
 
 def get_goal_sequence(p, goals):
     g = []
@@ -376,42 +359,6 @@ def arclength(x,y):
             l[i] = l[i] +l[i-1]
     return l
 
-# Returns an nGoalsxnGoals matrix with the mean length trajectory
-def get_mean_length(M, nGoals):
-    mat = []
-    for i in range(nGoals):
-        row = []
-        for j in range(nGoals):
-            if(len(M[i][j]) > 0):
-                arclen = get_paths_arcLength(M[i][j])
-                m = np.median(arclen)
-            else:
-                m = 0
-            row.append(m)
-        mat.append(row)
-    return mat
-
-# Determine the ratio between path length and linear path length (distance between goals)
-def get_distance_unit(mean, euclidean, nGoals):
-    mat = []
-    for i in range(nGoals):
-        row = []
-        for j in range(nGoals):
-            if(euclidean[i][j] == 0 or mean[i][j] == 0):
-                u = 1
-            else:
-                # Ratio between mean length and goal-to-goal distance
-                u = mean[i][j]/euclidean[i][j]
-            row.append(u)
-        mat.append(row)
-    # Mean value of the ratio
-    sumUnit = 0.
-    for i in range(nGoals):
-        for j in range(nGoals):
-            sumUnit += mat[i][j]
-    unit = sumUnit / nGoals**2
-    return mat, unit
-
 def get_number_of_steps_unit(Mat, nGoals):
     unit = 0.0
     numUnits = 0
@@ -435,24 +382,6 @@ def get_number_of_steps_unit(Mat, nGoals):
                 numUnits += 1
     unit = unit/numUnits
     return unit
-
-#Regresa una matriz con la probabilidad de ir de g_i a g_j en cada entrada
-def prior_probability_matrix(pathMat, nGoals):
-    priorMat = []
-    for i in range(nGoals):
-        p = []
-        paths_i = 0.
-        for j in range(nGoals):
-            paths_i += len(pathMat[i][j])
-
-        for j in range(nGoals):
-            if paths_i == 0:
-                p.append(0.)
-            else:
-                p.append(float(len(pathMat[i][j])/paths_i))
-        priorMat.append(p)
-
-    return priorMat
 
 #regresa la duracion minima y maxima de un conjunto de trayectorias
 def get_min_and_max_Duration(paths):
@@ -561,18 +490,6 @@ def get_linear_prior_mean(paths, flag):
     cov          = get_line_covariance(lineParameters, mean)
     vars         = get_line_variances(lineParameters, mean)
     return mean, cov, vars
-
-# Compute, for X and Y, for each pair of goals, the matrix of the linear prior means
-def get_linear_prior_mean_matrix(pathMat, nGoals, mGoals):
-    matX = np.empty((nGoals, mGoals),dtype=object)
-    matY = np.empty((nGoals, mGoals),dtype=object)
-    for i in range(nGoals):     #rows
-        for j in range(mGoals): #columns
-            meanX, covX, varX  = get_linear_prior_mean(pathMat[i][j], 'x')
-            meanY, covY, varY  = get_linear_prior_mean(pathMat[i][j], 'y')
-            matX[i][j] = (meanX,varX)
-            matY[i][j] = (meanY,varY)
-    return matX, matY
 
 """ HELPFUL FUNCTIONS"""
 def equal(vx,vy,x,y):

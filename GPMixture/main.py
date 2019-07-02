@@ -5,6 +5,7 @@ from GPRlib import *
 from path import *
 from testing import *
 from plotting import *
+from goalsLearnedStructure import *
 from multipleAgents import *
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,7 +27,7 @@ def single_goal_prediction_test(img,x,y,l,knownN,startG,finishG,goals,unitMat,st
 """******************************************************************************"""
 """**************    Main function starts here      *****************************"""
 
-# Areas de interes [x1,y1,x2,y2,...]
+# Interest areas [x1,y1,x2,y2,...]
 #R0 = [400,40,680,40,400,230,680,230] #azul
 #R1 = [1110,40,1400,40,1110,230,1400,230] #cian
 R0 = [410,10,680,10,410,150,680,150] #azul
@@ -39,12 +40,13 @@ R6 = [0,430,80,430,0,600,80,600]
 R7 = [1550,300,1650,300,1550,455,1650,455]
 R8 = [500,950,1000,950,500,1080,1000,1080]
 R9 = [1000,950,1500,950,1000,1080,1500,1080]
-goalSamplingAxis = ['x','x','y','x','x','y','y','y']
 
 # This array will contain the zones of interest
-areas = [R0,R1,R2,R3,R4,R5]
-nGoals = len(areas)
-img = mpimg.imread('imgs/goals.jpg')
+areas     = [R0,R1,R2,R3,R4,R5]
+areasAxis = ['x','x','y','x','x','y','y','y']
+nGoals    = len(areas)
+img       = mpimg.imread('imgs/goals.jpg')
+goalsData = goalsLearnedStructure(areas,areasAxis)
 
 # Al leer cortamos las trayectorias multiobjetivos por pares consecutivos
 # y las agregamos como trayectorias independientes
@@ -71,24 +73,22 @@ pathMat, learnSet = filter_path_matrix(startToGoalPath, nGoals, nGoals)
 print("[INF] Number of filtered paths: ",len(learnSet))
 
 # Compute the mean lengths
-meanLenMat = get_mean_length(pathMat, nGoals)
+goalsData.compute_mean_lengths(pathMat)
 # Compute the distances between pairs of goals (as a nGoalsxnGoals matrix)
-euclideanDistMat = get_euclidean_goal_distance(areas, nGoals)
+goalsData.compute_euclidean_distances()
 # Compute the ratios between average path lengths and inter-goal distances
-unitMat,  meanUnit = get_distance_unit(meanLenMat, euclideanDistMat, nGoals)
+goalsData.compute_distance_units()
 
 stepUnit = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals)
 speed    = 1.65033755511     #get_pedestrian_average_speed(dataPaths)
-# Computer prior probabilities between goals
-priorTransitionMat               = prior_probability_matrix(pathMat, nGoals)
-# For each pair of goals, determine the line prior
-linearPriorMatX, linearPriorMatY = get_linear_prior_mean_matrix(pathMat, nGoals, nGoals)
 
-#print("Linear prior mean Mat X:\n", linearPriorMatX)
-#print("Linear prior mean Mat Y:\n", linearPriorMatY)
-#print("***arc-len promedio***\n", meanLenMat)
-#print("***distancia euclidiana entre goals***\n", euclideanDistMat)
-#print("Prior likelihood matrix:", priorLikelihoodMat)
+# Computer prior probabilities between goals
+goalsData.compute_prior_transitions(pathMat)
+
+# For each pair of goals, determine the line prior
+goalsData.compute_linear_priors(pathMat)
+
+# Selection of the kernel type
 kernelType = "linePriorCombined"#"combined"
 nParameters = 4
 
@@ -97,7 +97,7 @@ nParameters = 4
 learningParameters = False
 if learningParameters==True:
     print("[INF] Starting the learning phase")
-    kernelMat_x, kernelMat_y = optimize_parameters_between_goals(kernelType, pathMat, nGoals, nGoals, linearPriorMatX, linearPriorMatY)
+    kernelMat_x, kernelMat_y = optimize_parameters_between_goals(kernelType, pathMat, nGoals, nGoals, goalsData.linearPriorX, goalsData.linearPriorY)
     write_parameters(kernelMat_x,nGoals,nGoals,"linearpriorcombined6x6_x.txt")
     write_parameters(kernelMat_y,nGoals,nGoals,"linearpriorcombined6x6_y.txt")
     print("[INF] End of the learning phase")
@@ -144,17 +144,16 @@ if predictionTest==True:
         knownTime = pathT[0:knownN]
         rT = pathT[knownN:pathSize]
         """Multigoal prediction test"""
-        multigoal_prediction_test_lp(img,trueX,trueY,trueL,knownN,startG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,priorTransitionMat,linearPriorMatX,linearPriorMatY,goalSamplingAxis)
-        #plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,middle_of_area(areas[nextG]))
+        multigoal_prediction_test_lp(img,trueX,trueY,trueL,knownN,startG,areas,goalsData.units,stepUnit,kernelMat_x,kernelMat_y,goalsData.priorTransitions,goalsData.linearPriorX,goalsData.linearPriorY,goalsData.areasAxis)
         #prediction_test_over_time(pathX,pathY,pathT,knownN,start[0],nextG[0],areas)
 
 nSamples = 100
 startGoal, finishGoal = 0,2
-#path_sampling_between_goals_test(img,nSamples,areas,startGoal,finishGoal,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
+#path_sampling_between_goals_test(img,nSamples,areas,startGoal,finishGoal,goalSamplingAxis,goalsData.units,stepUnit,kernelMat_x,kernelMat_y,goalsData.linearPriorsX,goalsData.linearPriorsY)
 
 knownN = int(pathSize/2) #numero de datos conocidos
 trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
-path_sampling_to_goal_test(img,trueX,trueY,trueL,knownN,nSamples,areas,startGoal,finishGoal,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
+path_sampling_to_goal_test(img,trueX,trueY,trueL,knownN,nSamples,goalsData.areas,startGoal,finishGoal,goalsData.areasAxis,goalsData.units,stepUnit,kernelMat_x,kernelMat_y,goalsData.linearPriorsX,goalsData.linearPriorsY)
 
 quit()
 
@@ -163,12 +162,12 @@ if interactionTest == True:
     sortedSet     = get_path_set_given_time_interval(sortedPaths,300,700)
     print("Numero de trayectorias en el conjunto:",len(sortedSet))
     plotPathSet(sortedSet,img)
-    
+
     interaction_potential_for_a_set_of_pedestrians(sortedSet)
     #Test para un par de trayectorias:
     #Ti, Tj = 1,0
     #plotPathSet([sortedSet[Ti],sortedSet[Tj]],img)
-    #interaction_potential(sortedSet[Ti], sortedSet[Tj]) 
+    #interaction_potential(sortedSet[Ti], sortedSet[Tj])
 
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
@@ -179,4 +178,3 @@ if interactionTest == True:
 #compare_error_goal_to_subgoal_test(img,pathX,pathY,pathL,startG,nextG,areas,unitMat,stepUnit,kernelMat_x,kernelMat_y,goalSamplingAxis)
 
 #path_sampling_test(img,areas,nGoals,goalSamplingAxis,unitMat,stepUnit,kernelMat_x,kernelMat_y,linearPriorMatX,linearPriorMatY)
-
