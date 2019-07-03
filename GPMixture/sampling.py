@@ -26,9 +26,12 @@ def goal_sequence(L, n):
 # Sample m points (x,y) in an area, with uniform sampling.
 def uniform_sampling_2D(m, goal):
     _x, _y = [], []
+
+    # Determines the bounding box
     xmin, xmax = goal[0], goal[2]
     ymin, ymax = goal[1], goal[len(goal)-1]
 
+    # Performs the sampling
     for i  in range(m):
         t = random.uniform(0,1.)
         val = (1.-t)*xmin + t*xmax
@@ -57,20 +60,9 @@ def uniform_sampling_1D(m, goal, axis):
             _x.append( xmin + (xmax-xmin)/2 )
     # Returns the axis of sampling too
     return _x, _y, axis
-    
-# Prediction towards a given finish point, and given observed points
-def sample_predictive_distribution(observedX,observedY,observedL,nObservations,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
-    # Sample end point
-    finishX, finishY, axis = uniform_sampling_1D(1, goals[finishG], samplingAxis[finishG])
-    # Number of known points
-    knownN = len(observedX)
-    # Prediction of the whole trajectory given the # start and finish points
-    newX, newY, newL, varX, varY = prediction_to_finish_point(observedX,observedY,observedL,knownN,[finishX[0], finishY[0]],distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)
-
-    return newX, newY, newL, varX, varY
 
 # Sample a full path from startG to finishG
-def sample_path(goals,startG,finishG,samplingAxis,distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
+def sample_path_between_goals(goals,startG,finishG,samplingAxis,distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
     # Sample start point
     startX, startY, axis   = uniform_sampling_1D(1, goals[startG],  samplingAxis[startG])
     # Sample end point
@@ -93,7 +85,6 @@ def sample_path(goals,startG,finishG,samplingAxis,distUnit,stepUnit,kernelX,kern
     sX = np.random.normal(size=(nPredictions,1))
     sY = np.random.normal(size=(nPredictions,1))
     return newX+LX.dot(sX), newY+LY.dot(sY), newL, newX, newY
-
 
 # Sample a full path from startG to finishG
 def sample_path_to_goal(observedX,observedY,observedL,knownN,goals,finishG,samplingAxis,distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):

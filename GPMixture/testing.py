@@ -347,7 +347,7 @@ def path_sampling_test(img,goals,nGoals,samplingAxis,unitMat,stepUnit,kernelMatX
             if(i != j):
                 startG, finishG = i, j
                 for k in range(3): #num of samples
-                    x, y = sample_path(goals,startG,finishG,samplingAxis,unitMat[startG][finishG],stepUnit,kernelMatX[startG][finishG],kernelMatY[startG][finishG],priorMeanMatX[startG][finishG],priorMeanMatY[startG][finishG])
+                    x, y = sample_path_between_goals(goals,startG,finishG,samplingAxis,unitMat[startG][finishG],stepUnit,kernelMatX[startG][finishG],kernelMatY[startG][finishG],priorMeanMatX[startG][finishG],priorMeanMatY[startG][finishG])
                     vecX.append(x)
                     vecY.append(y)
     plot_path_samples(img, vecX,vecY)
@@ -356,7 +356,7 @@ def path_sampling_test(img,goals,nGoals,samplingAxis,unitMat,stepUnit,kernelMatX
 def path_sampling_between_goals_test(img,nSamples,startG,finishG,stepUnit,goalsData):
     vecX, vecY = [], []
     for k in range(nSamples):
-        x, y, l, mx, my = sample_path(goalsData.areas,startG,finishG,goalsData.areasAxis,goalsData.units[startG][finishG],stepUnit,goalsData.kernelsX[startG][finishG],goalsData.kernelsY[startG][finishG],goalsData.linearPriorsX[startG][finishG],goalsData.linearPriorsY[startG][finishG])
+        x, y, l, mx, my = sample_path_between_goals(goalsData.areas,startG,finishG,goalsData.areasAxis,goalsData.units[startG][finishG],stepUnit,goalsData.kernelsX[startG][finishG],goalsData.kernelsY[startG][finishG],goalsData.linearPriorsX[startG][finishG],goalsData.linearPriorsY[startG][finishG])
         vecX.append(x)
         vecY.append(y)
         # For debugging
