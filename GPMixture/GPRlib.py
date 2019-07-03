@@ -1,5 +1,5 @@
 """
-Libreria de funciones para Gaussian Processes for Regression
+Library of functions for Gaussian Processes Regression
 """
 import numpy as np
 import math
@@ -23,7 +23,7 @@ nsigma = 7.50
 
 #******************************************************************************#
 """ REGRESSION FUNCTIONS """
-# The main regression function
+# The main regression function: perform regression for a vector of values lnew
 def joint_regression(l,x_meanl,lnew,kernel,linearPriorMean=None):
     # Number of observed data
     n    = len(l)
@@ -56,6 +56,34 @@ def joint_regression(l,x_meanl,lnew,kernel,linearPriorMean=None):
     kK_1kt = k.transpose().dot(K_1kt)
     # Variance
     var = C - kK_1kt
+    return xnew, var
+
+# Individual regression with line prior for a single scalar lnew
+def single_regression(l,x_meanl,lnew,kernel,priorMean=None):
+    # Number of observed data
+    n    = len(l)
+    # Compute K, k and c
+    K  = np.zeros((n,n))
+    k  = np.zeros(n)
+    # Fill in K
+    for i in range(n):
+        for j in range(n):
+            K[i][j] = kernel(l[i],l[j])
+    # Fill in k
+    for i in range(n):
+        k[i] = kernel(lnew,l[i],False)
+    K_1 = inv(K)
+    # Predictive mean
+    xnew = k.dot(K_1.dot(x_meanl))
+    if linearPriorMean!=None:
+        xnew += linear_mean(lnew,linearPriorMean[0])
+    # Estimate the variance
+    K_1kt = K_1.dot(k.transpose())
+    kK_1kt = k.dot(K_1kt)
+    # Variance
+    var = kernel(lnew,lnew,False) - kK_1kt
+    if var<0.1:
+        var = 0.1
     return xnew, var
 
 #******************************************************************************#
@@ -171,67 +199,6 @@ def optimize_kernel_parameters(t,x,theta,kernel):
 def learn_parameters(l,x,kernel,parameters):
     return optimize_kernel_parameters(l,x,parameters,kernel)
 
-# For each pair of goals, realize the optimization of the kernel parameters
-def optimize_parameters_between_goals(kernelType, learnSet, rows, columns, linearPriorMatX, linearPriorMatY):
-    # Build the kernel matrices with the default values
-    kernelMatX, parametersX = create_kernel_matrix(kernelType, rows, columns)
-    kernelMatY, parametersY = create_kernel_matrix(kernelType, rows, columns)
-    # For goal i
-    for i in range(rows):
-        # For goal j
-        for j in range(columns):
-            # Get the paths that go from i to j
-            paths = learnSet[i][j]
-            if len(paths) > 0:
-                start = timeit.default_timer()
-                # Get the path data as x,y,z (z is arclength)
-                x,y,z = get_data_from_paths(paths,"length")
-                # Build a kernel with the specified type and initial parameters theta
-                ker   = setKernel(kernelType)
-                params= ker.get_parameters()
-                theta = ker.get_optimizable_parameters()
-                print("[OPT] Init parameters ",theta)
-                print("[OPT] [",i,"][",j,"]")
-                print("[OPT] #trajectories: ",len(z))
-                # Learn parameters in X
-                params[0] = linearPriorMatX[i][j][1][0]
-                params[1] = linearPriorMatX[i][j][1][1]
-                ker.set_parameters(params)
-                thetaX  = learn_parameters(z,x,ker,theta)
-                print("[OPT] x: ",thetaX)
-                kernelMatX[i][j].set_parameters(ker.get_parameters())
-                # Learn parameters in Y
-                params[0] = linearPriorMatY[i][j][1][0]
-                params[1] = linearPriorMatY[i][j][1][1]
-                ker.set_parameters(params)
-                thetaY  = learn_parameters(z,y,ker,theta)
-                print("[OPT] y: ",thetaY)
-                kernelMatY[i][j].set_parameters(ker.get_parameters())
-                stop = timeit.default_timer()
-                execution_time = stop - start
-                print("[OPT] Parameter optimization done in %.2f seconds"%execution_time)
-    return kernelMatX, kernelMatY
-
-#recibe una matriz de kernel [[kij]], con parametros [gamma,s,l]
-def write_squared_matrix_parameters(matrix,nGoals,flag):
-    if flag == "x":
-        f = open("parameters_x.txt","w")
-    if flag == "y":
-        f = open("parameters_y.txt","w")
-
-    for i in range(nGoals):
-        for j in range(nGoals):
-            ker = matrix[i][j]
-            gamma = "%d "%(ker.gamma)
-            f.write(gamma)
-            s = "%d "%(ker.s)
-            f.write(s)
-            l = "%d "%(ker.l)
-            f.write(l)
-            skip = "\n"
-            f.write(skip)
-    f.close()
-
 # Takes as an input a matrix of kernels. Exports the parameters, line by line
 def write_parameters(matrix,rows,columns,fileName):
     f = open(fileName,"w")
@@ -279,14 +246,6 @@ def get_known_set(x,y,l,knownN):
     trueL = l[0:knownN]
     return trueX, trueY, trueL
 
-# TODO: is this function really useful?
-# Function to get the ground truth data: knownN data
-def get_known_data(x,y,z,knownN):
-    trueX = x[0:knownN]
-    trueY = y[0:knownN]
-    trueZ = z[0:knownN]
-    return trueX, trueY, trueZ
-
 def get_goal_likelihood(knownX,knownY,knownL,startG,finishG,goals,unitMat,kernelMatX,kernelMatY):
     # All the observed data
     _knownX = knownX.copy()
@@ -315,7 +274,6 @@ def get_goal_likelihood(knownX,knownY,knownL,startG,finishG,goals,unitMat,kernel
     kernelY = kernelMatY[startG][i]
     predX, predY, vx, vy = prediction_xy(_knownX, _knownY, _knownL, predSet, kernelX, kernelY)
     error = average_displacement_error([trueX,trueY],[predX,predY])
-
     return error
 
 # Sample m points (x,y) in an area, with uniform sampling.
@@ -519,23 +477,6 @@ def joint_estimate_new_set_of_values(observedL,observedX,newL,kernel,linearPrior
     predictedX, covarianceX = joint_regression(observedL,centeredX,newL,kernel,linearPriorMean)
     return predictedX, covarianceX
 
-#necesita recibir el kernel para X y el kernel para Y
-#Recibe los datos conocidos [(x,y,z)] y los puntos para la regresion. x, y, z,... son vectores de vectores
-def prediction_XY_of_set_of_trajectories(x, y, z, newZ, kernel_x, kernel_y):#prediction
-    numPred = len(newZ)
-    predicted_x, predicted_y = [], []
-    variance_x, variance_y = [], []
-    for i in range(numPred):
-        new_x, var_x = estimate_new_set_of_values(z[i],x[i],newZ[i],kernel_x)#prediccion para x
-        predicted_x.append(new_x)
-        variance_x.append(var_x)
-
-        new_y, var_y = estimate_new_set_of_values(z[i],y[i],newZ[i],kernel_y)#prediccion para y
-        predicted_y.append(new_y)
-        variance_y.append(var_y)
-    return predicted_x, predicted_y,variance_x, variance_y
-
-
 # Prediction of future positions towards a given finish point, given observations
 def prediction_to_finish_point(observedX,observedY,observedL,nObservations,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX=None,priorMeanY=None):
     # Last observed point
@@ -580,35 +521,6 @@ def prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goal,unit
     #print("[Error]:",error)
     return error
 
-# For a given dataset (knownX,knownY,knownL), takes half of the data as known
-# and predicts the remaining half. Then, evaluate the prediction error.
-def prediction_error_of_points_along_the_path(nPoints,knownX,knownY,knownL,goal,unit,kernelX,kernelY):
-    knownN= len(knownX)
-    halfN = int(knownN/2)
-
-    trueX = knownX[0:halfN]
-    trueY = knownY[0:halfN]
-    trueL = knownL[0:halfN]
-
-    finishXY = middle_of_area(goal)
-    finishD  = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
-    trueX.append(finishXY[0])
-    trueY.append(finishXY[1])
-    trueL.append(finishD*unit)
-
-    d = int(halfN/nPoints)
-    realX, realY, predictionSet = [],[],[]
-    for i in range(nPoints):
-        realX.append(knownX[halfN + i*d])
-        realY.append(knownY[halfN + i*d])
-        predictionSet.append(knownL[halfN + i*d])
-
-    predX, predY, varX,varY = prediction_xy(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
-
-    error = average_displacement_error([realX,realY],[predX,predY])
-
-    return error
-
 """ARC LENGHT TO TIME"""
 def arclen_to_time(initTime,l,speed):
     t = [initTime]
@@ -617,38 +529,11 @@ def arclen_to_time(initTime,l,speed):
         t.append(time_i)
     return t
 
-#******************************************************************************#
-"""***REGRESSION USING LINE PRIOR ***"""
 # Mean of the Gaussian process with a linear prior
 def linear_mean(l, priorMean):
     m = priorMean[0]*l + priorMean[1]
     return m
 
-# Individual regression with line prior for a single lnew
-def single_regression_with_lineprior(l,x_meanl,lnew,kernel,priorMean):
-    # Number of observed data
-    n    = len(l)
-    # Compute K, k and c
-    K  = np.zeros((n,n))
-    k  = np.zeros(n)
-    # Fill in K
-    for i in range(n):
-        for j in range(n):
-            K[i][j] = kernel(l[i],l[j])
-    # Fill in k
-    for i in range(n):
-        k[i] = kernel(lnew,l[i],False)
-    K_1 = inv(K)
-    # Predictive mean
-    xnew = linear_mean(lnew,priorMean[0]) + k.dot(K_1.dot(x_meanl))
-    # Estimate the variance
-    K_1kt = K_1.dot(k.transpose())
-    kK_1kt = k.dot(K_1kt)
-    # Variance
-    var = kernel(lnew,lnew,False) - kK_1kt
-    if var<0.1:
-        var = 0.1
-    return xnew, var
 
 # Performs prediction in X and Y
 # Takes as input observed values (x,y,l) and the points at which we want to perform regression (newL)
@@ -661,7 +546,7 @@ def prediction_xy(observedX, observedY, observedL, newL, kernelX, kernelY, prior
 
 # For a given dataset (knownX,knownY,knownL), takes half of the data as known
 # and predicts the remaining half. Then, evaluate the prediction error.
-def prediction_error_of_points_along_the_path_lp(nPoints,knownX,knownY,knownL,goal,unit,kernelX,kernelY,priorMeanX,priorMeanY):
+def prediction_error_of_points_along_the_path(nPoints,knownX,knownY,knownL,goal,unit,kernelX,kernelY,priorMeanX=None,priorMeanY=None):
     # Known data
     knownN = len(knownX)
     halfN = int(knownN/2)

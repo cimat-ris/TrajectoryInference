@@ -279,7 +279,7 @@ def multigoal_prediction_test_lp(img,x,y,l,knownN,startG,stepUnit,goalsData):
         priorMeanX = goalsData.linearPriorsX[startG][i]
         priorMeanY = goalsData.linearPriorsY[startG][i]
         # Evaluate the error
-        error = prediction_error_of_points_along_the_path_lp(nPoints,trueX,trueY,trueL,goalsData.areas[i],unit,kernelX,kernelY,priorMeanX,priorMeanY)
+        error = prediction_error_of_points_along_the_path(nPoints,trueX,trueY,trueL,goalsData.areas[i],unit,kernelX,kernelY,priorMeanX,priorMeanY)
         errorG.append(error)
 
     print("[RES] [Prediction Error]\n",errorG)
