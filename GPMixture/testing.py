@@ -352,10 +352,10 @@ def path_sampling_test(img,goals,nGoals,samplingAxis,unitMat,stepUnit,kernelMatX
     plot_path_samples(img, vecX,vecY)
 
 # Sampling trajectories between two goals
-def path_sampling_between_goals_test(img,nSamples,goals,startG,finishG,samplingAxis,unitMat,stepUnit,kernelMatX,kernelMatY,priorMeanMatX,priorMeanMatY):
+def path_sampling_between_goals_test(img,nSamples,startG,finishG,stepUnit,goalsData):
     vecX, vecY = [], []
     for k in range(nSamples):
-        x, y, l, mx, my = sample_path(goals,startG,finishG,samplingAxis,unitMat[startG][finishG],stepUnit,kernelMatX[startG][finishG],kernelMatY[startG][finishG],priorMeanMatX[startG][finishG],priorMeanMatY[startG][finishG])
+        x, y, l, mx, my = sample_path(goalsData.areas,startG,finishG,goalsData.areasAxis,goalsData.units[startG][finishG],stepUnit,goalsData.kernelsX[startG][finishG],goalsData.kernelsY[startG][finishG],goalsData.linearPriorsX[startG][finishG],goalsData.linearPriorsY[startG][finishG])
         vecX.append(x)
         vecY.append(y)
         # For debugging
@@ -366,22 +366,22 @@ def path_sampling_between_goals_test(img,nSamples,goals,startG,finishG,samplingA
     plot_path_samples(img, vecX,vecY)
 
 # Sampling trajectories to a given goal
-def path_sampling_to_goal_test(img,observedX,observedY,observedL,knownN,nSamples,goals,startG,finishG,samplingAxis,unitMat,stepUnit,kernelMatX,kernelMatY,linearPriorMatX,linearPriorMatY):
+def path_sampling_to_goal_test(img,observedX,observedY,observedL,knownN,nSamples,startG,finishG,stepUnit,goalsData):
     # Ground truth
     trueX, trueY, trueL = get_known_set(observedX,observedY,observedL,knownN)
 
     # Length/euclidean distance ratio
-    unit = unitMat[startG][finishG]
+    unit = goalsData.units[startG][finishG]
     # Kernels
-    kernelX = kernelMatX[startG][finishG]
-    kernelY = kernelMatY[startG][finishG]
+    kernelX = goalsData.kernelsX[startG][finishG]
+    kernelY = goalsData.kernelsY[startG][finishG]
     # Linear priors
-    priorMeanX = linearPriorMatX[startG][finishG]
-    priorMeanY = linearPriorMatY[startG][finishG]
+    priorMeanX = goalsData.linearPriorsX[startG][finishG]
+    priorMeanY = goalsData.linearPriorsY[startG][finishG]
 
     vecX, vecY = [], []
     for k in range(nSamples):
-        x, y, l, mx, my = sample_path_to_goal(observedX,observedY,observedL,knownN,goals,finishG,samplingAxis,unitMat[startG][finishG],stepUnit,kernelMatX[startG][finishG],kernelMatY[startG][finishG],linearPriorMatX[startG][finishG],linearPriorMatY[startG][finishG])
+        x, y, l, mx, my = sample_path_to_goal(observedX,observedY,observedL,knownN,goalsData.areas,finishG,goalsData.areasAxis,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)
         vecX.append(x)
         vecY.append(y)
     plot_path_samples_with_observations(img,observedX,observedY,vecX,vecY)
