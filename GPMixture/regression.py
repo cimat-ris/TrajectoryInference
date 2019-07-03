@@ -91,12 +91,17 @@ def get_known_set(x,y,l,knownN):
     return trueX, trueY, trueL
 
 # TODO: not sure if it is the good place
-def get_goal_likelihood(knownX,knownY,knownL,startG,finishG,goals,unitMat,kernelMatX,kernelMatY):
-    # All the observed data
-    _knownX = knownX.copy()
-    _knownY = knownY.copy()
-    _knownL = knownL.copy()
+def get_goal_likelihood(observedX,observedY,observedL,startG,finishG,stepsToCompare,goalsData):
 
+    error = prediction_error_of_points_along_the_path(nPoints,observedX,observedY,observedL,finishG,goalsDat)
+
+
+    # All the observed data
+    _observedX = observedX.copy()
+    _observedY = observedY.copy()
+    _observedL = observedL.copy()
+
+    # Takes the last stepsToCompare data from the observed data
     stepsToCompare = 5
     trueX, trueY, predSet = [], [], []
     for i in range(stepsToCompare):
@@ -107,7 +112,9 @@ def get_goal_likelihood(knownX,knownY,knownL,startG,finishG,goals,unitMat,kernel
         step = _knownL.pop()
         predSet.append(step)
 
-    n = len(_knownX)
+    # New set of observed data (amputed from stepsToCompare)
+    n = len(_observedX)
+    # Takes the center of the
     finish_xy = middle_of_area(goals[i])
     _knownX.append(finish_xy[0])
     _knownY.append(finish_xy[1])
@@ -279,13 +286,14 @@ def get_subgoals_center_and_size(nSubgoals, goal, axis):
 
 # Applies joint regression for a whole set newL of values L, given knownL, knownX
 def joint_estimate_new_set_of_values(observedL,observedX,newL,kernel,linearPriorMean=None):
+    centeredX = np.zeros((len(observedL),1),dtype=float)
     if linearPriorMean==None:
-        centeredX = observedX
+        for i in range(len(observedL)):
+            centeredX[i][0] = observedX[i]
     else:
-        centeredX = np.zeros((len(observedL),1),dtype=float)
         for i in range(len(observedL)):
             centeredX[i][0] = observedX[i] - linear_mean(observedL[i], linearPriorMean[0])
-    # Applies regression for the joint values predictedX (not independently)
+    # Applies regression for the joint values predictedX
     predictedX, covarianceX = joint_regression(observedL,centeredX,newL,kernel,linearPriorMean)
     return predictedX, covarianceX
 
@@ -357,32 +365,33 @@ def prediction_xy(observedX, observedY, observedL, newL, kernelX, kernelY, prior
 
 # For a given dataset (knownX,knownY,knownL), takes half of the data as known
 # and predicts the remaining half. Then, evaluate the prediction error.
-def prediction_error_of_points_along_the_path(nPoints,knownX,knownY,knownL,goal,unit,kernelX,kernelY,priorMeanX=None,priorMeanY=None):
+def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observedY,observedL,startG,finishG,goalsData):
     # Known data
-    knownN = len(knownX)
-    halfN = int(knownN/2)
+    observedN = len(observedX)
+    halfN     = int(observedN/2)
 
-    # First half of the know data
-    trueX = knownX[0:halfN]
-    trueY = knownY[0:halfN]
-    trueL = knownL[0:halfN]
+    # First half of the known data
+    trueX = observedX[0:halfN]
+    trueY = observedY[0:halfN]
+    trueL = observedL[0:halfN]
 
     # Get the last point and add it to the observed data
-    finishXY = middle_of_area(goal)
+    finishXY = middle_of_area(goalsData.areas[finishG])
     finishD  = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
     trueX.append(finishXY[0])
     trueY.append(finishXY[1])
-    trueL.append(finishD*unit)
+    trueL.append(finishD*goalsData.units[startG][finishG])
 
     d = int(halfN/nPoints)
     realX, realY, predictionSet = [],[],[]
     # Prepare the ground truths and the list of l to evaluate
     for i in range(nPoints):
-        realX.append(knownX[halfN + i*d])
-        realY.append(knownY[halfN + i*d])
-        predictionSet.append(knownL[halfN + i*d])
-    # Get the prediction
-    predX, predY, varX,varY = prediction_xy(trueX,trueY,trueL, predictionSet, kernelX, kernelY,priorMeanX,priorMeanY)
+        realX.append(observedX[halfN + i*d])
+        realY.append(observedY[halfN + i*d])
+        predictionSet.append(observedL[halfN + i*d])
+    # Get the prediction based on the
+    predX, predY, varX,varY = prediction_xy(trueX,trueY,trueL, predictionSet, goalsData.kernelsX[startG][finishG],goalsData.kernelsY[startG][finishG],
+    goalsData.linearPriorsX[startG][finishG],goalsData.linearPriorsY[startG][finishG])
 
     # Evaluate the error
     print('[INF] Evaluate the error')

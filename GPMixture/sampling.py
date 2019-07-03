@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Sep 10 17:56:43 2018
-
 @author: karenlc
 """
 
 from GPRlib import *
-from path import *
-from plotting import *
 from kernels import *
-from testing import*
-from statistics import*
+from path import *
+from regression import *
+from statistics import *
 import matplotlib.pyplot as plt
 import numpy as np
 import math
@@ -72,7 +70,6 @@ def sample_path_between_goals(goals,startG,finishG,samplingAxis,distUnit,stepUni
     knownN = 1
     # Prediction of the whole trajectory given the # start and finish points
     newX, newY, newL, varX, varY = prediction_to_finish_point(startX,startY,startL,knownN,[finishX[0], finishY[0]],distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)
-
     # Number of predicted points
     nPredictions = newX.shape[0]
     # Regularization to avoid singular matrices
@@ -86,7 +83,7 @@ def sample_path_between_goals(goals,startG,finishG,samplingAxis,distUnit,stepUni
     sY = np.random.normal(size=(nPredictions,1))
     return newX+LX.dot(sX), newY+LY.dot(sY), newL, newX, newY
 
-# Sample a full path from startG to finishG
+# Sample a full path to finishG
 def sample_path_to_goal(observedX,observedY,observedL,knownN,goals,finishG,samplingAxis,distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
     # Sample end point
     finishX, finishY, axis = uniform_sampling_1D(1, goals[finishG], samplingAxis[finishG])

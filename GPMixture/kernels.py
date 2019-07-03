@@ -4,8 +4,28 @@ import math as m
 # Standard deviation for the observation noise
 nsigma = 7.50
 
+# Returns two rowsxcolumns matrices:
+# - the matrix of kernels with the default parameters
+# - the matrix of kernel parameters (with default values)
+def create_kernel_matrix(kerType, rows, columns):
+    kerMatrix = []
+    parameters = []
+    # For goal i
+    for i in range(rows):
+        aux = []
+        auxP = []
+        # For goal j
+        for j in range(columns):
+            kernel = set_kernel(kerType)
+            theta  = kernel.get_parameters()
+            aux.append(kernel)
+            auxP.append(theta)
+        kerMatrix.append(aux)
+        parameters.append(auxP)
+    return kerMatrix, parameters
+
 # Set kernel: a function that creates a kernel with default parameters, given its type name
-def setKernel(name):
+def set_kernel(name):
     if(name == "squaredExponential"):
         parameters = [80., 80.]  #{Covariance magnitude factor, Characteristic length}
         kernel = squaredExponentialKernel(parameters[0],parameters[1],nsigma)

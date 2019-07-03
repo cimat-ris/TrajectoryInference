@@ -26,22 +26,22 @@ def plotPaths(vec):
     n = len(vec)
     for i in range(n):
         plt.plot(vec[i].x,vec[i].y)
-    
+
     v = [0,1920,1080,0]
     plt.axis(v)
-    plt.show() 
+    plt.show()
 
-    
+
 #******************************************************************************#
 
 # Lectura de los nombres de los archivos de datos
-def readDataset(name):   
+def readDataset(name):
     file = open(name,'r')
     lines = file.readlines()
     for i in range(len(lines)):
         lines[i]=lines[i].strip("\n")
     return lines
-   
+
 def histogram(paths,flag):
     n = len(paths)
     if flag == "duration":
@@ -59,13 +59,13 @@ def histogram(paths,flag):
         ymin.append(0)
         ymax.append(h[0][i])
     plt.vlines(x,ymin,ymax,colors='m',linestyles='solid')
-    
+
 # Regresa una matriz de trayectorias:
 # en la entrada (i,j) estan los caminos que comienzan en g_i y terminan en g_j
 def define_trajectories_start_and_end_areas(goals,paths):
     goalNum = len(goals)
-    mat = np.empty((goalNum,goalNum),dtype=object) 
-    arclenMat = np.empty((goalNum,goalNum),dtype=object) 
+    mat = np.empty((goalNum,goalNum),dtype=object)
+    arclenMat = np.empty((goalNum,goalNum),dtype=object)
     #usefulPaths = []
     for i in range(goalNum):
         for j in range(goalNum):
@@ -77,7 +77,7 @@ def define_trajectories_start_and_end_areas(goals,paths):
         startX, startY = paths[i].x[0], paths[i].y[0]
         endX, endY = paths[i].x[lenData-1], paths[i].y[lenData-1]
         startIndex, endIndex = -1, -1
-        
+
         for j in range(goalNum):
             if(isInArea(startX,startY,goals[j])):
                 startIndex = j
@@ -97,30 +97,30 @@ def next_goal_probability_matrix(M, nGoals):
         n = 0.
         for j in range(nGoals):
             n += len(M[i][j])
-        
+
         for j in range(nGoals):
             if n == 0:
                 p.append(0.)
             else:
                 p.append(float(len(M[i][j])/n))
         probMat.append(p)
-        
+
     return probMat
 
-    
+
 def geomError(mError):
     Ex, Ey = 0, 0
     for i in range(len(mError)):
         Ex += mError[i][0]
         Ey += mError[i][1]
-    Ex = Ex/len(mError) 
+    Ex = Ex/len(mError)
     Ey = Ey/len(mError)
     return math.sqrt(Ex**2+Ey**2)
-    
+
 def getKnownData(x,y,z,percent):
     trueX, trueY, trueZ = [],[],[]
     for j in range(len(x)):
-        M = int(len(x[j])*percent)  
+        M = int(len(x[j])*percent)
         if M == 0:
             return [],[],[]
         auxX, auxY, auxZ = np.zeros(M), np.zeros(M), np.zeros(M)
@@ -136,9 +136,9 @@ def getKnownData(x,y,z,percent):
         trueX.append(auxX)
         trueY.append(auxY)
         trueZ.append(auxZ)
-    
+
     return trueX, trueY, trueZ
-   
+
 #regresa un vector para cada goal g con la cantidad de trayectorias que van de g a gi
 def getNextGoal(M, numGoals): #matriz con tray. de gi a gj
     numVec,aux,indVec = [],[],[]
@@ -154,7 +154,7 @@ def getNextGoal(M, numGoals): #matriz con tray. de gi a gj
         numVec.append(vec) #vec de vec con el numero de trayectorias que van de gi a gj
         aux.append(i)
     return indVec
-    
+
 #recibe la matriz de probabilidad, el área inicial y el numero de k goals que se piden
 def getNextKGoals(start, k, pMat, nGoals):
     nextGoals = []
@@ -168,7 +168,7 @@ def getNextKGoals(start, k, pMat, nGoals):
                 maxp = aux[j]
         aux[maxi] = 0.
         nextGoals.append( maxi )
-    return nextGoals        
+    return nextGoals
 
 def most_likely_goals(likelihood, nGoals):
     next_goals = []
@@ -183,7 +183,7 @@ def most_likely_goals(likelihood, nGoals):
         next_goals.append(maxInd)
         likely[maxInd] = 0
     return next_goals
-    
+
 
 #path, goals, vecNextGoal, steps
 def getPathPredictionSet(p,goals,nextGoal,steps):#no se usa
@@ -206,16 +206,16 @@ def getPredictionSet(x,y,l,start,nextGoal,goals):
     dx, dy = goals[nextGoal][6]-goals[nextGoal][0], goals[nextGoal][7]-goals[nextGoal][1]
     end = [goals[nextGoal][0] + dx/2., goals[nextGoal][1] + dy/2.]
     dist = math.sqrt( (end[0]-x)**2 + (end[1]-y)**2 )
-    
+
     steps = 20#num de pasos
     step = dist/float(steps)
     newset = []
     for i in range(steps+1):
         newset.append( l + i*step )
-        
+
     return end, newset, l + dist
-    
-    
+
+
 def get_known_set(x,y,z,knownN):
     trueX,trueY, trueZ = [],[],[]
     knownN = int(knownN)
@@ -223,9 +223,9 @@ def get_known_set(x,y,z,knownN):
         trueX.append(x[j])
         trueY.append(y[j])
         trueZ.append(z[j])
-        
+
     return trueX, trueY, trueZ
-    
+
 def get_prediction_set_from_data(z,knownN):
     N = len(z)
     newZ = []
@@ -238,58 +238,58 @@ def get_prediction_set_from_data(z,knownN):
 def prediction_test_over_time(x,y,z,knownN,start,end,goals):
     kernelX = kernelMat_x[start][end]
     kernelY = kernelMat_y[start][end]
-    
+
     trueX, trueY, trueZ = get_known_set(x,y,z,knownN)
     final_xy = middle_of_area(goals[end])
     N = len(x)
-    trueX.append(final_xy[0])        
+    trueX.append(final_xy[0])
     trueY.append(final_xy[1])
     trueZ.append(z[N-1])
-    newZ = get_prediction_set_from_data(z,knownN) 
-    newX, newY,varX,varY = prediction_XY(trueX,trueY,trueZ,newZ,kernelX,kernelY) 
+    newZ = get_prediction_set_from_data(z,knownN)
+    newX, newY,varX,varY = prediction_XY(trueX,trueY,trueZ,newZ,kernelX,kernelY)
     plot_prediction(img,x,y,knownN,newX,newY,varX,varY)
 
 #recibe: datos conocidos, valores por predecir, areas de inicio y final
 def prediction_test(x,y,z,knownN,start,end,goals):
     kernelX = kernelMat_x[start][end]
     kernelY = kernelMat_y[start][end]
-    
+
     trueX, trueY, trueZ = get_known_set(x,y,z,knownN)
-    last_x = x[knownN-1] 
-    last_y = y[knownN-1] 
-    last_z = z[knownN-1]   
-    
-    final_xy, newZ, final_z = getPredictionSet(last_x,last_y,last_z,start,end,goals)  
-    trueX.append(final_xy[0])    
+    last_x = x[knownN-1]
+    last_y = y[knownN-1]
+    last_z = z[knownN-1]
+
+    final_xy, newZ, final_z = getPredictionSet(last_x,last_y,last_z,start,end,goals)
+    trueX.append(final_xy[0])
     trueY.append(final_xy[1])
     trueZ.append(final_z)
-    
-    newX,newY,varX,varY = prediction_XY(trueX,trueY,trueZ,newZ,kernelX,kernelY) 
+
+    newX,newY,varX,varY = prediction_XY(trueX,trueY,trueZ,newZ,kernelX,kernelY)
     plot_prediction(img,x,y,knownN,newX,newY,varX,varY)
-    
+
 #recibe: datos conocidos, valores por predecir, trayectoria real
 def multigoal_prediction_test(x,y,z,knownN,start,end,goals):
     trueX, trueY, trueZ = get_known_set(x,y,z,knownN)
-    
+
     fig,ax = plt.subplots(1)
     ax.set_aspect('equal')
     ax.imshow(img) # Show the image
-    
+
     for i in range(len(end)):
         nextGoal = end[i]
         kernelX = kernelMat_x[start][nextGoal]
         kernelY = kernelMat_y[start][nextGoal]
-        auxX = copy(trueX) 
-        auxY = copy(trueY) 
+        auxX = copy(trueX)
+        auxY = copy(trueY)
         auxZ = copy(trueZ)
-        final_point = middle_of_area(goals[nextGoal])      
+        final_point = middle_of_area(goals[nextGoal])
         auxX.append(final_point[0])
         auxY.append(final_point[1])
         steps = 20
-        end_, newZ, l_ = getPredictionSet(trueX[knownN-1],trueY[knownN-1],trueZ[knownN-1],start,nextGoal,goals)     
-        auxZ.append(l_)          
-        newX, newY, varX, varY = prediction_XY(auxX,auxY,auxZ,newZ,kernelX,kernelY) 
-         
+        end_, newZ, l_ = getPredictionSet(trueX[knownN-1],trueY[knownN-1],trueZ[knownN-1],start,nextGoal,goals)
+        auxZ.append(l_)
+        newX, newY, varX, varY = prediction_XY(auxX,auxY,auxZ,newZ,kernelX,kernelY)
+
         plt.plot(trueX,trueY,'r')
         plt.plot(newX,newY,'b')
 
@@ -300,11 +300,11 @@ def multigoal_prediction_test(x,y,z,knownN,start,end,goals):
             ell.set_lw(0)
             ell.set_facecolor('g')
             ax.add_patch(ell)
-            
+
     v = [0,1920,1080,0]
     plt.axis(v)
-    plt.show() 
-    
+    plt.show()
+
 
 #******************************************************************************#
 # Areas de interes [x1,y1...x2,y2]
@@ -319,23 +319,23 @@ R5 = [1030,40,1400,40,1030,230,1400,230] #naranja
 #areas = np.array([R0,R1,R2,R3,R4,R5])
 areas = [R0,R1,R2,R3,R4,R5]
 nGoals = len(areas)
-img=mpimg.imread('areasDeInteres.png')  
+img=mpimg.imread('areasDeInteres.png')
 
 #pathFiles = readDataset('pathSet2000.txt')
 pathFiles = readDataset('usefulPaths_198.txt')
 
-#Al leer cortamos las trayectorias multiobjetivos por pares consecutivos 
-#y las agregamos como trayectorias independientes 
+#Al leer cortamos las trayectorias multiobjetivos por pares consecutivos
+#y las agregamos como trayectorias independientes
 true_paths, multigoal = get_paths_from_files(pathFiles,areas)
 
-#Histograma    
+#Histograma
 #histogram(true_paths,"duration")
 #Quitamos las trayectorias demasiado largas o demasiado cortas
 learnSet = filter_paths(true_paths)
-startToGoalPath, arclenMat = define_trajectories_start_and_end_areas(areas,learnSet)#true_paths)  
-#print("Trajectories between goals\n",startToGoalPath)  
+startToGoalPath, arclenMat = define_trajectories_start_and_end_areas(areas,learnSet)#true_paths)
+#print("Trajectories between goals\n",startToGoalPath)
 probabilityMat = next_goal_probability_matrix(startToGoalPath, nGoals)
-""" 
+"""
 histogram(startToGoalPath[0][4],"duration")
 histogram(startToGoalPath[0][4],"length")
 arclenVec, minl, maxl = getLength(startToGoalPath[0][4])
@@ -379,20 +379,20 @@ arclen_vec = []
 part_num = 6
 for i in range(part_num-1):
     arclen_vec.append( (i+1)*(traj_arclen/float(part_num))  )
-    knownN = int((i+1)*(traj_len/part_num)) 
-    
+    knownN = int((i+1)*(traj_len/part_num))
+
     trueX,trueY,trueL = get_known_set(traj.x,traj.y,traj.l,knownN)
     likelihood, error = get_goals_likelihood(trueX,trueY,trueL,start[0],kernelMat_x,kernelMat_x,areas,nGoals)
-    likelihood_vector.append(likelihood)  
+    likelihood_vector.append(likelihood)
     error_vector.append(error)
     likely_goals = most_likely_goals(likelihood, nGoals)
     print("likely goals:", likely_goals)
-    
+
     multigoal_prediction_test(traj.x,traj.y,traj.l,knownN,start[0],likely_goals,areas)
     #prediction_test(traj.x,traj.y,traj.l,knownN,start[0],nextG[0],areas)
     #prediction_test_over_time(traj.x,traj.y,traj.t,knownN,start[0],nextG[0],areas)
-        
-        
+
+
 color = ['r','y','g','c','b','m']
 
 for i in range(nGoals):
@@ -406,4 +406,3 @@ for i in range(nGoals):
     plt.xlabel('arc length')
     #plt.ylabel('error')
     plt.ylabel('likelihood')
-     

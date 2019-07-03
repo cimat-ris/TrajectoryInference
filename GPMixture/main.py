@@ -14,19 +14,6 @@ import matplotlib.image as mpimg
 from matplotlib.patches import Ellipse
 from copy import copy
 
-#******************************************************************************#
-
-def single_goal_prediction_test(img,x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,goalSamplingAxis):
-    predictedX, predictedY, varX, varY, newL = trajectory_prediction_test(img,x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY)
-    initTime = knownTime[knownN-1]
-    time = arclen_to_time(initTime,newL,speed)
-    #print("[newL]:",newL)
-    #print("Predictions:\n x:",predictedX,"\ny:",predictedY,"\nl:",newL)
-    print("[Arclen to Time]:",time)
-    #plot_prediction(img,x,y,knownN,predictedX, predictedY,varX,varY)
-
-"""******************************************************************************"""
-"""**************    Main function starts here      *****************************"""
 
 # Interest areas [x1,y1,x2,y2,...]
 #R0 = [400,40,680,40,400,230,680,230] #azul
@@ -86,8 +73,10 @@ speed    = 1.65033755511     #get_pedestrian_average_speed(dataPaths)
 # Computer prior probabilities between goals
 goalsData.compute_prior_transitions(pathMat)
 
-# For each pair of goals, determine the line prior
-goalsData.compute_linear_priors(pathMat)
+useLinearPriors = False
+# For each pair of goals, determine the line priors
+if useLinearPriors:
+    goalsData.compute_linear_priors(pathMat)
 
 # Selection of the kernel type
 kernelType = "linePriorCombined"#"combined"
@@ -127,7 +116,6 @@ pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t
 pathSize = len(pathX)
 
 arcLenToTime = arclen_to_time(320,pathL,speed)
-
 predictionTest = True
 if predictionTest==True:
     # The dataset of observations is split into part_num subsets
@@ -142,7 +130,6 @@ if predictionTest==True:
         knownTime = pathT[0:knownN]
         rT = pathT[knownN:pathSize]
         """Multigoal prediction test"""
-        #multigoal_prediction_test_lp(img,trueX,trueY,trueL,knownN,startG,stepUnit,goalsData)
         multigoal_prediction_test(img,trueX,trueY,trueL,knownN,startG,stepUnit,goalsData)
 
 

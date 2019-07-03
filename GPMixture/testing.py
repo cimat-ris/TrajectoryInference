@@ -205,13 +205,7 @@ def multigoal_prediction_test(img,x,y,l,knownN,startG,stepUnit,goalsData):
     errorG = []
     nPoints = 5
     for i in range(goalsData.nGoals):
-        # Length/euclidean distance ratio
-        unit    = goalsData.units[startG][i]
-        # Kernels
-        kernelX = goalsData.kernelsX[startG][i]
-        kernelY = goalsData.kernelsY[startG][i]
-
-        error = prediction_error_of_points_along_the_path(nPoints,trueX,trueY,trueL,goalsData.areas[i],unit,kernelX,kernelY)
+        error = compute_prediction_error_of_points_along_the_path(nPoints,trueX,trueY,trueL,startG,i,goalsData)
         errorG.append(error)
 
     print("[RES] [Prediction Error]\n",errorG)

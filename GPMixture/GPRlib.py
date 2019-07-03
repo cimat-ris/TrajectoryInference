@@ -19,45 +19,7 @@ from termcolor import colored
 """ LEARNING """
 
 
-# Returns two nGoalsxnGoals matrices:
-# - the matrix of kernels with the default parameters
-# - the matrix of kernel parameters (with default values)
-def create_kernel_matrix_(kerType, ngoals):
-    kerMatrix = []
-    parameters = []
-    # For goal i
-    for i in range(ngoals):
-        aux = []
-        auxP = []
-        # For goal j
-        for j in range(ngoals):
-            kernel = setKernel(kerType)
-            theta  = kernel.get_parameters()
-            aux.append(kernel)
-            auxP.append(theta)
-        kerMatrix.append(aux)
-        parameters.append(auxP)
-    return kerMatrix, parameters
 
-# Returns two rowsxcolumns matrices:
-# - the matrix of kernels with the default parameters
-# - the matrix of kernel parameters (with default values)
-def create_kernel_matrix(kerType, rows, columns):
-    kerMatrix = []
-    parameters = []
-    # For goal i
-    for i in range(rows):
-        aux = []
-        auxP = []
-        # For goal j
-        for j in range(columns):
-            kernel = setKernel(kerType)
-            theta  = kernel.get_parameters()
-            aux.append(kernel)
-            auxP.append(theta)
-        kerMatrix.append(aux)
-        parameters.append(auxP)
-    return kerMatrix, parameters
 
 # Evaluate the minus log-likelihood
 def mlog_p(theta,x,y,kernel):
@@ -129,7 +91,7 @@ def read_and_set_parameters(file_name, nParameters):
     columns   = int(header[1])
     kernelType= header[2]
     print("[INF] Opening ",file_name," to read parameters of ",rows,"x",columns," kernels of type: ",kernelType)
-    matrix, parametersMat = create_kernel_matrix(kernelType, rows, columns)
+    matrix, parametersMat = kernels.create_kernel_matrix(kernelType, rows, columns)
 
     for line in file:
         parameters = []
