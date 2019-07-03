@@ -60,16 +60,16 @@ def uniform_sampling_1D(m, goal, axis):
     return _x, _y, axis
 
 # Sample a full path from startG to finishG
-def sample_path_between_goals(goals,startG,finishG,samplingAxis,distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
+def sample_path_between_goals(startG,finishG,stepUnit,goalsData):
     # Sample start point
-    startX, startY, axis   = uniform_sampling_1D(1, goals[startG],  samplingAxis[startG])
+    startX, startY, axis   = uniform_sampling_1D(1, goalsData.areas[startG],  goalsData.areasAxis[startG])
     # Sample end point
-    finishX, finishY, axis = uniform_sampling_1D(1, goals[finishG], samplingAxis[finishG])
+    finishX, finishY, axis = uniform_sampling_1D(1, goalsData.areas[finishG], goalsData.areasAxis[finishG])
     startL = [0]
     # Number of known points
     knownN = 1
     # Prediction of the whole trajectory given the # start and finish points
-    newX, newY, newL, varX, varY = prediction_to_finish_point(startX,startY,startL,knownN,[finishX[0], finishY[0]],distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)
+    newX, newY, newL, varX, varY = prediction_to_finish_point(startX,startY,startL,knownN,[finishX[0],finishY[0]],stepUnit,startG,finishG,goalsData)
     # Number of predicted points
     nPredictions = newX.shape[0]
     # Regularization to avoid singular matrices
@@ -84,11 +84,11 @@ def sample_path_between_goals(goals,startG,finishG,samplingAxis,distUnit,stepUni
     return newX+LX.dot(sX), newY+LY.dot(sY), newL, newX, newY
 
 # Sample a full path to finishG
-def sample_path_to_goal(observedX,observedY,observedL,knownN,goals,finishG,samplingAxis,distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
+def sample_path_to_goal(observedX,observedY,observedL,knownN,stepUnit,start,end,goalsData):
     # Sample end point
-    finishX, finishY, axis = uniform_sampling_1D(1, goals[finishG], samplingAxis[finishG])
+    finishX, finishY, axis = uniform_sampling_1D(1, goalsData.areas[end], goalsData.areasAxis[end])
     # Prediction of the whole trajectory given the # start and finish points
-    newX, newY, newL, varX, varY = prediction_to_finish_point(observedX,observedY,observedL,knownN,[finishX[0], finishY[0]],distUnit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY)
+    newX, newY, newL, varX, varY = prediction_to_finish_point(observedX,observedY,observedL,knownN,[finishX[0], finishY[0]],stepUnit,start,end,goalsData)
 
     # Number of predicted points
     nPredictions = newX.shape[0]

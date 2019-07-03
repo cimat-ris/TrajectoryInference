@@ -132,7 +132,7 @@ if predictionTest==True:
         """Multigoal prediction test"""
         multigoal_prediction_test(img,trueX,trueY,trueL,knownN,startG,stepUnit,goalsData)
 
-
+print("[INF] Sampling between goals")
 nSamples = 100
 startGoal, finishGoal = 0,2
 path_sampling_between_goals_test(img,nSamples,startGoal,finishGoal,stepUnit,goalsData)

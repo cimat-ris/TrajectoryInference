@@ -298,18 +298,18 @@ def joint_estimate_new_set_of_values(observedL,observedX,newL,kernel,linearPrior
     return predictedX, covarianceX
 
 # Prediction of future positions towards a given finish point, given observations
-def prediction_to_finish_point(observedX,observedY,observedL,nObservations,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX=None,priorMeanY=None):
+def prediction_to_finish_point(observedX,observedY,observedL,nObservations,finishPoint,stepUnit,start,end,goalsData):
     # Last observed point
     lastObservedPoint = [observedX[nObservations-1], observedY[nObservations-1], observedL[nObservations-1] ]
     # Generate the set of l values at which to predict x,y
-    newL, finalL = get_prediction_set(lastObservedPoint,finishPoint,unit,stepUnit)
+    newL, finalL = get_prediction_set(lastObservedPoint,finishPoint,goalsData.units[start][end],stepUnit)
     # One point at the final of the path
     observedX.append(finishPoint[0])
     observedY.append(finishPoint[1])
     observedL.append(finalL)
 
     # Performs regression for newL
-    newX,newY,varX,varY = prediction_xy(observedX,observedY,observedL,newL,kernelX,kernelY,priorMeanX,priorMeanY)
+    newX,newY,varX,varY = prediction_xy(observedX,observedY,observedL,newL,goalsData.kernelsX[start][end],goalsData.kernelsY[start][end],goalsData.linearPriorsX[start][end],goalsData.linearPriorsX[start][end])
 
     # Removes the last observed point (which was artificially added)
     observedX.pop()
