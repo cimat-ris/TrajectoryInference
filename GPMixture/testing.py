@@ -9,6 +9,7 @@ from GPRlib import *
 from path import *
 from regression import *
 from plotting import *
+from evaluation import *
 from kernels import *
 from statistics import*
 from sampling import*
@@ -202,16 +203,14 @@ def multigoal_prediction_test(img,x,y,l,knownN,startG,stepUnit,goalsData):
     observedX, observedY, observedL = get_known_set(x,y,l,knownN)
     # Goals
     likelyGoals, goalsLikelihood = [],[]
-    errorG = []
     nPoints = 5
-    for i in range(goalsData.nGoals):
-        error = compute_prediction_error_of_points_along_the_path(nPoints,observedX,observedY,observedL,startG,i,goalsData)
-        errorG.append(error)
+    #for i in range(goalsData.nGoals):
+        #error = compute_prediction_error_of_points_along_the_path(nPoints,observedX,observedY,observedL,startG,i,goalsData)
+    #    errorG.append(error)
 
-    print("[RES] [Prediction Error]\n",errorG)
-    D = 150.
+    #print("[RES] [Prediction Error]\n",errorG)
     for i in range(goalsData.nGoals):
-        val = goalsData.priorTransitions[startG][i]*(math.exp(-1.*( errorG[i]**2)/D**2 ))#   *(1.-errorG[i])
+        val = compute_goal_likelihood(observedX,observedY,observedL,startG,i,nPoints,goalsData)
         goalsLikelihood.append(val)
     # Consider the mean likelihood
     meanLikelihood = 0.85*mean(goalsLikelihood)

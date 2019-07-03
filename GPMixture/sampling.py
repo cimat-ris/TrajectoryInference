@@ -8,11 +8,8 @@ from GPRlib import *
 from kernels import *
 from path import *
 from regression import *
-from statistics import *
-import matplotlib.pyplot as plt
 import numpy as np
 import math
-from copy import copy
 
 
 def goal_sequence(L, n):

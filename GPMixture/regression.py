@@ -3,9 +3,7 @@ Regression with Gaussian Processes
 """
 import numpy as np
 import math
-import matplotlib.pyplot as plt
 from numpy.linalg import inv
-from scipy.optimize import minimize
 from scipy.linalg import *
 import kernels
 import path
@@ -90,43 +88,6 @@ def get_known_set(x,y,l,knownN):
     trueL = l[0:knownN]
     return trueX, trueY, trueL
 
-# TODO: not sure if it is the good place
-def get_goal_likelihood(observedX,observedY,observedL,startG,finishG,stepsToCompare,goalsData):
-
-    error = prediction_error_of_points_along_the_path(nPoints,observedX,observedY,observedL,finishG,goalsDat)
-
-
-    # All the observed data
-    _observedX = observedX.copy()
-    _observedY = observedY.copy()
-    _observedL = observedL.copy()
-
-    # Takes the last stepsToCompare data from the observed data
-    stepsToCompare = 5
-    trueX, trueY, predSet = [], [], []
-    for i in range(stepsToCompare):
-        valX = _knownX.pop()
-        trueX.append(valX)
-        valY = _knownY.pop()
-        trueY.append(valY)
-        step = _knownL.pop()
-        predSet.append(step)
-
-    # New set of observed data (amputed from stepsToCompare)
-    n = len(_observedX)
-    # Takes the center of the
-    finish_xy = middle_of_area(goals[i])
-    _knownX.append(finish_xy[0])
-    _knownY.append(finish_xy[1])
-    dist = math.sqrt( (_knownX[n-1] - finish_xy[0])**2 + (_knownY[n-1] - finish_xy[1])**2 )
-    unit = unitMat[startG][i]
-    lastL = knownL[n-1] + dist*unit
-    _knownL.append(lastL)
-    kernelX = kernelMatX[startG][i]
-    kernelY = kernelMatY[startG][i]
-    predX, predY, vx, vy = prediction_xy(_knownX, _knownY, _knownL, predSet, kernelX, kernelY)
-    error = average_displacement_error([trueX,trueY],[predX,predY])
-    return error
 
 # TODO: not sure if it is the good place
 def get_finish_point(knownX, knownY, knownL, finishGoal, goals, kernelX, kernelY, unit, samplingAxis):
@@ -165,16 +126,6 @@ def get_finish_point(knownX, knownY, knownL, finishGoal, goals, kernelX, kernelY
             min_error = error[i]
             min_id = i
     return [_x[min_id], _y[min_id]]
-
-# Evaluate the prediction error
-def compute_prediction_error_1D(trueX, trueY, prediction, flag):
-    error = 0.0
-    for i in range(len(prediction) ):
-        if flag == 'x':
-            error += abs(trueX[i] - prediction[i])
-        if flag == 'y':
-            error += abs(trueY[i] - prediction[i])
-    return error
 
 def get_finish_point_singleGP(knownX, knownY, knownL, finishGoal, goals, kernelX, kernelY, unit, img, samplingAxis):
     n = len(knownX)
@@ -317,30 +268,6 @@ def prediction_to_finish_point(observedX,observedY,observedL,nObservations,finis
     observedL.pop()
     return newX, newY, newL, varX, varY
 
-#Toma N-nPoints como datos conocidos y predice los ultimos nPoints, regresa el error de la prediccion
-def prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goal,unit,stepUnit,kernelX,kernelY):
-    knownN = len(knownX)
-    trueX = knownX[0:knownN -nPoints]
-    trueY = knownY[0:knownN -nPoints]
-    trueL = knownL[0:knownN -nPoints]
-
-    finishXY = middle_of_area(goal)
-    finishD = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
-    trueX.append(finishXY[0])
-    trueY.append(finishXY[1])
-    trueL.append(finishD*unit)
-
-    lastX = knownX[knownN -nPoints: nPoints]
-    lastY = knownY[knownN -nPoints: nPoints]
-    predictionSet = knownL[knownN -nPoints: nPoints]
-
-    predX, predY, varX,varY = prediction_xy(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
-    #print("[Prediccion]\n",predX)
-    #print(predY)
-    error = average_displacement_error([lastX,lastY],[predX,predY])
-    #print("[Error]:",error)
-    return error
-
 """ARC LENGHT TO TIME"""
 def arclen_to_time(initTime,l,speed):
     t = [initTime]
@@ -362,39 +289,3 @@ def prediction_xy(observedX, observedY, observedL, newL, kernelX, kernelY, prior
     # Regression for Y
     newY, varY = joint_estimate_new_set_of_values(observedL,observedY,newL,kernelY,priorMeanY)
     return newX, newY, varX, varY
-
-# For a given dataset (knownX,knownY,knownL), takes half of the data as known
-# and predicts the remaining half. Then, evaluate the prediction error.
-def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observedY,observedL,startG,finishG,goalsData):
-    # Known data
-    observedN = len(observedX)
-    halfN     = int(observedN/2)
-
-    # First half of the known data
-    trueX = observedX[0:halfN]
-    trueY = observedY[0:halfN]
-    trueL = observedL[0:halfN]
-
-    # Get the last point and add it to the observed data
-    finishXY = middle_of_area(goalsData.areas[finishG])
-    finishD  = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
-    trueX.append(finishXY[0])
-    trueY.append(finishXY[1])
-    trueL.append(finishD*goalsData.units[startG][finishG])
-
-    d = int(halfN/nPoints)
-    realX, realY, predictionSet = [],[],[]
-    # Prepare the ground truths and the list of l to evaluate
-    for i in range(nPoints):
-        realX.append(observedX[halfN + i*d])
-        realY.append(observedY[halfN + i*d])
-        predictionSet.append(observedL[halfN + i*d])
-    # Get the prediction based on the
-    predX, predY, varX,varY = prediction_xy(trueX,trueY,trueL, predictionSet, goalsData.kernelsX[startG][finishG],goalsData.kernelsY[startG][finishG],
-    goalsData.linearPriorsX[startG][finishG],goalsData.linearPriorsY[startG][finishG])
-
-    # Evaluate the error
-    print('[INF] Evaluate the error')
-    error = average_displacement_error([realX,realY],[predX,predY])
-
-    return error

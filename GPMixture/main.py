@@ -73,7 +73,7 @@ speed    = 1.65033755511     #get_pedestrian_average_speed(dataPaths)
 # Computer prior probabilities between goals
 goalsData.compute_prior_transitions(pathMat)
 
-useLinearPriors = False
+useLinearPriors = True
 # For each pair of goals, determine the line priors
 if useLinearPriors:
     goalsData.compute_linear_priors(pathMat)
