@@ -1,6 +1,35 @@
 from abc import ABCMeta, abstractmethod
 import math as m
 
+# Standard deviation for the observation noise
+nsigma = 7.50
+
+# Set kernel: a function that creates a kernel with default parameters, given its type name
+def setKernel(name):
+    if(name == "squaredExponential"):
+        parameters = [80., 80.]  #{Covariance magnitude factor, Characteristic length}
+        kernel = squaredExponentialKernel(parameters[0],parameters[1],nsigma)
+    elif(name == "combinedTrautman"):
+        parameters = [60., 80., 80.]  #{Precision of the line constant, Covariance magnitude factor, Characteristic length}
+        kernel = combinedKernel(parameters[0],parameters[1],parameters[2],nsigma)
+    elif(name == "exponential"):
+        parameters = [80., 80.]  #{Covariance magnitude factor, Characteristic length}
+        kernel = exponentialKernel(parameters[0],parameters[1])
+    elif(name == "gammaExponential"):
+        parameters = [80., 80., 8.]  #{Covariance magnitude factor, Characteristic length, Gamma exponent}
+        kernel = gammaExponentialKernel(parameters[0],parameters[1])
+    elif(name == "rationalQuadratic"):
+        parameters = [80.0,10., 5.] #{Covariance magnitude factor, Characteristic length, Alpha parameter}
+        kernel = rationalQuadraticKernel(parameters[0],parameters[1],nsigma)
+    elif(name == "squaredExponentialAndNoise"):
+        parameters = [80., 80.] #{Covariance magnitude factor, Characteristic length}
+        kernel = expKernel(parameters[0],parameters[1],nsigma)
+    elif(name == "linePriorCombined"):
+        parameters = [0.01,1.0, 80., 80.]  #{Standard deviation slope, Standard deviation constant, Covariance magnitude factor, Characteristic length}
+        kernel = linePriorCombinedKernel(parameters[0],parameters[1],parameters[2],parameters[3],nsigma)
+
+    return kernel
+
 # Kronecker delta
 def delta(x,y):
     if x == y:

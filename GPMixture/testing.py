@@ -7,6 +7,7 @@ Testing functions
 
 from GPRlib import *
 from path import *
+from regression import *
 from plotting import *
 from kernels import *
 from statistics import*

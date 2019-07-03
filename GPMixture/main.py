@@ -1,8 +1,9 @@
 """
 @author: karenlc
 """
+import path
 from GPRlib import *
-from path import *
+from regression import *
 from testing import *
 from plotting import *
 from goalsLearnedStructure import *

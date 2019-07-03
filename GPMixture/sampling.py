@@ -23,6 +23,41 @@ def goal_sequence(L, n):
         s.append[i]
     return s
 
+# Sample m points (x,y) in an area, with uniform sampling.
+def uniform_sampling_2D(m, goal):
+    _x, _y = [], []
+    xmin, xmax = goal[0], goal[2]
+    ymin, ymax = goal[1], goal[len(goal)-1]
+
+    for i  in range(m):
+        t = random.uniform(0,1.)
+        val = (1.-t)*xmin + t*xmax
+        _x.append(val)
+        r = random.uniform(0,1.)
+        val = (1.-r)*ymin + r*ymax
+        _y.append(val)
+
+    return _x, _y
+
+# Sample m points (x,y) along a line segment, with uniform sampling
+def uniform_sampling_1D(m, goal, axis):
+    _x, _y = [], []
+    xmin, xmax = goal[0], goal[2]
+    ymin, ymax = goal[1], goal[len(goal)-1]
+
+    for i  in range(m):
+        t = random.uniform(0,1.)
+        if(axis == 'x'):
+            val = (1.-t)*xmin + t*xmax
+            _x.append(val)
+            _y.append( ymin + (ymax-ymin)/2 )
+        if(axis == 'y'):
+            val = (1.-t)*ymin + t*ymax
+            _y.append(val)
+            _x.append( xmin + (xmax-xmin)/2 )
+    # Returns the axis of sampling too
+    return _x, _y, axis
+    
 # Prediction towards a given finish point, and given observed points
 def sample_predictive_distribution(observedX,observedY,observedL,nObservations,finishPoint,unit,stepUnit,kernelX,kernelY,priorMeanX,priorMeanY):
     # Sample end point
