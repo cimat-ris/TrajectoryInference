@@ -125,30 +125,19 @@ if mixtureTest==True:
         knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
         trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
         """Multigoal prediction test"""
-        likelihoods,predictedXYVec,varXYVec = mixture.update(trueX,trueY,trueL)
+        mixture.update(trueX,trueY,trueL)
+        likelihoods,predictedXYVec,varXYVec = mixture.predict()
         print('[INF] Plotting')
         plot_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,likelihoods,predictedXYVec,varXYVec)
         print("[RES] [Goals likelihood]\n",mixture.goalsLikelihood)
         print("[RES] [Mean likelihood]:", mixture.meanLikelihood)
+        vecX,vecY = mixture.generate_samples(100)
+        plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
-quit()
 
 arcLenToTime = arclen_to_time(320,pathL,speed)
-predictionTest = False
-if predictionTest==True:
-    # The dataset of observations is split into part_num subsets
-    # When predicting, one takes the percentge i/part_num as known,
-    # and the second part is predicted
-    part_num = 10
-    steps = 10
-    for i in range(1,part_num-1):
-        knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
-        trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
-        """Simple prediction test"""
-        knownTime = pathT[0:knownN]
-        rT = pathT[knownN:pathSize]
-        """Multigoal prediction test"""
-        multigoal_prediction_test(img,trueX,trueY,trueL,knownN,startG,stepUnit,goalsData)
+
+quit()
 
 print("[INF] Sampling between goals")
 nSamples = 100

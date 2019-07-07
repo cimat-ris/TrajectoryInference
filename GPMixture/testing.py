@@ -198,58 +198,6 @@ def prediction_test(img,x,y,z,knownN,startG,finishG,goals,unitMat,meanLenMat,ste
     newX,newY,varX,varY = prediction_XY(trueX,trueY,trueZ,newZ,kernelX,kernelY)
     plot_prediction(img,x,y,knownN,newX,newY,varX,varY,[0,0])
 
-def multigoal_prediction_test(img,x,y,l,knownN,startG,stepUnit,goalsData):
-    # Observed points
-    observedX, observedY, observedL = get_known_set(x,y,l,knownN)
-    # Goals
-    likelyGoals, goalsLikelihood = [],[]
-    nPoints = 5
-    #for i in range(goalsData.nGoals):
-        #error = compute_prediction_error_of_points_along_the_path(nPoints,observedX,observedY,observedL,startG,i,goalsData)
-    #    errorG.append(error)
-
-    #print("[RES] [Prediction Error]\n",errorG)
-    for i in range(goalsData.nGoals):
-        val = compute_goal_likelihood(observedX,observedY,observedL,startG,i,nPoints,goalsData)
-        goalsLikelihood.append(val)
-    # Consider the mean likelihood
-    meanLikelihood = 0.85*mean(goalsLikelihood)
-    for i in range(goalsData.nGoals):
-        if(goalsLikelihood[i] > meanLikelihood):
-            likelyGoals.append(i)
-
-    print("[RES] [Goals likelihood]\n",goalsLikelihood)
-    print("[RES] [Mean likelihood]:", meanLikelihood)
-    nSubgoals = 2
-    goalCount = 0
-    plotLikelihood = []
-    predictedXYVec, varXYVec = [], []
-
-    # For all likely goals
-    for i in range(len(likelyGoals)):
-        nextG = likelyGoals[i]
-        goalCenter = middle_of_area(goalsData.areas[nextG])
-        distToGoal = euclidean_distance([observedX[knownN-1],observedY[knownN-1]], goalCenter)
-        dist = euclidean_distance([observedX[0],observedY[0]], goalCenter)
-        # When close to the goal, define sub-goals
-        if(distToGoal < 0.4*dist):
-            subgoalsCenter, size = get_subgoals_center_and_size(nSubgoals, goalsData.areas[nextG], goalsData.areasAxis[nextG])
-            for j in range(nSubgoals):
-                predictedX, predictedY, predictedL, varX, varY = prediction_to_finish_point(observedX,observedY,observedL,knownN,subgoalsCenter[j],stepUnit,startG,nextG,goalsData)
-                predictedXYVec.append([predictedX, predictedY])
-                varXYVec.append([varX, varY])
-                plotLikelihood.append(goalsLikelihood[nextG])
-            goalCount += nSubgoals
-        else:
-            predictedX, predictedY, predictedL, varX, varY = prediction_to_finish_point(observedX,observedY,observedL,knownN,goalCenter,stepUnit,startG,nextG,goalsData)
-            predictedXYVec.append([predictedX, predictedY])
-            varXYVec.append([varX, varY])
-            plotLikelihood.append(goalsLikelihood[nextG])
-            goalCount += 1
-    # Plot everything
-    print('[INF] Plotting')
-    plot_multiple_predictions_and_goal_likelihood(img,x,y,knownN,goalCount,plotLikelihood,predictedXYVec,varXYVec)
-
 # Sampling 3 trajectories between all the pairs of goals
 def path_sampling_test(img,nGoals,stepUnit,goalsData):
     vecX, vecY = [], []
