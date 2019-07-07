@@ -206,15 +206,15 @@ def plot_multiple_predictions(img,x,y,knownN,nGoals,predictedXYVec,varXYVec):
     plt.axis(v)
     plt.show()
 
-def plot_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goalsLikelihood,predictedXYVec,varXYVec):
+def plot_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,goalsLikelihood,predictedXYVec,varXYVec):
     realX, realY = [],[]
     partialX, partialY = [], []
     N = int(len(x))
-
+    # Observed data
     for i in range(int(nUsedData)):
         partialX.append(x[i])
         partialY.append(y[i])
-
+    # Data to predict
     for i in range(int(nUsedData-1),N):
         realX.append(x[i])
         realY.append(y[i])
@@ -227,7 +227,8 @@ def plot_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goals
 
     maxLikelihood = max(goalsLikelihood)
     maxLW = 2
-    for i in range(nGoals): #pinta la prediccion para cada subgoal
+    for i in range(len(goalsLikelihood)):
+        # For each goal/subgoal, draws the prediction
         plt.plot(predictedXYVec[i][0],predictedXYVec[i][1],'b--')
         predictedN = len(predictedXYVec[i][0])
         # For the jth predicted element

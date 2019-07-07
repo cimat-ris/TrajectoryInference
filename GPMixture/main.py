@@ -6,6 +6,7 @@ from GPRlib import *
 from regression import *
 from testing import *
 from plotting import *
+from mixture import *
 from goalsLearnedStructure import *
 from multipleAgents import *
 import numpy as np
@@ -115,8 +116,25 @@ pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t
 # Total path length
 pathSize = len(pathX)
 
+mixtureTest = True
+if mixtureTest==True:
+    mixture = mixtureOfGPs(startG,stepUnit,goalsData)
+    part_num = 10
+    steps = 10
+    for i in range(1,part_num-1):
+        knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
+        trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
+        """Multigoal prediction test"""
+        likelihoods,predictedXYVec,varXYVec = mixture.update(trueX,trueY,trueL)
+        print('[INF] Plotting')
+        plot_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,likelihoods,predictedXYVec,varXYVec)
+        print("[RES] [Goals likelihood]\n",mixture.goalsLikelihood)
+        print("[RES] [Mean likelihood]:", mixture.meanLikelihood)
+
+quit()
+
 arcLenToTime = arclen_to_time(320,pathL,speed)
-predictionTest = True
+predictionTest = False
 if predictionTest==True:
     # The dataset of observations is split into part_num subsets
     # When predicting, one takes the percentge i/part_num as known,
