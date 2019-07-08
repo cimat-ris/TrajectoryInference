@@ -36,11 +36,14 @@ class mixtureOfGPs:
         for i in range(self.goalsData.nGoals):
             val = compute_goal_likelihood(self.observedX,self.observedY,self.observedL,self.startG,i,self.nPoints,self.goalsData)
             self.goalsLikelihood.append(val)
+        # Sum of the likelihoods
+        s = sum(self.goalsLikelihood)
         # Compute the mean likelihood
-        self.meanLikelihood = 0.85*mean(self.goalsLikelihood)
+        self.meanLikelihood = mean(self.goalsLikelihood)
         for i in range(self.goalsData.nGoals):
-            if(self.goalsLikelihood[i] > self.meanLikelihood):
+            if(self.goalsLikelihood[i] > 0.85*self.meanLikelihood):
                 self.likelyGoals.append(i)
+            self.goalsLikelihood[i] /= s
 
     # Performs prediction
     def predict(self):
@@ -71,8 +74,9 @@ class mixtureOfGPs:
         return plotLikelihood,predictedXYVec,varXYVec
 
     def sample(self):
-        # Sample goal
-        end = 2
+        # Sample goal: TODO
+        goalSample = np.random.choice(self.goalsData.nGoals, 1,p=self.goalsLikelihood)
+        end = goalSample[0]
         # Sample end point around the sampled goal
         finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.areas[end], self.goalsData.areasAxis[end])
         # Prediction of the whole trajectory given the
