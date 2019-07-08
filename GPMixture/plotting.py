@@ -206,7 +206,7 @@ def plot_multiple_predictions(img,x,y,knownN,nGoals,predictedXYVec,varXYVec):
     plt.axis(v)
     plt.show()
 
-def plot_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,goalsLikelihood,predictedXYVec,varXYVec):
+def plot_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goalsLikelihood,predictedXYVec,varXYVec):
     realX, realY = [],[]
     partialX, partialY = [], []
     N = int(len(x))
@@ -214,37 +214,44 @@ def plot_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,goalsLikelih
     for i in range(int(nUsedData)):
         partialX.append(x[i])
         partialY.append(y[i])
-    # Data to predict
+    # Data to predict (ground truth)
     for i in range(int(nUsedData-1),N):
         realX.append(x[i])
         realY.append(y[i])
 
     fig,ax = plt.subplots(1)
+    plt.margins(0, 0)
+    plt.gca().set_axis_off()
+    plt.gca().xaxis.set_major_locator(plt.NullLocator())
+    plt.gca().yaxis.set_major_locator(plt.NullLocator())
     ax.set_aspect('equal')
-    ax.imshow(img) # Show the image
-
+    # Show the image
+    ax.imshow(img)
+    # Plot the observed data
     plt.plot(partialX,partialY,'c')
 
     maxLikelihood = max(goalsLikelihood)
     maxLW = 2
-    for i in range(len(goalsLikelihood)):
-        # For each goal/subgoal, draws the prediction
-        plt.plot(predictedXYVec[i][0],predictedXYVec[i][1],'b--')
-        predictedN = len(predictedXYVec[i][0])
-        # For the jth predicted element
-        for j in range(predictedN):
-            xy = [predictedXYVec[i][0][j],predictedXYVec[i][1][j]]
-            # 6.0 = 2.0 x 3.0
-            # It is: to have 3.0 sigmas. Then, the Ellipse constructor asks for the diameter, hence the 2.0
-            ell = Ellipse(xy,6.0*math.sqrt(math.fabs(varXYVec[i][0][j][j])),6.0*math.sqrt(math.fabs(varXYVec[i][1][j][j])))
-            lw = (goalsLikelihood[i]/maxLikelihood)*maxLW
-            ell.set_lw(lw)
-            ell.set_fill(0)
-            ell.set_edgecolor(color[i])
-            ax.add_patch(ell)
+    for i in range(len(predictedXYVec)):
+        if predictedXYVec[i]!=None:
+            print('[RES] Plotting GP ',i)
+            # For each goal/subgoal, draws the prediction
+            plt.plot(predictedXYVec[i][0],predictedXYVec[i][1],'b--')
+            predictedN = len(predictedXYVec[i][0])
+            # For the jth predicted element
+            for j in range(predictedN):
+                xy = [predictedXYVec[i][0][j],predictedXYVec[i][1][j]]
+                # 6.0 = 2.0 x 3.0
+                # It is: to have 3.0 sigmas. Then, the Ellipse constructor asks for the diameter, hence the 2.0
+                ell = Ellipse(xy,6.0*math.sqrt(math.fabs(varXYVec[i][0][j][j])),6.0*math.sqrt(math.fabs(varXYVec[i][1][j][j])))
+                lw = (goalsLikelihood[i%nGoals]/maxLikelihood)*maxLW
+                ell.set_lw(lw)
+                ell.set_fill(0)
+                ell.set_edgecolor(color[i%nGoals])
+                ax.add_patch(ell)
 
     plt.plot(realX,realY,'c--')
-    v = [0,1920,1080,0]
+    v = [0,img.shape[1],img.shape[0],0]
     plt.axis(v)
     plt.show()
 

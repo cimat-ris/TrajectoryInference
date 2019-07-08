@@ -125,10 +125,10 @@ if mixtureTest==True:
         knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
         trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
         """Multigoal prediction test"""
-        mixture.update(trueX,trueY,trueL)
-        likelihoods,predictedXYVec,varXYVec = mixture.predict()
+        likelihoods = mixture.update(trueX,trueY,trueL)
+        predictedXYVec,varXYVec = mixture.predict()
         print('[INF] Plotting')
-        plot_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,likelihoods,predictedXYVec,varXYVec)
+        plot_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
         print("[RES] [Goals likelihood]\n",mixture.goalsLikelihood)
         print("[RES] [Mean likelihood]:", mixture.meanLikelihood)
         vecX,vecY = mixture.generate_samples(100)

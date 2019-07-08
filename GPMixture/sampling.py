@@ -21,7 +21,6 @@ def goal_sequence(L, n):
 # Sample m points (x,y) in an area, with uniform sampling.
 def uniform_sampling_2D(m, goal):
     _x, _y = [], []
-
     # Determines the bounding box
     xmin, xmax = goal[0], goal[2]
     ymin, ymax = goal[1], goal[len(goal)-1]
@@ -42,17 +41,30 @@ def uniform_sampling_1D(m, goal, axis):
     _x, _y = [], []
     xmin, xmax = goal[0], goal[2]
     ymin, ymax = goal[1], goal[len(goal)-1]
-
     for i  in range(m):
         t = random.uniform(0,1.)
         if(axis == 'x'):
             val = (1.-t)*xmin + t*xmax
             _x.append(val)
-            _y.append( ymin + (ymax-ymin)/2 )
+            _y.append( (ymax+ymin)/2.0 )
         if(axis == 'y'):
             val = (1.-t)*ymin + t*ymax
             _y.append(val)
-            _x.append( xmin + (xmax-xmin)/2 )
+            _x.append((xmax+xmin)/2.0 )
+    # Returns the axis of sampling too
+    return _x, _y, axis
+
+# Sample m points (x,y) along a line segment centered on point, with uniform sampling
+def uniform_sampling_1D_around_point(m, point, size, axis):
+    _x, _y = [], []
+    for i  in range(m):
+        t = random.uniform(-size,size)
+        if(axis == 'x'):
+            _x.append(point[0]+t)
+            _y.append(point[1])
+        if(axis == 'y'):
+            _y.append(point[1]+t)
+            _x.append(point[0])
     # Returns the axis of sampling too
     return _x, _y, axis
 
