@@ -18,25 +18,6 @@ import numpy as np
 import math
 from copy import copy
 
-
-def trajectory_prediction_test_using_sampling(img,x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,samplingAxis):
-    kernelX = kernelMatX[startG][finishG]
-    kernelY = kernelMatY[startG][finishG]
-
-    trueX, trueY, trueL = get_known_set(x,y,l,knownN)
-    lastKnownPoint = [x[knownN-1], y[knownN-1], l[knownN-1] ]
-    unit = unitMat[startG][finishG]
-
-    final_xy = get_finish_point(trueX,trueY,trueL,finishG,goals,kernelX,kernelY,unit,samplingAxis)
-    #final_xy = get_finish_point_singleGP(trueX,trueY,trueZ,finishG,goals,kernelX,kernelY,unit,img)
-    newL, final_l = get_prediction_set(lastKnownPoint,final_xy,unit,stepUnit)
-    trueX.append(final_xy[0])
-    trueY.append(final_xy[1])
-    trueL.append(final_l)
-
-    newX,newY,varX,varY = prediction_XY(trueX,trueY,trueL,newL,kernelX,kernelY)
-    plot_prediction(img,x,y,knownN,newX,newY,varX,varY)
-
 def trajectory_prediction_test(img,x,y,l,knownN,startG,finishG,goals,unitMat,stepUnit,kernelMatX,kernelMatY,linearPriorMatX,linearPriorMatY):
     kernelX = kernelMatX[startG][finishG]
     kernelY = kernelMatY[startG][finishG]
@@ -163,21 +144,6 @@ def compare_error_goal_to_subgoal_test(img,x,y,l,startG,finishG,goals,unitMat,st
     plt.plot(index,subgoalError,'b')
 
 #recibe: datos conocidos, valores por predecir, areas de inicio y final
-def prediction_test_over_time(x,y,z,knownN,start,end,goals):
-    kernelX = kernelMat_x[start][end]
-    kernelY = kernelMat_y[start][end]
-
-    trueX, trueY, trueZ = get_known_set(x,y,z,knownN)
-    final_xy = middle_of_area(goals[end])
-    N = len(x)
-    trueX.append(final_xy[0])
-    trueY.append(final_xy[1])
-    trueZ.append(z[N-1])
-    newZ = get_prediction_set_from_data(z,knownN)
-    newX, newY,varX,varY = prediction_XY(trueX,trueY,trueZ,newZ,kernelX,kernelY)
-    plot_prediction(img,x,y,knownN,newX,newY,varX,varY)
-
-#recibe: datos conocidos, valores por predecir, areas de inicio y final
 def prediction_test(img,x,y,z,knownN,startG,finishG,goals,unitMat,meanLenMat,steps,kernelMat_x,kernelMat_y):
     kernelX = kernelMat_x[startG][finishG]
     kernelY = kernelMat_y[startG][finishG]
@@ -289,7 +255,7 @@ def get_error_of_final_point_comparing_k_steps(samples,steps,trajectorySet,start
     meanError /= len(trajectorySet)
     return meanError
 
-def choose_number_of_steps_to_compare(trajectorySet,startG,finishG,goals,unitMat,meanLenMat,samplingAxis,kernelSetX,kernelSetY):
+def choose_number_of_steps_to_compare(trajectorySet,startG,finishG,goals,unitMat,meanLenMat,samplingAxis,kernelSpredictions_aetX,kernelSetY):
     errorVec = []
     stepsVec = []
     samples = 9

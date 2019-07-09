@@ -51,35 +51,6 @@ def joint_regression(l,x_meanl,lnew,kernel,linearPriorMean=None):
     var = C - kK_1kt
     return xnew, var
 
-# Individual regression for a single scalar lnew
-def single_regression(l,x_meanl,lnew,kernel,priorMean=None):
-    # Number of observed data
-    n    = len(l)
-    # Compute K, k and c
-    K  = np.zeros((n,n))
-    k  = np.zeros(n)
-    # Fill in K
-    for i in range(n):
-        for j in range(n):
-            K[i][j] = kernel(l[i],l[j])
-    # Fill in k
-    for i in range(n):
-        k[i] = kernel(lnew,l[i],False)
-    K_1 = inv(K)
-    # Predictive mean
-    xnew = k.dot(K_1.dot(x_meanl))
-    if linearPriorMean!=None:
-        xnew += linear_mean(lnew,linearPriorMean[0])
-    # Estimate the variance
-    K_1kt = K_1.dot(k.transpose())
-    kK_1kt = k.dot(K_1kt)
-    # Variance
-    var = kernel(lnew,lnew,False) - kK_1kt
-    # Clip variance
-    if var<0.1:
-        var = 0.1
-    return xnew, var
-
 # Function to get the ground truth data: knownN data
 # TODO: not sure if it is the good place
 def get_known_set(x,y,l,knownN):

@@ -6,7 +6,9 @@ from GPRlib import *
 from regression import *
 from testing import *
 from plotting import *
-from mixture import *
+from mixtureOfGPs import *
+from singleGP import *
+from gpRegressor import *
 from goalsLearnedStructure import *
 from multipleAgents import *
 import numpy as np
@@ -17,8 +19,6 @@ from copy import copy
 
 
 # Interest areas [x1,y1,x2,y2,...]
-#R0 = [400,40,680,40,400,230,680,230] #azul
-#R1 = [1110,40,1400,40,1110,230,1400,230] #cian
 R0 = [410,10,680,10,410,150,680,150] #azul
 R1 = [1120,30,1400,30,1120,150,1400,150] #cian
 R2 = [1650,460,1810,460,1650,740,1810,740] #verde
@@ -115,6 +115,23 @@ _path = pathMat[startG][nextG][pathId]
 pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t
 # Total path length
 pathSize = len(pathX)
+
+
+singleTest = True
+if singleTest==True:
+    gp = singleGP(startG,nextG,stepUnit,goalsData)
+    part_num = 10
+    steps = 10
+    for i in range(1,part_num-1):
+        knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
+        trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
+        """Single goal prediction test"""
+        likelihood = gp.update(trueX,trueY,trueL)
+        predictedXYVec,varXYVec = gp.predict()
+        print('[INF] Plotting')
+        print("[RES] [Likelihood]: ",gp.likelihood)
+        vecX,vecY = gp.generate_samples(100)
+        plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 mixtureTest = True
 if mixtureTest==True:
