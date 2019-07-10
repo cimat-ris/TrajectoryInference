@@ -13,6 +13,7 @@ from evaluation import *
 from kernels import *
 from statistics import*
 from sampling import*
+from multipleAgents import*
 import matplotlib.pyplot as plt
 import numpy as np
 import math
@@ -311,3 +312,30 @@ def number_of_samples_and_points_to_compare_to_destination(goals,pathMat,rows,co
     choose_number_of_steps_to_compare(trajectorySet,startGoal,finishGoal,goals,unitMat,meanLenMat,samplingAxis,kernelSetX,kernelSetY)
     print("Test: number of destination samples")
     choose_number_of_destination_samples(trajectorySet,startGoal,finishGoal,goals,unitMat,meanLenMat,samplingAxis,kernelSetX,kernelSetY)
+
+def interaction_using_sampling_test(img,pathSet,startGoals,finishGoals,stepUnit,speed,goalsData):
+    #Refinar: unsar n/m datos observados
+    observedXVec, observedYVec = [], []
+    sampleXVec, sampleYVec = [], [] 
+    samplePathSet = []
+    nPaths = len(pathSet)
+    for i in range(nPaths):
+        #Obtener observaciones
+        currentPath = pathSet[i]
+        knownN = int(len(currentPath.x)/2)
+        partialPath = get_partial_path(currentPath,knownN)
+        observedX,observedY,observedL = get_known_set(currentPath.x,currentPath.y,currentPath.l,knownN)
+        #Samplear el resto de la trayectoria
+        x, y, l, mx, my = sample_path_to_goal(observedX,observedY,observedL,knownN,stepUnit,startGoals[i],finishGoals[i],goalsData)
+        observedXVec.append(observedX)
+        observedYVec.append(observedY)
+        sampleX, sampleY = np.reshape(x,(x.shape[0])), np.reshape(y,(y.shape[0]))
+        sampleXVec.append(sampleX)
+        sampleYVec.append(sampleY)
+        samplePath = get_path_from_data(partialPath,sampleX,sampleY,l,speed)
+        samplePathSet.append(samplePath)
+    interaction_potential_for_a_set_of_pedestrians(samplePathSet)
+    #plot_multiple_path_samples_with_observations(img,observedXVec,observedYVec,sampleXVec,sampleYVec)
+    plotPathSet(samplePathSet,img)    
+    #Mas adelante: guardar potencial + config
+

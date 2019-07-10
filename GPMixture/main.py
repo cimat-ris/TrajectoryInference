@@ -151,9 +151,6 @@ if mixtureTest==True:
         vecX,vecY = mixture.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
-
-arcLenToTime = arclen_to_time(320,pathL,speed)
-
 quit()
 
 print("[INF] Sampling between goals")
@@ -178,6 +175,19 @@ if interactionTest == True:
     #Ti, Tj = 1,0
     #plotPathSet([sortedSet[Ti],sortedSet[Tj]],img)
     #interaction_potential(sortedSet[Ti], sortedSet[Tj])
+    
+interactionWithSamplingTest = False
+if interactionWithSamplingTest == True:
+    startG, finishG = 0, 3
+    currentPathSet = pathMat[startG][finishG] 
+    sortedCurrentPaths = sorted(currentPathSet, key=time_compare)
+    sortedSet = get_path_set_given_time_interval(sortedCurrentPaths,950,8000)
+    #plotPathSet(sortedSet,img)
+    startGoals, finishGoals = [], []
+    for j in range(len(sortedSet)):
+        startGoals.append(startG)
+        finishGoals.append(finishG)  
+    interaction_using_sampling_test(img,sortedSet,startGoals,finishGoals,stepUnit,speed,goalsData)
 
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
