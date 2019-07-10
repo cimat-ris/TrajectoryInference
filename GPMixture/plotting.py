@@ -53,14 +53,13 @@ def plotPaths(pathSetMat, img):
             axes[i,j].axis('off')
     plt.show()
 
-# Grafica los datos reales, los datos conocidos y los calculados
-def plot_prediction(img,trueX,trueY,knownN,predictedX,predictedY,varX,varY):
+# Plot the true data, the predicted ones and their variance
+def plot_prediction(img,trueX,trueY,knownN,predictedXY,varXY):
     realX, realY = [],[]
     N = int(len(trueX))
 
     knownX = trueX[0:knownN]
     knownY = trueY[0:knownN]
-
     realX = trueX[knownN:N]
     realY = trueY[knownN:N]
 
@@ -68,52 +67,18 @@ def plot_prediction(img,trueX,trueY,knownN,predictedX,predictedY,varX,varY):
     ax.set_aspect('equal')
     ax.imshow(img) # Show the image
 
-    plt.plot(knownX,knownY,'c',predictedX,predictedY,'b')
-
-    predictedN = len(predictedX)
+    plt.plot(knownX,knownY,'c',predictedXY[:,0],predictedXY[:,1],'b')
+    predictedN = predictedXY.shape[0]
     for i in range(predictedN):
-        xy = [predictedX[i],predictedY[i]]
-        ell = Ellipse(xy,varX[i], varY[i])
+        xy = [predictedXY[i,0],predictedXY[i,1]]
+        ell = Ellipse(xy,6.0*math.sqrt(math.fabs(varXY[0][i,i])),6.0*math.sqrt(math.fabs(varXY[1][i,i])))
         ell.set_lw(1.)
         ell.set_fill(0)
         ell.set_edgecolor('m')
         ax.add_patch(ell)
-
     plt.plot(realX,realY,'c--')
 
-    v = [0,1920,1080,0]
-    plt.axis(v)
-    plt.show()
-
-#Grafica los datos reales, los datos conocidos, los calculados y el punto muestreado
-def plot_sampling_prediction(img,trueX,trueY,knownN,predictedX,predictedY,varX,varY,finish_xy):
-    realX, realY = [],[]
-    partialX, partialY = [], []
-    N = int(len(trueX))
-
-    partialX = trueX[0:knownN]
-    partialY = trueY[0:knownN]
-
-    realX = trueX[knownN:N]
-    realY = trueY[knownN:N]
-
-    fig,ax = plt.subplots(1)
-    ax.set_aspect('equal')
-    ax.imshow(img) # Show the image
-
-    plt.plot(partialX,partialY,'c')
-    plt.plot(predictedX,predictedY,'bo')
-    plt.plot(realX,realY,'ro')
-    for i in range(len(predictedX)):
-        xy = [predictedX[i],predictedY[i]]
-        ell = Ellipse(xy,varX[i], varY[i])
-        ell.set_lw(1.)
-        ell.set_fill(0)
-        ell.set_edgecolor('g')
-        ax.add_patch(ell)
-    plt.plot([finish_xy[0]], [finish_xy[1]], 'yo')
-
-    v = [0,1920,1080,0]
+    v = [0,img.shape[1],img.shape[0],0]
     plt.axis(v)
     plt.show()
 
@@ -169,38 +134,6 @@ def plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,finalXY):
     lineY.append(finalXY[1])
     plt.plot(lineX,lineY,'b', label='Euclidean distance')
     ax.legend()
-
-    v = [0,1920,1080,0]
-    plt.axis(v)
-    plt.show()
-
-def plot_multiple_predictions(img,x,y,knownN,nGoals,predictedXYVec,varXYVec):
-    N = int(len(x))
-
-    partialX = trueX[0:knownN]
-    partialY = trueY[0:knownN]
-
-    realX = trueX[knownN:N]
-    realY = trueY[knownN:N]
-
-    fig,ax = plt.subplots(1)
-    ax.set_aspect('equal')
-    ax.imshow(img) # Show the image
-
-    plt.plot(partialX,partialY,'c')
-
-    for i in range(nGoals): #pinta la prediccion para cada subgoal
-        plt.plot(predictedXYVec[i][0],predictedXYVec[i][1],'b--')
-        predictedN = len(predictedXYVec[i][0])
-        for j in range(predictedN):
-            xy = [predictedXYVec[i][0][j],predictedXYVec[i][1][j]]
-            ell = Ellipse(xy,varXYVec[i][0][j], varXYVec[i][1][j])
-            ell.set_lw(1.)
-            ell.set_fill(0)
-            ell.set_edgecolor(color[i])
-            ax.add_patch(ell)
-
-    plt.plot(realX,realY,'c--')
 
     v = [0,1920,1080,0]
     plt.axis(v)

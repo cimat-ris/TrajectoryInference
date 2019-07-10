@@ -126,11 +126,12 @@ if singleTest==True:
         knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
         trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
         """Single goal prediction test"""
-        likelihood = gp.update(trueX,trueY,trueL)
-        predictedXYVec,varXYVec = gp.predict()
+        likelihood        = gp.update(trueX,trueY,trueL)
+        predictedXY,varXY = gp.predict()
+        plot_prediction(img,pathX,pathY,knownN,predictedXY,varXY)
         print('[INF] Plotting')
         print("[RES] [Likelihood]: ",gp.likelihood)
-        vecX,vecY = gp.generate_samples(100)
+        vecX,vecY = gp.generate_samples(1000)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 mixtureTest = True
@@ -175,18 +176,18 @@ if interactionTest == True:
     #Ti, Tj = 1,0
     #plotPathSet([sortedSet[Ti],sortedSet[Tj]],img)
     #interaction_potential(sortedSet[Ti], sortedSet[Tj])
-    
+
 interactionWithSamplingTest = False
 if interactionWithSamplingTest == True:
     startG, finishG = 0, 3
-    currentPathSet = pathMat[startG][finishG] 
+    currentPathSet = pathMat[startG][finishG]
     sortedCurrentPaths = sorted(currentPathSet, key=time_compare)
     sortedSet = get_path_set_given_time_interval(sortedCurrentPaths,950,8000)
     #plotPathSet(sortedSet,img)
     startGoals, finishGoals = [], []
     for j in range(len(sortedSet)):
         startGoals.append(startG)
-        finishGoals.append(finishG)  
+        finishGoals.append(finishG)
     interaction_using_sampling_test(img,sortedSet,startGoals,finishGoals,stepUnit,speed,goalsData)
 
 #Prueba el error de la prediccion variando:
