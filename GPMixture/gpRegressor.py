@@ -56,19 +56,19 @@ class gpRegressor:
         lastObservedPoint = [self.observedX[-1], self.observedY[-1],self.observedL[-1] ]
         # Generate the set of l values at which to predict x,y
         newL, finalL = get_prediction_set(lastObservedPoint,finishPoint,goalsData.units[start][end],stepUnit)
-    # One point at the final of the path
-    observedX.append(finishPoint[0])
-    observedY.append(finishPoint[1])
-    observedL.append(finalL)
+        # One point at the final of the path
+        observedX.append(finishPoint[0])
+        observedY.append(finishPoint[1])
+        observedL.append(finalL)
 
-    # Performs regression for newL
-    newX,newY,varX,varY = self.prediction_xy(observedX,observedY,observedL,newL,goalsData.kernelsX[start][end],goalsData.kernelsY[start][end],goalsData.linearPriorsX[start][end],goalsData.linearPriorsX[start][end])
+        # Performs regression for newL
+        newX,newY,varX,varY = self.prediction_xy(observedX,observedY,observedL,newL,goalsData.kernelsX[start][end],goalsData.kernelsY[start][end],goalsData.linearPriorsX[start][end],goalsData.linearPriorsX[start][end])
 
-    # Removes the last observed point (which was artificially added)
-    observedX.pop()
-    observedY.pop()
-    observedL.pop()
-    return newX, newY, newL, varX, varY
+        # Removes the last observed point (which was artificially added)
+        observedX.pop()
+        observedY.pop()
+        observedL.pop()
+        return newX, newY, newL, varX, varY
 
 
     # The main regression function: perform regression for a vector of values lnew
