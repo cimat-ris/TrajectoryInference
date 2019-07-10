@@ -7,6 +7,7 @@ from regression import *
 from evaluation import *
 from statistics import*
 from sampling import *
+from gpRegressor import *
 
 class singleGP:
 
@@ -28,12 +29,14 @@ class singleGP:
         self.observedY       = None
         self.observedL       = None
         self.likelihood      = 0.0
+        self.gpRegressor     = gpRegressor(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG], self.goalsData.linearPriorsX[self.startG][self.endG], self.goalsData.linearPriorsY[self.startG][self.endG])
 
     # Update observations and compute likelihood based on observations
     def update(self,observedX,observedY,observedL):
         self.observedX       = observedX
         self.observedY       = observedY
         self.observedL       = observedL
+
         # Compute likelihood
         self.likelihood = compute_goal_likelihood(self.observedX,self.observedY,self.observedL,self.startG,self.endG,self.nPoints,self.goalsData)
         return self.likelihood
@@ -63,6 +66,8 @@ class singleGP:
                 self.sqRootVarY[(j+1)] = cholesky(varY,lower=True)
         # Otherwise, perform prediction to the goal center
         else:
+            self.gpRegressor.updateObservations(self.observedX,self.observedY,self.observedL)
+
             predictedX, predictedY, predictedL, varX, varY = prediction_to_finish_point(self.observedX,self.observedY,self.observedL,knownN,goalCenter,self.stepUnit,self.startG,self.endG,self.goalsData)
             self.predictedMeans[0]=[predictedX, predictedY,predictedL]
             # Regularization to avoid singular matrices

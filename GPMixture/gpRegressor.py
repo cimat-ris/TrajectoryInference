@@ -7,7 +7,7 @@ from regression import *
 
 class gpRegressor:
     # Constructor
-    def __init__(self, kernelX, kernelY, linearPriorMeanX=None, linearPriorMeanY=None):
+    def __init__(self, kernelX, kernelY, linearPriorX=None, linearPriorY=None):
         self.observedX       = None
         self.observedY       = None
         self.observedL       = None
@@ -21,8 +21,10 @@ class gpRegressor:
         self.Ky_1            = None
         self.kernelX         = kernelX
         self.kernelY         = kernelY
+        self.linearPriorX    = linearPriorX
+        self.linearPriorY    = linearPriorY
 
-    def updateObservations(observedX,observedY,observedL):
+    def updateObservations(self,observedX,observedY,observedL):
         n                    = len(observedX)
         self.observedX       = np.zeros((n,1))
         self.observedY       = np.zeros((n,1))
@@ -37,16 +39,36 @@ class gpRegressor:
         self.Kx_1 = inv(self.Kx)
         self.Ky_1 = inv(self.Ky)
         # Center the data in case we use the linear prior
-        if self.linearPriorMeanX ==None:
+        if self.linearPriorX==None:
             for i in range(n):
                 self.observedX[i][0] = observedX[i]
                 self.observedY[i][0] = observedX[i]
                 self.observedL[i][0] = observedL[i]
             else:
                 for i in range(n):
-                    self.observedX[i][0] = observedX[i] - linear_mean(observedL[i], self.linearPriorMeanX[0])
-                    self.observedY[i][0] = observedY[i] - linear_mean(observedL[i], self.linearPriorMeanY[0])
+                    self.observedX[i][0] = observedX[i] - linear_mean(observedL[i], self.linearPriorX[0])
+                    self.observedY[i][0] = observedY[i] - linear_mean(observedL[i], self.linearPriorY[0])
                     self.observedL[i][0] = observedL[i]
+
+    # Prediction of future positions towards a given finish point, given observations
+    def prediction_to_finish_point(self,finishPoint):
+        # Last observed point
+        lastObservedPoint = [self.observedX[-1], self.observedY[-1],self.observedL[-1] ]
+        # Generate the set of l values at which to predict x,y
+        newL, finalL = get_prediction_set(lastObservedPoint,finishPoint,goalsData.units[start][end],stepUnit)
+    # One point at the final of the path
+    observedX.append(finishPoint[0])
+    observedY.append(finishPoint[1])
+    observedL.append(finalL)
+
+    # Performs regression for newL
+    newX,newY,varX,varY = self.prediction_xy(observedX,observedY,observedL,newL,goalsData.kernelsX[start][end],goalsData.kernelsY[start][end],goalsData.linearPriorsX[start][end],goalsData.linearPriorsX[start][end])
+
+    # Removes the last observed point (which was artificially added)
+    observedX.pop()
+    observedY.pop()
+    observedL.pop()
+    return newX, newY, newL, varX, varY
 
 
     # The main regression function: perform regression for a vector of values lnew
