@@ -47,12 +47,12 @@ class singleGP:
         # When close to the goal, define sub-goals
         if(distToGoal < 0.4*dist):
             n                    = (self.nSubgoals+1)
-            subgoalsCenter, size = get_subgoals_center_and_size(self.nSubgoals, self.goalsData.areas[nextG], self.goalsData.areasAxis[self.endG])
+            subgoalsCenter, size = get_subgoals_center_and_size(self.nSubgoals, self.goalsData.areas[self.endG], self.goalsData.areasAxis[self.endG])
             self.predictedMeans[0]=None
             self.predictedVars[0] =None
             for j in range(self.nSubgoals):
                 print('[INF] Predicting to subgoal ',j)
-                predictedX, predictedY, predictedL, varX, varY = prediction_to_finish_point(self.observedX,self.observedY,self.observedL,knownN,subgoalsCenter[j],self.stepUnit,self.startG,nextG,self.goalsData)
+                predictedX, predictedY, predictedL, varX, varY = prediction_to_finish_point(self.observedX,self.observedY,self.observedL,knownN,subgoalsCenter[j],self.stepUnit,self.startG,self.endG,self.goalsData)
                 self.predictedMeans[(j+1)]=[predictedX, predictedY,predictedL]
                 # Regularization to avoid singular matrices
                 varX = varX + 0.1*np.eye(predictedX.shape[0])
