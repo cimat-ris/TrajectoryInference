@@ -239,14 +239,6 @@ def prediction_to_finish_point(observedX,observedY,observedL,nObservations,finis
     observedL.pop()
     return newX, newY, newL, varX, varY
 
-"""ARC LENGHT TO TIME"""
-def arclen_to_time(initTime,l,speed):
-    t = [initTime]
-    for i in range(1,len(l)):
-        time_i = int(t[i-1] +(l[i]-l[i-1])/speed)
-        t.append(time_i)
-    return t
-
 # Mean of the Gaussian process with a linear prior
 def linear_mean(l, priorMean):
     m = priorMean[0]*l + priorMean[1]
