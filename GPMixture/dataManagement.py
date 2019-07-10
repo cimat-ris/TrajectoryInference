@@ -538,3 +538,28 @@ def copy_unitMat(unitMat, nGoals, nSubgoals):
 
 def time_compare(path):
     return path.t[0]
+
+
+def get_path_from_data(observedPath,x,y,l,speed):
+    initTime = observedPath.t[0]
+    arcLenToTime = arclen_to_time(initTime,l,speed)
+    for i in range(len(x)):
+        observedPath.x.append( int(x[i]) )
+        observedPath.y.append( int(y[i]) )
+        observedPath.l.append( int(l[i]) )
+        observedPath.t.append(arcLenToTime[i])
+        
+    return observedPath
+    
+def get_partial_path(fullPath, knownN):
+    x,y,t = fullPath.x[0:knownN], fullPath.y[0:knownN], fullPath.t[0:knownN]
+    partialPath = path.path(t,x,y)
+    return partialPath
+    
+"""ARC LENGHT TO TIME"""
+def arclen_to_time(initTime,l,speed):
+    t = [initTime]
+    for i in range(1,len(l)):
+        time_i = int(t[i-1] +(l[i]-l[i-1])/speed)
+        t.append(time_i)
+    return t
