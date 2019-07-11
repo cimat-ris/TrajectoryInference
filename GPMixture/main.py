@@ -136,20 +136,20 @@ if singleTest==True:
 
 mixtureTest = True
 if mixtureTest==True:
-    mixture = mixtureOfGPs(startG,stepUnit,goalsData)
+    mgps = mixtureOfGPs(startG,stepUnit,goalsData)
     part_num = 10
     steps = 10
     for i in range(1,part_num-1):
         knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
         trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
         """Multigoal prediction test"""
-        likelihoods = mixture.update(trueX,trueY,trueL)
-        predictedXYVec,varXYVec = mixture.predict()
+        likelihoods = mgps.update(trueX,trueY,trueL)
+        predictedXYVec,varXYVec = mgps.predict()
         print('[INF] Plotting')
         plot_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
-        print("[RES] [Goals likelihood]\n",mixture.goalsLikelihood)
-        print("[RES] [Mean likelihood]:", mixture.meanLikelihood)
-        vecX,vecY = mixture.generate_samples(100)
+        print("[RES] [Goals likelihood]\n",mgps.goalsLikelihood)
+        print("[RES] [Mean likelihood]:", mgps.meanLikelihood)
+        vecX,vecY = mgps.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 quit()

@@ -70,6 +70,10 @@ class Kernel:
     @abstractmethod
     def __call__(self,x,y): pass
 
+    # Derivative with respect to y
+    @abstractmethod
+    def dkdy(self,x,y): pass
+
 # Linear kernel
 class linearKernel(Kernel):
 
@@ -102,6 +106,9 @@ class linearKernel(Kernel):
     def __call__(self,x,y):
         return self.sigmaSq_a*x*y+self.sigmaSq_c
 
+    # Derivative with respect to y
+    def dkdy(self,x,y):
+        return self.sigmaSq_a*x
 
 #kernel Trautman
 class linearKernelTrautman(Kernel):
@@ -118,6 +125,10 @@ class linearKernelTrautman(Kernel):
     # Overload the operator ()
     def __call__(self,x,y):
         return x*y+(1./(self.gamma**2))
+
+    # Derivative with respect to y
+    def dkdy(self,x,y):
+        return x
 
 # Derived class: the squared exponential kernel
 class squaredExponentialKernel(Kernel):
@@ -140,6 +151,10 @@ class squaredExponentialKernel(Kernel):
     # Overload the operator ()
     def __call__(self,x,y):
         return (self.sigmaSq**2)*m.exp(-1.*(x-y)**2/(2*self.length**2))
+
+    # Derivative with respect to y
+    def dkdy(self,x,y):
+        return -(self.sigmaSq**2)*(y-x)/(2*self.length**2)*m.exp(-1.*(x-y)**2/(2*self.length**2))
 
 # Matern kernel
 class maternKernel(Kernel):
@@ -169,6 +184,18 @@ class maternKernel(Kernel):
         else:
             rn2 = rn**2
             val = self.sigmaSq*(1. + self.sqrootof5*rn + 1.67*rn2)*m.exp(-self.sqrootof5*rn)
+        return val
+
+    # Derivative with respect to y
+    def dkdy(self,x,y):
+        rn  = m.fabs((x-y)/self.length)
+        # To avoid overflow
+        if rn>20.0:
+            val = 0.0
+        else:
+            rn2 = rn**2
+            rp  = m.copysign(1,y-x)/self.length
+            val = -self.sigmaSq*rn*rp*1.67*(1. + self.sqrootof5*rn)*m.exp(-self.sqrootof5*rn)
         return val
 
 # Matern kernel from Rasmussen
@@ -409,6 +436,10 @@ class linePriorCombinedKernel(Kernel):
             return self.matern(x,y) + self.linear(x,y) + self.noise(x,y)
         else:
             return self.matern(x,y) + self.linear(x,y)
+
+    # Derivative with respect to y
+    def dkdy(self,x,y):
+        return self.matern.dkdy(x,y) + self.linear.dkdy(x,y)
 
     # Method to get parameters
     def get_parameters(self):
