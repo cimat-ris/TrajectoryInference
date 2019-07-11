@@ -121,7 +121,7 @@ singleTest = True
 if singleTest==True:
     gp = singleGP(startG,nextG,stepUnit,goalsData)
     part_num = 10
-    steps = 10
+    steps    = 10
     for i in range(1,part_num-1):
         knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
         trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)

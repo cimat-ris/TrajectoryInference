@@ -60,14 +60,15 @@ def plot_prediction(img,trueX,trueY,knownN,predictedXY,varXY):
 
     knownX = trueX[0:knownN]
     knownY = trueY[0:knownN]
-    realX = trueX[knownN:N]
-    realY = trueY[knownN:N]
+    realX = trueX[knownN-1:N]
+    realY = trueY[knownN-1:N]
 
     fig,ax = plt.subplots(1)
     ax.set_aspect('equal')
     ax.imshow(img) # Show the image
 
     plt.plot(knownX,knownY,'c',predictedXY[:,0],predictedXY[:,1],'b')
+    plt.plot([knownX[-1],predictedXY[0,0]],[knownY[-1],predictedXY[0,1]],'b')
     predictedN = predictedXY.shape[0]
     for i in range(predictedN):
         xy = [predictedXY[i,0],predictedXY[i,1]]
@@ -170,6 +171,7 @@ def plot_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goals
             print('[RES] Plotting GP ',i)
             # For each goal/subgoal, draws the prediction
             plt.plot(predictedXYVec[i][0],predictedXYVec[i][1],'b--')
+            plt.plot([partialX[-1],predictedXYVec[i][0][0]],[partialY[-1],predictedXYVec[i][1][0]],'b--')
             predictedN = len(predictedXYVec[i][0])
             # For the jth predicted element
             for j in range(predictedN):

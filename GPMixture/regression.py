@@ -154,7 +154,7 @@ def get_prediction_set(lastKnownPoint, finishPoint, distUnit, stepUnit):
     newset = []
     if(numSteps > 0):
         step = dist/float(numSteps)
-        for i in range(numSteps+1):
+        for i in range(1,numSteps+1):
             newset.append( l + i*step )
     return newset, l + dist
 
