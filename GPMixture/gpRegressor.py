@@ -30,6 +30,7 @@ class gpRegressor:
         self.unit            = unit
         self.stepUnit        = stepUnit
 
+    # Update observations for the Gaussian process (matrix K)
     def updateObservations(self,observedX,observedY,observedL,finishPoint):
         n                    = len(observedX)
         self.observedX       = np.zeros((n+1,1))
@@ -63,7 +64,16 @@ class gpRegressor:
         for i in range(n):
             self.updateObserved(i,observedX[i],observedY[i],observedL[i])
         self.updateObserved(n,finishPoint[0],finishPoint[1],finalL)
+        # For usage in prediction
+        nnew         = len(self.newL)
+        self.deltakx = np.zeros((nnew,1))
+        self.deltaky = np.zeros((nnew,1))
+        # Fill in deltakx
+        for j in range(nnew):
+            self.deltakx[j][0] = self.kernelX.dkdy(self.observedL[n],self.newL[j])
+            self.deltaky[j][0] = self.kernelY.dkdy(self.observedL[n],self.newL[j])
 
+    # Update single observation i
     def updateObserved(self,i,x,y,l):
         # Center the data in case we use the linear prior
         if self.linearPriorX==None:
@@ -74,43 +84,6 @@ class gpRegressor:
             self.observedX[i][0] = x - linear_mean(l, self.linearPriorX[0])
             self.observedY[i][0] = y - linear_mean(l, self.linearPriorY[0])
             self.observedL[i][0] = l
-
-    # Prediction as a perturbation of the "normal" prediction done to the center of an area
-    def prediction_to_perturbed_finish_point(self,deltax,deltay):
-        n            = len(self.observedX)
-        nnew         = len(self.newL)
-        # Express the displacement wrt the nominal ending point
-        deltaX       = np.zeros((n,1))
-        deltaX[n-1,0]= deltax
-        deltaY       = np.zeros((n,1))
-        deltaY[n-1,0]= deltay
-        # Compute dk (nxnnew)
-        deltakx      = np.zeros((nnew,1))
-        deltaky      = np.zeros((nnew,1))
-        # TODO: reevaluate
-        deltal       = 10.0
-        # Fill in deltakx
-        for j in range(nnew):
-            deltakx[j][0] = deltal*self.kernelX.dkdy(self.observedL[n-1],self.newL[j])
-            deltaky[j][0] = deltal*self.kernelY.dkdy(self.observedL[n-1],self.newL[j])
-        # In this approximation, only the predictive mean is adapted
-        newx = self.newX + self.kx.transpose().dot(self.Kx_1.dot(deltaX))
-        newy = self.newY + self.ky.transpose().dot(self.Ky_1.dot(deltaY))
-        vx   = self.Kx_1.dot(self.observedX)
-        vy   = self.Ky_1.dot(self.observedY)
-        newx+= vx[-1][0]*deltakx
-        newy+= vy[-1][0]*deltaky
-        return newx, newy, self.newL, self.varx, self.vary
-
-    # Generate a sample from the predictive distribution with a perturbed finish point
-    def sample_with_perturbed_finish_point(self,deltaX,deltaY):
-        predictedX, predictedY, predictedL, varX, varY = self.prediction_to_perturbed_finish_point(deltaX,deltaY)
-        # Number of predicted points
-        nPredictions = len(predictedX)
-        # Noise from a normal distribution
-        sX = np.random.normal(size=(nPredictions,1))
-        sY = np.random.normal(size=(nPredictions,1))
-        return predictedX+self.sqRootVarX.dot(sX), predictedY+self.sqRootVarY.dot(sY)
 
     # The main regression function: perform regression for a vector of values
     # lnew, that has been computed in update
@@ -139,19 +112,21 @@ class gpRegressor:
                 self.Cy[i][j] = self.kernelY(self.newL[i],self.newL[j],False)
 
         # Predictive mean
-        self.newX = self.kx.transpose().dot(self.Kx_1.dot(self.observedX))
-        self.newY = self.ky.transpose().dot(self.Ky_1.dot(self.observedY))
+        self.Kx_1o= self.Kx_1.dot(self.observedX)
+        self.Ky_1o= self.Ky_1.dot(self.observedY)
+        self.newX = self.kx.transpose().dot(self.Kx_1o)
+        self.newY = self.ky.transpose().dot(self.Ky_1o)
         if self.linearPriorX!=None:
             for j in range(nnew):
                 self.newX[j] += linear_mean(self.newL[j],self.linearPriorX[0])
                 self.newY[j] += linear_mean(self.newL[j],self.linearPriorY[0])
         # Estimate the variance in x
-        K_1kt  = self.Kx_1.dot(self.kx)
-        kK_1kt = self.kx.transpose().dot(K_1kt)
+        self.ktKx_1 = self.kx.transpose().dot(self.Kx_1)
+        kK_1kt      = self.ktKx_1.dot(self.kx)
         self.varx   = self.Cx - kK_1kt
         # Estimate the variance in y
-        K_1kt  = self.Ky_1.dot(self.ky)
-        kK_1kt = self.ky.transpose().dot(K_1kt)
+        self.ktKy_1 = self.ky.transpose().dot(self.Ky_1)
+        kK_1kt      = self.ktKy_1.dot(self.ky)
         self.vary   = self.Cy - kK_1kt
         # Regularization to avoid singular matrices
         self.varx += self.epsilon*np.eye(self.varx.shape[0])
@@ -160,3 +135,36 @@ class gpRegressor:
         self.sqRootVarX     = cholesky(self.varx,lower=True)
         self.sqRootVarY     = cholesky(self.vary,lower=True)
         return self.newX, self.newY, self.newL, self.varx, self.vary
+
+    # Prediction as a perturbation of the "normal" prediction done to the center of an area
+    def prediction_to_perturbed_finish_point(self,deltax,deltay):
+        n            = len(self.observedX)
+        nnew         = len(self.newL)
+        # Express the displacement wrt the nominal ending point
+        deltaX       = np.zeros((n,1))
+        deltaX[n-1,0]= deltax
+        deltaY       = np.zeros((n,1))
+        deltaY[n-1,0]= deltay
+        # TODO: reevaluate
+        deltal       = 10.0
+
+        # In this approximation, only the predictive mean is adapted (will be used for sampling)
+        # First order term #1: variation in observedX
+        newx = self.newX + self.ktKx_1.dot(deltaX)
+        newy = self.newY + self.ktKy_1.dot(deltaY)
+        # First order term #2: variation in kX
+        newx+= self.Kx_1o[-1][0]*deltal*self.deltakx
+        newy+= self.Ky_1o[-1][0]*deltal*self.deltaky
+        # First order term #3: variation in Kx_1
+        # TODO
+        return newx, newy, self.newL, self.varx, self.vary
+
+    # Generate a sample from the predictive distribution with a perturbed finish point
+    def sample_with_perturbed_finish_point(self,deltaX,deltaY):
+        predictedX, predictedY, predictedL, varX, varY = self.prediction_to_perturbed_finish_point(deltaX,deltaY)
+        # Number of predicted points
+        nPredictions = len(predictedX)
+        # Noise from a normal distribution
+        sX = np.random.normal(size=(nPredictions,1))
+        sY = np.random.normal(size=(nPredictions,1))
+        return predictedX+self.sqRootVarX.dot(sX), predictedY+self.sqRootVarY.dot(sY)

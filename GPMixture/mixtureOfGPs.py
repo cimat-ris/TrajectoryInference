@@ -7,7 +7,9 @@ from regression import *
 from evaluation import *
 from statistics import*
 from sampling import *
+from gpRegressor import *
 
+# Class for performing path regression with a mixture of Gaussian processes
 class mixtureOfGPs:
 
     # Constructor
@@ -29,7 +31,7 @@ class mixtureOfGPs:
         self.observedX       = None
         self.observedY       = None
         self.observedL       = None
-
+        
     # Update observations and compute likelihoods based on observations
     def update(self,observedX,observedY,observedL):
         self.observedX       = observedX
