@@ -167,23 +167,29 @@ def plot_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goals
     maxLikelihood = max(goalsLikelihood)
     maxLW = 2
     for i in range(len(predictedXYVec)):
-        if predictedXYVec[i]!=None:
-            print('[RES] Plotting GP ',i)
-            # For each goal/subgoal, draws the prediction
-            plt.plot(predictedXYVec[i][0],predictedXYVec[i][1],'b--')
-            plt.plot([partialX[-1],predictedXYVec[i][0][0]],[partialY[-1],predictedXYVec[i][1][0]],'b--')
-            predictedN = len(predictedXYVec[i][0])
-            # For the jth predicted element
-            for j in range(predictedN):
-                xy = [predictedXYVec[i][0][j],predictedXYVec[i][1][j]]
-                # 6.0 = 2.0 x 3.0
-                # It is: to have 3.0 sigmas. Then, the Ellipse constructor asks for the diameter, hence the 2.0
-                ell = Ellipse(xy,6.0*math.sqrt(math.fabs(varXYVec[i][0][j][j])),6.0*math.sqrt(math.fabs(varXYVec[i][1][j][j])))
-                lw = (goalsLikelihood[i%nGoals]/maxLikelihood)*maxLW
-                ell.set_lw(lw)
-                ell.set_fill(0)
-                ell.set_edgecolor(color[i%nGoals])
-                ax.add_patch(ell)
+        if (predictedXYVec[i].shape[0]==0):
+            continue
+        print('[RES] Plotting GP ',i)
+        # For each goal/subgoal, draws the prediction
+        #plt.plot(knownX,knownY,'c',predictedXY[:,0],predictedXY[:,1],'b')
+        #plt.plot([knownX[-1],predictedXY[0,0]],[knownY[-1],predictedXY[0,1]],'b')
+
+        plt.plot(predictedXYVec[i][:,0],predictedXYVec[i][:,1],'b--')
+        plt.plot([partialX[-1],predictedXYVec[i][0,0]],[partialY[-1],predictedXYVec[i][0,1]],'b--')
+        predictedN = predictedXYVec[i].shape[0]
+        # For the jth predicted element
+        for j in range(predictedN):
+            xy = [predictedXYVec[i][j,0],predictedXYVec[i][j,1]]
+            # 6.0 = 2.0 x 3.0
+            # It is: to have 3.0 sigmas. Then, the Ellipse constructor asks for the diameter, hence the 2.0
+            vx  = varXYVec[i][0,j,j]
+            vy  = varXYVec[i][1,j,j]
+            ell = Ellipse(xy,6.0*math.sqrt(math.fabs(vx)),6.0*math.sqrt(math.fabs(vy)))
+            lw = (goalsLikelihood[i%nGoals]/maxLikelihood)*maxLW
+            ell.set_lw(lw)
+            ell.set_fill(0)
+            ell.set_edgecolor(color[i%nGoals])
+            ax.add_patch(ell)
 
     plt.plot(realX,realY,'c--')
     v = [0,img.shape[1],img.shape[0],0]
@@ -237,6 +243,7 @@ def plot_path_samples_with_observations(img,ox,oy,x,y):
     plt.plot(ox,oy,'c')
     for i in range(n):
         plt.plot(x[i],y[i])
+        plt.plot([ox[-1],x[i][0]],[oy[-1],y[i][0]])
     s = img.shape
     v = [0,s[1],s[0],0]
     plt.axis(v)

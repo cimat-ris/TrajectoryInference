@@ -24,23 +24,51 @@ class mixtureOfGPs:
         self.stepUnit        = stepUnit
         self.startG          = startG
         self.goalsLikelihood = np.zeros(n, dtype=float)
-        self.predictedMeans  = np.empty(n, dtype=object)
-        self.predictedVars   = np.empty(n, dtype=object)
+        self.predictedMeans  = [np.zeros((0,3), dtype=float)]*n
+        self.predictedVars   = [np.zeros((0,0,0), dtype=float)]*n
         self.sqRootVarX      = np.empty(n, dtype=object)
         self.sqRootVarY      = np.empty(n, dtype=object)
         self.observedX       = None
         self.observedY       = None
         self.observedL       = None
-        
+        # The basic element here is this object, that will do the regression work
+        self.gpPathRegressor = [None]*n
+        for i in range(self.goalsData.nGoals):
+            # One regressor per goal
+            self.gpPathRegressor[i] = gpRegressor(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.linearPriorsX[self.startG][i], self.goalsData.linearPriorsY[self.startG][i])
+            # For sub-goals
+            for j in range(self.nSubgoals):
+                k= i+(j+1)*self.goalsData.nGoals
+                self.gpPathRegressor[k] = gpRegressor(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.linearPriorsX[self.startG][i],self.goalsData.linearPriorsY[self.startG][i])
+
+
+
     # Update observations and compute likelihoods based on observations
     def update(self,observedX,observedY,observedL):
         self.observedX       = observedX
         self.observedY       = observedY
         self.observedL       = observedL
-        # Compute likelihoods
+
+        # Update each regressor with its corresponding observations
         for i in range(self.goalsData.nGoals):
-            val = compute_goal_likelihood(self.observedX,self.observedY,self.observedL,self.startG,i,self.nPoints,self.goalsData)
-            self.goalsLikelihood[i] = val
+            goalCenter = middle_of_area(self.goalsData.areas[i])
+            distToGoal = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
+            dist       = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
+            knownN = len(self.observedX)
+
+            # When close to the goal, define sub-goals
+            if(distToGoal < 0.4*dist):
+                subgoalsCenter, size = get_subgoals_center_and_size(self.nSubgoals, self.goalsData.areas[i], self.goalsData.areasAxis[i])
+                for j in range(self.nSubgoals):
+                    print('[INF] Updating subgoal ',j)
+                    k= i+(j+1)*self.goalsData.nGoals
+                    self.gpPathRegressor[k].updateObservations(observedX,observedY,observedL,subgoalsCenter[j])
+            else:
+                # Update observations and re-compute the kernel matrices
+                self.gpPathRegressor[i].updateObservations(observedX,observedY,observedL,goalCenter)
+            # Compute the model likelihood
+            self.goalsLikelihood[i] = self.gpPathRegressor[i].computeLikelihood(observedX,observedY,observedL,self.startG,i,self.nPoints,self.goalsData)
+
         # Sum of the likelihoods
         s = sum(self.goalsLikelihood)
         # Compute the mean likelihood
@@ -55,50 +83,41 @@ class mixtureOfGPs:
     # Performs prediction
     def predict(self):
         # For all likely goals
-        for nextG in range(self.goalsData.nGoals):
-            print('[INF] Predicting to goal ',nextG)
-            goalCenter = middle_of_area(self.goalsData.areas[nextG])
+        for i in range(self.goalsData.nGoals):
+            print('[INF] Predicting to goal ',i)
+            goalCenter = middle_of_area(self.goalsData.areas[i])
             distToGoal = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
-            dist   = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
+            dist       = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
             knownN = len(self.observedX)
+
             # When close to the goal, define sub-goals
             if(distToGoal < 0.4*dist):
-                n                    = (self.nSubgoals+1)*self.goalsData.nGoals
-                subgoalsCenter, size = get_subgoals_center_and_size(self.nSubgoals, self.goalsData.areas[nextG], self.goalsData.areasAxis[nextG])
-                self.predictedMeans[nextG]=None
-                self.predictedVars[nextG] =None
+                self.predictedMeans[i]=np.zeros((0,3), dtype=float)
+                self.predictedVars[i]=np.zeros((0,0,0), dtype=float)
                 for j in range(self.nSubgoals):
                     print('[INF] Predicting to subgoal ',j)
-                    predictedX, predictedY, predictedL, varX, varY = prediction_to_finish_point(self.observedX,self.observedY,self.observedL,knownN,subgoalsCenter[j],self.stepUnit,self.startG,nextG,self.goalsData)
-                    self.predictedMeans[(j+1)*self.goalsData.nGoals+nextG]=[predictedX, predictedY,predictedL]
-                    # Regularization to avoid singular matrices
-                    varX = varX + 0.1*np.eye(predictedX.shape[0])
-                    varY = varY + 0.1*np.eye(predictedY.shape[0])
-                    self.predictedVars[(j+1)*self.goalsData.nGoals+nextG] =[varX, varY]
-                    # Cholesky on varX
-                    self.sqRootVarX[(j+1)*self.goalsData.nGoals+nextG] = cholesky(varX,lower=True)
-                    self.sqRootVarY[(j+1)*self.goalsData.nGoals+nextG] = cholesky(varY,lower=True)
+                    k= i+(j+1)*self.goalsData.nGoals
+                    predictedX, predictedY, predictedL, varX, varY = self.gpPathRegressor[k].prediction_to_finish_point()
+                    self.predictedMeans[k]=np.column_stack((predictedX, predictedY, predictedL))
+                    self.predictedVars[k] = np.stack([varX, varY],axis=0)
             # Otherwise, perform prediction
             else:
-                predictedX, predictedY, predictedL, varX, varY = prediction_to_finish_point(self.observedX,self.observedY,self.observedL,knownN,goalCenter,self.stepUnit,self.startG,nextG,self.goalsData)
-                self.predictedMeans[nextG]=[predictedX, predictedY,predictedL]
-                # Regularization to avoid singular matrices
-                varX = varX + 0.1*np.eye(predictedX.shape[0])
-                varY = varY + 0.1*np.eye(predictedY.shape[0])
-                self.predictedVars[nextG] =[varX, varY]
-                # Cholesky on varX
-                self.sqRootVarX[nextG] = cholesky(varX,lower=True)
-                self.sqRootVarY[nextG] = cholesky(varY,lower=True)
+                # Uses the already computed matrices to apply regression over missing data
+                predictedX, predictedY, predictedL, varX, varY = self.gpPathRegressor[i].prediction_to_finish_point()
+                self.predictedMeans[i] = np.column_stack((predictedX, predictedY, predictedL))
+                self.predictedVars[i]  = np.stack([varX, varY],axis=0)
+
         return self.predictedMeans,self.predictedVars
+
 
     def sample(self):
         p = self.goalsLikelihood[:self.goalsData.nGoals]
         # Sample goal
         goalSample = np.random.choice(self.goalsData.nGoals,1,p=p)
         end        = goalSample[0]
-        k          = 0
+        k          = end
         # Sample end point around the sampled goal
-        if self.predictedMeans[end]!=None:
+        if self.predictedMeans[end].shape[0]>0:
             finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.areas[end], self.goalsData.areasAxis[end])
         else:
             # Use subgoals: choose one randomly and sample
@@ -108,33 +127,17 @@ class mixtureOfGPs:
             else:
                 s = size[1]
             # Choose a subgoal randomly
-            k = 1 + np.random.choice(self.nSubgoals)
+            j = np.random.choice(self.nSubgoals)
+            k = end+(1+j)*self.goalsData.nGoals
             #
-            finishX, finishY, axis = uniform_sampling_1D_around_point(1, subgoalsCenter[k-1], s, self.goalsData.areasAxis[end])
+            finishX, finishY, axis = uniform_sampling_1D_around_point(1, subgoalsCenter[j], s, self.goalsData.areasAxis[end])
 
 
-        # TODO: OPTIMIZE
-        # One point at the final of the path
-        self.observedX.append(finishX[0])
-        self.observedY.append(finishY[0])
-        index = end+k*self.goalsData.nGoals
-        self.observedL.append(self.predictedMeans[index][2][-1])
-
-        # Performs regression for newL
-        predictedX, predictedY, varX, varY = prediction_xy(self.observedX,self.observedY,self.observedL,self.predictedMeans[index][2],self.goalsData.kernelsX[self.startG][end],self.goalsData.kernelsY[self.startG][end],self.goalsData.linearPriorsX[self.startG][end],self.goalsData.linearPriorsX[self.startG][end])
-
-        # Removes the last observed point (which was artificially added)
-        self.observedX.pop()
-        self.observedY.pop()
-        self.observedL.pop()
-
-        # Number of predicted points
-        nPredictions = len(predictedX)
-
-        # Noise from a normal distribution
-        sX = np.random.normal(size=(nPredictions,1))
-        sY = np.random.normal(size=(nPredictions,1))
-        return predictedX+self.sqRootVarX[index].dot(sX), predictedY+self.sqRootVarY[index].dot(sY)
+        # Use a pertubation approach to get the sample
+        goalCenter = middle_of_area(self.goalsData.areas[end])
+        deltaX = finishX[0]-goalCenter[0]
+        deltaY = finishY[0]-goalCenter[1]
+        return self.gpPathRegressor[k].sample_with_perturbed_finish_point(deltaX,deltaY)
 
     def generate_samples(self,nSamples):
         vecX, vecY = [], []

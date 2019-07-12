@@ -31,8 +31,7 @@ class singleGP:
         # Update observations and re-compute the kernel matrices
         self.gpPathRegressor.updateObservations(observedX,observedY,observedL,goalCenter)
         # Compute the model likelihood
-        self.likelihood = compute_goal_likelihood(observedX,observedY,observedL,self.startG,self.endG,self.nPoints,self.goalsData)
-        return self.likelihood
+        return self.gpPathRegressor.computeLikelihood(observedX,observedY,observedL,self.startG,self.endG,self.nPoints,self.goalsData)
 
     # Performs prediction
     def predict(self):

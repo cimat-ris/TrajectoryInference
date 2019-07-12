@@ -4,6 +4,7 @@ A class for GP regression
 import numpy as np
 import math
 from regression import *
+from evaluation import *
 
 class gpRegressor:
     # Constructor
@@ -84,6 +85,13 @@ class gpRegressor:
             self.observedX[i][0] = x - linear_mean(l, self.linearPriorX[0])
             self.observedY[i][0] = y - linear_mean(l, self.linearPriorY[0])
             self.observedL[i][0] = l
+
+    # Compute the likelihood
+    def computeLikelihood(self,observedX,observedY,observedL,startG,finishG,stepsToCompare,goalsData):
+        # TODO: remove the goalsData structure
+        error = compute_prediction_error_of_points_along_the_path(stepsToCompare,observedX,observedY,observedL,startG,finishG,goalsData)
+        self.likelihood = goalsData.priorTransitions[startG][finishG]*(math.exp(-1.*( error**2)/D**2 ))
+        return self.likelihood
 
     # The main regression function: perform regression for a vector of values
     # lnew, that has been computed in update

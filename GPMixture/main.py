@@ -117,7 +117,7 @@ pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t
 pathSize = len(pathX)
 
 
-singleTest = True
+singleTest = False
 if singleTest==True:
     gp = singleGP(startG,nextG,stepUnit,goalsData)
     part_num = 10
