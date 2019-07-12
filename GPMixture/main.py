@@ -3,7 +3,6 @@
 """
 import path
 from GPRlib import *
-from regression import *
 from testing import *
 from plotting import *
 from mixtureOfGPs import *
@@ -35,7 +34,6 @@ areas     = [R0,R1,R2,R3,R4,R5]
 areasAxis = ['x','x','y','x','x','y','y','y']
 nGoals    = len(areas)
 img       = mpimg.imread('imgs/goals.jpg')
-goalsData = goalsLearnedStructure(areas,areasAxis)
 
 # Al leer cortamos las trayectorias multiobjetivos por pares consecutivos
 # y las agregamos como trayectorias independientes
@@ -45,37 +43,24 @@ sortedPaths = sorted(usefulPaths, key=time_compare)
 
 print("[INF] Number of useful paths: ",len(usefulPaths))
 
-"""
-Useful matrices:
-- pathMat: Quita las trayectorias que se alejan de la media del conjunto que va de g_i a g_j
-- meanLenMat: Guarda en ij el arc-len promedio de los caminos de g_i a g_j
-- euclideanDistMat: Guarda en ij la distancia euclidiana del goal g_i al g_j
-- unitMat: Guarda en ij la unidad de distancia para los caminos de g_i a g_j
-"""
 # Split the trajectories into pairs of goals
 startToGoalPath, arclenMat = define_trajectories_start_and_end_areas(areas,areas,usefulPaths)
 
 # Remove the trajectories that are either too short or too long
 pathMat, learnSet = filter_path_matrix(startToGoalPath, nGoals, nGoals)
-#plotPaths(pathMat, img)
-
+showDataset = False
+if showDataset:
+    plotPaths(pathMat, img)
 print("[INF] Number of filtered paths: ",len(learnSet))
 
-# Compute the mean lengths
-goalsData.compute_mean_lengths(pathMat)
-# Compute the distances between pairs of goals (as a nGoalsxnGoals matrix)
-goalsData.compute_euclidean_distances()
-# Compute the ratios between average path lengths and inter-goal distances
-goalsData.compute_distance_units()
+# Form the object goalsLearnedStructure
+goalsData = goalsLearnedStructure(areas,areasAxis,pathMat)
 
 stepUnit = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals)
 speed    = 1.65033755511     #get_pedestrian_average_speed(dataPaths)
 
-# Computer prior probabilities between goals
-goalsData.compute_prior_transitions(pathMat)
-
-useLinearPriors = True
 # For each pair of goals, determine the line priors
+useLinearPriors = True
 if useLinearPriors:
     goalsData.compute_linear_priors(pathMat)
 

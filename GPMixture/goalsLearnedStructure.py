@@ -11,7 +11,7 @@ from copy import copy
 class goalsLearnedStructure:
 
     # Constructor
-    def __init__(self, areas, areasAxis):
+    def __init__(self, areas, areasAxis, trajData):
         self.nGoals   = len(areas)
         self.areas    = areas
         self.areasAxis= areasAxis
@@ -25,6 +25,14 @@ class goalsLearnedStructure:
         self.linearPriorsY = np.empty((self.nGoals, self.nGoals),dtype=object)
         self.kernelsX = np.empty((self.nGoals, self.nGoals),dtype=object)
         self.kernelsY = np.empty((self.nGoals, self.nGoals),dtype=object)
+        # Compute the mean lengths
+        self.compute_mean_lengths(trajData)
+        # Compute the distances between pairs of goals (as a nGoalsxnGoals matrix)
+        self.compute_euclidean_distances()
+        # Compute the ratios between average path lengths and inter-goal distances
+        self.compute_distance_units()
+        # Computer prior probabilities between goals
+        self.compute_prior_transitions(trajData)
 
     # Fills in the matrix with the
     # mean length of the trajectories
