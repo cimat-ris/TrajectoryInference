@@ -7,6 +7,7 @@ Testing functions
 
 from GPRlib import *
 from path import *
+from gpRegressor import *
 from regression import *
 from plotting import *
 from evaluation import *
@@ -166,30 +167,27 @@ def prediction_test(img,x,y,z,knownN,startG,finishG,goals,unitMat,meanLenMat,ste
     plot_prediction(img,x,y,knownN,newX,newY,varX,varY,[0,0])
 
 # Sampling 3 trajectories between all the pairs of goals
-def path_sampling_test(img,nGoals,stepUnit,goalsData):
+def path_sampling_test(img,stepUnit,goalsData):
     vecX, vecY = [], []
-    for i in range(nGoals):
-        for j in range(i,nGoals):
+    for i in range(goalsData.nGoals):
+        for j in range(i,goalsData.nGoals):
             if(i != j):
-                startG, finishG = i, j
+                iCenter = middle_of_area(goalsData.areas[i])
+                jCenter = middle_of_area(goalsData.areas[j])
+                # The basic element here is this object, that will do the regression work
+                gp = gpRegressor(goalsData.kernelsX[i][j], goalsData.kernelsY[i][j],goalsData.units[i][j],stepUnit,goalsData.areas[j],goalsData.areasAxis[j],goalsData.linearPriorsX[i][j], goalsData.linearPriorsY[i][j])
+                gp.updateObservations([iCenter[0]],[iCenter[1]],[0.0])
+                gp.prediction_to_finish_point()
                 for k in range(3): #num of samples
-                    x, y = sample_path_between_goals(startG,finishG,stepUnit,goalsData)
+                    #x, y,__,__,__  = sample_path_between_goals(i,j,stepUnit,goalsData)
+                    # Sample end point around the sampled goal
+                    finishX, finishY, axis = uniform_sampling_1D(1, goalsData.areas[j], goalsData.areasAxis[i])
+                    # Use a pertubation approach to get the sample
+                    deltaX = finishX[0]-jCenter[0]
+                    deltaY = finishY[0]-jCenter[1]
+                    x,y = gp.sample_with_perturbed_finish_point()
                     vecX.append(x)
                     vecY.append(y)
-    plot_path_samples(img, vecX,vecY)
-
-# Sampling trajectories between two goals
-def path_sampling_between_goals_test(img,nSamples,startG,finishG,stepUnit,goalsData):
-    vecX, vecY = [], []
-    for k in range(nSamples):
-        x, y, l, mx, my = sample_path_between_goals(startG,finishG,stepUnit,goalsData)
-        vecX.append(x)
-        vecY.append(y)
-        # For debugging
-        plt.plot(l,x)
-        plt.plot(l,y)
-        plt.plot(l,mx)
-        plt.plot(l,mx)
     plot_path_samples(img, vecX,vecY)
 
 # Sampling trajectories to a given goal
@@ -316,7 +314,7 @@ def number_of_samples_and_points_to_compare_to_destination(goals,pathMat,rows,co
 def interaction_using_sampling_test(img,pathSet,startGoals,finishGoals,stepUnit,speed,goalsData):
     #Refinar: unsar n/m datos observados
     observedXVec, observedYVec = [], []
-    sampleXVec, sampleYVec = [], [] 
+    sampleXVec, sampleYVec = [], []
     samplePathSet = []
     nPaths = len(pathSet)
     for i in range(nPaths):
@@ -336,6 +334,5 @@ def interaction_using_sampling_test(img,pathSet,startGoals,finishGoals,stepUnit,
         samplePathSet.append(samplePath)
     interaction_potential_for_a_set_of_pedestrians(samplePathSet)
     #plot_multiple_path_samples_with_observations(img,observedXVec,observedYVec,sampleXVec,sampleYVec)
-    plotPathSet(samplePathSet,img)    
+    plotPathSet(samplePathSet,img)
     #Mas adelante: guardar potencial + config
-

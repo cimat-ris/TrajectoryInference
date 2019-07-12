@@ -14,7 +14,7 @@ class mixtureOfGPs:
 
     # Constructor
     def __init__(self, startG, stepUnit, goalsData):
-        self.goalsData = goalsData
+        self.goalsData       = goalsData
         # Goals
         self.likelyGoals     = []
         self.nSubgoals       = 2
@@ -35,11 +35,14 @@ class mixtureOfGPs:
         self.gpPathRegressor = [None]*n
         for i in range(self.goalsData.nGoals):
             # One regressor per goal
-            self.gpPathRegressor[i] = gpRegressor(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.linearPriorsX[self.startG][i], self.goalsData.linearPriorsY[self.startG][i])
+            self.gpPathRegressor[i] = gpRegressor(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i], self.goalsData.linearPriorsY[self.startG][i])
+
+            ## TODO:
+            subareas = get_subgoals_areas(self.nSubgoals, self.goalsData.areas[i],self.goalsData.areasAxis[i])
             # For sub-goals
             for j in range(self.nSubgoals):
                 k= i+(j+1)*self.goalsData.nGoals
-                self.gpPathRegressor[k] = gpRegressor(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.linearPriorsX[self.startG][i],self.goalsData.linearPriorsY[self.startG][i])
+                self.gpPathRegressor[k] = gpRegressor(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i],self.goalsData.linearPriorsY[self.startG][i])
 
 
 
@@ -54,18 +57,15 @@ class mixtureOfGPs:
             goalCenter = middle_of_area(self.goalsData.areas[i])
             distToGoal = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
             dist       = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
-            knownN = len(self.observedX)
-
             # When close to the goal, define sub-goals
             if(distToGoal < 0.4*dist):
-                subgoalsCenter, size = get_subgoals_center_and_size(self.nSubgoals, self.goalsData.areas[i], self.goalsData.areasAxis[i])
                 for j in range(self.nSubgoals):
                     print('[INF] Updating subgoal ',j)
                     k= i+(j+1)*self.goalsData.nGoals
-                    self.gpPathRegressor[k].updateObservations(observedX,observedY,observedL,subgoalsCenter[j])
+                    self.gpPathRegressor[k].updateObservations(observedX,observedY,observedL)
             else:
                 # Update observations and re-compute the kernel matrices
-                self.gpPathRegressor[i].updateObservations(observedX,observedY,observedL,goalCenter)
+                self.gpPathRegressor[i].updateObservations(observedX,observedY,observedL)
             # Compute the model likelihood
             self.goalsLikelihood[i] = self.gpPathRegressor[i].computeLikelihood(observedX,observedY,observedL,self.startG,i,self.nPoints,self.goalsData)
 
@@ -137,7 +137,7 @@ class mixtureOfGPs:
         goalCenter = middle_of_area(self.goalsData.areas[end])
         deltaX = finishX[0]-goalCenter[0]
         deltaY = finishY[0]-goalCenter[1]
-        return self.gpPathRegressor[k].sample_with_perturbed_finish_point(deltaX,deltaY)
+        return self.gpPathRegressor[k].sample_with_perturbation(deltaX,deltaY)
 
     def generate_samples(self,nSamples):
         vecX, vecY = [], []

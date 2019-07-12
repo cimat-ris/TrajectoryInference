@@ -5,10 +5,11 @@ import numpy as np
 import math
 from regression import *
 from evaluation import *
+from sampling import *
 
 class gpRegressor:
     # Constructor
-    def __init__(self, kernelX, kernelY, unit, stepUnit, linearPriorX=None, linearPriorY=None):
+    def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis,linearPriorX=None, linearPriorY=None):
         self.observedX       = None
         self.observedY       = None
         self.observedL       = None
@@ -30,9 +31,13 @@ class gpRegressor:
         self.linearPriorY    = linearPriorY
         self.unit            = unit
         self.stepUnit        = stepUnit
+        self.finalArea       = finalArea
+        self.finalAreaAxis   = finalAreaAxis
+        self.finalAreaCenter = middle_of_area(finalArea)
 
     # Update observations for the Gaussian process (matrix K)
-    def updateObservations(self,observedX,observedY,observedL,finishPoint):
+    # TODO: should remove finishPoint (passed in the constructor)
+    def updateObservations(self,observedX,observedY,observedL):
         n                    = len(observedX)
         self.observedX       = np.zeros((n+1,1))
         self.observedY       = np.zeros((n+1,1))
@@ -42,7 +47,7 @@ class gpRegressor:
         # Last really observed point
         lastObservedPoint = [observedX[-1], observedY[-1], observedL[-1]]
         # Generate the set of l values at which to predict x,y
-        self.newL, finalL = get_prediction_set(lastObservedPoint,finishPoint,self.unit,self.stepUnit)
+        self.newL, finalL = get_prediction_set(lastObservedPoint,self.finalAreaCenter,self.unit,self.stepUnit)
         # Fill in K (n+1 x n+1)
         for i in range(n):
             self.Kx[i][i] = self.kernelX(observedL[i],observedL[i])
@@ -64,7 +69,7 @@ class gpRegressor:
         self.Ky_1 = inv(self.Ky)
         for i in range(n):
             self.updateObserved(i,observedX[i],observedY[i],observedL[i])
-        self.updateObserved(n,finishPoint[0],finishPoint[1],finalL)
+        self.updateObserved(n,self.finalAreaCenter[0],self.finalAreaCenter[1],finalL)
         # For usage in prediction
         nnew         = len(self.newL)
         self.deltakx = np.zeros((nnew,1))
@@ -167,8 +172,8 @@ class gpRegressor:
         # TODO
         return newx, newy, self.newL, self.varx, self.vary
 
-    # Generate a sample from the predictive distribution with a perturbed finish point
-    def sample_with_perturbed_finish_point(self,deltaX,deltaY):
+    # Generate a sample from perturbations
+    def sample_with_perturbation(self,deltaX,deltaY):
         predictedX, predictedY, predictedL, varX, varY = self.prediction_to_perturbed_finish_point(deltaX,deltaY)
         # Number of predicted points
         nPredictions = len(predictedX)
@@ -176,3 +181,12 @@ class gpRegressor:
         sX = np.random.normal(size=(nPredictions,1))
         sY = np.random.normal(size=(nPredictions,1))
         return predictedX+self.sqRootVarX.dot(sX), predictedY+self.sqRootVarY.dot(sY)
+
+    # Generate a sample from the predictive distribution with a perturbed finish point
+    def sample_with_perturbed_finish_point(self):
+        # Sample end point around the sampled goal
+        finishX, finishY, axis = uniform_sampling_1D(1, self.finalArea, self.finalAreaAxis)
+        # Use a pertubation approach to get the sample
+        deltaX = finishX[0]-self.finalAreaCenter[0]
+        deltaY = finishY[0]-self.finalAreaCenter[1]
+        return self.sample_with_perturbation(deltaX,deltaY)

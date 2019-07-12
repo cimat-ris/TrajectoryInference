@@ -101,6 +101,9 @@ pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t
 # Total path length
 pathSize = len(pathX)
 
+samplingViz = False
+if samplingViz==True:
+    path_sampling_test(img,stepUnit,goalsData)
 
 singleTest = False
 if singleTest==True:
@@ -108,15 +111,19 @@ if singleTest==True:
     part_num = 10
     steps    = 10
     for i in range(1,part_num-1):
-        knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
+        # Data we will suppose known
+        knownN = int((i+1)*(pathSize/part_num))
         trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
         """Single goal prediction test"""
+        # Update the GP
         likelihood        = gp.update(trueX,trueY,trueL)
+        # Perform prediction
         predictedXY,varXY = gp.predict()
         plot_prediction(img,pathX,pathY,knownN,predictedXY,varXY)
         print('[INF] Plotting')
-        print("[RES] [Likelihood]: ",gp.likelihood)
-        vecX,vecY = gp.generate_samples(1000)
+        print("[RES] [Likelihood]: ",likelihood)
+        # Generate samples
+        vecX,vecY         = gp.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 mixtureTest = True

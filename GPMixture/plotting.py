@@ -18,6 +18,18 @@ color = ['g','m','r','b','c','y','w','k']
 
 #******************************************************************************#
 """ PLOT FUNCTIONS """
+def plotPaths(vec):
+    fig,ax = plt.subplots(1)
+    ax.set_aspect('equal')
+    # Show the image
+    ax.imshow(img)
+    n = len(vec)
+    for i in range(n):
+        plt.plot(vec[i].x,vec[i].y)
+
+    v = [0,1920,1080,0]
+    plt.axis(v)
+    plt.show()
 
 # Takes as an input a set of paths and plot them all on img
 def plotPathSet(vec, img):

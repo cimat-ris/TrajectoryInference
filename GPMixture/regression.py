@@ -178,6 +178,33 @@ def get_arclen_to_finish_point(point, finishPoint, unit):
     dist = math.sqrt( (_x-x)**2 + (_y-y)**2 )
     return l + dist*unit
 
+# TODO: REDO IN A BETTER WAY
+def get_subgoals_areas(nSubgoals, goal, axis):
+    goalDX = goal[len(goal) -2] - goal[0]
+    goalDY = goal[len(goal) -1] - goal[1]
+    goalCenterX = goal[0]+ goalDX/2
+    goalCenterY = goal[1]+ goalDY/2
+    goalMinX    = goal[0]
+    goalMinY    = goal[1]
+    goalMaxX    = goal[-2]
+    goalMaxY    = goal[-1]
+    subGoalsAreas = []
+    if axis == 'x':
+        subgoalDX = goalDX/nSubgoals
+        subgoalDY = goalDY
+        for i in range(nSubgoals):
+            subGoalsAreas.append( [goalMinX+i*subgoalDX,goalMinY,goalMinX+(i+1)*subgoalDX,goalMinY,goalMinX+i*subgoalDX,goalMaxY,goalMinX+(i+1)*subgoalDX,goalMaxY] )
+    else:
+        subgoalDX = goalDX
+        subgoalDY = goalDY/nSubgoals
+        _x = goalCenterX
+        _y = goal[1]
+        for i in range(nSubgoals):
+            subGoalsAreas.append([goalMinX,goalMinY+i*subgoalDY,goalMaxX,goalMinY+i*subgoalDY,goalMinX,goalMinY+(i+1)*subgoalDY,goalMaxX,goalMinY+(i+1)*subgoalDY])
+
+    return subGoalsAreas
+
+
 def get_subgoals_center_and_size(nSubgoals, goal, axis):
     goalX = goal[len(goal) -2] - goal[0]
     goalY = goal[len(goal) -1] - goal[1]
