@@ -5,7 +5,6 @@ Testing functions
 @author: karenlc
 """
 
-from GPRlib import *
 from path import *
 from gpRegressor import *
 from regression import *
@@ -189,15 +188,6 @@ def path_sampling_test(img,stepUnit,goalsData):
                     vecX.append(x)
                     vecY.append(y)
     plot_path_samples(img, vecX,vecY)
-
-# Sampling trajectories to a given goal
-def path_sampling_to_goal_test(img,observedX,observedY,observedL,knownN,nSamples,startG,finishG,stepUnit,goalsData):
-    vecX, vecY = [], []
-    for k in range(nSamples):
-        x, y, l, mx, my = sample_path_to_goal(observedX,observedY,observedL,knownN,stepUnit,startG,finishG,goalsData)
-        vecX.append(x)
-        vecY.append(y)
-    plot_path_samples_with_observations(img,observedX,observedY,vecX,vecY)
 
 #Devuelve el punto con menor error de n muestras comparando k pasos
 def sample_finish_point(nSamples,kSteps,knownX, knownY, knownL, finishGoal, goals, kernelX, kernelY, unit, samplingAxis):

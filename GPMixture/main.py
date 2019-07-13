@@ -2,9 +2,9 @@
 @author: karenlc
 """
 import path
-from GPRlib import *
+from gp_code.io_parameters import *
 from testing import *
-from plotting import *
+from utils.plotting import *
 from mixtureOfGPs import *
 from singleGP import *
 from gpRegressor import *
@@ -143,17 +143,6 @@ if mixtureTest==True:
         print("[RES] [Mean likelihood]:", mgps.meanLikelihood)
         vecX,vecY = mgps.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
-
-quit()
-
-print("[INF] Sampling between goals")
-nSamples = 100
-startGoal, finishGoal = 0,2
-path_sampling_between_goals_test(img,nSamples,startGoal,finishGoal,stepUnit,goalsData)
-
-knownN = int(pathSize/2) #numero de datos conocidos
-trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
-path_sampling_to_goal_test(img,trueX,trueY,trueL,knownN,nSamples,startGoal,finishGoal,stepUnit,goalsData)
 
 quit()
 

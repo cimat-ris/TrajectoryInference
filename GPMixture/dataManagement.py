@@ -8,10 +8,10 @@ import matplotlib.pyplot as plt
 from numpy.linalg import inv
 from scipy.optimize import minimize
 import kernels
-import GPRlib
 import path
 import matplotlib.image as mpimg
 from matplotlib.patches import Ellipse
+from gp_code.io_parameters import *
 from copy import copy
 import random
 
@@ -548,14 +548,14 @@ def get_path_from_data(observedPath,x,y,l,speed):
         observedPath.y.append( int(y[i]) )
         observedPath.l.append( int(l[i]) )
         observedPath.t.append(arcLenToTime[i])
-        
+
     return observedPath
-    
+
 def get_partial_path(fullPath, knownN):
     x,y,t = fullPath.x[0:knownN], fullPath.y[0:knownN], fullPath.t[0:knownN]
     partialPath = path.path(t,x,y)
     return partialPath
-    
+
 """ARC LENGHT TO TIME"""
 def arclen_to_time(initTime,l,speed):
     t = [initTime]

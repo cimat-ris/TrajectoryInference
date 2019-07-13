@@ -4,7 +4,6 @@ Created on Mon Sep 10 17:56:43 2018
 @author: karenlc
 """
 
-from GPRlib import *
 from kernels import *
 from path import *
 from regression import *
@@ -67,24 +66,3 @@ def uniform_sampling_1D_around_point(m, point, size, axis):
             _x.append(point[0])
     # Returns the axis of sampling too
     return _x, _y, axis
-
-# Sample a full path to finishG
-def sample_path_to_goal(observedX,observedY,observedL,knownN,stepUnit,start,end,goalsData):
-    # Sample end point
-    finishX, finishY, axis = uniform_sampling_1D(1, goalsData.areas[end], goalsData.areasAxis[end])
-    # Prediction of the whole trajectory given the # start and finish points
-    newX, newY, newL, varX, varY = prediction_to_finish_point(observedX,observedY,observedL,knownN,[finishX[0], finishY[0]],stepUnit,start,end,goalsData)
-
-    # Number of predicted points
-    nPredictions = newX.shape[0]
-
-    # Regularization to avoid singular matrices
-    varX = varX + 0.1*np.eye(newX.shape[0])
-    varY = varY + 0.1*np.eye(newX.shape[0])
-    # Cholesky on varX
-    LX = cholesky(varX,lower=True)
-    LY = cholesky(varY,lower=True)
-    # Noise from a normal distribution
-    sX = np.random.normal(size=(nPredictions,1))
-    sY = np.random.normal(size=(nPredictions,1))
-    return newX+LX.dot(sX), newY+LY.dot(sY), newL, newX, newY

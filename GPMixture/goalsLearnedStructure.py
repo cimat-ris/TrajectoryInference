@@ -1,6 +1,7 @@
 from kernels import *
 from statistics import*
 from sampling import*
+from gp_code.optimize_parameters import *
 import matplotlib.pyplot as plt
 import numpy as np
 import math
@@ -113,7 +114,7 @@ class goalsLearnedStructure:
                     # Get the path data as x,y,z (z is arclength)
                     x,y,z = get_data_from_paths(paths,"length")
                     # Build a kernel with the specified type and initial parameters theta
-                    ker   = setKernel(kernelType)
+                    ker   = set_kernel(kernelType)
                     params= ker.get_parameters()
                     theta = ker.get_optimizable_parameters()
                     print("[OPT] Init parameters ",theta)

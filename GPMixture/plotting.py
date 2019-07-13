@@ -5,11 +5,9 @@ Plotting functions
 @author: karenlc
 """
 
-from GPRlib import *
 from path import *
 import numpy as np
 import math
-import GPRlib
 from copy import copy
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
