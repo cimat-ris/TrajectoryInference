@@ -126,7 +126,7 @@ if singleTest==True:
         vecX,vecY         = gp.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
-mixtureTest = True
+mixtureTest = False
 if mixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
     part_num = 10
@@ -144,7 +144,7 @@ if mixtureTest==True:
         vecX,vecY = mgps.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
-quit()
+#quit()
 
 interactionTest = False
 if interactionTest == True:
@@ -153,23 +153,42 @@ if interactionTest == True:
     plotPathSet(sortedSet,img)
 
     interaction_potential_for_a_set_of_pedestrians(sortedSet)
-    #Test para un par de trayectorias:
-    #Ti, Tj = 1,0
-    #plotPathSet([sortedSet[Ti],sortedSet[Tj]],img)
-    #interaction_potential(sortedSet[Ti], sortedSet[Tj])
 
-interactionWithSamplingTest = False
+interactionWithSamplingTest = True
 if interactionWithSamplingTest == True:
-    startG, finishG = 0, 3
-    currentPathSet = pathMat[startG][finishG]
-    sortedCurrentPaths = sorted(currentPathSet, key=time_compare)
-    sortedSet = get_path_set_given_time_interval(sortedCurrentPaths,950,8000)
-    #plotPathSet(sortedSet,img)
-    startGoals, finishGoals = [], []
-    for j in range(len(sortedSet)):
-        startGoals.append(startG)
-        finishGoals.append(finishG)
-    interaction_using_sampling_test(img,sortedSet,startGoals,finishGoals,stepUnit,speed,goalsData)
+    sortedSet = get_path_set_given_time_interval(sortedPaths,100,350)
+    plotPathSet(sortedSet,img)
+    part_num = 3
+    for i in range(1):
+        samplePathSet = []
+        for j in range(len(sortedSet)):
+            print("path #",j)
+            currentPath = sortedSet[j]
+            pathSize = len(currentPath.x)
+            knownN = int((i+1)*(pathSize/part_num))
+            observedPath = get_partial_path(currentPath,knownN)
+            trueX,trueY,trueL = get_known_set(currentPath.x,currentPath.y,currentPath.l,knownN)
+            
+            startG = get_path_start_goal(observedPath,areas)
+            print("[INF] Start goal", startG)
+            mgps = mixtureOfGPs(startG,stepUnit,goalsData)
+            likelihoods = mgps.update(trueX,trueY,trueL)
+            
+            predictedXYVec,varXYVec = mgps.predict()#esta linea es para que se llame a gpRegressor.update
+            nSamples = 1       
+            vecX,vecY = mgps.generate_samples(nSamples)
+            sampleXVec, sampleYVec = [], []
+            for k in range(nSamples): #num de samples
+                x, y = vecX[k], vecY[k]
+                sampleX, sampleY = np.reshape(x,(x.shape[0])), np.reshape(y,(y.shape[0]))
+                sampleXVec.append(sampleX)
+                sampleYVec.append(sampleY)
+                finishG = get_goal_of_point([sampleX[len(sampleX)-1],sampleY[len(sampleY)-1]],areas)
+                newL = mgps.gpPathRegressor[finishG].newL
+                samplePath = get_path_from_data(observedPath,sampleX,sampleY,newL,speed)   
+                samplePathSet.append(samplePath)
+        plotPathSet(samplePathSet,img)
+        interaction_potential_for_a_set_of_pedestrians(samplePathSet)
 
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
