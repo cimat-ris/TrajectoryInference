@@ -513,6 +513,18 @@ def isInArea(p,R):
             return 0
     else:
         return 0
+        
+# Test if a point (x,y) belongs to an area R
+def is_in_area(p,R):
+    x = p[0]
+    y = p[1]
+    if(x >= R[0] and x <= R[len(R)-2]):
+        if(y >= R[1] and y <= R[len(R)-1]):
+            return 1
+        else:
+            return 0
+    else:
+        return 0
 
 # Euclidean distance
 def euclidean_distance(p, q): #p = (x,y)
@@ -556,9 +568,32 @@ def get_partial_path(fullPath, knownN):
     partialPath = path.path(t,x,y)
     return partialPath
 
+def get_path_start_goal(observedPath, goals):
+    initPoint = [observedPath.x[0], observedPath.y[0]]
+    for i in range(len(goals)):
+        if(is_in_area(initPoint,goals[i])):
+            return i
+    return -1
+    
+
+def get_path_finish_goal(observedPath, goals):
+    n = len(observedPath.x)
+    finishPoint = [observedPath.x[n-1], observedPath.y[n-1]]
+    for i in range(len(goals)):
+        if(is_in_area(finishPoint,goals[i])):
+            return i
+    return -1
+    
+def get_goal_of_point(p, goals):
+    for i in range(len(goals)):
+        if(is_in_area(p,goals[i])):
+            return i
+    return -1
+
 """ARC LENGHT TO TIME"""
 def arclen_to_time(initTime,l,speed):
     t = [initTime]
+    #print("acrlen to time l:",l)
     for i in range(1,len(l)):
         time_i = int(t[i-1] +(l[i]-l[i-1])/speed)
         t.append(time_i)
