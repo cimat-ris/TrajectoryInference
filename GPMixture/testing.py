@@ -8,7 +8,7 @@ Testing functions
 from path import *
 from gpRegressor import *
 from regression import *
-from plotting import *
+#from plotting import *
 from evaluation import *
 from kernels import *
 from statistics import*
