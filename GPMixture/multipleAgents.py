@@ -112,3 +112,4 @@ def interaction_potential_for_a_set_of_pedestrians(pathSet):
             potentialProduct *= val
 
     print("Potential product of set:",potentialProduct)
+    return potentialProduct
