@@ -39,7 +39,7 @@ img       = mpimg.imread('imgs/goals.jpg')
 # y las agregamos como trayectorias independientes
 dataPaths, multigoal = get_paths_from_file('datasets/CentralStation_paths_10000.txt',areas)
 usefulPaths = getUsefulPaths(dataPaths,areas)
-sortedPaths = sorted(usefulPaths, key=time_compare)
+#sortedPaths = sorted(usefulPaths, key=time_compare)
 
 print("[INF] Number of useful paths: ",len(usefulPaths))
 
@@ -48,6 +48,7 @@ startToGoalPath, arclenMat = define_trajectories_start_and_end_areas(areas,areas
 
 # Remove the trajectories that are either too short or too long
 pathMat, learnSet = filter_path_matrix(startToGoalPath, nGoals, nGoals)
+sortedPaths = sorted(learnSet, key=time_compare)
 showDataset = False
 if showDataset:
     plotPaths(pathMat, img)
@@ -148,7 +149,7 @@ if mixtureTest==True:
 
 interactionTest = False
 if interactionTest == True:
-    sortedSet     = get_path_set_given_time_interval(sortedPaths,300,700)
+    sortedSet     = get_path_set_given_time_interval(sortedPaths,200,700)
     print("Numero de trayectorias en el conjunto:",len(sortedSet))
     plotPathSet(sortedSet,img)
 
@@ -156,21 +157,24 @@ if interactionTest == True:
 
 interactionWithSamplingTest = True
 if interactionWithSamplingTest == True:
-    sortedSet = get_path_set_given_time_interval(sortedPaths,100,350)
+    sortedSet = get_path_set_given_time_interval(sortedPaths,400,650)
     plotPathSet(sortedSet,img)
+    
+    sampleSetVec, potentialVec = [], []
+    numTests = 7
     part_num = 3
-    for i in range(1):
+    for i in range(numTests):
         samplePathSet = []
         for j in range(len(sortedSet)):
-            print("path #",j)
+            #print("path #",j)
             currentPath = sortedSet[j]
             pathSize = len(currentPath.x)
-            knownN = int((i+1)*(pathSize/part_num))
+            knownN = int(pathSize/part_num)#int((i+1)*(pathSize/part_num))
             observedPath = get_partial_path(currentPath,knownN)
             trueX,trueY,trueL = get_known_set(currentPath.x,currentPath.y,currentPath.l,knownN)
             
             startG = get_path_start_goal(observedPath,areas)
-            print("[INF] Start goal", startG)
+            #print("[INF] Start goal", startG)
             mgps = mixtureOfGPs(startG,stepUnit,goalsData)
             likelihoods = mgps.update(trueX,trueY,trueL)
             
@@ -185,10 +189,24 @@ if interactionWithSamplingTest == True:
                 sampleYVec.append(sampleY)
                 finishG = get_goal_of_point([sampleX[len(sampleX)-1],sampleY[len(sampleY)-1]],areas)
                 newL = mgps.gpPathRegressor[finishG].newL
-                samplePath = get_path_from_data(observedPath,sampleX,sampleY,newL,speed)   
-                samplePathSet.append(samplePath)
-        plotPathSet(samplePathSet,img)
-        interaction_potential_for_a_set_of_pedestrians(samplePathSet)
+                #print("[INF] newL:",newL)
+                if(newL != None):
+                    samplePath = get_path_from_data(observedPath,sampleX,sampleY,newL,speed)   
+                    samplePathSet.append(samplePath)
+        if(len(samplePathSet) == len(sortedSet)):
+            sampleSetVec.append(samplePathSet)
+            interactionPotential = interaction_potential_for_a_set_of_pedestrians(samplePathSet)
+            potentialVec.append(interactionPotential)
+        
+            plotPathSet(samplePathSet,img)
+    maxPotential = 0
+    maxId = -1
+    for i in range(len(potentialVec)):
+        if(potentialVec[i] > maxPotential):
+            maxPotential = potentialVec[i]
+            maxId = i
+    print("Best configuration: figure ", maxId+2) #Figure 1 son las trayectorias reales
+
 
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
