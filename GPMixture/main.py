@@ -157,48 +157,47 @@ if interactionTest == True:
 
 interactionWithSamplingTest = True
 if interactionWithSamplingTest == True:
-    sortedSet = get_path_set_given_time_interval(sortedPaths,400,650)
-    plotPathSet(sortedSet,img)
+    sortedSet = get_path_set_given_time_interval(sortedPaths,350,650)
+    #plotPathSet(sortedSet,img)
     
     sampleSetVec, potentialVec = [], []
-    numTests = 7
+    numTests = 1
     part_num = 3
     for i in range(numTests):
         samplePathSet = []
+        observedX, observedY = [], []
+        sampleXVec, sampleYVec = [], []
         for j in range(len(sortedSet)):
-            #print("path #",j)
             currentPath = sortedSet[j]
             pathSize = len(currentPath.x)
             knownN = int(pathSize/part_num)#int((i+1)*(pathSize/part_num))
             observedPath = get_partial_path(currentPath,knownN)
             trueX,trueY,trueL = get_known_set(currentPath.x,currentPath.y,currentPath.l,knownN)
+            observedX.append(trueX)
+            observedY.append(trueY)
             
             startG = get_path_start_goal(observedPath,areas)
+            #print("Path #",j)
             #print("[INF] Start goal", startG)
             mgps = mixtureOfGPs(startG,stepUnit,goalsData)
             likelihoods = mgps.update(trueX,trueY,trueL)
             
-            predictedXYVec,varXYVec = mgps.predict()#esta linea es para que se llame a gpRegressor.update
             nSamples = 1       
             vecX,vecY = mgps.generate_samples(nSamples)
-            sampleXVec, sampleYVec = [], []
             for k in range(nSamples): #num de samples
                 x, y = vecX[k], vecY[k]
                 sampleX, sampleY = np.reshape(x,(x.shape[0])), np.reshape(y,(y.shape[0]))
                 sampleXVec.append(sampleX)
                 sampleYVec.append(sampleY)
-                finishG = get_goal_of_point([sampleX[len(sampleX)-1],sampleY[len(sampleY)-1]],areas)
-                newL = mgps.gpPathRegressor[finishG].newL
-                #print("[INF] newL:",newL)
-                if(newL != None):
-                    samplePath = get_path_from_data(observedPath,sampleX,sampleY,newL,speed)   
-                    samplePathSet.append(samplePath)
+                newL = arclength(sampleX,sampleY)
+                samplePath = get_path_from_data(observedPath,sampleX,sampleY,newL,speed)   
+                samplePathSet.append(samplePath)
         if(len(samplePathSet) == len(sortedSet)):
             sampleSetVec.append(samplePathSet)
             interactionPotential = interaction_potential_for_a_set_of_pedestrians(samplePathSet)
             potentialVec.append(interactionPotential)
         
-            plotPathSet(samplePathSet,img)
+            plot_path_set_samples_with_observations(img,observedX,observedY,sampleXVec,sampleYVec)#plotPathSet(samplePathSet,img)
     maxPotential = 0
     maxId = -1
     for i in range(len(potentialVec)):
