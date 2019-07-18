@@ -258,3 +258,20 @@ def plot_path_samples_with_observations(img,ox,oy,x,y):
     v = [0,s[1],s[0],0]
     plt.axis(v)
     plt.show()
+
+def plot_path_set_samples_with_observations(img,ox,oy,x,y):
+    n = len(x)
+    if(n == 0):
+        return
+    fig,ax = plt.subplots(1)
+    ax.set_aspect('equal')
+    # Show the image
+    ax.imshow(img)
+    for i in range(n):
+        plt.plot(ox[i],oy[i])
+        plt.plot(x[i],y[i],'--')
+        #plt.plot([ox[-1],x[i][0]],[oy[-1],y[i][0]])
+    s = img.shape
+    v = [0,s[1],s[0],0]
+    plt.axis(v)
+    plt.show()
