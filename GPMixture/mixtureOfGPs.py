@@ -129,6 +129,7 @@ class mixtureOfGPs:
             # Choose a subgoal randomly
             j = np.random.choice(self.nSubgoals)
             k = end+(1+j)*self.goalsData.nGoals
+            self.gpPathRegressor[k].updateObservations(self.observedX,self.observedY,self.observedL) #we call this in case the subgoals haven't been updated
             #
             finishX, finishY, axis = uniform_sampling_1D_around_point(1, subgoalsCenter[j], s, self.goalsData.areasAxis[end])
 
@@ -137,6 +138,7 @@ class mixtureOfGPs:
         goalCenter = middle_of_area(self.goalsData.areas[end])
         deltaX = finishX[0]-goalCenter[0]
         deltaY = finishY[0]-goalCenter[1]
+        
         return self.gpPathRegressor[k].sample_with_perturbation(deltaX,deltaY)
 
     def generate_samples(self,nSamples):
