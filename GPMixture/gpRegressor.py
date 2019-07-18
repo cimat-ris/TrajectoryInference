@@ -174,6 +174,7 @@ class gpRegressor:
 
     # Generate a sample from perturbations
     def sample_with_perturbation(self,deltaX,deltaY):
+        newx, newy, newl, varx, vary = self.prediction_to_finish_point() #we call this function to obtain newX, newY
         predictedX, predictedY, predictedL, varX, varY = self.prediction_to_perturbed_finish_point(deltaX,deltaY)
         # Number of predicted points
         nPredictions = len(predictedX)
