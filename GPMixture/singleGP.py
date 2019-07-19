@@ -3,7 +3,7 @@ A class for handling a single GP in trajectory prediction
 """
 import numpy as np
 import math
-from gpRegressor import *
+from gp_code.gpRegressor import *
 
 # Class for performing path regression with a single Gaussian Process
 class singleGP:

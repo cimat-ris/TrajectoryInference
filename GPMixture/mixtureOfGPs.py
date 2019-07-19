@@ -6,8 +6,8 @@ import math
 from regression import *
 from evaluation import *
 from statistics import*
-from sampling import *
-from gpRegressor import *
+from gp_code.sampling import *
+from gp_code.gpRegressor import *
 
 # Class for performing path regression with a mixture of Gaussian processes
 class mixtureOfGPs:
@@ -138,7 +138,7 @@ class mixtureOfGPs:
         goalCenter = middle_of_area(self.goalsData.areas[end])
         deltaX = finishX[0]-goalCenter[0]
         deltaY = finishY[0]-goalCenter[1]
-        
+
         return self.gpPathRegressor[k].sample_with_perturbation(deltaX,deltaY)
 
     def generate_samples(self,nSamples):

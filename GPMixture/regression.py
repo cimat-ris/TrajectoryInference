@@ -5,8 +5,7 @@ import numpy as np
 import math
 from numpy.linalg import inv
 from scipy.linalg import *
-import kernels
-import path
+import gp_code.kernels
 from dataManagement import *
 import dataManagement
 import matplotlib.image as mpimg

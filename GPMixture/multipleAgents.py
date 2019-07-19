@@ -4,11 +4,11 @@ Functions to handle interaction of multiple agents
 @author: karenlc
 """
 
-from path import *
 from utils.plotting import *
-from kernels import *
+from gp_code.kernels import *
 from statistics import*
-from sampling import*
+from dataManagement import*
+from gp_code.sampling import*
 import matplotlib.pyplot as plt
 import numpy as np
 import math

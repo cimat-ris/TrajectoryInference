@@ -7,8 +7,8 @@ import math
 import matplotlib.pyplot as plt
 from numpy.linalg import inv
 from scipy.optimize import minimize
-import kernels
-import path
+from gp_code.kernels import *
+from gp_code.path import *
 import matplotlib.image as mpimg
 from matplotlib.patches import Ellipse
 from gp_code.io_parameters import *
@@ -43,7 +43,7 @@ def get_paths_from_file(path_file,areas):
                     auxX.append(x_)
                     auxY.append(y_)
                     auxT.append(t_)
-            auxPath = path.path(auxT,auxX,auxY)
+            auxPath = path(auxT,auxX,auxY)
             gi = get_goal_sequence(auxPath,areas)
             if len(gi) > 2:
                 multigoal_paths.append(auxPath)
@@ -287,7 +287,7 @@ def break_multigoal_path(multigoalPath, goalVec, goals):
             nextgoal = g[goalInd+1]
             xy = [p.x[j], p.y[j]]
             if isInArea(xy,goals[nextgoal]):
-                new = path.path(newT,newX,newY)
+                new = path(newT,newX,newY)
                 newPath.append(new)
                 newX, newY, newT = [p.x[j]], [p.y[j]], [p.t[j]]
                 goalInd += 1
@@ -513,7 +513,7 @@ def isInArea(p,R):
             return 0
     else:
         return 0
-        
+
 # Test if a point (x,y) belongs to an area R
 def is_in_area(p,R):
     x = p[0]
@@ -565,7 +565,7 @@ def get_path_from_data(observedPath,x,y,l,speed):
 
 def get_partial_path(fullPath, knownN):
     x,y,t = fullPath.x[0:knownN], fullPath.y[0:knownN], fullPath.t[0:knownN]
-    partialPath = path.path(t,x,y)
+    partialPath = path(t,x,y)
     return partialPath
 
 def get_path_start_goal(observedPath, goals):
@@ -574,7 +574,7 @@ def get_path_start_goal(observedPath, goals):
         if(is_in_area(initPoint,goals[i])):
             return i
     return -1
-    
+
 
 def get_path_finish_goal(observedPath, goals):
     n = len(observedPath.x)
@@ -583,7 +583,7 @@ def get_path_finish_goal(observedPath, goals):
         if(is_in_area(finishPoint,goals[i])):
             return i
     return -1
-    
+
 def get_goal_of_point(p, goals):
     for i in range(len(goals)):
         if(is_in_area(p,goals[i])):

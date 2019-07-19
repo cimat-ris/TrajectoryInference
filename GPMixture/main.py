@@ -1,13 +1,11 @@
 """
 @author: karenlc
 """
-import path
 from gp_code.io_parameters import *
 from testing import *
 from utils.plotting import *
 from mixtureOfGPs import *
 from singleGP import *
-from gpRegressor import *
 from goalsLearnedStructure import *
 from multipleAgents import *
 import numpy as np
@@ -75,13 +73,13 @@ learningParameters = False
 if learningParameters==True:
     print("[INF] Starting the learning phase")
     goalsData.optimize_kernel_parameters(kernelType, pathMat)
-    write_parameters(kernelMat_x,nGoals,nGoals,"linearpriorcombined6x6_x.txt")
-    write_parameters(kernelMat_y,nGoals,nGoals,"linearpriorcombined6x6_y.txt")
+    write_parameters(kernelMat_x,nGoals,nGoals,"parameters/linearpriorcombined6x6_x.txt")
+    write_parameters(kernelMat_y,nGoals,nGoals,"parameters/linearpriorcombined6x6_y.txt")
     print("[INF] End of the learning phase")
 else:
      # Read the kernel parameters from file
-     goalsData.kernelsX = read_and_set_parameters("linearpriorcombined6x6_x.txt",nParameters)
-     goalsData.kernelsY = read_and_set_parameters("linearpriorcombined6x6_y.txt",nParameters)
+     goalsData.kernelsX = read_and_set_parameters("parameters/linearpriorcombined6x6_x.txt",nParameters)
+     goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined6x6_y.txt",nParameters)
 
 """******************************************************************************"""
 """**************    Testing                           **************************"""
@@ -159,7 +157,7 @@ interactionWithSamplingTest = True
 if interactionWithSamplingTest == True:
     sortedSet = get_path_set_given_time_interval(sortedPaths,370,850)
     #plotPathSet(sortedSet,img)
-    
+
     sampleSetVec, potentialVec = [], []
     observationsVec, samplesVec, potentialVec = [], [], []# Guardan en i: [obsX, obsY] y [sampleX, sampleY]
     numTests = 6
@@ -176,14 +174,14 @@ if interactionWithSamplingTest == True:
             trueX,trueY,trueL = get_known_set(currentPath.x,currentPath.y,currentPath.l,knownN)
             observedX.append(trueX)
             observedY.append(trueY)
-            
+
             startG = get_path_start_goal(observedPath,areas)
             #print("Path #",j)
             #print("[INF] Start goal", startG)
             mgps = mixtureOfGPs(startG,stepUnit,goalsData)
             likelihoods = mgps.update(trueX,trueY,trueL)
-            
-            nSamples = 1       
+
+            nSamples = 1
             vecX,vecY = mgps.generate_samples(nSamples)
             for k in range(nSamples): #num de samples
                 x, y = vecX[k], vecY[k]
@@ -191,7 +189,7 @@ if interactionWithSamplingTest == True:
                 sampleXVec.append(sampleX)
                 sampleYVec.append(sampleY)
                 newL = arclength(sampleX,sampleY)
-                samplePath = get_path_from_data(observedPath,sampleX,sampleY,newL,speed)   
+                samplePath = get_path_from_data(observedPath,sampleX,sampleY,newL,speed)
                 samplePathSet.append(samplePath)
         if(len(samplePathSet) == len(sortedSet)):
             sampleSetVec.append(samplePathSet)
@@ -199,7 +197,7 @@ if interactionWithSamplingTest == True:
             potentialVec.append(interactionPotential)
             observationsVec.append([observedX, observedY])
             samplesVec.append([sampleXVec,sampleYVec])
-    
+
         #plot_path_set_samples_with_observations(img,observedX,observedY,sampleXVec,sampleYVec)#plotPathSet(samplePathSet,img)
     plot_interaction_with_sampling_test(img,observationsVec,samplesVec,potentialVec)
     maxPotential = 0
