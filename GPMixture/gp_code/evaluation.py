@@ -54,9 +54,9 @@ def compute_goal_likelihood(observedX,observedY,observedL,startG,finishG,stepsTo
 def compute_prediction_error_1D(trueX, trueY, prediction, flag):
     error = 0.0
     for i in range(len(prediction) ):
-        if flag == 'x':
+        if flag == 0:
             error += abs(trueX[i] - prediction[i])
-        if flag == 'y':
+        if flag == 1:
             error += abs(trueY[i] - prediction[i])
     return error
 

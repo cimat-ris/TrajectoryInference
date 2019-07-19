@@ -41,9 +41,6 @@ print("[INF] Number of filtered paths: ",len(learnSet))
 # Form the object goalsLearnedStructure
 goalsData = goalsLearnedStructure(areas,areasAxis,pathMat)
 
-stepUnit = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals)
-speed    = 1.65033755511     #get_pedestrian_average_speed(dataPaths)
-
 # For each pair of goals, determine the line priors
 useLinearPriors = True
 if useLinearPriors:

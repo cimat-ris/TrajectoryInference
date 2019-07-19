@@ -13,31 +13,19 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from matplotlib.patches import Ellipse
 from copy import copy
+import pandas as pd
 
-
-# Interest areas [x1,y1,x2,y2,...]
-R0 = [410,10,680,10,410,150,680,150] #azul
-R1 = [1120,30,1400,30,1120,150,1400,150] #cian
-R2 = [1650,460,1810,460,1650,740,1810,740] #verde
-R3 = [1500,950,1800,950,1500,1080,1800,1080]#amarillo
-R4 = [100,950,500,950,100,1080,500,1080] #naranja
-R5 = [300,210,450,210,300,400,450,400] #rosa
-R6 = [0,430,80,430,0,600,80,600]
-R7 = [1550,300,1650,300,1550,455,1650,455]
-R8 = [500,950,1000,950,500,1080,1000,1080]
-R9 = [1000,950,1500,950,1000,1080,1500,1080]
-
-# This array will contain the zones of interest
-areas     = [R0,R1,R2,R3,R4,R5]
-areasAxis = ['x','x','y','x','x','y','y','y']
-nGoals    = len(areas)
-img       = mpimg.imread('imgs/goals.jpg')
+# Read the areas data from a file and take only the first 6 goals
+data     = pd.read_csv('parameters/CentralStation_areasDescriptions.csv')
+areas    = data.values[:6,2:]
+areasAxis= data.values[:6,1]
+nGoals   = len(areas)
+img      = mpimg.imread('imgs/goals.jpg')
 
 # Al leer cortamos las trayectorias multiobjetivos por pares consecutivos
 # y las aimportgregamos como trayectorias independientes
 dataPaths, multigoal = get_paths_from_file('datasets/CentralStation_paths_10000.txt',areas)
 usefulPaths = getUsefulPaths(dataPaths,areas)
-#sortedPaths = sorted(usefulPaths, key=time_compare)
 
 print("[INF] Number of useful paths: ",len(usefulPaths))
 
@@ -67,19 +55,9 @@ if useLinearPriors:
 kernelType = "linePriorCombined"#"combined"
 nParameters = 4
 
-"""******************************************************************************"""
-"""**************    Learning / reading parameters     **************************"""
-learningParameters = False
-if learningParameters==True:
-    print("[INF] Starting the learning phase")
-    goalsData.optimize_kernel_parameters(kernelType, pathMat)
-    write_parameters(kernelMat_x,nGoals,nGoals,"parameters/linearpriorcombined6x6_x.txt")
-    write_parameters(kernelMat_y,nGoals,nGoals,"parameters/linearpriorcombined6x6_y.txt")
-    print("[INF] End of the learning phase")
-else:
-     # Read the kernel parameters from file
-     goalsData.kernelsX = read_and_set_parameters("parameters/linearpriorcombined6x6_x.txt",nParameters)
-     goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined6x6_y.txt",nParameters)
+# Read the kernel parameters from file
+goalsData.kernelsX = read_and_set_parameters("parameters/linearpriorcombined6x6_x.txt",nParameters)
+goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined6x6_y.txt",nParameters)
 
 """******************************************************************************"""
 """**************    Testing                           **************************"""

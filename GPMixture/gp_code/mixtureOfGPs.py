@@ -122,7 +122,7 @@ class mixtureOfGPs:
         else:
             # Use subgoals: choose one randomly and sample
             subgoalsCenter, size = get_subgoals_center_and_size(self.nSubgoals, self.goalsData.areas[end], self.goalsData.areasAxis[end])
-            if self.goalsData.areasAxis[end]=='x':
+            if self.goalsData.areasAxis[end]==0:
                 s = size[0]
             else:
                 s = size[1]

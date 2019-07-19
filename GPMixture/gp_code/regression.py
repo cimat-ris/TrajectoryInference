@@ -114,16 +114,16 @@ def get_finish_point_singleGP(knownX, knownY, knownL, finishGoal, goals, kernelX
         auxY = _knownY.copy()
         auxX.append(_x[i])
         auxY.append(_y[i])
-        if flag == 'y': #x(y)
+        if flag == 1: #x(y)
             predSet = trueY.copy()
             prediction, var = estimate_new_set_of_values(auxY,auxX,predSet,kernelX)
             plot_sampling_prediction(img,knownX,knownY,n-k,prediction,trueY,var,var,[_x[i],_y[i]])
-            error.append(prediction_error_1D(trueX, trueY, prediction, 'x'))
-        if flag == 'x': #y(x)
+            error.append(prediction_error_1D(trueX, trueY, prediction, 0))
+        if flag == 0: #y(x)
             predSet = trueX.copy()
             prediction, var = estimate_new_set_of_values(auxX,auxY,predSet,kernelY)
             plot_sampling_prediction(img,knownX,knownY,n-k,trueX,prediction,var,var,[_x[i],_y[i]])
-            error.append(prediction_error_1D(trueX, trueY, prediction, 'y')) #y(x)
+            error.append(prediction_error_1D(trueX, trueY, prediction, 1)) #y(x)
 
     #encuentra el punto que genera el error minimo
     min_id, min_error = 0, error[0]
@@ -187,7 +187,7 @@ def get_subgoals_areas(nSubgoals, goal, axis):
     goalMaxX    = goal[-2]
     goalMaxY    = goal[-1]
     subGoalsAreas = []
-    if axis == 'x':
+    if axis == 0:
         subgoalDX = goalDX/nSubgoals
         subgoalDY = goalDY
         for i in range(nSubgoals):
@@ -211,7 +211,7 @@ def get_subgoals_center_and_size(nSubgoals, goal, axis):
 
     subgoalsCenter = []
     subgoalX, subgoalY = 0,0
-    if axis == 'x':
+    if axis == 0:
         subgoalX = goalX/nSubgoals
         subgoalY = goalY
         _x = goal[0]
@@ -219,8 +219,7 @@ def get_subgoals_center_and_size(nSubgoals, goal, axis):
         for i in range(nSubgoals):
             subgoalsCenter.append( [_x+subgoalX/2, _y] )
             _x += subgoalX
-
-    if axis == 'y':
+    if axis == 1:
         subgoalX = goalX
         subgoalY = goalY/nSubgoals
         _x = goalCenterX
