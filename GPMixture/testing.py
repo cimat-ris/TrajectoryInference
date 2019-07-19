@@ -6,10 +6,9 @@ Testing functions
 """
 
 from gp_code.gpRegressor import *
-from regression import *
-from evaluation import *
+from gp_code.regression import *
+from gp_code.evaluation import *
 from gp_code.kernels import *
-from statistics import*
 from gp_code.sampling import*
 from multipleAgents import*
 import matplotlib.pyplot as plt

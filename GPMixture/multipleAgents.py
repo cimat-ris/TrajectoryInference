@@ -5,9 +5,8 @@ Functions to handle interaction of multiple agents
 """
 
 from utils.plotting import *
+from utils.dataManagement import*
 from gp_code.kernels import *
-from statistics import*
-from dataManagement import*
 from gp_code.sampling import*
 import matplotlib.pyplot as plt
 import numpy as np

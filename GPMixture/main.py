@@ -2,11 +2,11 @@
 @author: karenlc
 """
 from gp_code.io_parameters import *
-from testing import *
+from gp_code.goalsLearnedStructure import *
+from gp_code.mixtureOfGPs import *
+from gp_code.singleGP import *
 from utils.plotting import *
-from mixtureOfGPs import *
-from singleGP import *
-from goalsLearnedStructure import *
+from testing import *
 from multipleAgents import *
 import numpy as np
 import matplotlib.pyplot as plt
@@ -34,7 +34,7 @@ nGoals    = len(areas)
 img       = mpimg.imread('imgs/goals.jpg')
 
 # Al leer cortamos las trayectorias multiobjetivos por pares consecutivos
-# y las agregamos como trayectorias independientes
+# y las aimportgregamos como trayectorias independientes
 dataPaths, multigoal = get_paths_from_file('datasets/CentralStation_paths_10000.txt',areas)
 usefulPaths = getUsefulPaths(dataPaths,areas)
 #sortedPaths = sorted(usefulPaths, key=time_compare)
