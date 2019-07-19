@@ -100,11 +100,11 @@ pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t
 # Total path length
 pathSize = len(pathX)
 
-samplingViz = False
+samplingViz = True
 if samplingViz==True:
     path_sampling_test(img,stepUnit,goalsData)
 
-singleTest = False
+singleTest = True
 if singleTest==True:
     gp = singleGP(startG,nextG,stepUnit,goalsData)
     part_num = 10
@@ -125,7 +125,7 @@ if singleTest==True:
         vecX,vecY         = gp.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
-mixtureTest = False
+mixtureTest = True
 if mixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
     part_num = 10

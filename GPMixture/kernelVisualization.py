@@ -1,8 +1,5 @@
-from GPRlib import *
-from path import *
-from plotting import *
-from kernels import *
-from statistics import*
+from utils.plotting import *
+from gp_code.kernels import *
 import matplotlib.pyplot as plt
 import numpy as np
 import math
@@ -22,23 +19,23 @@ s = 1000
 
 
 parameters = [0.01, 2000, 500., 200., 1.0]
-kernel = kernels.squaredExponentialKernel(parameters[2],parameters[3])
-CSqe = evaluateCovarianceMatrix(kernel,s)
+kernel = squaredExponentialKernel(parameters[2],parameters[3])
+CSqe   = evaluateCovarianceMatrix(kernel,s)
 
-kernel = kernels.maternKernel(parameters[2],parameters[3])
-CM   = evaluateCovarianceMatrix(kernel,s)
+kernel = maternKernel(parameters[2],parameters[3])
+CM     = evaluateCovarianceMatrix(kernel,s)
 
-kernel = kernels.linePriorCombinedKernel(parameters[0],parameters[1],parameters[2],parameters[3],parameters[4])
-CCk  = evaluateCovarianceMatrix(kernel,s)
+kernel = linePriorCombinedKernel(parameters[0],parameters[1],parameters[2],parameters[3],parameters[4])
+CCk    = evaluateCovarianceMatrix(kernel,s)
 
-kernel = kernels.gammaExponentialKernel(parameters[2],parameters[3],0.8)
-CG   =  evaluateCovarianceMatrix(kernel,s)
+kernel = gammaExponentialKernel(parameters[2],parameters[3],0.8)
+CG     = evaluateCovarianceMatrix(kernel,s)
 
-kernel = kernels.squaredExponentialAndNoiseKernel(parameters[2],parameters[3],parameters[4])
-CSqeN   =  evaluateCovarianceMatrix(kernel,s)
+kernel = squaredExponentialAndNoiseKernel(parameters[2],parameters[3],parameters[4])
+CSqeN  = evaluateCovarianceMatrix(kernel,s)
 
-kernel = kernels.exponentialAndNoiseKernel(parameters[2],parameters[3],parameters[4])
-Cexp   =  evaluateCovarianceMatrix(kernel,s)
+kernel = exponentialAndNoiseKernel(parameters[2],parameters[3],parameters[4])
+Cexp   = evaluateCovarianceMatrix(kernel,s)
 
 fg, axes = plt.subplots(2, 3, sharey=True)
 axes[0][0].matshow(CSqe)
