@@ -157,11 +157,12 @@ if interactionTest == True:
 
 interactionWithSamplingTest = True
 if interactionWithSamplingTest == True:
-    sortedSet = get_path_set_given_time_interval(sortedPaths,350,650)
+    sortedSet = get_path_set_given_time_interval(sortedPaths,370,850)
     #plotPathSet(sortedSet,img)
     
     sampleSetVec, potentialVec = [], []
-    numTests = 1
+    observationsVec, samplesVec, potentialVec = [], [], []# Guardan en i: [obsX, obsY] y [sampleX, sampleY]
+    numTests = 6
     part_num = 3
     for i in range(numTests):
         samplePathSet = []
@@ -196,15 +197,18 @@ if interactionWithSamplingTest == True:
             sampleSetVec.append(samplePathSet)
             interactionPotential = interaction_potential_for_a_set_of_pedestrians(samplePathSet)
             potentialVec.append(interactionPotential)
-        
-            plot_path_set_samples_with_observations(img,observedX,observedY,sampleXVec,sampleYVec)#plotPathSet(samplePathSet,img)
+            observationsVec.append([observedX, observedY])
+            samplesVec.append([sampleXVec,sampleYVec])
+    
+        #plot_path_set_samples_with_observations(img,observedX,observedY,sampleXVec,sampleYVec)#plotPathSet(samplePathSet,img)
+    plot_interaction_with_sampling_test(img,observationsVec,samplesVec,potentialVec)
     maxPotential = 0
     maxId = -1
     for i in range(len(potentialVec)):
         if(potentialVec[i] > maxPotential):
             maxPotential = potentialVec[i]
             maxId = i
-    print("Best configuration: figure ", maxId+2) #Figure 1 son las trayectorias reales
+    #print("Best configuration: figure ", maxId+2) #Figure 1 son las trayectorias reales
 
 
 #Prueba el error de la prediccion variando:
