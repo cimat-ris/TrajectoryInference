@@ -4,10 +4,8 @@ import matplotlib.pyplot as plt
 from numpy.linalg import inv
 from scipy.optimize import minimize
 from scipy.linalg import *
-from kernels import *
-import path
-from dataManagement import *
-import dataManagement
+from gp_code.kernels import *
+from utils.dataManagement import *
 import matplotlib.image as mpimg
 from matplotlib.patches import Ellipse
 from copy import copy
@@ -40,7 +38,7 @@ def read_and_set_parameters(file_name, nParameters):
     columns   = int(header[1])
     kernelType= header[2]
     print("[INF] Opening ",file_name," to read parameters of ",rows,"x",columns," kernels of type: ",kernelType)
-    matrix, parametersMat = kernels.create_kernel_matrix(kernelType, rows, columns)
+    matrix, parametersMat = create_kernel_matrix(kernelType, rows, columns)
 
     for line in file:
         parameters = []

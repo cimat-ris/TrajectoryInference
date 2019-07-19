@@ -4,11 +4,7 @@ import matplotlib.pyplot as plt
 from numpy.linalg import inv
 from scipy.optimize import minimize
 from scipy.linalg import *
-from kernels import *
-import path
-#from dataManagement import *
-#import dataManagement
-#import matplotlib.image as mpimg
+from gp_code.kernels import *
 from copy import copy
 import random
 import timeit

@@ -3,9 +3,9 @@ A class for GP regression
 """
 import numpy as np
 import math
-from regression import *
-from evaluation import *
-from sampling import *
+from gp_code.regression import *
+from gp_code.evaluation import *
+from gp_code.sampling import *
 
 class gpRegressor:
     # Constructor

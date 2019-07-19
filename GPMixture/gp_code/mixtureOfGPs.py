@@ -3,11 +3,11 @@ Handling mixtures of GPs in trajectory prediction
 """
 import numpy as np
 import math
-from regression import *
-from evaluation import *
-from statistics import*
+from gp_code.regression import *
+from gp_code.evaluation import *
 from gp_code.sampling import *
 from gp_code.gpRegressor import *
+from statistics import mean
 
 # Class for performing path regression with a mixture of Gaussian processes
 class mixtureOfGPs:

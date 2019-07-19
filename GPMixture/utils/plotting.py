@@ -5,7 +5,6 @@ Plotting functions
 @author: karenlc
 """
 
-from path import *
 import numpy as np
 import math
 from copy import copy
@@ -276,12 +275,12 @@ def plot_path_set_samples_with_observations(img,ox,oy,x,y):
     v = [0,s[1],s[0],0]
     plt.axis(v)
     plt.show()
-    
+
 #Grafica con subplots los tests del sampling dado un conjunto de observaciones
 def plot_interaction_with_sampling_test(img,obsVec, samplesVec, potentialVec):
     N = len(obsVec) #num de tests
     print("Number of tests:",N)
-    n, m = 1, 1    
+    n, m = 1, 1
     if(N%3 == 0):
         n = 3
         m = int(N/3)
@@ -307,17 +306,3 @@ def plot_interaction_with_sampling_test(img,obsVec, samplesVec, potentialVec):
                 axes[i,j].plot(samplesVec[t][0][k],samplesVec[t][1][k],color[colorId]+'--',lw=2.0)
             axes[i,j].axis('off')
     plt.show()
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    

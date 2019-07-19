@@ -5,9 +5,8 @@ import numpy as np
 import math
 from numpy.linalg import inv
 from scipy.linalg import *
-import gp_code.kernels
-from dataManagement import *
-import dataManagement
+from gp_code.kernels import *
+from utils.dataManagement import *
 import matplotlib.image as mpimg
 from matplotlib.patches import Ellipse
 from copy import copy

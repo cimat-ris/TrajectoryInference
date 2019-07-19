@@ -6,7 +6,7 @@ Created on Sun Oct 30 15:13:31 2016
 """
 import numpy as np
 import math
-from dataManagement import *
+from utils.dataManagement import *
 
 class path:
     def __init__(self,vecT,vecX,vecY):
@@ -15,17 +15,17 @@ class path:
         self.y = vecY.copy()
         self.l = path_arcLength(self.x,self.y)
         self.duration, self.length = statistics(self.t,self.x,self.y)
-        if self.duration > 0:            
+        if self.duration > 0:
             self.speed = self.length/self.duration
         else:
             self.speed = 0.
 
 def statistics(t,x,y):
     duration = t[len(t)-1] - t[0]
-        
+
     l = path_arcLength(x,y)
     length = l[len(l)-1]
-    
+
     return duration, length
 
 def path_arcLength(x,y):
@@ -37,6 +37,6 @@ def path_arcLength(x,y):
     for i in range(n):
         if(i>0):
             l[i] = l[i] +l[i-1]
-    return l    
-    
+    return l
+
 #************************************************************#

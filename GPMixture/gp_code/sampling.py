@@ -3,10 +3,6 @@
 Created on Mon Sep 10 17:56:43 2018
 @author: karenlc
 """
-
-from kernels import *
-from path import *
-from regression import *
 import numpy as np
 import math
 
@@ -26,10 +22,10 @@ def uniform_sampling_2D(m, goal):
 
     # Performs the sampling
     for i  in range(m):
-        t = random.uniform(0,1.)
+        t = np.random.uniform(0,1.)
         val = (1.-t)*xmin + t*xmax
         _x.append(val)
-        r = random.uniform(0,1.)
+        r = np.random.uniform(0,1.)
         val = (1.-r)*ymin + r*ymax
         _y.append(val)
 
@@ -41,7 +37,7 @@ def uniform_sampling_1D(m, goal, axis):
     xmin, xmax = goal[0], goal[2]
     ymin, ymax = goal[1], goal[len(goal)-1]
     for i  in range(m):
-        t = random.uniform(0,1.)
+        t = np.random.uniform(0,1.)
         if(axis == 'x'):
             val = (1.-t)*xmin + t*xmax
             _x.append(val)
@@ -57,7 +53,7 @@ def uniform_sampling_1D(m, goal, axis):
 def uniform_sampling_1D_around_point(m, point, size, axis):
     _x, _y = [], []
     for i  in range(m):
-        t = random.uniform(-size,size)
+        t = np.random.uniform(-size,size)
         if(axis == 'x'):
             _x.append(point[0]+t)
             _y.append(point[1])

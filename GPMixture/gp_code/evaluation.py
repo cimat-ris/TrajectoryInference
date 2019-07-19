@@ -3,7 +3,7 @@ Error and likelihood evaluation
 """
 import numpy as np
 import math
-from regression import *
+from gp_code.regression import *
 
 D = 150.
 

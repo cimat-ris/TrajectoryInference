@@ -1,6 +1,5 @@
 from gp_code.kernels import *
-from statistics import*
-from dataManagement import*
+from utils.dataManagement import*
 from gp_code.sampling import*
 from gp_code.optimize_parameters import *
 import matplotlib.pyplot as plt
