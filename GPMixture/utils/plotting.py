@@ -279,7 +279,6 @@ def plot_path_set_samples_with_observations(img,ox,oy,x,y):
 #Grafica con subplots los tests del sampling dado un conjunto de observaciones
 def plot_interaction_with_sampling_test(img,obsVec, samplesVec, potentialVec):
     N = len(obsVec) #num de tests
-    print("Number of tests:",N)
     n, m = 1, 1
     if(N%3 == 0):
         n = 3
@@ -289,7 +288,6 @@ def plot_interaction_with_sampling_test(img,obsVec, samplesVec, potentialVec):
         m = int(N/2)
     else:
         m = N
-    print("Dim:",n,",",m)
     fig, axes = plt.subplots(n,m)
     for i in range(n):
         for j in range(m):
@@ -298,11 +296,12 @@ def plot_interaction_with_sampling_test(img,obsVec, samplesVec, potentialVec):
             axes[i,j].imshow(img)
             # Plot each test
             t = (i*m)+j
-            print("Test num:",t)
             numPaths = len(obsVec[t][0])
             for k in range(numPaths):
                 colorId = (k)%len(color)
                 axes[i,j].plot(obsVec[t][0][k], obsVec[t][1][k],color[colorId],lw=2.0)
                 axes[i,j].plot(samplesVec[t][0][k],samplesVec[t][1][k],color[colorId]+'--',lw=2.0)
+                string = str(potentialVec[t])   
+                axes[i,j].set_title('IP='+string)
             axes[i,j].axis('off')
     plt.show()
