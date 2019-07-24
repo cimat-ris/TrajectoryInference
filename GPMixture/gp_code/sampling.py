@@ -53,7 +53,8 @@ def uniform_sampling_1D(m, goal, axis):
 def uniform_sampling_1D_around_point(m, point, size, axis):
     _x, _y = [], []
     for i  in range(m):
-        t = np.random.uniform(-size,size)
+        s = int(size/2)
+        t = np.random.uniform(-s,s)
         if(axis == 0):
             _x.append(point[0]+t)
             _y.append(point[1])
