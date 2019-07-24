@@ -120,6 +120,7 @@ class mixtureOfGPs:
         if self.predictedMeans[end].shape[0]>0:
             finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.areas[end], self.goalsData.areasAxis[end])
         else:
+            self.update(self.observedX,self.observedY,self.observedL)
             # Use subgoals: choose one randomly and sample
             subgoalsCenter, size = get_subgoals_center_and_size(self.nSubgoals, self.goalsData.areas[end], self.goalsData.areasAxis[end])
             if self.goalsData.areasAxis[end]==0:
