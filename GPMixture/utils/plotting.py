@@ -270,7 +270,6 @@ def plot_path_set_samples_with_observations(img,ox,oy,x,y):
         colorId = i%len(color)
         plt.plot(ox[i],oy[i],color[colorId],lw=2.0)
         plt.plot(x[i],y[i],color[colorId]+'--',lw=2.0)
-        #plt.plot([ox[-1],x[i][0]],[oy[-1],y[i][0]])
     s = img.shape
     v = [0,s[1],s[0],0]
     plt.axis(v)
@@ -301,7 +300,7 @@ def plot_interaction_with_sampling_test(img,obsVec, samplesVec, potentialVec):
                 colorId = (k)%len(color)
                 axes[i,j].plot(obsVec[t][0][k], obsVec[t][1][k],color[colorId],lw=2.0)
                 axes[i,j].plot(samplesVec[t][0][k],samplesVec[t][1][k],color[colorId]+'--',lw=2.0)
-                string = str(potentialVec[t])   
+                string = "{0:.12f}".format(potentialVec[t])#str(potentialVec[t])   
                 axes[i,j].set_title('IP='+string)
             axes[i,j].axis('off')
     plt.show()
