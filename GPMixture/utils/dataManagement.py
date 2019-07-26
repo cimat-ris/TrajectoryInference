@@ -551,6 +551,39 @@ def copy_unitMat(unitMat, nGoals, nSubgoals):
 def time_compare(path):
     return path.t[0]
 
+def get_goal_of_point(p, goals):
+    for i in range(len(goals)):
+        if(is_in_area(p,goals[i])):
+            return i
+    return -1
+
+"""ARC LENGHT TO TIME"""
+def arclen_to_time(initTime,l,speed):
+    t = [initTime]
+    #print("acrlen to time l:",l)
+    for i in range(1,len(l)):
+        time_i = int(t[i-1] +(l[i]-l[i-1])/speed)
+        t.append(time_i)
+    return t
+
+"""GET OBSERVED DATA"""
+def get_known_set(x,y,z,knownN):
+    trueX,trueY, trueZ = [],[],[]
+    knownN = int(knownN)
+    for j in range(knownN): #numero de datos conocidos
+        trueX.append(x[j])
+        trueY.append(y[j])
+        trueZ.append(z[j])
+
+    return trueX, trueY, trueZ
+
+def get_prediction_set_from_data(z,knownN):
+    N = len(z)
+    newZ = []
+    knownN = int(knownN)
+    for j in range(knownN-1, N): #numero de datos conocidos
+        newZ.append(z[j])
+    return newZ
 
 def get_path_from_data(observedPath,x,y,l,speed):
     initTime = observedPath.t[0]
@@ -573,8 +606,6 @@ def get_path_start_goal(observedPath, goals):
     for i in range(len(goals)):
         if(is_in_area(initPoint,goals[i])):
             return i
-    return -1
-
 
 def get_path_finish_goal(observedPath, goals):
     n = len(observedPath.x)
@@ -584,17 +615,12 @@ def get_path_finish_goal(observedPath, goals):
             return i
     return -1
 
-def get_goal_of_point(p, goals):
-    for i in range(len(goals)):
-        if(is_in_area(p,goals[i])):
-            return i
-    return -1
-
-"""ARC LENGHT TO TIME"""
-def arclen_to_time(initTime,l,speed):
-    t = [initTime]
-    #print("acrlen to time l:",l)
-    for i in range(1,len(l)):
-        time_i = int(t[i-1] +(l[i]-l[i-1])/speed)
-        t.append(time_i)
-    return t
+def get_observed_path_given_current_time(fullPath, currentTime):
+    x, y, t= [],[],[]
+    knownN = 0
+    while(fullPath.t[knownN] <= currentTime):
+        knownN += 1
+    x,y,t = fullPath.x[0:knownN], fullPath.y[0:knownN], fullPath.t[0:knownN]
+    observedPath = path(t,x,y)
+    return observedPath
+  
