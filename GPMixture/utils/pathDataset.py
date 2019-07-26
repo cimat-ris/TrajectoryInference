@@ -4,7 +4,7 @@ Created on Mon Oct 24 00:50:28 2016
 
 @author: karenlc
 """
-from GPRlib import *
+
 import numpy as np
 import math
 import matplotlib.pyplot as plt
@@ -182,37 +182,8 @@ def getPathPredictionSet(p,goals,nextGoal,steps):#no se usa
     for i in range(steps+1):
         newset.append( p.l[l-1] + i*step )
     return end, newset, p.l[l-1] +dist
-
-#start, goals, last know (x,y,l), nextGoal
-def getPredictionSet(x,y,l,start,nextGoal,goals):
-    #calcula en centro del area siguiente
-    dx, dy = goals[nextGoal][6]-goals[nextGoal][0], goals[nextGoal][7]-goals[nextGoal][1]
-    end = [goals[nextGoal][0] + dx/2., goals[nextGoal][1] + dy/2.]
-    dist = math.sqrt( (end[0]-x)**2 + (end[1]-y)**2 )
-
-    steps = 20#num de pasos
-    step = dist/float(steps)
-    newset = []
-    for i in range(steps+1):
-        newset.append( l + i*step )
-
-    return end, newset, l + dist
-
-
-def get_known_set(x,y,z,knownN):
-    trueX,trueY, trueZ = [],[],[]
-    knownN = int(knownN)
-    for j in range(knownN): #numero de datos conocidos
-        trueX.append(x[j])
-        trueY.append(y[j])
-        trueZ.append(z[j])
-
-    return trueX, trueY, trueZ
-
-def get_prediction_set_from_data(z,knownN):
-    N = len(z)
-    newZ = []
-    knownN = int(knownN)
-    for j in range(knownN-1, N): #numero de datos conocidos
-        newZ.append(z[j])
-    return newZ
+      
+        
+        
+        
+        
