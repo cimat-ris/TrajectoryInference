@@ -74,10 +74,16 @@ class gpRegressor:
         nnew         = len(self.newL)
         self.deltakx = np.zeros((nnew,1))
         self.deltaky = np.zeros((nnew,1))
+        self.deltaKx = np.zeros((n+1,1))
+        self.deltaKy = np.zeros((n+1,1))
         # Fill in deltakx
         for j in range(nnew):
             self.deltakx[j][0] = self.kernelX.dkdy(self.observedL[n],self.newL[j])
             self.deltaky[j][0] = self.kernelY.dkdy(self.observedL[n],self.newL[j])
+        # Fill in deltaKx
+        for j in range(n+1):
+            self.deltaKx[j][0] = self.kernelX.dkdy(self.observedL[n],self.observedL[j])
+            self.deltaKy[j][0] = self.kernelY.dkdy(self.observedL[n],self.observedL[j])
 
     # Update single observation i
     def updateObserved(self,i,x,y,l):
@@ -169,7 +175,14 @@ class gpRegressor:
         newx+= self.Kx_1o[-1][0]*deltal*self.deltakx
         newy+= self.Ky_1o[-1][0]*deltal*self.deltaky
         # First order term #3: variation in Kx_1
-        # TODO
+        #  x= k^T (K+DK)^{-1}x
+        #  x= k^T ((I+DK.K^{-1})K)^{-1}x
+        #  x= k^T K^{-1}(I+DK.K^{-1})^{-1}x
+        # dx=-k^T K^{-1}.DK.K^{-1}x
+        newx-= deltal*self.Kx_1o[-1][0]*self.ktKx_1.dot(self.deltaKx)
+        newx-= deltal*self.ktKx_1[0][-1]*self.deltaKx.transpose().dot(self.Kx_1o)
+        newy-= deltal*self.Ky_1o[-1][0]*self.ktKy_1.dot(self.deltaKy)
+        newy-= deltal*self.ktKy_1[0][-1]*self.deltaKy.transpose().dot(self.Ky_1o)
         return newx, newy, self.newL, self.varx, self.vary
 
     # Generate a sample from perturbations
