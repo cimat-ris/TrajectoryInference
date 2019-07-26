@@ -111,4 +111,9 @@ def interaction_potential_for_a_set_of_pedestrians(pathSet):
             potentialProduct *= val
 
     print("Potential product of set:",potentialProduct)
+    #string = "{0:.10f}".format(potentialProduct)
+    round(potentialProduct,10)
+    val = potentialProduct*(pow(10,10))
+    string = str(val) + "e-10"
+    print("String:", string)
     return potentialProduct
