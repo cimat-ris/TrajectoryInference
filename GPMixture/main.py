@@ -6,6 +6,7 @@ from gp_code.goalsLearnedStructure import *
 from gp_code.mixtureOfGPs import *
 from gp_code.singleGP import *
 from utils.plotting import *
+from utils.dataManagement import *
 from testing import *
 from multipleAgents import *
 import numpy as np
@@ -78,11 +79,11 @@ pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t
 # Total path length
 pathSize = len(pathX)
 
-samplingViz = True
+samplingViz = False
 if samplingViz==True:
     path_sampling_test(img,stepUnit,goalsData)
 
-singleTest = True
+singleTest = False
 if singleTest==True:
     gp = singleGP(startG,nextG,stepUnit,goalsData)
     part_num = 10
@@ -103,7 +104,7 @@ if singleTest==True:
         vecX,vecY         = gp.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
-mixtureTest = True
+mixtureTest = False
 if mixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
     part_num = 10
@@ -133,13 +134,15 @@ if interactionTest == True:
 
 interactionWithSamplingTest = True
 if interactionWithSamplingTest == True:
-    sortedSet = get_path_set_given_time_interval(sortedPaths,370,850)
+    sortedSet = get_path_set_given_time_interval(sortedPaths,350,750)
     #plotPathSet(sortedSet,img)
 
     sampleSetVec, potentialVec = [], []
     observationsVec, samplesVec, potentialVec = [], [], []# Guardan en i: [obsX, obsY] y [sampleX, sampleY]
-    numTests = 6
+        
+    numTests = 4
     part_num = 3
+    currentTime = 800
     for i in range(numTests):
         samplePathSet = []
         observedX, observedY = [], []
@@ -148,8 +151,10 @@ if interactionWithSamplingTest == True:
             currentPath = sortedSet[j]
             pathSize = len(currentPath.x)
             knownN = int(pathSize/part_num)#int((i+1)*(pathSize/part_num))
-            observedPath = get_partial_path(currentPath,knownN)
-            trueX,trueY,trueL = get_known_set(currentPath.x,currentPath.y,currentPath.l,knownN)
+            #observedPath = get_partial_path(currentPath,knownN)
+            #trueX,trueY,trueL = get_known_set(currentPath.x,currentPath.y,currentPath.l,knownN)
+            observedPath = get_observed_path_given_current_time(currentPath, currentTime)   
+            trueX,trueY,trueL = observedPath.x.copy(), observedPath.y.copy(), observedPath.l.copy() 
             observedX.append(trueX)
             observedY.append(trueY)
 
