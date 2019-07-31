@@ -585,16 +585,15 @@ def get_prediction_set_from_data(z,knownN):
         newZ.append(z[j])
     return newZ
 
-def get_path_from_data(observedPath,x,y,l,speed):
-    initTime = observedPath.t[0]
+def get_trajectory_from_path(trajectory,x,y,l,speed):
+    initTime     = trajectory.t[0]
     arcLenToTime = arclen_to_time(initTime,l,speed)
     for i in range(len(x)):
-        observedPath.x.append( int(x[i]) )
-        observedPath.y.append( int(y[i]) )
-        observedPath.l.append( int(l[i]) )
-        observedPath.t.append(arcLenToTime[i])
-
-    return observedPath
+        trajectory.x.append( int(x[i]) )
+        trajectory.y.append( int(y[i]) )
+        trajectory.l.append( int(l[i]) )
+        trajectory.t.append(arcLenToTime[i])
+    return trajectory
 
 def get_partial_path(fullPath, knownN):
     x,y,t = fullPath.x[0:knownN], fullPath.y[0:knownN], fullPath.t[0:knownN]
@@ -623,4 +622,3 @@ def get_observed_path_given_current_time(fullPath, currentTime):
     x,y,t = fullPath.x[0:knownN], fullPath.y[0:knownN], fullPath.t[0:knownN]
     observedPath = path(t,x,y)
     return observedPath
-  

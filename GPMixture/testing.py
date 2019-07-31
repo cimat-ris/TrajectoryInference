@@ -317,7 +317,7 @@ def interaction_using_sampling_test(img,pathSet,startGoals,finishGoals,stepUnit,
         sampleX, sampleY = np.reshape(x,(x.shape[0])), np.reshape(y,(y.shape[0]))
         sampleXVec.append(sampleX)
         sampleYVec.append(sampleY)
-        samplePath = get_path_from_data(partialPath,sampleX,sampleY,l,speed)
+        samplePath = get_trajectory_from_path(partialPath,sampleX,sampleY,l,speed)
         samplePathSet.append(samplePath)
     interaction_potential_for_a_set_of_pedestrians(samplePathSet)
     #plot_multiple_path_samples_with_observations(img,observedXVec,observedYVec,sampleXVec,sampleYVec)

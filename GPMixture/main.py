@@ -79,10 +79,12 @@ pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t
 # Total path length
 pathSize = len(pathX)
 
+# Test function: simple path sampling
 samplingViz = False
 if samplingViz==True:
     path_sampling_test(img,stepUnit,goalsData)
 
+# Test function: prediction of single trajectories with single goals
 singleTest = False
 if singleTest==True:
     gp = singleGP(startG,nextG,stepUnit,goalsData)
@@ -104,6 +106,7 @@ if singleTest==True:
         vecX,vecY         = gp.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
+# Test function: prediction of single trajectories with multiple goals
 mixtureTest = False
 if mixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
@@ -117,62 +120,64 @@ if mixtureTest==True:
         predictedXYVec,varXYVec = mgps.predict()
         print('[INF] Plotting')
         plot_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
-        print("[RES] [Goals likelihood]\n",mgps.goalsLikelihood)
-        print("[RES] [Mean likelihood]:", mgps.meanLikelihood)
+        print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
+        print("[RES] [ean likelihood:", mgps.meanLikelihood)
         vecX,vecY = mgps.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
-#quit()
-
+# Test function: evaluation of interaction potentials on complete trajectories from the dataset
 interactionTest = False
 if interactionTest == True:
     sortedSet     = get_path_set_given_time_interval(sortedPaths,200,700)
-    print("Numero de trayectorias en el conjunto:",len(sortedSet))
+    print("[INF] Number of trajectories in the selected time interval:",len(sortedSet))
+    pot = interaction_potential_for_a_set_of_pedestrians(sortedSet)
+    print("[RES] Potential value: ",'{:1.4e}'.format(pot))
     plotPathSet(sortedSet,img)
 
-    interaction_potential_for_a_set_of_pedestrians(sortedSet)
-
+# Test function: evaluation of interaction potentials on sampled trajectories
 interactionWithSamplingTest = True
 if interactionWithSamplingTest == True:
+    # Get all the trajectories that exist in the dataset within some time interval
     sortedSet = get_path_set_given_time_interval(sortedPaths,350,750)
-    #plotPathSet(sortedSet,img)
 
     sampleSetVec, potentialVec = [], []
     observationsVec, samplesVec, potentialVec = [], [], []# Guardan en i: [obsX, obsY] y [sampleX, sampleY]
-        
+
     numTests = 4
     part_num = 3
     currentTime = 800
+    # Perform different tests
     for i in range(numTests):
         samplePathSet = []
         observedX, observedY = [], []
         sampleXVec, sampleYVec = [], []
+        # For all the paths in the set
         for j in range(len(sortedSet)):
-            currentPath = sortedSet[j]
-            pathSize = len(currentPath.x)
-            knownN = int(pathSize/part_num)#int((i+1)*(pathSize/part_num))
-            #observedPath = get_partial_path(currentPath,knownN)
-            #trueX,trueY,trueL = get_known_set(currentPath.x,currentPath.y,currentPath.l,knownN)
-            observedPath = get_observed_path_given_current_time(currentPath, currentTime)   
-            trueX,trueY,trueL = observedPath.x.copy(), observedPath.y.copy(), observedPath.l.copy() 
+            # Get the path
+            currentPath       = sortedSet[j]
+            # Get the partial paths up to now
+            observedPath      = get_observed_path_given_current_time(currentPath, currentTime)
+            trueX,trueY,trueL = observedPath.x.copy(), observedPath.y.copy(), observedPath.l.copy()
+            # Concatenate all the observed trajectories for display
             observedX.append(trueX)
             observedY.append(trueY)
-
-            startG = get_path_start_goal(observedPath,areas)
-            #print("Path #",j)
-            #print("[INF] Start goal", startG)
-            mgps = mixtureOfGPs(startG,stepUnit,goalsData)
+            # Determine the starting goal
+            startG      = get_path_start_goal(observedPath,areas)
+            # Generate the mixture
+            mgps        = mixtureOfGPs(startG,stepUnit,goalsData)
             likelihoods = mgps.update(trueX,trueY,trueL)
-
+            # Generate samples
             nSamples = 1
             vecX,vecY = mgps.generate_samples(nSamples)
-            for k in range(nSamples): #num de samples
+            # For all samples
+            for k in range(nSamples):
+                # Get the prediction
                 x, y = vecX[k], vecY[k]
                 sampleX, sampleY = np.reshape(x,(x.shape[0])), np.reshape(y,(y.shape[0]))
                 sampleXVec.append(sampleX)
                 sampleYVec.append(sampleY)
                 newL = arclength(sampleX,sampleY)
-                samplePath = get_path_from_data(observedPath,sampleX,sampleY,newL,speed)
+                samplePath = get_trajectory_from_path(observedPath,sampleX,sampleY,newL,speed)
                 samplePathSet.append(samplePath)
         if(len(samplePathSet) == len(sortedSet)):
             sampleSetVec.append(samplePathSet)

@@ -98,22 +98,14 @@ def interaction_potential(fi, fj):
                 j += 1
 
         potentialProduct *= potentialVal
-        #print("Potential value:", potentialVal)
-    #print("Potential product:",potentialProduct)
     return potentialProduct
 
 def interaction_potential_for_a_set_of_pedestrians(pathSet):
+    # Number of pedestrians in the set
     n = len(pathSet)
     potentialProduct = 1.
     for i in range(n):
         for j in range(i+1,n):
             val = interaction_potential(pathSet[i],pathSet[j])
             potentialProduct *= val
-
-    print("Potential product of set:",potentialProduct)
-    #string = "{0:.10f}".format(potentialProduct)
-    round(potentialProduct,10)
-    val = potentialProduct*(pow(10,10))
-    string = str(val) + "e-10"
-    print("String:", string)
     return potentialProduct
