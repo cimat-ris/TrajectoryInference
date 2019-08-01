@@ -91,7 +91,6 @@ def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observed
     goalsData.linearPriorsX[startG][finishG],goalsData.linearPriorsY[startG][finishG])
 
     # Evaluate the error
-    print('[INF] Evaluate the error')
     return mean_displacement_error([realX,realY],[predX,predY])
 
 #Toma N-nPoints como datos conocidos y predice los ultimos nPoints, regresa el error de la prediccion

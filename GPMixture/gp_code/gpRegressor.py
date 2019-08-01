@@ -24,7 +24,7 @@ class gpRegressor:
         self.sqRootVarX      = None
         self.sqRootVarY      = None
         self.newL            = None
-        self.epsilon         = 0.1
+        self.epsilon         = 0.5
         self.kernelX         = kernelX
         self.kernelY         = kernelY
         self.linearPriorX    = linearPriorX
@@ -194,7 +194,7 @@ class gpRegressor:
         # Noise from a normal distribution
         sX = np.random.normal(size=(nPredictions,1))
         sY = np.random.normal(size=(nPredictions,1))
-        return predictedX+self.sqRootVarX.dot(sX), predictedY+self.sqRootVarY.dot(sY)
+        return predictedX+self.sqRootVarX.dot(sX), predictedY+self.sqRootVarY.dot(sY), predictedL
 
     # Generate a sample from the predictive distribution with a perturbed finish point
     def sample_with_perturbed_finish_point(self):

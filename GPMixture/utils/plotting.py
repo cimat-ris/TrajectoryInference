@@ -47,7 +47,6 @@ def plotPathSet(vec, img):
 
 # Takes as an input a matrix of sets of paths and plot them all on img
 def plotPaths(pathSetMat, img):
-    print(pathSetMat)
     s         = pathSetMat.shape
     fig, axes = plt.subplots(s[0], s[1])
     for i in range(s[0]):
@@ -120,8 +119,7 @@ def plot_subgoal_prediction(img,trueX,trueY,knownN,nSubgoals,predictedXYVec,varX
             ax.add_patch(ell)
 
     plt.plot(realX,realY,'c--')
-
-    v = [0,1920,1080,0]
+    v = [0,img.shape[1],img.shape[0],0]
     plt.axis(v)
     plt.show()
 
@@ -145,7 +143,7 @@ def plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,finalXY):
     plt.plot(lineX,lineY,'b', label='Euclidean distance')
     ax.legend()
 
-    v = [0,1920,1080,0]
+    v = [0,img.shape[1],img.shape[0],0]
     plt.axis(v)
     plt.show()
 
@@ -276,8 +274,9 @@ def plot_path_set_samples_with_observations(img,ox,oy,x,y):
     plt.show()
 
 #Grafica con subplots los tests del sampling dado un conjunto de observaciones
-def plot_interaction_with_sampling_test(img,obsVec, samplesVec, potentialVec):
-    N = len(obsVec) #num de tests
+def plot_interaction_with_sampling_test(img,observedPaths, samplesVec, potentialVec):
+    N        = len(samplesVec) # Number of joint samples
+    numPaths = len(observedPaths)
     n, m = 1, 1
     if(N%3 == 0):
         n = 3
@@ -295,12 +294,13 @@ def plot_interaction_with_sampling_test(img,obsVec, samplesVec, potentialVec):
             axes[i,j].imshow(img)
             # Plot each test
             t = (i*m)+j
-            numPaths = len(obsVec[t][0])
             for k in range(numPaths):
                 colorId = (k)%len(color)
-                axes[i,j].plot(obsVec[t][0][k], obsVec[t][1][k],color[colorId],lw=2.0)
-                axes[i,j].plot(samplesVec[t][0][k],samplesVec[t][1][k],color[colorId]+'--',lw=2.0)
-                string = "{0:.12f}".format(potentialVec[t])#str(potentialVec[t])   
+                ox,oy = observedPaths[k].x,observedPaths[k].y
+                axes[i,j].plot(ox,oy,color[colorId],lw=2.0)
+                sx,sy = samplesVec[t][k].x,samplesVec[t][k].y
+                axes[i,j].plot(sx,sy,color[colorId]+'--',lw=2.0)
+                string = "{0:1.3e}".format(potentialVec[t])#str(potentialVec[t])
                 axes[i,j].set_title('IP='+string)
             axes[i,j].axis('off')
     plt.show()

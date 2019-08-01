@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from matplotlib.patches import Ellipse
 from copy import copy
+from copy import deepcopy
 import pandas as pd
 
 # Read the areas data from a file and take only the first 6 goals
@@ -140,54 +141,48 @@ if interactionWithSamplingTest == True:
     # Get all the trajectories that exist in the dataset within some time interval
     sortedSet = get_path_set_given_time_interval(sortedPaths,350,750)
 
-    sampleSetVec, potentialVec = [], []
-    observationsVec, samplesVec, potentialVec = [], [], []# Guardan en i: [obsX, obsY] y [sampleX, sampleY]
+    samplesJointTrajectories, potentialVec = [], []
+    observedPaths, samplesVec, potentialVec = [], [], []# Guardan en i: [obsX, obsY] y [sampleX, sampleY]
 
-    numTests = 4
+    numTests = 6
     part_num = 3
     currentTime = 800
-    # Perform different tests
+    allSampleTrajectories = []
+    # Perform numTests sampling for all trajectories
+    for j in range(len(sortedSet)):
+        # Get the partial path up to now
+        observedPaths.append(get_observed_path_given_current_time(sortedSet[j], currentTime))
+        trueX,trueY,trueL = observedPaths[j].x.copy(), observedPaths[j].y.copy(), observedPaths[j].l.copy()
+        # Determine the starting goal
+        startG      = get_path_start_goal(observedPaths[j],areas)
+        # Create the mixture, and update it with the observed data
+        mgps        = mixtureOfGPs(startG,stepUnit,goalsData)
+        likelihoods = mgps.update(trueX,trueY,trueL)
+        mgps.predict()
+        # Generate samples
+        vecX,vecY,vecL  = mgps.generate_samples(numTests)
+        allSampleTrajectories.append([vecX,vecY,vecL])
+
+    # Use the previously sampled trajectories to form joint samples
     for i in range(numTests):
-        samplePathSet = []
-        observedX, observedY = [], []
-        sampleXVec, sampleYVec = [], []
+        jointTrajectories    = []
         # For all the paths in the set
         for j in range(len(sortedSet)):
-            # Get the path
-            currentPath       = sortedSet[j]
-            # Get the partial paths up to now
-            observedPath      = get_observed_path_given_current_time(currentPath, currentTime)
-            trueX,trueY,trueL = observedPath.x.copy(), observedPath.y.copy(), observedPath.l.copy()
-            # Concatenate all the observed trajectories for display
-            observedX.append(trueX)
-            observedY.append(trueY)
-            # Determine the starting goal
-            startG      = get_path_start_goal(observedPath,areas)
-            # Generate the mixture
-            mgps        = mixtureOfGPs(startG,stepUnit,goalsData)
-            likelihoods = mgps.update(trueX,trueY,trueL)
-            # Generate samples
-            nSamples = 1
-            vecX,vecY = mgps.generate_samples(nSamples)
-            # For all samples
-            for k in range(nSamples):
-                # Get the prediction
-                x, y = vecX[k], vecY[k]
-                sampleX, sampleY = np.reshape(x,(x.shape[0])), np.reshape(y,(y.shape[0]))
-                sampleXVec.append(sampleX)
-                sampleYVec.append(sampleY)
-                newL = arclength(sampleX,sampleY)
-                samplePath = get_trajectory_from_path(observedPath,sampleX,sampleY,newL,speed)
-                samplePathSet.append(samplePath)
-        if(len(samplePathSet) == len(sortedSet)):
-            sampleSetVec.append(samplePathSet)
-            interactionPotential = interaction_potential_for_a_set_of_pedestrians(samplePathSet)
-            potentialVec.append(interactionPotential)
-            observationsVec.append([observedX, observedY])
-            samplesVec.append([sampleXVec,sampleYVec])
+            # Form trajectory from path
+            sampleX,sampleY,sampleL = allSampleTrajectories[j]
+            predictedTrajectory     = deepcopy(observedPaths[j])
+            # TODO: make it a method instead of function
+            predictedTrajectory     = get_trajectory_from_path(predictedTrajectory,sampleX[i],sampleY[i],sampleL[i],speed)
+            # Keep trajectory as an element of the joint sample
+            jointTrajectories.append(predictedTrajectory)
+            # When we have all the predictions to get one joint prediction
+            if(len(jointTrajectories) == len(sortedSet)):
+                samplesJointTrajectories.append(jointTrajectories)
+                # Evaluation of the potential
+                interactionPotential = interaction_potential_for_a_set_of_pedestrians(jointTrajectories)
+                potentialVec.append(interactionPotential)
+    plot_interaction_with_sampling_test(img,observedPaths,samplesJointTrajectories,potentialVec)
 
-        #plot_path_set_samples_with_observations(img,observedX,observedY,sampleXVec,sampleYVec)#plotPathSet(samplePathSet,img)
-    plot_interaction_with_sampling_test(img,observationsVec,samplesVec,potentialVec)
     maxPotential = 0
     maxId = -1
     for i in range(len(potentialVec)):

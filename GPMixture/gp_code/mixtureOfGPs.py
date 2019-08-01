@@ -14,16 +14,23 @@ class mixtureOfGPs:
 
     # Constructor
     def __init__(self, startG, stepUnit, goalsData):
+        # The goals structure
         self.goalsData       = goalsData
-        # Goals
+        # Sub-set of likely goals
         self.likelyGoals     = []
+        # Number of sub-goals
         self.nSubgoals       = 2
+        # Number of elements in the mixture (not all are used at the same time)
         n                    = (self.nSubgoals+1)*self.goalsData.nGoals
-        self.goalsLikelihood = np.empty(n, dtype=object)
+        # Points to evaluate the likelihoods
         self.nPoints         = 5
+        # Step unit
         self.stepUnit        = stepUnit
+        # Starting goal
         self.startG          = startG
+        # Likelihoods
         self.goalsLikelihood = np.zeros(n, dtype=float)
+        # Predicted means (per element of the mixture)
         self.predictedMeans  = [np.zeros((0,3), dtype=float)]*n
         self.predictedVars   = [np.zeros((0,0,0), dtype=float)]*n
         self.sqRootVarX      = np.empty(n, dtype=object)
@@ -130,8 +137,8 @@ class mixtureOfGPs:
             # Choose a subgoal randomly
             j = np.random.choice(self.nSubgoals)
             k = end+(1+j)*self.goalsData.nGoals
-            self.gpPathRegressor[k].updateObservations(self.observedX,self.observedY,self.observedL) #we call this in case the subgoals haven't been updated
-            #
+            self.gpPathRegressor[k].updateObservations(self.observedX,self.observedY,self.observedL)
+            # We call this in case the subgoals haven't been updated
             finishX, finishY, axis = uniform_sampling_1D_around_point(1, subgoalsCenter[j], s, self.goalsData.areasAxis[end])
 
 
@@ -143,9 +150,10 @@ class mixtureOfGPs:
         return self.gpPathRegressor[k].sample_with_perturbation(deltaX,deltaY)
 
     def generate_samples(self,nSamples):
-        vecX, vecY = [], []
+        vecX, vecY, vecL = [], [], []
         for k in range(nSamples):
-            x, y = self.sample()
+            x, y, l = self.sample()
             vecX.append(x)
             vecY.append(y)
-        return vecX,vecY
+            vecL.append(l)
+        return vecX,vecY,vecL
