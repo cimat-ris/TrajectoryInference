@@ -47,8 +47,6 @@ def interaction_potential_using_approximation(fi, fj):
     while(i < n and j < m):
         potentialVal = 1.
         ti, tj = fi.t[i], fj.t[j]
-        #checar si el tiempo coincide
-        #print("[Current time]: i=",fi.t[i],", j=",fj.t[j])
         if ti < tj:
             if ti > fj.t[j-1]:
                 val = search_value(0,1,ti,fj.t[j-1],tj)
@@ -70,9 +68,7 @@ def interaction_potential_using_approximation(fi, fj):
             if j < m:
                 j += 1
         potentialProduct *= potentialVal
-        print("Potential value:", potentialVal)
-        print("Potential product:",potentialProduct)
-    #print("Potential product:",potentialProduct)
+    return potentialProduct
 
 #Para un par de agentes regresa el valor del potencial
 #En este caso si fi(t) existe pero fj(t) no, el valor del potencial en este t es 1
@@ -83,7 +79,6 @@ def interaction_potential(fi, fj):
     while(i < n and j < m):
         potentialVal = 1.
         ti, tj = fi.t[i], fj.t[j]
-        #print("[Current time]: i=",ti,", j=",tj)
         if abs(ti - tj) < 3:
             potentialVal = potential_value([fj.x[j],fj.y[j]], [fi.x[i],fi.y[i]])
             if i < n:
@@ -106,6 +101,9 @@ def interaction_potential_for_a_set_of_pedestrians(pathSet):
     potentialProduct = 1.
     for i in range(n):
         for j in range(i+1,n):
-            val = interaction_potential(pathSet[i],pathSet[j])
+            #val = interaction_potential(pathSet[i],pathSet[j])
+            #print("\nSimple Interaction Potential:",val)
+            val = interaction_potential_using_approximation(pathSet[i],pathSet[j])
+            #print("Interaction Potential using approximation:",val)
             potentialProduct *= val
     return potentialProduct
