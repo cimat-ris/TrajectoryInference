@@ -28,7 +28,7 @@ def trajectory_prediction_test(img,x,y,l,knownN,startG,finishG,goals,unitMat,ste
     finalPoints = get_goal_center_and_boundaries(goals[finishG])
 
     #newL, finalL = get_prediction_set_given_size(lastKnownPoint,finalPoints[0],unit,20)
-    newL, finalL = get_prediction_set(lastKnownPoint,finalPoints[0],unit,stepUnit)
+    newL, finalL, __ = get_prediction_set(lastKnownPoint,finalPoints[0],unit,stepUnit)
     finalArcLen = []
     for i in range(1):#len(finalPoints)):
         finalArcLen.append(get_arclen_to_finish_point(lastKnownPoint,finalPoints[i],unit))
@@ -54,7 +54,7 @@ def subgoal_prediction(x,y,l,knownN,subgoal,unit,stepUnit,kernelX,kernelY):
 
     finalPoints = get_goal_center_and_boundaries(subgoal)
 
-    newL, finalL = get_prediction_set(lastKnownPoint,finalPoints[0],unit,stepUnit)
+    newL, finalL, __ = get_prediction_set(lastKnownPoint,finalPoints[0],unit,stepUnit)
     finalArcLen = []
 
     for i in range(1):#len(finalPoints)):

@@ -47,7 +47,7 @@ class gpRegressor:
         # Last really observed point
         lastObservedPoint = [observedX[-1], observedY[-1], observedL[-1]]
         # Generate the set of l values at which to predict x,y
-        self.newL, finalL = get_prediction_set(lastObservedPoint,self.finalAreaCenter,self.unit,self.stepUnit)
+        self.newL, finalL, self.dist = get_prediction_set(lastObservedPoint,self.finalAreaCenter,self.unit,self.stepUnit)
         # Fill in K (n+1 x n+1)
         for i in range(n):
             self.Kx[i][i] = self.kernelX(observedL[i],observedL[i])
@@ -159,13 +159,14 @@ class gpRegressor:
     def prediction_to_perturbed_finish_point(self,deltax,deltay):
         n            = len(self.observedX)
         nnew         = len(self.newL)
-        # Express the displacement wrt the nominal ending point
+        # Express the displacement wrt the nominal ending point, as a nx1 vector
         deltaX       = np.zeros((n,1))
         deltaX[n-1,0]= deltax
         deltaY       = np.zeros((n,1))
         deltaY[n-1,0]= deltay
-        # TODO: reevaluate
-        deltal       = 10.0
+        # TODO: Reevaluate l (only the last point)
+        # deltal       = 10.0
+        deltal = deltax*(self.finalAreaCenter[0]-self.observedX[n-2])/self.dist + deltay*(self.finalAreaCenter[1]--self.observedY[n-2])/self.dist
 
         # In this approximation, only the predictive mean is adapted (will be used for sampling)
         # First order term #1: variation in observedX

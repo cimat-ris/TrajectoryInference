@@ -104,11 +104,11 @@ if singleTest==True:
         print('[INF] Plotting')
         print("[RES] [Likelihood]: ",likelihood)
         # Generate samples
-        vecX,vecY         = gp.generate_samples(100)
+        vecX,vecY,__         = gp.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 # Test function: prediction of single trajectories with multiple goals
-mixtureTest = False
+mixtureTest = True
 if mixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
     part_num = 10
@@ -123,7 +123,7 @@ if mixtureTest==True:
         plot_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
         print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
         print("[RES] [ean likelihood:", mgps.meanLikelihood)
-        vecX,vecY = mgps.generate_samples(100)
+        vecX,vecY,__ = mgps.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 # Test function: evaluation of interaction potentials on complete trajectories from the dataset
