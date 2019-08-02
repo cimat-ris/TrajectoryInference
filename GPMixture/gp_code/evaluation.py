@@ -116,3 +116,23 @@ def compute_prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,g
     error = average_displacement_error([lastX,lastY],[predX,predY])
     #print("[Error]:",error)
     return error
+
+#Busco un alpha en [0,1] tal que t = alpha*T1 + (1-alpha)*T2
+def search_value(a, b, t, T1, T2):
+    alpha = (a+b)/2
+    val = (1-alpha)*T1 + alpha*T2
+    if(abs(t-val) < timeRange):
+        return alpha
+    elif val > t:
+        return search_value(a,alpha,t,T1,T2)
+    elif val < t:
+        return search_value(alpha,b,t,T1,T2)
+
+#Dado un valor en [0,1], regresa un punto (x,y) con x en [path.x_i-1, pathx_i]... usando interpolacion lineal
+def get_approximation(val,path,index):
+    _x = (1-val)*path.x[index-1] + val*path.x[index]
+    _y = (1-val)*path.y[index-1] + val*path.y[index]
+    return _x,_y
+    
+def ADE_of_prediction_given_future_time(realPath, predictedPath, knownN, futureTime):
+    lastObservedTime = realPath.t[knownN-1]
