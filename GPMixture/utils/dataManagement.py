@@ -54,6 +54,27 @@ def get_paths_from_file(path_file,areas):
                 paths.append(auxPath)
     return paths, multigoal_paths
 
+def get_uncut_paths_from_file(file):
+    paths = []
+    # Open file
+    with open(file) as f:
+        # Each line should contain a path
+        for line in f:
+            dataX, dataY, dataT = [],[],[]
+            # Split the line into sub-strings
+            data = line.split()
+            for i in range(0, len(data), 3):
+                x_ = int(data[i])
+                y_ = int(data[i+1])
+                t_ = int(data[i+2])
+                if equal(dataX,dataY,x_,y_) == 0: #checks if the last point of data is the same as (x_,y_), if it is then its discarded
+                    dataX.append(x_)
+                    dataY.append(y_)
+                    dataT.append(t_)
+            newPath = path(dataT,dataX,dataY)
+            paths.append(newPath)
+    return paths
+    
 """Recibe un conjunto de paths y obtiene los puntos (x,y,z)
 con z = {tiempo, long de arco} si flag = {"time", "length"}"""
 def get_data_from_paths(paths, flag):
