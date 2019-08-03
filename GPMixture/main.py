@@ -109,7 +109,7 @@ if singleTest==True:
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 # Test function: prediction of single trajectories with multiple goals
-mixtureTest = True
+mixtureTest = False
 if mixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
     part_num = 10
@@ -141,7 +141,7 @@ if interactionTest == True:
     plotPathSet(sortedSet,img)
 
 # Test function: evaluation of interaction potentials on sampled trajectories
-interactionWithSamplingTest = True
+interactionWithSamplingTest = False
 if interactionWithSamplingTest == True:
     # Get all the trajectories that exist in the dataset within some time interval
     sortedSet = get_path_set_given_time_interval(sortedPaths,350,750)
@@ -196,6 +196,29 @@ if interactionWithSamplingTest == True:
             maxId = i
     #print("Best configuration: figure ", maxId+2) #Figure 1 son las trayectorias reales
 
+testingData = get_uncut_paths_from_file('datasets/CentralStation_paths_10000-12500.txt')
+testingPaths = getUsefulPaths(testingData,areas) #410 paths
+
+predictionErrorTest = True
+if predictionErrorTest == True:
+    print("[INF] Number of testing paths:",len(testingPaths))
+    plotPathSet(testingPaths, img)
+    partNum = 3
+    for i in range(3):#len(testingPaths)):
+        currentPath = testingPaths[i]
+        startG = get_path_start_goal(currentPath,areas)
+        mgps = mixtureOfGPs(startG,stepUnit,goalsData)
+        
+        for j in range(partNum-1):
+            knownN = int((j+1)*(pathSize/part_num)) #numero de datos conocidos
+            trueX,trueY,trueL = get_known_set(currentPath.x,currentPath.y,currentPath.l,knownN)
+            """Multigoal prediction test"""
+            likelihoods = mgps.update(trueX,trueY,trueL)
+            predictedXYVec,varXYVec = mgps.predict()
+            print('[INF] Plotting')
+            plot_multiple_predictions_and_goal_likelihood(img,currentPath.x,currentPath.y,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
+            print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
+            print("[RES] Mean likelihood:", mgps.meanLikelihood)
 
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
