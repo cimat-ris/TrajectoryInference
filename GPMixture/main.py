@@ -97,6 +97,7 @@ if singleTest==True:
         trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
         """Single goal prediction test"""
         # Update the GP
+        # TODO: too slow
         likelihood        = gp.update(trueX,trueY,trueL)
         # Perform prediction
         predictedXY,varXY = gp.predict()
@@ -113,16 +114,20 @@ if mixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
     part_num = 10
     steps = 10
+    # For different sub-parts of the trajectory
     for i in range(1,part_num-1):
         knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
         trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
         """Multigoal prediction test"""
+        print('[INF] Updating likelihoods')
         likelihoods = mgps.update(trueX,trueY,trueL)
+        print('[INF] Performing prediction')
         predictedXYVec,varXYVec = mgps.predict()
         print('[INF] Plotting')
         plot_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
         print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
-        print("[RES] [ean likelihood:", mgps.meanLikelihood)
+        print("[RES] Mean likelihood:", mgps.meanLikelihood)
+        print('[INF] Generating samples')        
         vecX,vecY,__ = mgps.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 

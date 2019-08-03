@@ -67,7 +67,6 @@ class mixtureOfGPs:
             # When close to the goal, define sub-goals
             if(distToGoal < 0.4*dist):
                 for j in range(self.nSubgoals):
-                    print('[INF] Updating subgoal ',j)
                     k= i+(j+1)*self.goalsData.nGoals
                     self.gpPathRegressor[k].updateObservations(observedX,observedY,observedL)
             else:
@@ -127,6 +126,7 @@ class mixtureOfGPs:
         if self.predictedMeans[end].shape[0]>0:
             finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.areas[end], self.goalsData.areasAxis[end])
         else:
+            # TODO: too slow?
             self.update(self.observedX,self.observedY,self.observedL)
             # Use subgoals: choose one randomly and sample
             subgoalsCenter, size = get_subgoals_center_and_size(self.nSubgoals, self.goalsData.areas[end], self.goalsData.areasAxis[end])

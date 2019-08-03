@@ -577,24 +577,6 @@ def get_known_set(x,y,z,knownN):
 
     return trueX, trueY, trueZ
 
-def get_prediction_set_from_data(z,knownN):
-    N = len(z)
-    newZ = []
-    knownN = int(knownN)
-    for j in range(knownN-1, N): #numero de datos conocidos
-        newZ.append(z[j])
-    return newZ
-
-def get_trajectory_from_path(trajectory,x,y,l,speed):
-    initTime     = trajectory.t[0]
-    arcLenToTime = arclen_to_time(initTime,l,speed)
-    for i in range(len(x)):
-        trajectory.x.append( int(x[i]) )
-        trajectory.y.append( int(y[i]) )
-        trajectory.l.append( int(l[i]) )
-        trajectory.t.append(arcLenToTime[i])
-    return trajectory
-
 def get_partial_path(fullPath, knownN):
     x,y,t = fullPath.x[0:knownN], fullPath.y[0:knownN], fullPath.t[0:knownN]
     partialPath = path(t,x,y)

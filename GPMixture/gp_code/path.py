@@ -9,6 +9,7 @@ import math
 from utils.dataManagement import *
 
 class path:
+    # Constructor
     def __init__(self,vecT,vecX,vecY):
         self.t = vecT.copy()
         self.x = vecX.copy()
@@ -19,6 +20,17 @@ class path:
             self.speed = self.length/self.duration
         else:
             self.speed = 0.
+
+    def get_trajectory_from_path(self,x,y,l,speed):
+        initTime     = self.t[0]
+        arcLenToTime = arclen_to_time(initTime,l,speed)
+        for i in range(len(x)):
+            self.x.append( int(x[i]) )
+            self.y.append( int(y[i]) )
+            self.l.append( int(l[i]) )
+            self.t.append(arcLenToTime[i])
+        return self
+
 
 def statistics(t,x,y):
     duration = t[len(t)-1] - t[0]
