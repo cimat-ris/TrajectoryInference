@@ -126,8 +126,6 @@ class mixtureOfGPs:
         if self.predictedMeans[end].shape[0]>0:
             finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.areas[end], self.goalsData.areasAxis[end])
         else:
-            # TODO: too slow?
-            self.update(self.observedX,self.observedY,self.observedL)
             # Use subgoals: choose one randomly and sample
             subgoalsCenter, size = get_subgoals_center_and_size(self.nSubgoals, self.goalsData.areas[end], self.goalsData.areasAxis[end])
             if self.goalsData.areasAxis[end]==0:
@@ -137,10 +135,9 @@ class mixtureOfGPs:
             # Choose a subgoal randomly
             j = np.random.choice(self.nSubgoals)
             k = end+(1+j)*self.goalsData.nGoals
-            self.gpPathRegressor[k].updateObservations(self.observedX,self.observedY,self.observedL)
             # We call this in case the subgoals haven't been updated
             finishX, finishY, axis = uniform_sampling_1D_around_point(1, subgoalsCenter[j], s, self.goalsData.areasAxis[end])
-
+            print(subgoalsCenter[j], s, finishX, finishY)
 
         # Use a pertubation approach to get the sample
         goalCenter = middle_of_area(self.goalsData.areas[end])
