@@ -202,23 +202,26 @@ testingPaths = getUsefulPaths(testingData,areas) #410 paths
 predictionErrorTest = True
 if predictionErrorTest == True:
     print("[INF] Number of testing paths:",len(testingPaths))
-    plotPathSet(testingPaths, img)
-    partNum = 3
-    for i in range(3):#len(testingPaths)):
+    #plotPathSet(testingPaths, img)
+    partNum = 2
+    for i in range(1):#len(testingPaths)):
         currentPath = testingPaths[i]
         startG = get_path_start_goal(currentPath,areas)
         mgps = mixtureOfGPs(startG,stepUnit,goalsData)
         
         for j in range(partNum-1):
-            knownN = int((j+1)*(pathSize/part_num)) #numero de datos conocidos
+            knownN = int((j+1)*(pathSize/partNum)) #numero de datos conocidos
             trueX,trueY,trueL = get_known_set(currentPath.x,currentPath.y,currentPath.l,knownN)
             """Multigoal prediction test"""
             likelihoods = mgps.update(trueX,trueY,trueL)
-            predictedXYVec,varXYVec = mgps.predict()
+            predictedMeans,varXYVec = mgps.predict()
+            predictedXYVec = get_prediction_arrays(predictedMeans,nGoals)
             print('[INF] Plotting')
-            plot_multiple_predictions_and_goal_likelihood(img,currentPath.x,currentPath.y,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
+            plot_multiple_predictions_and_goal_likelihood(img,currentPath.x,currentPath.y,knownN,goalsData.nGoals,likelihoods,predictedMeans,varXYVec)
             print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
-            print("[RES] Mean likelihood:", mgps.meanLikelihood)
+            #print("[RES] Mean likelihood:", mgps.meanLikelihood)
+            futureSteps = 8
+            #ADE_of_prediction_given_future_steps(currentPath, predictedXYVec, knownN, futureSteps)
 
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
