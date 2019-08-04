@@ -578,6 +578,18 @@ def get_goal_of_point(p, goals):
             return i
     return -1
 
+def column(matrix, i):
+    return [row[i] for row in matrix]
+
+#predictedMeans es una lista que en i contiene array([X Y L]), esta funcion regresa una lista con [X, Y] en i
+def get_prediction_arrays(predictedMeans, nGoals):
+    XYvec = []
+    for i in range(nGoals):
+        x = predictedMeans[i][:,0]
+        y = predictedMeans[i][:,1]    
+        XYvec.append([x,y])
+    return XYvec
+
 """ARC LENGHT TO TIME"""
 def arclen_to_time(initTime,l,speed):
     t = [initTime]

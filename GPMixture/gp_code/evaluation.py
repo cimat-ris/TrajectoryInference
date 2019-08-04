@@ -4,6 +4,8 @@ Error and likelihood evaluation
 import numpy as np
 import math
 from gp_code.regression import *
+from utils.dataManagement import *
+
 
 D = 150.
 
@@ -134,5 +136,15 @@ def get_approximation(val,path,index):
     _y = (1-val)*path.y[index-1] + val*path.y[index]
     return _x,_y
     
-def ADE_of_prediction_given_future_time(realPath, predictedPath, knownN, futureTime):
-    lastObservedTime = realPath.t[knownN-1]
+def ADE_of_prediction_given_future_steps(fullPath, predictedXY, knownN, futureSteps):
+    lastObservedTime = fullPath.t[knownN-1]
+    realX = fullPath.x[knownN : futureSteps]
+    realY = fullPath.y[knownN : futureSteps]
+    
+    predX = predictedXY[0][:futureSteps]
+    predY = predictedXY[1][:futureSteps]
+    print("Real path:\nX:",realX,"\nY:",realY)
+    print("Predicted path:\nX:",predX,"\nY:",predY)
+    error = mean_displacement_error([realX,realY],[predX,predY])
+    print("[INF] ADE of the next",futureSteps,"steps: ",error)
+    
