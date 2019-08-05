@@ -30,6 +30,15 @@ class path:
             self.l.append( int(l[i]) )
             self.t.append(arcLenToTime[i])
         return self
+    
+    def join_path_with_sample(self,sampleX,sampleY,sampleL,speed):
+        self.x = self.x + list(sampleX[:,0])
+        self.y = self.y + list(sampleY[:,0])
+        #print("NewY:",self.x)
+        self.l = self.l + sampleL
+        for i in range(len(sampleL)):
+            self.t.append( int(sampleL[i]/speed) )
+        #print("NewT:",self.t)
 
 
 def statistics(t,x,y):
