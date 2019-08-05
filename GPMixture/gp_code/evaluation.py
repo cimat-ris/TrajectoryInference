@@ -75,8 +75,8 @@ def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observed
     trueL = observedL[0:halfN]
 
     # Get the last point and add it to the observed data
-    finishXY = middle_of_area(goalsData.areas[finishG])
-    finishD  = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
+    finishXY,__ = middle_of_area(goalsData.areas[finishG])
+    finishD     = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
     trueX.append(finishXY[0])
     trueY.append(finishXY[1])
     trueL.append(finishD*goalsData.units[startG][finishG])
@@ -102,8 +102,8 @@ def compute_prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,g
     trueY = knownY[0:knownN -nPoints]
     trueL = knownL[0:knownN -nPoints]
 
-    finishXY = middle_of_area(goal)
-    finishD = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
+    finishXY,__ = middle_of_area(goal)
+    finishD     = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
     trueX.append(finishXY[0])
     trueY.append(finishXY[1])
     trueL.append(finishD*unit)
@@ -135,14 +135,13 @@ def get_approximation(val,path,index):
     _x = (1-val)*path.x[index-1] + val*path.x[index]
     _y = (1-val)*path.y[index-1] + val*path.y[index]
     return _x,_y
-    
+
 def ADE_of_prediction_given_future_steps(fullPath, predictedXY, knownN, futureSteps):
     realX = fullPath.x[knownN : knownN+futureSteps]
     realY = fullPath.y[knownN : knownN+futureSteps]
-    
+
     predX = predictedXY[0][:futureSteps]
     predY = predictedXY[1][:futureSteps]
-    
+
     error = mean_displacement_error([realX,realY],[predX,predY])
     return error
-    

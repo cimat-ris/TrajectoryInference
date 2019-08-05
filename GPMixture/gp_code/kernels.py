@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 import math as m
 
+# TODO: pass in a different way
 # Standard deviation for the observation noise
 nsigma = 7.50
 
