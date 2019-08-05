@@ -180,8 +180,8 @@ def get_arclen_to_finish_point(point, finishPoint, unit):
 def get_subgoals_areas(nSubgoals, goal, axis):
     goalDX = goal[len(goal) -2] - goal[0]
     goalDY = goal[len(goal) -1] - goal[1]
-    goalCenterX = goal[0]+ goalDX/2
-    goalCenterY = goal[1]+ goalDY/2
+    goalCenterX = goal[0]+ goalDX/2.0
+    goalCenterY = goal[1]+ goalDY/2.0
     goalMinX    = goal[0]
     goalMinY    = goal[1]
     goalMaxX    = goal[-2]
@@ -217,15 +217,15 @@ def get_subgoals_center_and_size(nSubgoals, goal, axis):
         _x = goal[0]
         _y = goalCenterY
         for i in range(nSubgoals):
-            subgoalsCenter.append( [_x+subgoalX/2, _y] )
+            subgoalsCenter.append( [_x+subgoalX/2.0, _y] )
             _x += subgoalX
-    if axis == 1:
+    else:
         subgoalX = goalX
         subgoalY = goalY/nSubgoals
         _x = goalCenterX
         _y = goal[1]
         for i in range(nSubgoals):
-            subgoalsCenter.append( [_x, _y+subgoalY/2] )
+            subgoalsCenter.append( [_x, _y+subgoalY/2.0] )
             _y += subgoalY
 
     return subgoalsCenter, [subgoalX, subgoalY]

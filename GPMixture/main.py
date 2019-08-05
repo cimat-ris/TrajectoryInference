@@ -114,6 +114,7 @@ if mixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
     part_num = 10
     steps = 10
+    # plot_scene_structure(img,goalsData)
     # For different sub-parts of the trajectory
     for i in range(1,part_num-1):
         knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
@@ -124,7 +125,7 @@ if mixtureTest==True:
         print('[INF] Performing prediction')
         predictedXYVec,varXYVec = mgps.predict()
         print('[INF] Plotting')
-        plot_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
+        #plot_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
         print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
         print("[RES] Mean likelihood:", mgps.meanLikelihood)
         print('[INF] Generating samples')

@@ -52,15 +52,13 @@ def uniform_sampling_1D(m, goal, axis):
 # Sample m points (x,y) along a line segment centered on point, with uniform sampling
 def uniform_sampling_1D_around_point(m, point, size, axis):
     _x, _y = [], []
-    s = int(size/2)
     for i  in range(m):
-        t = np.random.uniform(-s,s)
-        print(t)
+        t = np.random.uniform(0,size)
         if(axis == 0):
-            _x.append(point[0]+t)
+            _x.append(point[0]-size/2.0+t)
             _y.append(point[1])
-        if(axis == 1):
-            _y.append(point[1]+t)
+        else:
+            _y.append(point[1]-size/2.0+t)
             _x.append(point[0])
     # Returns the axis of sampling too
     return _x, _y, axis

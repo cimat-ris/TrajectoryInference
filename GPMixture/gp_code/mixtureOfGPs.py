@@ -43,7 +43,6 @@ class mixtureOfGPs:
         for i in range(self.goalsData.nGoals):
             # One regressor per goal
             self.gpPathRegressor[i] = gpRegressor(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i], self.goalsData.linearPriorsY[self.startG][i])
-
             ## TODO:
             subareas = get_subgoals_areas(self.nSubgoals, self.goalsData.areas[i],self.goalsData.areasAxis[i])
             # For sub-goals
@@ -137,13 +136,10 @@ class mixtureOfGPs:
             k = end+(1+j)*self.goalsData.nGoals
             # We call this in case the subgoals haven't been updated
             finishX, finishY, axis = uniform_sampling_1D_around_point(1, subgoalsCenter[j], s, self.goalsData.areasAxis[end])
-            print(subgoalsCenter[j], s, finishX, finishY)
 
         # Use a pertubation approach to get the sample
-        goalCenter = middle_of_area(self.goalsData.areas[end])
-        deltaX = finishX[0]-goalCenter[0]
-        deltaY = finishY[0]-goalCenter[1]
-
+        deltaX = finishX[0]-self.gpPathRegressor[k].finalAreaCenter[0]
+        deltaY = finishY[0]-self.gpPathRegressor[k].finalAreaCenter[1]
         return self.gpPathRegressor[k].sample_with_perturbation(deltaX,deltaY)
 
     def generate_samples(self,nSamples):

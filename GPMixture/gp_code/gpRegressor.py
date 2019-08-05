@@ -36,7 +36,6 @@ class gpRegressor:
         self.finalAreaCenter = middle_of_area(finalArea)
 
     # Update observations for the Gaussian process (matrix K)
-    # TODO: should remove finishPoint (passed in the constructor)
     def updateObservations(self,observedX,observedY,observedL):
         n                    = len(observedX)
         self.observedX       = np.zeros((n+1,1))
@@ -164,10 +163,8 @@ class gpRegressor:
         deltaX[n-1,0]= deltax
         deltaY       = np.zeros((n,1))
         deltaY[n-1,0]= deltay
-        # TODO: Reevaluate l (only the last point)
-        # deltal       = 10.0
-        deltal = deltax*(self.finalAreaCenter[0]-self.observedX[n-2])/self.dist + deltay*(self.finalAreaCenter[1]--self.observedY[n-2])/self.dist
-
+        # A first order approximation of the new final l
+        deltal       = deltax*(self.finalAreaCenter[0]-self.observedX[n-2])/self.dist + deltay*(self.finalAreaCenter[1]--self.observedY[n-2])/self.dist
         # In this approximation, only the predictive mean is adapted (will be used for sampling)
         # First order term #1: variation in observedX
         newx = self.newX + self.ktKx_1.dot(deltaX)
@@ -188,7 +185,7 @@ class gpRegressor:
 
     # Generate a sample from perturbations
     def sample_with_perturbation(self,deltaX,deltaY):
-        newx, newy, newl, varx, vary = self.prediction_to_finish_point() #we call this function to obtain newX, newY
+        # newx, newy, newl, varx, vary = self.prediction_to_finish_point() #we call this function to obtain newX, newY
         predictedX, predictedY, predictedL, varX, varY = self.prediction_to_perturbed_finish_point(deltaX,deltaY)
         # Number of predicted points
         nPredictions = len(predictedX)
@@ -200,7 +197,7 @@ class gpRegressor:
     # Generate a sample from the predictive distribution with a perturbed finish point
     def sample_with_perturbed_finish_point(self):
         # Sample end point around the sampled goal
-        finishX, finishY, axis = uniform_sampling_1D(1, self.finalArea, self.finalAreaAxis)
+        finishX, finishY, axis = uniform_sampling_1D_around_point(1, self.finalAreaCenter, self.finalAreaAxis)
         # Use a pertubation approach to get the sample
         deltaX = finishX[0]-self.finalAreaCenter[0]
         deltaY = finishY[0]-self.finalAreaCenter[1]
