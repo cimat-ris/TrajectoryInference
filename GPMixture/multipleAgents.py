@@ -13,7 +13,7 @@ import numpy as np
 import math
 from copy import copy
 
-timeRange = 5
+timeRange = 3.
 
 #Busco un alpha en [0,1] tal que t = alpha*T1 + (1-alpha)*T2
 def search_value(a, b, t, T1, T2):
