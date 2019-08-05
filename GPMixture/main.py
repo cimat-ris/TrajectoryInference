@@ -109,7 +109,7 @@ if singleTest==True:
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 # Test function: prediction of single trajectories with multiple goals
-mixtureTest = True
+mixtureTest =  False
 if mixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
     part_num = 10
@@ -142,7 +142,7 @@ if interactionTest == True:
     plotPathSet(sortedSet,img)
 
 # Test function: evaluation of interaction potentials on sampled trajectories
-interactionWithSamplingTest = False
+interactionWithSamplingTest = True
 if interactionWithSamplingTest == True:
     # Get all the trajectories that exist in the dataset within some time interval
     sortedSet = get_path_set_given_time_interval(sortedPaths,350,750)
@@ -177,8 +177,8 @@ if interactionWithSamplingTest == True:
             # Form trajectory from path
             sampleX,sampleY,sampleL = allSampleTrajectories[j]
             predictedTrajectory     = deepcopy(observedPaths[j])
-            # TODO: make it a method instead of function
-            predictedTrajectory     = get_trajectory_from_path(predictedTrajectory,sampleX[i],sampleY[i],sampleL[i],speed)
+            # TODO: make it a method instead of function     *done*
+            predictedTrajectory.join_path_with_sample(sampleX[i],sampleY[i],sampleL[i],speed)#     = get_trajectory_from_path(predictedTrajectory,sampleX[i],sampleY[i],sampleL[i],speed)
             # Keep trajectory as an element of the joint sample
             jointTrajectories.append(predictedTrajectory)
             # When we have all the predictions to get one joint prediction
@@ -204,7 +204,7 @@ predictionErrorTest = True
 if predictionErrorTest == True:
     print("[INF] Number of testing paths:",len(testingPaths))
     #plotPathSet(testingPaths, img)
-    partNum = 2
+    partNum = 5
     for i in range(1):#len(testingPaths)):
         currentPath = testingPaths[i]
         startG = get_path_start_goal(currentPath,areas)
@@ -221,8 +221,13 @@ if predictionErrorTest == True:
             plot_multiple_predictions_and_goal_likelihood(img,currentPath.x,currentPath.y,knownN,goalsData.nGoals,likelihoods,predictedMeans,varXYVec)
             print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
             #print("[RES] Mean likelihood:", mgps.meanLikelihood)
-            futureSteps = 8
-            #ADE_of_prediction_given_future_steps(currentPath, predictedXYVec, knownN, futureSteps)
+            futureSteps = [8,10,12]
+            #Compute error for each goal
+            for steps in futureSteps:
+                print("ADE",steps,"future steps")
+                for k in range(nGoals):
+                    error = ADE_of_prediction_given_future_steps(currentPath, predictedXYVec[k], knownN, steps)
+                    print("Goal",k,"| error:",error)
 
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
