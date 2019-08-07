@@ -557,6 +557,13 @@ def middle_of_area(rectangle):
     dx, dy = rectangle[6]-rectangle[0], rectangle[7]-rectangle[1]
     middle = [rectangle[0] + dx/2., rectangle[1] + dy/2.]
     return middle
+    
+# Centroid and size of an area
+def goal_center_and_size(R):
+    dx, dy = R[6]-R[0], R[7]-R[1]
+    center = [R[0] + dx/2., R[1] + dy/2.]
+    size = [dx, dy]
+    return center, size
 
 def copy_unitMat(unitMat, nGoals, nSubgoals):
     mat = []
