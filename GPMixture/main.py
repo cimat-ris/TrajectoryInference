@@ -109,7 +109,7 @@ if singleTest==True:
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 # Test function: prediction of single trajectories with multiple goals
-mixtureTest =  True
+mixtureTest =  False#True
 if mixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
     part_num = 10
@@ -150,7 +150,7 @@ if interactionWithSamplingTest == True:
     samplesJointTrajectories, potentialVec = [], []
     observedPaths, samplesVec, potentialVec = [], [], []# Guardan en i: [obsX, obsY] y [sampleX, sampleY]
 
-    numTests = 6
+    numTests = 1
     part_num = 3
     currentTime = 800
     allSampleTrajectories = []
@@ -173,7 +173,16 @@ if interactionWithSamplingTest == True:
     for i in range(numTests):
         jointTrajectories    = []
         # For all the paths in the set
-        for j in range(len(sortedSet)):
+        for j in range(len(sortedSet)):  
+            currentPath = sortedSet[j]
+            knownN = len(observedPaths[j].x)
+            sampleX = allSampleTrajectories[i][0][0][:,0]
+            sampleY = allSampleTrajectories[i][1][0][:,0]
+            currentSample = [sampleX, sampleY]
+            steps = 8
+            error = ADE_of_prediction_given_future_steps(currentPath, currentSample, knownN, steps)
+            print("ADE",steps,"future steps | Path",j,"Sample",i,":",error)
+
             # Form trajectory from path
             sampleX,sampleY,sampleL = allSampleTrajectories[j]
             predictedTrajectory     = deepcopy(observedPaths[j])
@@ -187,7 +196,7 @@ if interactionWithSamplingTest == True:
                 # Evaluation of the potential
                 interactionPotential = interaction_potential_for_a_set_of_pedestrians(jointTrajectories)
                 potentialVec.append(interactionPotential)
-    plot_interaction_with_sampling_test(img,observedPaths,samplesJointTrajectories,potentialVec)
+    #plot_interaction_with_sampling_test(img,observedPaths,samplesJointTrajectories,potentialVec)
 
     maxPotential = 0
     maxId = -1
@@ -200,7 +209,7 @@ if interactionWithSamplingTest == True:
 testingData = get_uncut_paths_from_file('datasets/CentralStation_paths_10000-12500.txt')
 testingPaths = getUsefulPaths(testingData,areas) #410 paths
 
-predictionErrorTest = True
+predictionErrorTest = False
 if predictionErrorTest == True:
     print("[INF] Number of testing paths:",len(testingPaths))
     #plotPathSet(testingPaths, img)
