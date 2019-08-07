@@ -60,7 +60,7 @@ class mixtureOfGPs:
 
         # Update each regressor with its corresponding observations
         for i in range(self.goalsData.nGoals):
-            goalCenter,__= middle_of_area(self.goalsData.areas[i])
+            goalCenter,__= goal_center_and_size(self.goalsData.areas[i])
             distToGoal   = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
             dist         = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
             # When close to the goal, define sub-goals
@@ -90,7 +90,7 @@ class mixtureOfGPs:
         # For all likely goals
         for i in range(self.goalsData.nGoals):
             print('[INF] Predicting to goal ',i)
-            goalCenter,__ = middle_of_area(self.goalsData.areas[i])
+            goalCenter,__ = goal_center_and_size(self.goalsData.areas[i])
             distToGoal    = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
             dist          = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
             knownN = len(self.observedX)
