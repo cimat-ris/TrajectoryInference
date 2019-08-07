@@ -75,7 +75,7 @@ def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observed
     trueL = observedL[0:halfN]
 
     # Get the last point and add it to the observed data
-    finishXY,__ = middle_of_area(goalsData.areas[finishG])
+    finishXY,__ = goal_center_and_size(goalsData.areas[finishG])
     finishD     = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
     trueX.append(finishXY[0])
     trueY.append(finishXY[1])
