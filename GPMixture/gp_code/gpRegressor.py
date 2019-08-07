@@ -33,7 +33,7 @@ class gpRegressor:
         self.stepUnit        = stepUnit
         self.finalArea       = finalArea
         self.finalAreaAxis   = finalAreaAxis
-        self.finalAreaCenter, self.finalAreaSize = middle_of_area(finalArea)
+        self.finalAreaCenter, self.finalAreaSize = goal_center_and_size(finalArea)
 
     # Update observations for the Gaussian process (matrix K)
     def updateObservations(self,observedX,observedY,observedL):
