@@ -142,7 +142,7 @@ if interactionTest == True:
     plotPathSet(sortedSet,img)
 
 # Test function: evaluation of interaction potentials on sampled trajectories
-interactionWithSamplingTest = False
+interactionWithSamplingTest = True
 if interactionWithSamplingTest == True:
     # Get all the trajectories that exist in the dataset within some time interval
     sortedSet = get_path_set_given_time_interval(sortedPaths,350,750)
@@ -150,7 +150,7 @@ if interactionWithSamplingTest == True:
     samplesJointTrajectories, potentialVec = [], []
     observedPaths, samplesVec, potentialVec = [], [], []# Guardan en i: [obsX, obsY] y [sampleX, sampleY]
 
-    numTests = 1
+    numTests = 4
     part_num = 3
     currentTime = 800
     allSampleTrajectories = []
@@ -173,6 +173,8 @@ if interactionWithSamplingTest == True:
     for i in range(numTests):
         jointTrajectories    = []
         # For all the paths in the set
+        print("Test #",i+1)
+        meanError = 0.
         for j in range(len(sortedSet)):  
             currentPath = sortedSet[j]
             knownN = len(observedPaths[j].x)
@@ -182,6 +184,7 @@ if interactionWithSamplingTest == True:
             steps = 8
             error = ADE_of_prediction_given_future_steps(currentPath, currentSample, knownN, steps)
             print("ADE",steps,"future steps | Path",j,"Sample",i,":",error)
+            meanError += error
 
             # Form trajectory from path
             sampleX,sampleY,sampleL = allSampleTrajectories[j]
@@ -196,7 +199,9 @@ if interactionWithSamplingTest == True:
                 # Evaluation of the potential
                 interactionPotential = interaction_potential_for_a_set_of_pedestrians(jointTrajectories)
                 potentialVec.append(interactionPotential)
-    #plot_interaction_with_sampling_test(img,observedPaths,samplesJointTrajectories,potentialVec)
+        meanError = meanError/len(sortedSet)
+        print("Mean error:",meanError)
+    plot_interaction_with_sampling_test(img,observedPaths,samplesJointTrajectories,potentialVec)
 
     maxPotential = 0
     maxId = -1
@@ -210,7 +215,7 @@ testingData = get_uncut_paths_from_file('datasets/CentralStation_paths_10000-125
 testingPaths = getUsefulPaths(testingData,areas) #410 paths
 plotPathSet(testingPaths,img)
 
-predictionErrorTest = True
+predictionErrorTest = False
 if predictionErrorTest == True:
     print("[INF] Number of testing paths:",len(testingPaths))
     plotPathSet([testingPaths[9]],img) #uno de los paths con el que aparece el error
