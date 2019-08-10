@@ -142,7 +142,7 @@ if interactionTest == True:
     plotPathSet(sortedSet,img)
 
 # Test function: evaluation of interaction potentials on sampled trajectories
-interactionWithSamplingTest = True
+interactionWithSamplingTest = False
 if interactionWithSamplingTest == True:
     # Get all the trajectories that exist in the dataset within some time interval
     sortedSet = get_path_set_given_time_interval(sortedPaths,350,750)
@@ -189,7 +189,6 @@ if interactionWithSamplingTest == True:
             # Form trajectory from path
             sampleX,sampleY,sampleL = allSampleTrajectories[j]
             predictedTrajectory     = deepcopy(observedPaths[j])
-            # TODO: make it a method instead of function     *done*
             predictedTrajectory.join_path_with_sample(sampleX[i],sampleY[i],sampleL[i],speed)#     = get_trajectory_from_path(predictedTrajectory,sampleX[i],sampleY[i],sampleL[i],speed)
             # Keep trajectory as an element of the joint sample
             jointTrajectories.append(predictedTrajectory)
@@ -215,40 +214,59 @@ testingData = get_uncut_paths_from_file('datasets/CentralStation_paths_10000-125
 testingPaths = getUsefulPaths(testingData,areas) #410 paths
 plotPathSet(testingPaths,img)
 
-predictionErrorTest = False
-if predictionErrorTest == True:
-    print("[INF] Number of testing paths:",len(testingPaths))
-    plotPathSet([testingPaths[9]],img) #uno de los paths con el que aparece el error
-    partNum = 5
-    futureSteps = 8
-    meanError = np.zeros(partNum-1, dtype=float)
-    for i in range(1,10):#len(testingPaths)):
-        print("Path #",i)
-        currentPath = testingPaths[i]
-        startG = get_path_start_goal(currentPath,areas)
-        mgps = mixtureOfGPs(startG,stepUnit,goalsData)
-
-        for j in range(partNum-1):
-            print("Observed data:",j+1,"/",partNum)
-            pathSize = len(currentPath.x) 
-            knownN = int((j+1)*(pathSize/partNum)) #numero de datos conocidos
-            trueX,trueY,trueL = get_known_set(currentPath.x,currentPath.y,currentPath.l,knownN)
-            """Multigoal prediction test"""
-            likelihoods = mgps.update(trueX,trueY,trueL)
-            predictedMeans,varXYVec = mgps.predict()
-            predictedXYVec = get_prediction_arrays(predictedMeans,nGoals)
-            #print('[INF] Plotting')
-            #plot_multiple_predictions_and_goal_likelihood(img,currentPath.x,currentPath.y,knownN,goalsData.nGoals,likelihoods,predictedMeans,varXYVec)
-            #print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
-            #print("[RES] Mean likelihood:", mgps.meanLikelihood)
-            maxLikelihood = 0 
-            for k in range(nGoals):
-                if mgps.goalsLikelihood[k] > mgps.goalsLikelihood[maxLikelihood]:
-                    maxLikelihood = k
-            error = ADE_of_prediction_given_future_steps(currentPath, predictedXYVec[maxLikelihood], knownN, futureSteps)
-            totalError += error  
-            meanError[j] += error
-    print("ADE",futureSteps,"future steps:",totalError,"mean:",meanError/len(testingPaths))
+errorTablesTest = True
+if errorTablesTest == True:
+    futureSteps = [8,10,12]
+    partNum = 3
+    nSamples = 20
+    predictionTable = []
+    samplingTable = []
+    for steps in futureSteps:
+        print("_Comparing",steps,"steps_")
+        meanPredError = []
+        meanSampleError = []
+        for i in range(partNum-1):
+            meanP = 0.
+            meanS = 0.
+            for j in range(len(testingPaths)):
+                print("Path #",j)
+                currentPath = testingPaths[j]
+                startG = get_path_start_goal(currentPath,areas)
+                mgps = mixtureOfGPs(startG,stepUnit,goalsData)
+                
+                print("Observed data:",i+1,"/",partNum)
+                pathSize = len(currentPath.x) 
+                knownN = int((i+1)*(pathSize/partNum)) #numero de datos conocidos
+                trueX,trueY,trueL = get_known_set(currentPath.x,currentPath.y,currentPath.l,knownN)
+                """Multigoal prediction test"""
+                likelihoods = mgps.update(trueX,trueY,trueL)
+                predictedMeans,varXYVec = mgps.predict()
+                predictedXYVec = get_prediction_arrays(predictedMeans,nGoals)
+                maxLikelihood = 0 
+                for k in range(nGoals):
+                    if mgps.goalsLikelihood[k] > mgps.goalsLikelihood[maxLikelihood]:
+                        maxLikelihood = k
+                error = ADE_of_prediction_given_future_steps(currentPath, predictedXYVec[maxLikelihood], knownN, steps)
+                meanP += error
+                """Sampling"""        
+                # Generate samples
+                vecX,vecY,vecL  = mgps.generate_samples(nSamples)
+                samplesError = []
+                for k in range(nSamples):
+                    sampleXY = [vecX[k][:,0], vecY[k][:,0]]
+                    error = ADE_of_prediction_given_future_steps(currentPath,sampleXY, knownN, steps)
+                    samplesError.append(error)
+                meanS += min(samplesError)
+            meanP /= len(testingPaths)
+            meanS /= len(testingPaths)
+            meanPredError.append(meanP)
+            meanSampleError.append(meanS)
+        predictionTable.append(meanPredError)
+        samplingTable.append(meanSampleError)
+    print("Prediction error:",predictionTable)
+    print("Sampling error:",samplingTable)
+    #Plot tables
+    #plot_table()
 
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
