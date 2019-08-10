@@ -596,6 +596,21 @@ def get_prediction_arrays(predictedMeans, nGoals):
         y = predictedMeans[i][:,1]    
         XYvec.append([x,y])
     return XYvec
+    
+#Check for: neagtive eigenvalues, asymmetry and negative diagonal values
+def positive_definite(M):
+    eigenvalues = np.linalg.eigvals(M)
+    for i in range(len(eigenvalues)):
+        if eigenvalues[i] <= 0:
+            print("Negative eigenvalues")
+            return 0
+    Mt = np.transpose(M)
+    M = (M + Mt)/2
+    for i in range(M.shape[0]):
+        if M[i][i] < 0:
+            print("Negative value in diagonal")
+            return 0
+    return 1
 
 """ARC LENGHT TO TIME"""
 def arclen_to_time(initTime,l,speed):
