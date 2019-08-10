@@ -155,9 +155,12 @@ class gpRegressor:
         # Regularization to avoid singular matrices
         self.varx += self.epsilon*np.eye(self.varx.shape[0])
         self.vary += self.epsilon*np.eye(self.vary.shape[0])
-        # Cholesky on varX
-        self.sqRootVarX     = cholesky(self.varx,lower=True)
-        self.sqRootVarY     = cholesky(self.vary,lower=True)
+        
+        #Check if there are negative eigenvalues
+        if positive_definite(self.varx) and positive_definite(self.vary):
+            # Cholesky on varX
+            self.sqRootVarX     = cholesky(self.varx,lower=True)
+            self.sqRootVarY     = cholesky(self.vary,lower=True)
         return self.newX, self.newY, self.newL, self.varx, self.vary
 
     # Prediction as a perturbation of the "normal" prediction done to the center of an area
@@ -198,7 +201,10 @@ class gpRegressor:
         # Noise from a normal distribution
         sX = np.random.normal(size=(nPredictions,1))
         sY = np.random.normal(size=(nPredictions,1))
-        return predictedX+self.sqRootVarX.dot(sX), predictedY+self.sqRootVarY.dot(sY), predictedL
+        if self.sqRootVarX != None and self.sqRootVarY != None:
+            return predictedX+self.sqRootVarX.dot(sX), predictedY+self.sqRootVarY.dot(sY), predictedL
+        else:
+            return predictedX, predictedY, predictedL
 
     # Generate a sample from the predictive distribution with a perturbed finish point
     def sample_with_perturbed_finish_point(self):
