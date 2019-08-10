@@ -10,6 +10,7 @@ import math
 from copy import copy
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
+import pandas as pd
 
 color = ['g','m','r','b','c','y','w','k']
 
@@ -303,4 +304,57 @@ def plot_interaction_with_sampling_test(img,observedPaths, samplesVec, potential
                 string = "{0:1.3e}".format(potentialVec[t])#str(potentialVec[t])
                 axes[i,j].set_title('IP='+string)
             axes[i,j].axis('off')
+    plt.show()
+    
+def plot_table__():
+    data = [[ 66386, 174296,  75131, 577908,  32015],
+        [ 58230, 381139,  78045,  99308, 160454],
+        [ 89135,  80552, 152558, 497981, 603535],
+        [ 78415,  81858, 150656, 193263,  69638],
+        [139361, 331509, 343164, 781380,  52269]]
+    stringData = []
+    n, m = len(data), len(data[0])
+    for i in range(n):
+        row = []
+        for j in range(m):
+            string = "{0:1.3e}".format(data[i][j])
+            row.append(string)
+        stringData.append(row)
+        
+    fig, axes = plt.subplots(1)
+    
+    axes.xaxis.set_visible(False) 
+    axes.yaxis.set_visible(False)
+    # Show the image
+    plt.table(cellText=stringData,loc='center')
+    plt.show()
+    
+def plot_table():
+    data = [[ 66386, 174296,  75131, 577908,  32015],
+        [ 58230, 381139,  78045,  99308, 160454],
+        [ 89135,  80552, 152558, 497981, 603535],
+        [ 78415,  81858, 150656, 193263,  69638],
+        [139361, 331509, 343164, 781380,  52269]]
+    stringData = []
+    n, m = len(data), len(data[0])
+    for i in range(n):
+        row = []
+        for j in range(m):
+            string = "{0:1.3e}".format(data[i][j])
+            row.append(string)
+        stringData.append(row)
+    fig, ax = plt.subplots()
+
+    # hide axes
+    fig.patch.set_visible(False)
+    ax.axis('off')
+    ax.axis('tight')
+
+    #df = pd.DataFrame(np.random.randn(10, 4), columns=list('ABCD'))
+    columns=list('ABCDE')
+    
+    ax.table(cellText=stringData, colLabels=columns, loc='center')
+
+    fig.tight_layout()
+
     plt.show()
