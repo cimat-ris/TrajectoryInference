@@ -230,7 +230,7 @@ def getUsefulPaths(paths, goals):
                 isFirst = j
             if(isInArea(last,goals[j])):
                 isLast = j
-        if(isFirst > -1 and isLast > -1):
+        if(isFirst > -1 and isLast > -1 and pathLen > 3):
             useful.append(paths[i])
 
     return useful
