@@ -154,21 +154,21 @@ def nearestPD(A):
     A2 = (B + H) / 2
     A3 = (A2 + np.transpose(A2)) / 2
 
-    if isPD(A3):
+    if is_positive_definite(A3):
         return A3
 
     spacing = np.spacing(la.norm(A))
     I = np.eye(A.shape[0])
     k = 1
-    while not isPD(A3):
+    while not is_positive_definite(A3):
         mineig = np.min(np.real(la.eigvals(A3)))
         A3 += I * (-mineig * k**2 + spacing)
         k += 1
 
     return A3
 
-def isPD(B):
-    """Returns true when input is positive-definite, via Cholesky"""
+#Returns true when input is positive-definite, via Cholesky
+def is_positive_definite(B):
     try:
         _ = la.cholesky(B)
         return True
