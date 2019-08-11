@@ -329,12 +329,7 @@ def plot_table__():
     plt.table(cellText=stringData,loc='center')
     plt.show()
     
-def plot_table():
-    data = [[ 66386, 174296,  75131, 577908,  32015],
-        [ 58230, 381139,  78045,  99308, 160454],
-        [ 89135,  80552, 152558, 497981, 603535],
-        [ 78415,  81858, 150656, 193263,  69638],
-        [139361, 331509, 343164, 781380,  52269]]
+def plot_table(data, rowLabels, colLabels):
     stringData = []
     n, m = len(data), len(data[0])
     for i in range(n):
@@ -344,16 +339,12 @@ def plot_table():
             row.append(string)
         stringData.append(row)
     fig, ax = plt.subplots()
-
     # hide axes
     fig.patch.set_visible(False)
     ax.axis('off')
     ax.axis('tight')
-
-    #df = pd.DataFrame(np.random.randn(10, 4), columns=list('ABCD'))
-    columns=list('ABCDE')
     
-    ax.table(cellText=stringData, colLabels=columns, loc='center')
+    ax.table(cellText=stringData,cellLoc='center',rowLabels = rowLabels, colLabels = colLabels, loc='center')
 
     fig.tight_layout()
 
