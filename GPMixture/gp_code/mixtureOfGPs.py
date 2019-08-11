@@ -51,13 +51,11 @@ class mixtureOfGPs:
                 self.gpPathRegressor[k] = gpRegressor(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i],self.goalsData.linearPriorsY[self.startG][i])
 
 
-
     # Update observations and compute likelihoods based on observations
     def update(self,observedX,observedY,observedL):
         self.observedX       = observedX
         self.observedY       = observedY
         self.observedL       = observedL
-
         # Update each regressor with its corresponding observations
         for i in range(self.goalsData.nGoals):
             goalCenter,__= goal_center_and_size(self.goalsData.areas[i])
@@ -66,7 +64,7 @@ class mixtureOfGPs:
             # When close to the goal, define sub-goals
             if(distToGoal < 0.4*dist):
                 for j in range(self.nSubgoals):
-                    k= i+(j+1)*self.goalsData.nGoals
+                    k = i+(j+1)*self.goalsData.nGoals
                     self.gpPathRegressor[k].updateObservations(observedX,observedY,observedL)
             else:
                 # Update observations and re-compute the kernel matrices
@@ -93,18 +91,17 @@ class mixtureOfGPs:
             goalCenter,__ = goal_center_and_size(self.goalsData.areas[i])
             distToGoal    = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
             dist          = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
-            knownN = len(self.observedX)
 
             # When close to the goal, define sub-goals
             if(distToGoal < 0.4*dist):
-                self.predictedMeans[i]=np.zeros((0,3), dtype=float)
-                self.predictedVars[i]=np.zeros((0,0,0), dtype=float)
+                self.predictedMeans[i] = np.zeros((0,3), dtype=float)
+                self.predictedVars[i]  = np.zeros((0,0,0), dtype=float)
                 for j in range(self.nSubgoals):
                     print('[INF] Predicting to subgoal ',j)
                     k= i+(j+1)*self.goalsData.nGoals
                     predictedX, predictedY, predictedL, varX, varY = self.gpPathRegressor[k].prediction_to_finish_point()
-                    self.predictedMeans[k]=np.column_stack((predictedX, predictedY, predictedL))
-                    self.predictedVars[k] = np.stack([varX, varY],axis=0)
+                    self.predictedMeans[k] = np.column_stack((predictedX, predictedY, predictedL))
+                    self.predictedVars[k]  = np.stack([varX, varY],axis=0)
             # Otherwise, perform prediction
             else:
                 # Uses the already computed matrices to apply regression over missing data
