@@ -118,6 +118,8 @@ class gpRegressor:
         n    = self.observedX.shape[0]
         # Number of predicted data
         nnew = len(self.newL)
+        if nnew == 0:
+            return None
         # Compute k (nxnnew), C (nnewxnnew)
         self.kx  = np.zeros((n,nnew))
         self.ky  = np.zeros((n,nnew))
@@ -155,10 +157,16 @@ class gpRegressor:
         # Regularization to avoid singular matrices
         self.varx += self.epsilon*np.eye(self.varx.shape[0])
         self.vary += self.epsilon*np.eye(self.vary.shape[0])
-        
-        #Check if there are negative eigenvalues
+        # Cholesky on varX
         if positive_definite(self.varx) and positive_definite(self.vary):
-            # Cholesky on varX
+            try:
+                self.sqRootVarX = np.linalg.cholesky(self.varx)
+            except np.linalg.LinAlgError:
+                    self.varx = nearestPD(self.varx)
+            try:
+                self.sqRootVarY = np.linalg.cholesky(self.vary)
+            except np.linalg.LinAlgError:
+                self.vary = nearestPD(self.vary)
             self.sqRootVarX     = cholesky(self.varx,lower=True)
             self.sqRootVarY     = cholesky(self.vary,lower=True)
         return self.newX, self.newY, self.newL, self.varx, self.vary
