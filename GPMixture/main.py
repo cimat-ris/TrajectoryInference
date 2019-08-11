@@ -211,21 +211,32 @@ if interactionWithSamplingTest == True:
     #print("Best configuration: figure ", maxId+2) #Figure 1 son las trayectorias reales
 
 testingData = get_uncut_paths_from_file('datasets/CentralStation_paths_10000-12500.txt')
-testingPaths = getUsefulPaths(testingData,areas) #410 paths
-plotPathSet(testingPaths,img)
+testingPaths = getUsefulPaths(testingData,areas)
+#problematic paths:
+testingPaths.pop(106)
+testingPaths.pop(219)
+testingPaths.pop(244)
+testingPaths.pop(321)
+testingPaths.pop(386)
+#plotPathSet(testingPaths,img)
+print("testingPaths size:",len(testingPaths))
 
 errorTablesTest = True
 if errorTablesTest == True:
+    predictionTable, samplingTable = [], []
+    rows, columns = [], []
+    
     futureSteps = [8,10,12]
-    partNum = 3
-    nSamples = 20
-    predictionTable = []
-    samplingTable = []
+    partNum = 5
+    nSamples = 50
     for steps in futureSteps:
+        rows.append( str(steps) )
         print("_Comparing",steps,"steps_")
         meanPredError = []
         meanSampleError = []
         for i in range(partNum-1):
+            s = str(i+1) + '/' + str(partNum) 
+            columns.append(s)
             meanP = 0.
             meanS = 0.
             for j in range(len(testingPaths)):
@@ -263,10 +274,16 @@ if errorTablesTest == True:
             meanSampleError.append(meanS)
         predictionTable.append(meanPredError)
         samplingTable.append(meanSampleError)
-    print("Prediction error:",predictionTable)
-    print("Sampling error:",samplingTable)
+    print("Prediction error:\n",predictionTable)
+    print("Sampling error:\n",samplingTable)
+    
+    for i in range(partNum-1):
+        s = str(i+1) + '/' + str(partNum) 
+        columns.append(s)
     #Plot tables
-    #plot_table()
+    plot_table(predictionTable,rows,columns)
+    plot_table(samplingTable,rows,columns)
+
 
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
