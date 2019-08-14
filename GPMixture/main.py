@@ -221,7 +221,7 @@ testingPaths.pop(386)
 #plotPathSet(testingPaths,img)
 print("testingPaths size:",len(testingPaths))
 
-errorTablesTest = True
+errorTablesTest = False
 if errorTablesTest == True:
     predictionTable, samplingTable = [], []
     rows, columns = [], []
@@ -235,8 +235,11 @@ if errorTablesTest == True:
         meanPredError = []
         meanSampleError = []
         for i in range(partNum-1):
-            s = str(i+1) + '/' + str(partNum) 
-            columns.append(s)
+            predictionFile = 'results/Prediction_error_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(partNum)+'_data.txt'
+            samplingFile   = 'results/Sampling_error_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(partNum)+'_data.txt'
+            
+            predError = []
+            samplingError = []
             meanP = 0.
             meanS = 0.
             for j in range(len(testingPaths)):
@@ -258,6 +261,7 @@ if errorTablesTest == True:
                     if mgps.goalsLikelihood[k] > mgps.goalsLikelihood[maxLikelihood]:
                         maxLikelihood = k
                 error = ADE_of_prediction_given_future_steps(currentPath, predictedXYVec[maxLikelihood], knownN, steps)
+                predError.append(error)                
                 meanP += error
                 """Sampling"""        
                 # Generate samples
@@ -267,7 +271,11 @@ if errorTablesTest == True:
                     sampleXY = [vecX[k][:,0], vecY[k][:,0]]
                     error = ADE_of_prediction_given_future_steps(currentPath,sampleXY, knownN, steps)
                     samplesError.append(error)
+                samplingError.append(min(samplesError))                
                 meanS += min(samplesError)
+                
+                write_data(predError,predictionFile)
+                write_data(samplingError,samplingFile)
             meanP /= len(testingPaths)
             meanS /= len(testingPaths)
             meanPredError.append(meanP)
@@ -284,6 +292,8 @@ if errorTablesTest == True:
     plot_table(predictionTable,rows,columns)
     plot_table(samplingTable,rows,columns)
 
+predData = read_data('results/Prediction_error_'+'%d'%(8)+'_steps_%d'%(1)+'_of_%d'%(5)+'_data.txt')
+boxplot(predData, 'Prediction error data')
 
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
