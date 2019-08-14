@@ -349,3 +349,10 @@ def plot_table(data, rowLabels, colLabels):
     fig.tight_layout()
 
     plt.show()
+    
+def boxplot(data, title):
+    fig, ax = plt.subplots()
+    ax.set_title(title)
+    ax.boxplot(data)
+
+
