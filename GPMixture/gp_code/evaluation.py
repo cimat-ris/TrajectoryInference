@@ -137,7 +137,7 @@ def get_approximation(val,path,index):
     _y = (1-val)*path.y[index-1] + val*path.y[index]
     return _x,_y
 
-def ADE_of_prediction_given_future_steps(fullPath, predictedXY, knownN, futureSteps):
+def ADE_given_future_steps(fullPath, predictedXY, knownN, futureSteps):
     realX = fullPath.x[knownN : knownN+futureSteps]
     realY = fullPath.y[knownN : knownN+futureSteps]
 
