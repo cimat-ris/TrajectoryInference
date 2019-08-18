@@ -260,7 +260,7 @@ if errorTablesTest == True:
                 for k in range(nGoals):
                     if mgps.goalsLikelihood[k] > mgps.goalsLikelihood[maxLikelihood]:
                         maxLikelihood = k
-                error = ADE_of_prediction_given_future_steps(currentPath, predictedXYVec[maxLikelihood], knownN, steps)
+                error = ADE_given_future_steps(currentPath, predictedXYVec[maxLikelihood], knownN, steps)
                 predError.append(error)                
                 meanP += error
                 """Sampling"""        
@@ -269,7 +269,7 @@ if errorTablesTest == True:
                 samplesError = []
                 for k in range(nSamples):
                     sampleXY = [vecX[k][:,0], vecY[k][:,0]]
-                    error = ADE_of_prediction_given_future_steps(currentPath,sampleXY, knownN, steps)
+                    error = ADE_given_future_steps(currentPath,sampleXY, knownN, steps)
                     samplesError.append(error)
                 samplingError.append(min(samplesError))                
                 meanS += min(samplesError)
@@ -292,8 +292,22 @@ if errorTablesTest == True:
     plot_table(predictionTable,rows,columns)
     plot_table(samplingTable,rows,columns)
 
-predData = read_data('results/Prediction_error_'+'%d'%(8)+'_steps_%d'%(1)+'_of_%d'%(5)+'_data.txt')
+predData = read_data('results/Prediction_error_'+'%d'%(8)+'_steps_%d'%(3)+'_of_%d'%(5)+'_data.txt')
 boxplot(predData, 'Prediction error data')
+
+samplingData = read_data('results/Sampling_error_'+'%d'%(8)+'_steps_%d'%(3)+'_of_%d'%(5)+'_data.txt')
+boxplot(samplingData, 'Sampling error data')
+
+# Fixing random state for reproducibility
+np.random.seed(19680801)
+
+# fake up some data
+spread = np.random.rand(50) * 100
+center = np.ones(25) * 50
+flier_high = np.random.rand(10) * 100 + 100
+flier_low = np.random.rand(10) * -100
+data = np.concatenate((spread, center, flier_high, flier_low))
+#boxplot(data, 'Testing data')
 
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
