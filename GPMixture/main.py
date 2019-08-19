@@ -146,6 +146,7 @@ interactionWithSamplingTest = False
 if interactionWithSamplingTest == True:
     # Get all the trajectories that exist in the dataset within some time interval
     sortedSet = get_path_set_given_time_interval(sortedPaths,350,750)
+    plotPathSet(sortedSet,img)
 
     samplesJointTrajectories, potentialVec = [], []
     observedPaths, samplesVec, potentialVec = [], [], []# Guardan en i: [obsX, obsY] y [sampleX, sampleY]
@@ -173,16 +174,16 @@ if interactionWithSamplingTest == True:
     for i in range(numTests):
         jointTrajectories    = []
         # For all the paths in the set
-        print("Test #",i+1)
+        print("_____Test #",i+1,"_____")
         meanError = 0.
         for j in range(len(sortedSet)):  
             currentPath = sortedSet[j]
             knownN = len(observedPaths[j].x)
-            sampleX = allSampleTrajectories[i][0][0][:,0]
-            sampleY = allSampleTrajectories[i][1][0][:,0]
+            sampleX = allSampleTrajectories[j][0][i][:,0]#aqui hay un indice mal, i deberia ser j
+            sampleY = allSampleTrajectories[j][1][i][:,0]
             currentSample = [sampleX, sampleY]
             steps = 8
-            error = ADE_of_prediction_given_future_steps(currentPath, currentSample, knownN, steps)
+            error = ADE_given_future_steps(currentPath, currentSample, knownN, steps)
             print("ADE",steps,"future steps | Path",j,"Sample",i,":",error)
             meanError += error
 
@@ -221,12 +222,12 @@ testingPaths.pop(386)
 #plotPathSet(testingPaths,img)
 print("testingPaths size:",len(testingPaths))
 
-errorTablesTest = False
+errorTablesTest = True
 if errorTablesTest == True:
     predictionTable, samplingTable = [], []
     rows, columns = [], []
     
-    futureSteps = [8,10,12]
+    futureSteps = [8]#,10,12]
     partNum = 5
     nSamples = 50
     for steps in futureSteps:
@@ -234,7 +235,7 @@ if errorTablesTest == True:
         print("_Comparing",steps,"steps_")
         meanPredError = []
         meanSampleError = []
-        for i in range(partNum-1):
+        for i in range(1):#partNum-1):
             predictionFile = 'results/Prediction_error_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(partNum)+'_data.txt'
             samplingFile   = 'results/Sampling_error_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(partNum)+'_data.txt'
             
@@ -292,22 +293,19 @@ if errorTablesTest == True:
     plot_table(predictionTable,rows,columns)
     plot_table(samplingTable,rows,columns)
 
-predData = read_data('results/Prediction_error_'+'%d'%(8)+'_steps_%d'%(3)+'_of_%d'%(5)+'_data.txt')
-boxplot(predData, 'Prediction error data')
 
-samplingData = read_data('results/Sampling_error_'+'%d'%(8)+'_steps_%d'%(3)+'_of_%d'%(5)+'_data.txt')
-boxplot(samplingData, 'Sampling error data')
+futureSteps = [8,10]
+partNum = 5
+for steps in futureSteps:
+    for j in range(1,partNum-2):
+        plotName = 'Prediction Error '+'%d'%(steps)+' steps %d'%(j+1)+'/%d'%(partNum)+' data'
+        predData = read_data('results/Prediction_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
+        boxplot(predData, plotName)
 
-# Fixing random state for reproducibility
-np.random.seed(19680801)
+        plotName = 'Sampling Error '+'%d'%(steps)+' steps %d'%(j+1)+'/%d'%(partNum)+' data'
+        samplingData = read_data('results/Sampling_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
+        boxplot(samplingData, plotName)
 
-# fake up some data
-spread = np.random.rand(50) * 100
-center = np.ones(25) * 50
-flier_high = np.random.rand(10) * 100 + 100
-flier_low = np.random.rand(10) * -100
-data = np.concatenate((spread, center, flier_high, flier_low))
-#boxplot(data, 'Testing data')
 
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
