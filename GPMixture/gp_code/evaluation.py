@@ -38,6 +38,7 @@ def mean_displacement_error(true_XY, prediction_XY):
         error += math.sqrt((trueX[i]-predictionX[i])**2 + (trueY[i]-predictionY[i])**2)
     if(l>0):
         error = error/l
+        
     return error
 
 #The distance between the predicted final destination and the true final destination
