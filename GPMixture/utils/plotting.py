@@ -329,7 +329,7 @@ def plot_table__():
     plt.table(cellText=stringData,loc='center')
     plt.show()
     
-def plot_table(data, rowLabels, colLabels):
+def plot_table(data, rowLabels, colLabels, tittle):
     stringData = []
     n, m = len(data), len(data[0])
     for i in range(n):
@@ -339,6 +339,7 @@ def plot_table(data, rowLabels, colLabels):
             row.append(string)
         stringData.append(row)
     fig, ax = plt.subplots()
+    plt.title(tittle)
     # hide axes
     fig.patch.set_visible(False)
     ax.axis('off')
