@@ -222,29 +222,28 @@ testingPaths.pop(386)
 #plotPathSet(testingPaths,img)
 print("testingPaths size:",len(testingPaths))
 
-errorTablesTest = True
+errorTablesTest = False
 if errorTablesTest == True:
     predictionTable, samplingTable = [], []
     rows, columns = [], []
     
-    futureSteps = [8]#,10,12]
+    futureSteps = [8,10,12]
     partNum = 5
     nSamples = 50
+    nPaths = len(testingPaths)
     for steps in futureSteps:
         rows.append( str(steps) )
-        print("_Comparing",steps,"steps_")
+        print("__Comparing",steps,"steps__")
         meanPredError = []
         meanSampleError = []
-        for i in range(1):#partNum-1):
+        for i in range(partNum-1):
             predictionFile = 'results/Prediction_error_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(partNum)+'_data.txt'
             samplingFile   = 'results/Sampling_error_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(partNum)+'_data.txt'
             
-            predError = []
-            samplingError = []
-            meanP = 0.
-            meanS = 0.
-            for j in range(len(testingPaths)):
-                print("Path #",j)
+            predError, samplingError = [], []
+            meanP, meanS = 0., 0.
+            for j in range(nPaths):
+                print("\nPath #",j)
                 currentPath = testingPaths[j]
                 startG = get_path_start_goal(currentPath,areas)
                 mgps = mixtureOfGPs(startG,stepUnit,goalsData)
@@ -256,12 +255,24 @@ if errorTablesTest == True:
                 """Multigoal prediction test"""
                 likelihoods = mgps.update(trueX,trueY,trueL)
                 predictedMeans,varXYVec = mgps.predict()
-                predictedXYVec = get_prediction_arrays(predictedMeans,nGoals)
-                maxLikelihood = 0 
-                for k in range(nGoals):
-                    if mgps.goalsLikelihood[k] > mgps.goalsLikelihood[maxLikelihood]:
-                        maxLikelihood = k
-                error = ADE_given_future_steps(currentPath, predictedXYVec[maxLikelihood], knownN, steps)
+                predictedXYVec = get_prediction_arrays(predictedMeans)
+                
+                mostLikelyG = mgps.mostLikelyGoal
+                if mgps.gpPathRegressor[mostLikelyG + nGoals] != None:
+                    sgError = [] 
+                    sgError.append(ADE_given_future_steps(currentPath, predictedXYVec[mostLikelyG], knownN, steps))
+                    for it in range(mgps.nSubgoals):
+                        k = mostLikelyG + (it+1)*nGoals
+                        sgError.append(ADE_given_future_steps(currentPath, predictedXYVec[k], knownN, steps))
+                    minId = 0
+                    for ind in range(len(sgError)):
+                        if sgError[minId] == 0 and sgError[ind] > 0:
+                            minId = ind
+                        elif sgError[minId] > sgError[ind] and sgError[ind] > 0:
+                            minId = ind 
+                    error = sgError[minId]
+                else:
+                    error = ADE_given_future_steps(currentPath, predictedXYVec[mostLikelyG], knownN, steps)
                 predError.append(error)                
                 meanP += error
                 """Sampling"""        
@@ -277,8 +288,8 @@ if errorTablesTest == True:
                 
                 write_data(predError,predictionFile)
                 write_data(samplingError,samplingFile)
-            meanP /= len(testingPaths)
-            meanS /= len(testingPaths)
+            meanP /= nPaths
+            meanS /= nPaths
             meanPredError.append(meanP)
             meanSampleError.append(meanS)
         predictionTable.append(meanPredError)
@@ -290,21 +301,22 @@ if errorTablesTest == True:
         s = str(i+1) + '/' + str(partNum) 
         columns.append(s)
     #Plot tables
-    plot_table(predictionTable,rows,columns)
-    plot_table(samplingTable,rows,columns)
+    plot_table(predictionTable,rows,columns,'Prediction Error')
+    plot_table(samplingTable,rows,columns,'Sampling Error')
 
-
-futureSteps = [8,10]
-partNum = 5
-for steps in futureSteps:
-    for j in range(1,partNum-2):
-        plotName = 'Prediction Error '+'%d'%(steps)+' steps %d'%(j+1)+'/%d'%(partNum)+' data'
-        predData = read_data('results/Prediction_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
-        boxplot(predData, plotName)
-
-        plotName = 'Sampling Error '+'%d'%(steps)+' steps %d'%(j+1)+'/%d'%(partNum)+' data'
-        samplingData = read_data('results/Sampling_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
-        boxplot(samplingData, plotName)
+boxPlots = True
+if boxPlots == True:
+    futureSteps = [8,10]
+    partNum = 5
+    for steps in futureSteps:
+        for j in range(1,partNum-2):
+            plotName = 'Prediction Error '+'%d'%(steps)+' steps %d'%(j+1)+'/%d'%(partNum)+' data'
+            predData = read_data('results/Prediction_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
+            boxplot(predData, plotName)
+            
+            plotName = 'Sampling Error '+'%d'%(steps)+' steps %d'%(j+1)+'/%d'%(partNum)+' data'
+            samplingData = read_data('results/Sampling_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
+            boxplot(samplingData, plotName)
 
 
 #Prueba el error de la prediccion variando:
