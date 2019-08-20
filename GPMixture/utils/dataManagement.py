@@ -609,9 +609,10 @@ def column(matrix, i):
     return [row[i] for row in matrix]
 
 #predictedMeans es una lista que en i contiene array([X Y L]), esta funcion regresa una lista con [X, Y] en i
-def get_prediction_arrays(predictedMeans, nGoals):
+def get_prediction_arrays(predictedMeans):
+    n = len(predictedMeans)
     XYvec = []
-    for i in range(nGoals):
+    for i in range(n):
         x = predictedMeans[i][:,0]
         y = predictedMeans[i][:,1]    
         XYvec.append([x,y])
