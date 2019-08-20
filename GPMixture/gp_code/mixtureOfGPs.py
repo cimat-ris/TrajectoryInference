@@ -18,6 +18,8 @@ class mixtureOfGPs:
         self.goalsData       = goalsData
         # Sub-set of likely goals
         self.likelyGoals     = []
+        #Index of most likely goal
+        self.mostLikelyGoal = None
         # Number of sub-goals
         self.nSubgoals       = 2
         # Number of elements in the mixture (not all are used at the same time)
@@ -81,6 +83,13 @@ class mixtureOfGPs:
             self.goalsLikelihood[i] /= s
             if(self.goalsLikelihood[i] > 0.85*self.meanLikelihood):
                 self.likelyGoals.append(i)
+        # Save most likely goal
+        mostLikely = 0
+        for i in range(self.goalsData.nGoals):
+            if self.goalsLikelihood[i] > self.goalsLikelihood[mostLikely]:
+                mostLikely = i
+        self.mostLikelyGoal = mostLikely
+        
         return self.goalsLikelihood
 
     # Performs prediction
