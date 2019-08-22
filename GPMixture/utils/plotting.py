@@ -10,6 +10,7 @@ import math
 from copy import copy
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
+from gp_code.regression import *
 
 color = ['g','m','r','b','c','y','w','k']
 
@@ -206,21 +207,13 @@ def plot_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goals
 def plot_subgoals(img, goal, numSubgoals, axis):
     subgoalsCenter, size = get_subgoals_center_and_size(numSubgoals, goal, axis)
 
-    fig,ax = plt.subplots(1)
-    ax.set_aspect('equal')
-    ax.imshow(img)
-
     for i in range(numSubgoals):
-        xy = [subgoalsCenter[i][0],subgoalsCenter[i][1]]
-        ell = Ellipse(xy,size[0]*0.75, size[1])
-        ell.set_lw(2.5)
-        ell.set_fill(0)
-        ell.set_edgecolor(color[i])
-        ax.add_patch(ell)
+        xy  = [subgoalsCenter[i][0],subgoalsCenter[i][1]]
+        if axis==0:
+            plt.plot([subgoalsCenter[i][0]-size[0]/2.0,subgoalsCenter[i][0]+size[0]/2.0],[subgoalsCenter[i][1],subgoalsCenter[i][1]],color[i])
+        else:
+            plt.plot([subgoalsCenter[i][0],subgoalsCenter[i][0]],[subgoalsCenter[i][1]-size[1]/2.0,subgoalsCenter[i][1]+size[1]/2.0],color[i])
 
-    v = [0,img.columns,img.rows,0]
-    plt.axis(v)
-    plt.show()
 
 # Plot a set of sample trajectories
 def plot_path_samples(img,x,y):
@@ -233,6 +226,19 @@ def plot_path_samples(img,x,y):
     ax.imshow(img)
     for i in range(n):
         plt.plot(x[i],y[i])
+    s = img.shape
+    v = [0,s[1],s[0],0]
+    plt.axis(v)
+    plt.show()
+
+# Plot the scene structure: goals and sub-goals
+def plot_scene_structure(img,goalsData):
+    fig,ax = plt.subplots(1)
+    ax.set_aspect('equal')
+    ax.imshow(img)
+
+    for i in range(goalsData.nGoals):
+        plot_subgoals(img, goalsData.areas[i], 2, goalsData.areasAxis[i])
     s = img.shape
     v = [0,s[1],s[0],0]
     plt.axis(v)

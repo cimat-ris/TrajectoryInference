@@ -74,7 +74,7 @@ def get_uncut_paths_from_file(file):
             newPath = path(dataT,dataX,dataY)
             paths.append(newPath)
     return paths
-    
+
 """Recibe un conjunto de paths y obtiene los puntos (x,y,z)
 con z = {tiempo, long de arco} si flag = {"time", "length"}"""
 def get_data_from_paths(paths, flag):
@@ -317,7 +317,7 @@ def break_multigoal_path(multigoalPath, goalVec, goals):
 
 def get_goal_center_and_boundaries(goal):
     points = []
-    p = middle_of_area(goal)
+    p, __ = middle_of_area(goal)
     points.append(p)
     lenX = goal[len(goal) -2] - goal[0]
     lenY = goal[len(goal) -1] - goal[1]
@@ -556,7 +556,7 @@ def euclidean_distance(p, q): #p = (x,y)
 def middle_of_area(rectangle):
     dx, dy = rectangle[6]-rectangle[0], rectangle[7]-rectangle[1]
     middle = [rectangle[0] + dx/2., rectangle[1] + dy/2.]
-    return middle
+    return middle, [dx,dy]
 
 def copy_unitMat(unitMat, nGoals, nSubgoals):
     mat = []
@@ -586,7 +586,7 @@ def get_prediction_arrays(predictedMeans, nGoals):
     XYvec = []
     for i in range(nGoals):
         x = predictedMeans[i][:,0]
-        y = predictedMeans[i][:,1]    
+        y = predictedMeans[i][:,1]
         XYvec.append([x,y])
     return XYvec
 
