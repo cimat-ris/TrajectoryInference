@@ -310,11 +310,11 @@ if boxPlots == True:
     partNum = 5
     for steps in futureSteps:
         for j in range(1,partNum-2):
-            plotName = 'Prediction Error '+'%d'%(steps)+' steps %d'%(j+1)+'/%d'%(partNum)+' data'
+            plotName = 'Predictive mean\n'+'%d'%(steps)+' steps | %d'%(j+1)+'/%d'%(partNum)+' data'
             predData = read_data('results/Prediction_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
             boxplot(predData, plotName)
             
-            plotName = 'Sampling Error '+'%d'%(steps)+' steps %d'%(j+1)+'/%d'%(partNum)+' data'
+            plotName = 'Best of samples\n'+'%d'%(steps)+' steps | %d'%(j+1)+'/%d'%(partNum)+' data'
             samplingData = read_data('results/Sampling_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
             boxplot(samplingData, plotName)
 
