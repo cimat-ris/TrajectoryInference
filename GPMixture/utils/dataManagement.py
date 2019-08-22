@@ -139,6 +139,26 @@ def write_useful_paths_file(paths): #paths es un vector de indices
             f.write(s)
     f.close()
 
+
+def write_data(data, fileName):
+    n = len(data)
+    f = open(fileName,"w+")
+    for i in range(n):
+        s = "%d\n"%(data[i])
+        f.write(s)
+    f.close()
+    
+def read_data(fileName):
+    data = []
+    f = open(fileName,'r')
+    lines = f.readlines()
+    for i in range(len(lines)):
+        lines[i] = lines[i].strip("\n")
+        data.append( float(lines[i]) )
+    f.close()
+    return data
+    
+
 """ FILTER PATHS """
 """ Regresa una matriz de trayectorias:
 en la entrada (i,j) estan los caminos que comienzan en g_i y terminan en g_j"""
@@ -230,7 +250,7 @@ def getUsefulPaths(paths, goals):
                 isFirst = j
             if(isInArea(last,goals[j])):
                 isLast = j
-        if(isFirst > -1 and isLast > -1):
+        if(isFirst > -1 and isLast > -1 and pathLen > 3):
             useful.append(paths[i])
 
     return useful
@@ -556,7 +576,14 @@ def euclidean_distance(p, q): #p = (x,y)
 def middle_of_area(rectangle):
     dx, dy = rectangle[6]-rectangle[0], rectangle[7]-rectangle[1]
     middle = [rectangle[0] + dx/2., rectangle[1] + dy/2.]
-    return middle, [dx,dy]
+    return middle
+    
+# Centroid and size of an area
+def goal_center_and_size(R):
+    dx, dy = R[6]-R[0], R[7]-R[1]
+    center = [R[0] + dx/2., R[1] + dy/2.]
+    size = [dx, dy]
+    return center, size
 
 def copy_unitMat(unitMat, nGoals, nSubgoals):
     mat = []
@@ -582,13 +609,29 @@ def column(matrix, i):
     return [row[i] for row in matrix]
 
 #predictedMeans es una lista que en i contiene array([X Y L]), esta funcion regresa una lista con [X, Y] en i
-def get_prediction_arrays(predictedMeans, nGoals):
+def get_prediction_arrays(predictedMeans):
+    n = len(predictedMeans)
     XYvec = []
-    for i in range(nGoals):
+    for i in range(n):
         x = predictedMeans[i][:,0]
         y = predictedMeans[i][:,1]
         XYvec.append([x,y])
     return XYvec
+    
+#Check for: neagtive eigenvalues, asymmetry and negative diagonal values
+def positive_definite(M):
+    eigenvalues = np.linalg.eigvals(M)
+    for i in range(len(eigenvalues)):
+        if eigenvalues[i] <= 0:
+            print("Negative eigenvalues")
+            return 0
+    Mt = np.transpose(M)
+    M = (M + Mt)/2
+    for i in range(M.shape[0]):
+        if M[i][i] < 0:
+            print("Negative value in diagonal")
+            return 0
+    return 1
 
 """ARC LENGHT TO TIME"""
 def arclen_to_time(initTime,l,speed):

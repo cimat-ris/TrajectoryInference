@@ -51,10 +51,10 @@ class goalsLearnedStructure:
     def compute_euclidean_distances(self):
         for i in range(self.nGoals):
             # Take the centroid of the ROI i
-            p,__ = middle_of_area(self.areas[i])
+            p,__ = goal_center_and_size(self.areas[i])
             for j in range(self.nGoals):
                 # Take the centroid of the ROI j
-                q,__ = middle_of_area(self.areas[j])
+                q,__ = goal_center_and_size(self.areas[j])
                 # Compute the euclidean distance between the two centroids i and j
                 d = np.sqrt((p[0]-q[0])**2 + (p[1]-q[1])**2)
                 self.euclideanDistances[i][j] = d

@@ -3,6 +3,7 @@ Error and likelihood evaluation
 """
 import numpy as np
 import math
+from numpy import linalg as la
 from gp_code.regression import *
 from utils.dataManagement import *
 
@@ -37,6 +38,7 @@ def mean_displacement_error(true_XY, prediction_XY):
         error += math.sqrt((trueX[i]-predictionX[i])**2 + (trueY[i]-predictionY[i])**2)
     if(l>0):
         error = error/l
+        
     return error
 
 #The distance between the predicted final destination and the true final destination
@@ -75,7 +77,7 @@ def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observed
     trueL = observedL[0:halfN]
 
     # Get the last point and add it to the observed data
-    finishXY,__ = middle_of_area(goalsData.areas[finishG])
+    finishXY,__ = goal_center_and_size(goalsData.areas[finishG])
     finishD     = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
     trueX.append(finishXY[0])
     trueY.append(finishXY[1])
@@ -136,7 +138,7 @@ def get_approximation(val,path,index):
     _y = (1-val)*path.y[index-1] + val*path.y[index]
     return _x,_y
 
-def ADE_of_prediction_given_future_steps(fullPath, predictedXY, knownN, futureSteps):
+def ADE_given_future_steps(fullPath, predictedXY, knownN, futureSteps):
     realX = fullPath.x[knownN : knownN+futureSteps]
     realY = fullPath.y[knownN : knownN+futureSteps]
 
@@ -145,3 +147,31 @@ def ADE_of_prediction_given_future_steps(fullPath, predictedXY, knownN, futureSt
 
     error = mean_displacement_error([realX,realY],[predX,predY])
     return error
+    
+def nearestPD(A):
+    B = (A + np.transpose(A)) / 2
+    _, s, V = la.svd(B)
+    H = np.dot(np.transpose(V), np.dot(np.diag(s), V))
+    A2 = (B + H) / 2
+    A3 = (A2 + np.transpose(A2)) / 2
+
+    if is_positive_definite(A3):
+        return A3
+
+    spacing = np.spacing(la.norm(A))
+    I = np.eye(A.shape[0])
+    k = 1
+    while not is_positive_definite(A3):
+        mineig = np.min(np.real(la.eigvals(A3)))
+        A3 += I * (-mineig * k**2 + spacing)
+        k += 1
+
+    return A3
+
+#Returns true when input is positive-definite, via Cholesky
+def is_positive_definite(B):
+    try:
+        _ = la.cholesky(B)
+        return True
+    except la.LinAlgError:
+        return False

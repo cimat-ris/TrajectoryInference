@@ -18,6 +18,8 @@ class mixtureOfGPs:
         self.goalsData       = goalsData
         # Sub-set of likely goals
         self.likelyGoals     = []
+        #Index of most likely goal
+        self.mostLikelyGoal = None
         # Number of sub-goals
         self.nSubgoals       = 2
         # Number of elements in the mixture (not all are used at the same time)
@@ -51,22 +53,20 @@ class mixtureOfGPs:
                 self.gpPathRegressor[k] = gpRegressor(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i],self.goalsData.linearPriorsY[self.startG][i])
 
 
-
     # Update observations and compute likelihoods based on observations
     def update(self,observedX,observedY,observedL):
         self.observedX       = observedX
         self.observedY       = observedY
         self.observedL       = observedL
-
         # Update each regressor with its corresponding observations
         for i in range(self.goalsData.nGoals):
-            goalCenter,__= middle_of_area(self.goalsData.areas[i])
+            goalCenter,__= goal_center_and_size(self.goalsData.areas[i])
             distToGoal   = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
             dist         = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
             # When close to the goal, define sub-goals
             if(distToGoal < 0.4*dist):
                 for j in range(self.nSubgoals):
-                    k= i+(j+1)*self.goalsData.nGoals
+                    k = i+(j+1)*self.goalsData.nGoals
                     self.gpPathRegressor[k].updateObservations(observedX,observedY,observedL)
             else:
                 # Update observations and re-compute the kernel matrices
@@ -83,6 +83,13 @@ class mixtureOfGPs:
             self.goalsLikelihood[i] /= s
             if(self.goalsLikelihood[i] > 0.85*self.meanLikelihood):
                 self.likelyGoals.append(i)
+        # Save most likely goal
+        mostLikely = 0
+        for i in range(self.goalsData.nGoals):
+            if self.goalsLikelihood[i] > self.goalsLikelihood[mostLikely]:
+                mostLikely = i
+        self.mostLikelyGoal = mostLikely
+        
         return self.goalsLikelihood
 
     # Performs prediction
@@ -90,21 +97,20 @@ class mixtureOfGPs:
         # For all likely goals
         for i in range(self.goalsData.nGoals):
             print('[INF] Predicting to goal ',i)
-            goalCenter,__ = middle_of_area(self.goalsData.areas[i])
+            goalCenter,__ = goal_center_and_size(self.goalsData.areas[i])
             distToGoal    = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
             dist          = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
-            knownN = len(self.observedX)
 
             # When close to the goal, define sub-goals
             if(distToGoal < 0.4*dist):
-                self.predictedMeans[i]=np.zeros((0,3), dtype=float)
-                self.predictedVars[i]=np.zeros((0,0,0), dtype=float)
+                self.predictedMeans[i] = np.zeros((0,3), dtype=float)
+                self.predictedVars[i]  = np.zeros((0,0,0), dtype=float)
                 for j in range(self.nSubgoals):
                     print('[INF] Predicting to subgoal ',j)
                     k= i+(j+1)*self.goalsData.nGoals
                     predictedX, predictedY, predictedL, varX, varY = self.gpPathRegressor[k].prediction_to_finish_point()
-                    self.predictedMeans[k]=np.column_stack((predictedX, predictedY, predictedL))
-                    self.predictedVars[k] = np.stack([varX, varY],axis=0)
+                    self.predictedMeans[k] = np.column_stack((predictedX, predictedY, predictedL))
+                    self.predictedVars[k]  = np.stack([varX, varY],axis=0)
             # Otherwise, perform prediction
             else:
                 # Uses the already computed matrices to apply regression over missing data
