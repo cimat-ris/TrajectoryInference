@@ -21,8 +21,8 @@ class gpRegressor:
         self.Cy              = None
         self.Kx_1            = None
         self.Ky_1            = None
-        self.sqRootVarX      = None
-        self.sqRootVarY      = None
+        self.sqRootVarX      = np.empty((0, 0))
+        self.sqRootVarY      = np.empty((0, 0))
         self.newL            = None
         self.epsilon         = 0.5
         self.kernelX         = kernelX
@@ -209,7 +209,7 @@ class gpRegressor:
         # Noise from a normal distribution
         sX = np.random.normal(size=(nPredictions,1))
         sY = np.random.normal(size=(nPredictions,1))
-        if self.sqRootVarX != None and self.sqRootVarY != None:
+        if self.sqRootVarX.shape[0]>0 and self.sqRootVarY.shape[0]>0:
             return predictedX+self.sqRootVarX.dot(sX), predictedY+self.sqRootVarY.dot(sY), predictedL
         else:
             return predictedX, predictedY, predictedL
