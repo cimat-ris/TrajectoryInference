@@ -352,8 +352,12 @@ def plot_table(data, rowLabels, colLabels, tittle):
     plt.show()
     
 def boxplot(data, title):
+    boxprops = dict(linewidth=1.2, color='black')
+    flierprops = dict(marker='o', markerfacecolor='blue', markersize=8)
+    meanlineprops = dict(linestyle='--', linewidth=2.3, color='green')
+    
     fig, ax = plt.subplots()
     ax.set_title(title)
-    ax.boxplot(data)
+    ax.boxplot(data, boxprops=boxprops, whiskerprops=dict(linestyle='-', linewidth=1.2, color='black'), flierprops=flierprops, meanprops=meanlineprops, showmeans=True, meanline=True)
 
 
