@@ -142,16 +142,16 @@ if interactionTest == True:
     plotPathSet(sortedSet,img)
 
 # Test function: evaluation of interaction potentials on sampled trajectories
-interactionWithSamplingTest = False
+interactionWithSamplingTest = True
 if interactionWithSamplingTest == True:
     # Get all the trajectories that exist in the dataset within some time interval
     sortedSet = get_path_set_given_time_interval(sortedPaths,350,750)
-    plotPathSet(sortedSet,img)
+    #plotPathSet(sortedSet,img)
 
     samplesJointTrajectories, potentialVec = [], []
     observedPaths, samplesVec, potentialVec = [], [], []# Guardan en i: [obsX, obsY] y [sampleX, sampleY]
 
-    numTests = 4
+    numTests = 6
     part_num = 3
     currentTime = 800
     allSampleTrajectories = []
@@ -304,7 +304,7 @@ if errorTablesTest == True:
     plot_table(predictionTable,rows,columns,'Prediction Error')
     plot_table(samplingTable,rows,columns,'Sampling Error')
 
-boxPlots = True
+boxPlots = False
 if boxPlots == True:
     futureSteps = [8,10]
     partNum = 5
