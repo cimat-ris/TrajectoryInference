@@ -109,7 +109,7 @@ if singleTest==True:
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 # Test function: prediction of single trajectories with multiple goals
-mixtureTest =  False#True
+mixtureTest =  False
 if mixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
     part_num = 10
@@ -179,7 +179,7 @@ if interactionWithSamplingTest == True:
         for j in range(len(sortedSet)):  
             currentPath = sortedSet[j]
             knownN = len(observedPaths[j].x)
-            sampleX = allSampleTrajectories[j][0][i][:,0]#aqui hay un indice mal, i deberia ser j
+            sampleX = allSampleTrajectories[j][0][i][:,0]
             sampleY = allSampleTrajectories[j][1][i][:,0]
             currentSample = [sampleX, sampleY]
             steps = 8
@@ -209,7 +209,6 @@ if interactionWithSamplingTest == True:
         if(potentialVec[i] > maxPotential):
             maxPotential = potentialVec[i]
             maxId = i
-    #print("Best configuration: figure ", maxId+2) #Figure 1 son las trayectorias reales
 
 testingData = get_uncut_paths_from_file('datasets/CentralStation_paths_10000-12500.txt')
 testingPaths = getUsefulPaths(testingData,areas)
