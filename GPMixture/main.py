@@ -108,8 +108,8 @@ if singleTest==True:
         vecX,vecY,__         = gp.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
-# Test function: prediction of single paths with multiple goals
-mixtureTest = False
+# Test function: prediction of single trajectories with multiple goals
+mixtureTest =  False
 if mixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
     part_num = 10
@@ -164,12 +164,12 @@ interactionWithSamplingTest = True
 if interactionWithSamplingTest == True:
     # Get all the trajectories that exist in the dataset within some time interval
     sortedSet = get_path_set_given_time_interval(sortedPaths,350,750)
-    plotPathSet(sortedSet,img)
+    #plotPathSet(sortedSet,img)
 
     samplesJointTrajectories, potentialVec = [], []
     observedPaths, samplesVec, potentialVec = [], [], []# Guardan en i: [obsX, obsY] y [sampleX, sampleY]
 
-    numTests = 4
+    numTests = 6
     part_num = 3
     currentTime = 800
     allSampleTrajectories = []
@@ -197,7 +197,7 @@ if interactionWithSamplingTest == True:
         for j in range(len(sortedSet)):
             currentPath = sortedSet[j]
             knownN = len(observedPaths[j].x)
-            sampleX = allSampleTrajectories[j][0][i][:,0]#aqui hay un indice mal, i deberia ser j
+            sampleX = allSampleTrajectories[j][0][i][:,0]
             sampleY = allSampleTrajectories[j][1][i][:,0]
             currentSample = [sampleX, sampleY]
             steps = 8
@@ -227,7 +227,6 @@ if interactionWithSamplingTest == True:
         if(potentialVec[i] > maxPotential):
             maxPotential = potentialVec[i]
             maxId = i
-    #print("Best configuration: figure ", maxId+2) #Figure 1 son las trayectorias reales
 
 testingData = get_uncut_paths_from_file('datasets/CentralStation_paths_10000-12500.txt')
 testingPaths = getUsefulPaths(testingData,areas)
@@ -322,7 +321,7 @@ if errorTablesTest == True:
     plot_table(predictionTable,rows,columns,'Prediction Error')
     plot_table(samplingTable,rows,columns,'Sampling Error')
 
-boxPlots = True
+boxPlots = False
 if boxPlots == True:
     futureSteps = [8,10]
     partNum = 5

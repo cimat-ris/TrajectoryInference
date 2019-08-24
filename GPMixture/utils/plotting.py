@@ -388,7 +388,7 @@ def plot_interaction_with_sampling_test(img,observedPaths, samplesVec, potential
                 sx,sy = samplesVec[t][k].x,samplesVec[t][k].y
                 axes[i,j].plot(sx,sy,color[colorId]+'--',lw=2.0)
                 string = "{0:1.3e}".format(potentialVec[t])#str(potentialVec[t])
-                axes[i,j].set_title('IP='+string)
+                axes[i,j].set_title('w='+string)
             axes[i,j].axis('off')
     plt.show()
 

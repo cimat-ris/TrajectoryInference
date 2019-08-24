@@ -71,6 +71,27 @@ def interaction_potential_using_approximation(fi, fj):
         potentialProduct *= potentialVal
     return potentialProduct
 
+#Distance of Closest Approach
+def interaction_potential_DCA(fi, fj):
+    minDist = -1.
+    iMin, jMin = 0, 0
+    for i in range(len(fi.x)):
+        for j in range(len(fj.x)):
+            p = [fi.x[i], fi.y[i]]
+            q = [fj.x[j], fj.y[j]]
+            dist = euclidean_distance(p, q)
+            if minDist < 0:
+                minDist = dist
+            elif dist < minDist:
+                minDist = dist
+                iMin = i
+                jMin = j
+    p = [fi.x[iMin], fi.y[iMin]]
+    q = [fj.x[jMin], fj.y[jMin]]
+    val = potential_value(p,q)
+    
+    return val
+
 #Para un par de agentes regresa el valor del potencial
 #En este caso si fi(t) existe pero fj(t) no, el valor del potencial en este t es 1
 def interaction_potential(fi, fj):
@@ -102,9 +123,12 @@ def interaction_potential_for_a_set_of_trajectories(pathSet):
     potentialProduct = 1.
     for i in range(n):
         for j in range(i+1,n):
+            #Simple Interaction Potential
             #val = interaction_potential(pathSet[i],pathSet[j])
-            #print("\nSimple Interaction Potential:",val)
-            val = interaction_potential_using_approximation(pathSet[i],pathSet[j])
+            #Interaction potential using approximation
+            #val = interaction_potential_using_approximation(pathSet[i],pathSet[j])
+            #intereaction potental using Distance of Closest Approach
+            val = interaction_potential_DCA(pathSet[i],pathSet[j])
             #print("Interaction Potential using approximation:",val)
             potentialProduct *= val
     return potentialProduct
