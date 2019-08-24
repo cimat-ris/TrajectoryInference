@@ -166,8 +166,8 @@ if interactionWithSamplingTest == True:
     sortedSet = get_path_set_given_time_interval(sortedPaths,350,750)
     #plotPathSet(sortedSet,img)
 
-    samplesJointTrajectories, potentialVec = [], []
-    observedPaths, samplesVec, potentialVec = [], [], []# Guardan en i: [obsX, obsY] y [sampleX, sampleY]
+    samplesJointTrajectories, potentialVec, errorVec = [], [], []
+    observedPaths, samplesVec = [], []# Guardan en i: [obsX, obsY] y [sampleX, sampleY]
 
     numTests = 6
     part_num = 3
@@ -219,11 +219,13 @@ if interactionWithSamplingTest == True:
                 potentialVec.append(interactionPotential)
         meanError = meanError/len(sortedSet)
         print("Mean error:",meanError)
+        errorVec.append(meanError)
     plot_interaction_with_sampling_test(img,observedPaths,samplesJointTrajectories,potentialVec)
 
     maxPotential = 0
     maxId = -1
     for i in range(len(potentialVec)):
+        plot_interaction_with_sampling(img, observedPaths, samplesJointTrajectories[i], potentialVec[i], errorVec[i])
         if(potentialVec[i] > maxPotential):
             maxPotential = potentialVec[i]
             maxId = i
@@ -323,10 +325,10 @@ if errorTablesTest == True:
 
 boxPlots = False
 if boxPlots == True:
-    futureSteps = [8,10]
+    futureSteps = [8,10,12]
     partNum = 5
     for steps in futureSteps:
-        for j in range(1,partNum-2):
+        for j in range(partNum-1):
             plotName = 'Predictive mean\n'+'%d'%(steps)+' steps | %d'%(j+1)+'/%d'%(partNum)+' data'
             predData = read_data('results/Prediction_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
             boxplot(predData, plotName)
