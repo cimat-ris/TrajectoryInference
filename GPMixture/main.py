@@ -131,7 +131,7 @@ if mixtureTest==True:
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 # Test function: prediction of single paths with multiple goals
-animateMixtureTest = True
+animateMixtureTest = False
 if animateMixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
     part_num = 10
@@ -149,7 +149,7 @@ if animateMixtureTest==True:
 
 
 # Test function: evaluation of interaction potentials on complete trajectories from the dataset
-interactionTest = True
+interactionTest = False
 if interactionTest == True:
     # Get trajectories within some time interval
     sortedSet     = get_path_set_given_time_interval(sortedPaths,200,700)
@@ -160,7 +160,7 @@ if interactionTest == True:
     plotPathSet(sortedSet,img)
 
 # Test function: evaluation of interaction potentials on sampled trajectories
-interactionWithSamplingTest = True
+interactionWithSamplingTest = False
 if interactionWithSamplingTest == True:
     # Get all the trajectories that exist in the dataset within some time interval
     sortedSet = get_path_set_given_time_interval(sortedPaths,350,750)
@@ -323,19 +323,28 @@ if errorTablesTest == True:
     plot_table(predictionTable,rows,columns,'Prediction Error')
     plot_table(samplingTable,rows,columns,'Sampling Error')
 
-boxPlots = False
+boxPlots = True
 if boxPlots == True:
     futureSteps = [8,10,12]
     partNum = 5
+    
     for steps in futureSteps:
+        predMeanBoxes, samplesBoxes = [], []
+        boxesP, boxesS, labels = [], [], []
         for j in range(partNum-1):
             plotName = 'Predictive mean\n'+'%d'%(steps)+' steps | %d'%(j+1)+'/%d'%(partNum)+' data'
             predData = read_data('results/Prediction_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
-            boxplot(predData, plotName)
-
+            #boxplot(predData, plotName)
+            predMeanBoxes.append(predData)
+            labels.append('Predictive mean\n%d'%(j+1)+'/%d data'%(partNum))
+            
             plotName = 'Best of samples\n'+'%d'%(steps)+' steps | %d'%(j+1)+'/%d'%(partNum)+' data'
             samplingData = read_data('results/Sampling_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
-            boxplot(samplingData, plotName)
+            #boxplot(samplingData, plotName)
+            labels.append('Best ofsamples\n%d'%(j+1)+'/%d data'%(partNum))
+            samplesBoxes.append(samplingData)
+        #plot multiple boxplots
+        joint_multiple_boxplots(predMeanBoxes, samplesBoxes)
 
 
 #Prueba el error de la prediccion variando:
