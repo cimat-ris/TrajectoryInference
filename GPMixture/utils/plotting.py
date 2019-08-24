@@ -16,7 +16,9 @@ from matplotlib.animation import FuncAnimation
 import pandas as pd
 import time
 
-color = ['g','m','r','b','c','y','w','k']
+color = ['g','m','r','b','c','y','tomato','darkorange','orange','gold','yellow','lime',
+         'springgreen','cyan','teal','deepskyblue','dodgerblue','royalblue','blueviolet','indigo',
+         'purple','magenta','deeppink','hotpink','white','black']
 
 #******************************************************************************#
 """ PLOT FUNCTIONS """
@@ -464,3 +466,59 @@ def boxplot(data, title):
     fig, ax = plt.subplots()
     ax.set_title(title)
     ax.boxplot(data, boxprops=boxprops, whiskerprops=dict(linestyle='-', linewidth=1.2, color='black'), flierprops=flierprops, meanprops=meanlineprops, showmeans=True, meanline=True)
+
+#plot an array of data in multiple boxplots
+def multiple_boxplots(data, labels):
+    num_boxes = len(data)
+    blackbox = dict(linewidth=1.2, color='black')
+    bluebox = dict(linewidth=1.2, color='blue')
+    flierprops = dict(marker='o', markerfacecolor='blue', markersize=8)
+    meanlineprops = dict(linestyle='--', linewidth=2.3, color='green')
+    
+    boxprops = []
+    for i in range(num_boxes):
+        if i%2 == 0:
+            boxprops.append(bluebox)
+        else:
+            boxprops.append(blackbox)
+            
+    
+    fig, ax = plt.subplots()    
+    ax.boxplot(data, labels = labels, boxprops=blackbox, whiskerprops=dict(linestyle='-', linewidth=1.2, color='black'))
+    plt.show()
+
+def joint_multiple_boxplots(data_a, data_b):
+    color_a = 'm'
+    color_b = '#2C7BB6'
+    ticks = ['1/5', '2/5', '3/5', '4/5']
+    
+    plt.figure()
+    
+    bp_a = plt.boxplot(data_a, positions=np.array(range(len(data_a)))*2.0-0.4, widths=0.6, whiskerprops=dict(linestyle='-', linewidth=1.2, color=color_a), showfliers=True)
+    bp_b = plt.boxplot(data_b, positions=np.array(range(len(data_b)))*2.0+0.4, widths=0.6, whiskerprops=dict(linestyle='-', linewidth=1.2, color=color_b), showfliers=True)
+    set_box_color(bp_a, color_a)    
+    plt.setp(bp_a['medians'], color='indigo')
+    set_box_color(bp_b, color_b)
+    plt.setp(bp_b['medians'], color='blue')
+
+    #legend
+    plt.plot([], c=color_a, label='Predictive mean')
+    plt.plot([], c=color_b, label='Best of samples')
+    plt.legend()
+
+    plt.xticks(range(0, len(ticks) * 2, 2), ticks)
+    plt.xlim(-2, len(ticks)*2)
+    maxy = 0
+    for i in range(len(data_a)):
+        current_max = max(data_a[i])
+        if current_max > maxy:
+            maxy = current_max
+    plt.ylim(0, maxy)
+    plt.tight_layout()
+
+def set_box_color(bp, color):
+    plt.setp(bp['boxes'], color=color)
+    plt.setp(bp['whiskers'], color=color)
+    plt.setp(bp['caps'], color=color)
+
+
