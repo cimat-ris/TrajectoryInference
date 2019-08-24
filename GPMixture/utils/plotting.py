@@ -9,8 +9,12 @@ import numpy as np
 import math
 from copy import copy
 import matplotlib.pyplot as plt
+import matplotlib
+#matplotlib.use('TkAgg')
 from matplotlib.patches import Ellipse
+from matplotlib.animation import FuncAnimation
 import pandas as pd
+import time
 
 color = ['g','m','r','b','c','y','w','k']
 
@@ -204,6 +208,83 @@ def plot_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goals
     plt.axis(v)
     plt.show()
 
+def animate_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goalsLikelihood,predictedXYVec,varXYVec):
+    realX, realY = [],[]
+    partialX, partialY = [], []
+    N = int(len(x))
+    # Observed data
+    print(nUsedData,N)
+    for i in range(int(nUsedData)):
+        partialX.append(x[i])
+        partialY.append(y[i])
+    # Data to predict (ground truth)
+    for i in range(int(nUsedData-1),N):
+        realX.append(x[i])
+        realY.append(y[i])
+
+    fig,ax = plt.subplots()
+    plt.gca().set_axis_off()
+    plt.gca().xaxis.set_major_locator(plt.NullLocator())
+    plt.gca().yaxis.set_major_locator(plt.NullLocator())
+    # Plot the observed data
+    lineObs, = ax.plot(partialX,partialY, lw=3,color='c')
+
+    # Show the image
+    ax.imshow(img)
+    plt.tight_layout()
+    # Likelihoods
+    maxLikelihood = max(goalsLikelihood)
+    maxLW = 3.0
+
+    # For all potential goals
+    ells      = []
+    pls       = []
+    #ax.set_aspect('equal')
+    for i in range(nGoals):
+            lw = max((goalsLikelihood[i]/maxLikelihood)*maxLW,1)
+            e = Ellipse([0,0],0,0)
+            e.set_fill(0)
+            if (predictedXYVec[i].shape[0]==0):
+                l, = ax.plot([0],[0], lw=0,color='b')
+                e.set_lw(0)
+            else:
+                l, = ax.plot(predictedXYVec[i][0,0],predictedXYVec[i][0,1], lw=lw,color='b')
+                ## Ellipse center
+                xy  = [predictedXYVec[i][0,0],predictedXYVec[i][0,1]]
+                vx  = varXYVec[i][0,0,0]
+                vy  = varXYVec[i][1,0,0]
+                e.center = xy
+                e.width  = 6.0*math.sqrt(math.fabs(vx))
+                e.height = 6.0*math.sqrt(math.fabs(vx))
+                e.set_edgecolor('b')
+                e.set_lw(lw)
+            ax.add_patch(e)
+            ells.append(e)
+            pls.append(l)
+    v = [0,img.shape[1],img.shape[0],0]
+    plt.axis(v)
+
+
+    def animate(i):
+        for j in range(nGoals):
+            if (predictedXYVec[j].shape[0]==0):
+                continue
+            predictedN = predictedXYVec[j].shape[0]
+            if (i<predictedXYVec[j].shape[0]):
+                p   = [predictedXYVec[j][i,0],predictedXYVec[j][i,1]]
+                vx  = varXYVec[j][0,i,i]
+                vy  = varXYVec[j][1,i,i]
+                pls[j].set_data(predictedXYVec[j][0:i,0],predictedXYVec[j][0:i,1])
+                ells[j].center = p
+                ells[j].width  = 6.0*math.sqrt(math.fabs(vx))
+                ells[j].height = 6.0*math.sqrt(math.fabs(vx))
+
+
+    anim = FuncAnimation(fig, animate,frames=100,interval=100)
+    plt.show()
+    return
+
+
 def plot_subgoals(img, goal, numSubgoals, axis):
     subgoalsCenter, size = get_subgoals_center_and_size(numSubgoals, goal, axis)
 
@@ -310,7 +391,7 @@ def plot_interaction_with_sampling_test(img,observedPaths, samplesVec, potential
                 axes[i,j].set_title('IP='+string)
             axes[i,j].axis('off')
     plt.show()
-    
+
 def plot_table__():
     data = [[ 66386, 174296,  75131, 577908,  32015],
         [ 58230, 381139,  78045,  99308, 160454],
@@ -325,15 +406,15 @@ def plot_table__():
             string = "{0:1.3e}".format(data[i][j])
             row.append(string)
         stringData.append(row)
-        
+
     fig, axes = plt.subplots(1)
-    
-    axes.xaxis.set_visible(False) 
+
+    axes.xaxis.set_visible(False)
     axes.yaxis.set_visible(False)
     # Show the image
     plt.table(cellText=stringData,loc='center')
     plt.show()
-    
+
 def plot_table(data, rowLabels, colLabels, tittle):
     stringData = []
     n, m = len(data), len(data[0])
@@ -349,20 +430,18 @@ def plot_table(data, rowLabels, colLabels, tittle):
     fig.patch.set_visible(False)
     ax.axis('off')
     ax.axis('tight')
-    
+
     ax.table(cellText=stringData,cellLoc='center',rowLabels = rowLabels, colLabels = colLabels, loc='center')
 
     fig.tight_layout()
 
     plt.show()
-    
+
 def boxplot(data, title):
     boxprops = dict(linewidth=1.2, color='black')
     flierprops = dict(marker='o', markerfacecolor='blue', markersize=8)
     meanlineprops = dict(linestyle='--', linewidth=2.3, color='green')
-    
+
     fig, ax = plt.subplots()
     ax.set_title(title)
     ax.boxplot(data, boxprops=boxprops, whiskerprops=dict(linestyle='-', linewidth=1.2, color='black'), flierprops=flierprops, meanprops=meanlineprops, showmeans=True, meanline=True)
-
-

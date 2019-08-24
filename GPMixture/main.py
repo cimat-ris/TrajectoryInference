@@ -85,7 +85,7 @@ samplingViz = False
 if samplingViz==True:
     path_sampling_test(img,stepUnit,goalsData)
 
-# Test function: prediction of single trajectories with single goals
+# Test function: prediction of single paths with single goals
 singleTest = False
 if singleTest==True:
     gp = singleGP(startG,nextG,stepUnit,goalsData)
@@ -108,13 +108,11 @@ if singleTest==True:
         vecX,vecY,__         = gp.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
-# Test function: prediction of single trajectories with multiple goals
-mixtureTest =  False#True
+# Test function: prediction of single paths with multiple goals
+mixtureTest = False
 if mixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
     part_num = 10
-    steps = 10
-    # plot_scene_structure(img,goalsData)
     # For different sub-parts of the trajectory
     for i in range(1,part_num-1):
         knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
@@ -132,17 +130,37 @@ if mixtureTest==True:
         vecX,vecY,__ = mgps.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
+# Test function: prediction of single paths with multiple goals
+animateMixtureTest = True
+if animateMixtureTest==True:
+    mgps = mixtureOfGPs(startG,stepUnit,goalsData)
+    part_num = 10
+    # For different sub-parts of the trajectory
+    for i in range(1,part_num-1):
+        knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
+        trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
+        """Multigoal prediction test"""
+        print('[INF] Updating likelihoods')
+        likelihoods = mgps.update(trueX,trueY,trueL)
+        print('[INF] Performing prediction')
+        predictedXYVec,varXYVec = mgps.predict()
+        print('[INF] Plotting')
+        animate_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
+
+
 # Test function: evaluation of interaction potentials on complete trajectories from the dataset
-interactionTest = False
+interactionTest = True
 if interactionTest == True:
+    # Get trajectories within some time interval
     sortedSet     = get_path_set_given_time_interval(sortedPaths,200,700)
     print("[INF] Number of trajectories in the selected time interval:",len(sortedSet))
-    pot = interaction_potential_for_a_set_of_pedestrians(sortedSet)
+    # Potential is evaluated based on the timestamps (array t)
+    pot = interaction_potential_for_a_set_of_trajectories(sortedSet)
     print("[RES] Potential value: ",'{:1.4e}'.format(pot))
     plotPathSet(sortedSet,img)
 
 # Test function: evaluation of interaction potentials on sampled trajectories
-interactionWithSamplingTest = False
+interactionWithSamplingTest = True
 if interactionWithSamplingTest == True:
     # Get all the trajectories that exist in the dataset within some time interval
     sortedSet = get_path_set_given_time_interval(sortedPaths,350,750)
@@ -176,7 +194,7 @@ if interactionWithSamplingTest == True:
         # For all the paths in the set
         print("_____Test #",i+1,"_____")
         meanError = 0.
-        for j in range(len(sortedSet)):  
+        for j in range(len(sortedSet)):
             currentPath = sortedSet[j]
             knownN = len(observedPaths[j].x)
             sampleX = allSampleTrajectories[j][0][i][:,0]#aqui hay un indice mal, i deberia ser j
@@ -197,7 +215,7 @@ if interactionWithSamplingTest == True:
             if(len(jointTrajectories) == len(sortedSet)):
                 samplesJointTrajectories.append(jointTrajectories)
                 # Evaluation of the potential
-                interactionPotential = interaction_potential_for_a_set_of_pedestrians(jointTrajectories)
+                interactionPotential = interaction_potential_for_a_set_of_trajectories(jointTrajectories)
                 potentialVec.append(interactionPotential)
         meanError = meanError/len(sortedSet)
         print("Mean error:",meanError)
@@ -226,7 +244,7 @@ errorTablesTest = False
 if errorTablesTest == True:
     predictionTable, samplingTable = [], []
     rows, columns = [], []
-    
+
     futureSteps = [8,10,12]
     partNum = 5
     nSamples = 50
@@ -239,7 +257,7 @@ if errorTablesTest == True:
         for i in range(partNum-1):
             predictionFile = 'results/Prediction_error_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(partNum)+'_data.txt'
             samplingFile   = 'results/Sampling_error_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(partNum)+'_data.txt'
-            
+
             predError, samplingError = [], []
             meanP, meanS = 0., 0.
             for j in range(nPaths):
@@ -247,19 +265,19 @@ if errorTablesTest == True:
                 currentPath = testingPaths[j]
                 startG = get_path_start_goal(currentPath,areas)
                 mgps = mixtureOfGPs(startG,stepUnit,goalsData)
-                
+
                 print("Observed data:",i+1,"/",partNum)
-                pathSize = len(currentPath.x) 
+                pathSize = len(currentPath.x)
                 knownN = int((i+1)*(pathSize/partNum)) #numero de datos conocidos
                 trueX,trueY,trueL = get_known_set(currentPath.x,currentPath.y,currentPath.l,knownN)
                 """Multigoal prediction test"""
                 likelihoods = mgps.update(trueX,trueY,trueL)
                 predictedMeans,varXYVec = mgps.predict()
                 predictedXYVec = get_prediction_arrays(predictedMeans)
-                
+
                 mostLikelyG = mgps.mostLikelyGoal
                 if mgps.gpPathRegressor[mostLikelyG + nGoals] != None:
-                    sgError = [] 
+                    sgError = []
                     sgError.append(ADE_given_future_steps(currentPath, predictedXYVec[mostLikelyG], knownN, steps))
                     for it in range(mgps.nSubgoals):
                         k = mostLikelyG + (it+1)*nGoals
@@ -269,13 +287,13 @@ if errorTablesTest == True:
                         if sgError[minId] == 0 and sgError[ind] > 0:
                             minId = ind
                         elif sgError[minId] > sgError[ind] and sgError[ind] > 0:
-                            minId = ind 
+                            minId = ind
                     error = sgError[minId]
                 else:
                     error = ADE_given_future_steps(currentPath, predictedXYVec[mostLikelyG], knownN, steps)
-                predError.append(error)                
+                predError.append(error)
                 meanP += error
-                """Sampling"""        
+                """Sampling"""
                 # Generate samples
                 vecX,vecY,vecL  = mgps.generate_samples(nSamples)
                 samplesError = []
@@ -283,9 +301,9 @@ if errorTablesTest == True:
                     sampleXY = [vecX[k][:,0], vecY[k][:,0]]
                     error = ADE_given_future_steps(currentPath,sampleXY, knownN, steps)
                     samplesError.append(error)
-                samplingError.append(min(samplesError))                
+                samplingError.append(min(samplesError))
                 meanS += min(samplesError)
-                
+
                 write_data(predError,predictionFile)
                 write_data(samplingError,samplingFile)
             meanP /= nPaths
@@ -296,9 +314,9 @@ if errorTablesTest == True:
         samplingTable.append(meanSampleError)
     print("Prediction error:\n",predictionTable)
     print("Sampling error:\n",samplingTable)
-    
+
     for i in range(partNum-1):
-        s = str(i+1) + '/' + str(partNum) 
+        s = str(i+1) + '/' + str(partNum)
         columns.append(s)
     #Plot tables
     plot_table(predictionTable,rows,columns,'Prediction Error')
@@ -313,7 +331,7 @@ if boxPlots == True:
             plotName = 'Predictive mean\n'+'%d'%(steps)+' steps | %d'%(j+1)+'/%d'%(partNum)+' data'
             predData = read_data('results/Prediction_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
             boxplot(predData, plotName)
-            
+
             plotName = 'Best of samples\n'+'%d'%(steps)+' steps | %d'%(j+1)+'/%d'%(partNum)+' data'
             samplingData = read_data('results/Sampling_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
             boxplot(samplingData, plotName)
