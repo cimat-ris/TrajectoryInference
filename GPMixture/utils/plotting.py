@@ -388,10 +388,29 @@ def plot_interaction_with_sampling_test(img,observedPaths, samplesVec, potential
                 sx,sy = samplesVec[t][k].x,samplesVec[t][k].y
                 axes[i,j].plot(sx,sy,color[colorId]+'--',lw=2.0)
                 string = "{0:1.3e}".format(potentialVec[t])#str(potentialVec[t])
-                axes[i,j].set_title('w='+string)
+                axes[i,j].set_title('w = '+string)
             axes[i,j].axis('off')
     plt.show()
 
+def plot_interaction_with_sampling(img, observedPaths, samples, potential, error):
+    n = len(observedPaths)
+    
+    fig, ax = plt.subplots(1)
+    ax.set_aspect('equal')
+    ax.imshow(img)
+    for i in range(n):
+        ind = i%len(color)
+        Color = color[ind]
+        plt.plot(observedPaths[i].x, observedPaths[i].y,Color,lw=2.0)
+        plt.plot(samples[i].x, samples[i].y,Color+'--',lw=2.0)
+        strPotential = "{0:1.3e}".format(potential)
+        strError = "{0:.2f}".format(error)
+    plt.title('w = '+strPotential + '\nerror = '+strError)
+    s = img.shape
+    v = [0,s[1],s[0],0]
+    plt.axis(v)
+    plt.show()
+    
 def plot_table__():
     data = [[ 66386, 174296,  75131, 577908,  32015],
         [ 58230, 381139,  78045,  99308, 160454],
