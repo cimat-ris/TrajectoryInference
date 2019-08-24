@@ -16,6 +16,7 @@ from copy import copy
 timeRange = 3.
 
 #Busco un alpha en [0,1] tal que t = alpha*T1 + (1-alpha)*T2
+# TODO: Binary search is not necessary here, there is an analytical solution.
 def search_value(a, b, t, T1, T2):
     alpha = (a+b)/2
     val = (1-alpha)*T1 + alpha*T2
@@ -95,7 +96,7 @@ def interaction_potential(fi, fj):
         potentialProduct *= potentialVal
     return potentialProduct
 
-def interaction_potential_for_a_set_of_pedestrians(pathSet):
+def interaction_potential_for_a_set_of_trajectories(pathSet):
     # Number of pedestrians in the set
     n = len(pathSet)
     potentialProduct = 1.
