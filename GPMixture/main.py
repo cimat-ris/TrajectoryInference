@@ -16,6 +16,7 @@ from matplotlib.patches import Ellipse
 from copy import copy
 from copy import deepcopy
 import pandas as pd
+from statistics import * 
 
 # Read the areas data from a file and take only the first 6 goals
 data     = pd.read_csv('parameters/CentralStation_areasDescriptions.csv')
@@ -109,10 +110,11 @@ if singleTest==True:
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 # Test function: prediction of single trajectories with multiple goals
-mixtureTest =  False
+mixtureTest = False
 if mixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
-    part_num = 10
+    nSamples = 50
+    part_num = 5
     # For different sub-parts of the trajectory
     for i in range(1,part_num-1):
         knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
@@ -127,7 +129,7 @@ if mixtureTest==True:
         print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
         print("[RES] Mean likelihood:", mgps.meanLikelihood)
         print('[INF] Generating samples')
-        vecX,vecY,__ = mgps.generate_samples(100)
+        vecX,vecY,__ = mgps.generate_samples(nSamples)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 # Test function: prediction of single paths with multiple goals
@@ -305,8 +307,8 @@ if errorTablesTest == True:
                 samplingError.append(min(samplesError))
                 meanS += min(samplesError)
 
-                write_data(predError,predictionFile)
-                write_data(samplingError,samplingFile)
+                #write_data(predError,predictionFile)
+                #write_data(samplingError,samplingFile)
             meanP /= nPaths
             meanS /= nPaths
             meanPredError.append(meanP)
@@ -323,30 +325,27 @@ if errorTablesTest == True:
     plot_table(predictionTable,rows,columns,'Prediction Error')
     plot_table(samplingTable,rows,columns,'Sampling Error')
 
-boxPlots = True
+boxPlots = False
 if boxPlots == True:
     futureSteps = [8,10,12]
     partNum = 5
     
     for steps in futureSteps:
         predMeanBoxes, samplesBoxes = [], []
-        boxesP, boxesS, labels = [], [], []
         for j in range(partNum-1):
             plotName = 'Predictive mean\n'+'%d'%(steps)+' steps | %d'%(j+1)+'/%d'%(partNum)+' data'
             predData = read_data('results/Prediction_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
-            #boxplot(predData, plotName)
             predMeanBoxes.append(predData)
-            labels.append('Predictive mean\n%d'%(j+1)+'/%d data'%(partNum))
             
             plotName = 'Best of samples\n'+'%d'%(steps)+' steps | %d'%(j+1)+'/%d'%(partNum)+' data'
             samplingData = read_data('results/Sampling_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
-            #boxplot(samplingData, plotName)
-            labels.append('Best ofsamples\n%d'%(j+1)+'/%d data'%(partNum))
             samplesBoxes.append(samplingData)
         #plot multiple boxplots
-        joint_multiple_boxplots(predMeanBoxes, samplesBoxes)
+        title = 'Error comparing %d'%(steps) + ' steps'
+        joint_multiple_boxplots(predMeanBoxes, samplesBoxes, title)
 
-
+realPath = testingPaths[0]
+real_path_predicted_mean_and_sample(realPath,areas,goalsData,stepUnit)
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
 # - numero de pasos a comparar dado un objetivo final
