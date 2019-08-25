@@ -15,10 +15,11 @@ from matplotlib.patches import Ellipse
 from matplotlib.animation import FuncAnimation
 import pandas as pd
 import time
+import random
 
-color = ['g','m','r','b','c','y','tomato','darkorange','orange','gold','yellow','lime',
+color = ['g','m','r','b','steelblue','y','tomato','orange','gold','yellow','lime',
          'springgreen','cyan','teal','deepskyblue','dodgerblue','royalblue','blueviolet','indigo',
-         'purple','magenta','deeppink','hotpink','white','black']
+         'purple','magenta','deeppink','hotpink','sandybrown','darkorange','coral','lightgreen']
 
 #******************************************************************************#
 """ PLOT FUNCTIONS """
@@ -327,7 +328,7 @@ def plot_scene_structure(img,goalsData):
     plt.axis(v)
     plt.show()
 
-# Plot a set of sample trajectories and an observed partial trajectories
+# Plot a set of sample trajectories and an observed partial trajectory
 def plot_path_samples_with_observations(img,ox,oy,x,y):
     n = len(x)
     if(n == 0):
@@ -336,15 +337,17 @@ def plot_path_samples_with_observations(img,ox,oy,x,y):
     ax.set_aspect('equal')
     # Show the image
     ax.imshow(img)
-    plt.plot(ox,oy,'c')
+    plt.plot(ox,oy,'c',lw=2.0)
     for i in range(n):
-        plt.plot(x[i],y[i])
+        Color = color[random.randint(0,len(color)-1) ]
+        plt.plot(x[i],y[i], color=Color)
         plt.plot([ox[-1],x[i][0]],[oy[-1],y[i][0]])
     s = img.shape
     v = [0,s[1],s[0],0]
     plt.axis(v)
     plt.show()
 
+# Plots a set of observed paths and their corresponding sample
 def plot_path_set_samples_with_observations(img,ox,oy,x,y):
     n = len(x)
     if(n == 0):
@@ -487,7 +490,7 @@ def multiple_boxplots(data, labels):
     ax.boxplot(data, labels = labels, boxprops=blackbox, whiskerprops=dict(linestyle='-', linewidth=1.2, color='black'))
     plt.show()
 
-def joint_multiple_boxplots(data_a, data_b):
+def joint_multiple_boxplots(data_a, data_b, title):
     color_a = 'm'
     color_b = '#2C7BB6'
     ticks = ['1/5', '2/5', '3/5', '4/5']
@@ -500,7 +503,8 @@ def joint_multiple_boxplots(data_a, data_b):
     plt.setp(bp_a['medians'], color='indigo')
     set_box_color(bp_b, color_b)
     plt.setp(bp_b['medians'], color='blue')
-
+    
+    plt.title(title)
     #legend
     plt.plot([], c=color_a, label='Predictive mean')
     plt.plot([], c=color_b, label='Best of samples')
@@ -514,6 +518,9 @@ def joint_multiple_boxplots(data_a, data_b):
         if current_max > maxy:
             maxy = current_max
     plt.ylim(0, maxy)
+    
+    plt.xlabel('Observed data')
+    plt.ylabel('Error in pixels')
     plt.tight_layout()
 
 def set_box_color(bp, color):
