@@ -307,8 +307,8 @@ if errorTablesTest == True:
                 samplingError.append(min(samplesError))
                 meanS += min(samplesError)
 
-                #write_data(predError,predictionFile)
-                #write_data(samplingError,samplingFile)
+                write_data(predError,predictionFile)
+                write_data(samplingError,samplingFile)
             meanP /= nPaths
             meanS /= nPaths
             meanPredError.append(meanP)
@@ -345,7 +345,8 @@ if boxPlots == True:
         joint_multiple_boxplots(predMeanBoxes, samplesBoxes, title)
 
 realPath = testingPaths[0]
-real_path_predicted_mean_and_sample(realPath,areas,goalsData,stepUnit)
+#real_path_predicted_mean_and_sample(realPath,areas,goalsData,stepUnit)
+
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
 # - numero de pasos a comparar dado un objetivo final
