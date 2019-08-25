@@ -364,6 +364,25 @@ def plot_path_set_samples_with_observations(img,ox,oy,x,y):
     v = [0,s[1],s[0],0]
     plt.axis(v)
     plt.show()
+    
+# Plots a set of observed paths and their corresponding sample
+def plot_observations_predictive_mean_and_sample(img,ox,oy,x,y):
+    n = len(x)
+    if(n == 0):
+        return
+    fig,ax = plt.subplots(1)
+    ax.set_aspect('equal')
+    # Show the image
+    ax.imshow(img)
+    for i in range(n):
+        colorId = i%len(color)
+        plt.plot(ox[i],oy[i],color[colorId],lw=2.0)
+        plt.plot(x[i],y[i],color[colorId]+'--',lw=2.0)
+    s = img.shape
+    v = [0,s[1],s[0],0]
+    plt.axis(v)
+    plt.show()
+
 
 #Grafica con subplots los tests del sampling dado un conjunto de observaciones
 def plot_interaction_with_sampling_test(img,observedPaths, samplesVec, potentialVec):
@@ -411,34 +430,12 @@ def plot_interaction_with_sampling(img, observedPaths, samples, potential, error
         strPotential = "{0:1.3e}".format(potential)
         strError = "{0:.2f}".format(error)
     plt.title('w = '+strPotential + '\nerror = '+strError)
+    #plt.title('\nerror = '+strError)
     s = img.shape
     v = [0,s[1],s[0],0]
     plt.axis(v)
     plt.show()
     
-def plot_table__():
-    data = [[ 66386, 174296,  75131, 577908,  32015],
-        [ 58230, 381139,  78045,  99308, 160454],
-        [ 89135,  80552, 152558, 497981, 603535],
-        [ 78415,  81858, 150656, 193263,  69638],
-        [139361, 331509, 343164, 781380,  52269]]
-    stringData = []
-    n, m = len(data), len(data[0])
-    for i in range(n):
-        row = []
-        for j in range(m):
-            string = "{0:1.3e}".format(data[i][j])
-            row.append(string)
-        stringData.append(row)
-
-    fig, axes = plt.subplots(1)
-
-    axes.xaxis.set_visible(False)
-    axes.yaxis.set_visible(False)
-    # Show the image
-    plt.table(cellText=stringData,loc='center')
-    plt.show()
-
 def plot_table(data, rowLabels, colLabels, tittle):
     stringData = []
     n, m = len(data), len(data[0])
