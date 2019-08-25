@@ -6,6 +6,7 @@ Testing functions
 """
 
 from gp_code.gpRegressor import *
+from gp_code.mixtureOfGPs import *
 from gp_code.regression import *
 from gp_code.evaluation import *
 from gp_code.kernels import *
@@ -323,3 +324,59 @@ def interaction_using_sampling_test(img,pathSet,startGoals,finishGoals,stepUnit,
     #plot_multiple_path_samples_with_observations(img,observedXVec,observedYVec,sampleXVec,sampleYVec)
     plotPathSet(samplePathSet,img)
     #Mas adelante: guardar potencial + config
+
+def real_path_predicted_mean_and_sample(realPath,areas,goalsData,stepUnit):
+    futureSteps = [8]
+    partNum = 5
+    nSamples = 50
+    nGoals = goalsData.nGoals
+    PM, samples, knownData = [], [], []
+    for steps in futureSteps:
+        print("__Comparing",steps,"steps__")
+        
+        for i in range(partNum-1):
+            currentPath = realPath
+            startG = get_path_start_goal(currentPath,areas)
+            mgps = mixtureOfGPs(startG,stepUnit,goalsData)
+
+            print("Observed data:",i+1,"/",partNum)
+            pathSize = len(currentPath.x)
+            knownN = int((i+1)*(pathSize/partNum)) #numero de datos conocidos
+            trueX,trueY,trueL = get_known_set(currentPath.x,currentPath.y,currentPath.l,knownN)
+            """Multigoal prediction test"""
+            likelihoods = mgps.update(trueX,trueY,trueL)
+            predictedMeans,varXYVec = mgps.predict()
+            predictedXYVec = get_prediction_arrays(predictedMeans)
+
+            mostLikelyG = mgps.mostLikelyGoal
+            PredMean = predictedXYVec[mostLikelyG]
+            minPMError = ADE_given_future_steps(currentPath, predictedXYVec[mostLikelyG], knownN, steps)
+            if mgps.gpPathRegressor[mostLikelyG + nGoals] != None:
+                for it in range(mgps.nSubgoals):
+                    k = mostLikelyG + (it+1)*nGoals
+                    error = ADE_given_future_steps(currentPath, predictedXYVec[k], knownN, steps)
+                    if minPMError == 0:
+                        minPMError = error
+                        PredMean = predictedXYVec[k]
+                    if error > 0 and error < minPMError:
+                        minPMError = error
+                        PredMean = predictedXYVec[k]
+            """Sampling"""
+            # Generate samples
+            vecX,vecY,vecL  = mgps.generate_samples(nSamples)
+            sample = [vecX[0][:,0], vecY[0][:,0]]
+            minSampleError = ADE_given_future_steps(currentPath, sample, knownN, steps) 
+            for k in range(nSamples):
+                sampleXY = [vecX[k][:,0], vecY[k][:,0]]
+                error = ADE_given_future_steps(currentPath, sampleXY, knownN, steps)
+                if error < minSampleError:
+                    minSampleError = error
+                    sample = sampleXY
+            PM.append(PredMean)
+            samples.append(sample)
+            knownData.append(knownN)
+    print("_____Data____\nReal:\n",realPath,"Pred mean:\n",PM,"Samples:\n",samples,"knownN:\n",knownData)
+
+
+
+
