@@ -204,11 +204,11 @@ def filter_path_vec(vec):
     # Median
     m = np.median(arclen)
     # Standard deviation
-    var = np.sqrt(np.var(arclen))
+    SD = np.sqrt(np.var(arclen))
     # Resulting filtered set
     learnSet = []
     for i in range(len(arclen)):
-        if abs(arclen[i] - m) <= var:
+        if abs(arclen[i] - m) <= SD:
             learnSet.append(vec[i])
     return learnSet
 
