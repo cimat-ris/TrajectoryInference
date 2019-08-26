@@ -325,9 +325,9 @@ def interaction_using_sampling_test(img,pathSet,startGoals,finishGoals,stepUnit,
     plotPathSet(samplePathSet,img)
     #Mas adelante: guardar potencial + config
 
-def real_path_predicted_mean_and_sample(realPath,areas,goalsData,stepUnit):
+def real_path_predicted_mean_and_sample(img,realPath,areas,goalsData,stepUnit):
     futureSteps = [8]
-    partNum = 5
+    partNum = 7
     nSamples = 50
     nGoals = goalsData.nGoals
     PM, samples, knownData = [], [], []
@@ -362,8 +362,8 @@ def real_path_predicted_mean_and_sample(realPath,areas,goalsData,stepUnit):
                         minPMError = error
                         PredMean = predictedXYVec[k]
             """Sampling"""
-            # Generate samples
-            vecX,vecY,vecL  = mgps.generate_samples(nSamples)
+            vecX,vecY,vecL  = mgps.generate_samples(nSamples) #Generate samples
+            #Save the sample that gives the minimum error
             sample = [vecX[0][:,0], vecY[0][:,0]]
             minSampleError = ADE_given_future_steps(currentPath, sample, knownN, steps) 
             for k in range(nSamples):
@@ -375,7 +375,8 @@ def real_path_predicted_mean_and_sample(realPath,areas,goalsData,stepUnit):
             PM.append(PredMean)
             samples.append(sample)
             knownData.append(knownN)
-    print("_____Data____\nReal:\n",realPath,"Pred mean:\n",PM,"Samples:\n",samples,"knownN:\n",knownData)
+            #plot_observations_predictive_mean_and_sample(img,realPath,knownN,PredMean,sample)
+    sequence_of_observations_predmean_samples(img,realPath,knownData,PM,samples)
 
 
 
