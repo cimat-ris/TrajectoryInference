@@ -344,9 +344,13 @@ if boxPlots == True:
         title = 'Error comparing %d'%(steps) + ' steps'
         joint_multiple_boxplots(predMeanBoxes, samplesBoxes, title)
 
-realPath = testingPaths[0]
-#real_path_predicted_mean_and_sample(realPath,areas,goalsData,stepUnit)
+plotPathSet(img,learnSet)
 
+"""
+#Plots a partial path, the predictive mean to the most likely goal and the best among 50 samples 
+realPath = testingPaths[0]
+real_path_predicted_mean_and_sample(img,realPath,areas,goalsData,stepUnit)
+"""
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
 # - numero de pasos a comparar dado un objetivo final
