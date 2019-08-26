@@ -37,7 +37,7 @@ def plotPaths(vec):
     plt.show()
 
 # Takes as an input a set of paths and plot them all on img
-def plotPathSet(vec, img):
+def plotPathSet(img, vec):
     n = len(vec)
     if(n == 0):
         return
@@ -366,21 +366,49 @@ def plot_path_set_samples_with_observations(img,ox,oy,x,y):
     plt.show()
     
 # Plots a set of observed paths and their corresponding sample
-def plot_observations_predictive_mean_and_sample(img,ox,oy,x,y):
-    n = len(x)
-    if(n == 0):
-        return
+def plot_observations_predictive_mean_and_sample(img,realXY,knownN,predXY,sampleXY):
     fig,ax = plt.subplots(1)
     ax.set_aspect('equal')
     # Show the image
+    obsXY = [ realXY.x[:knownN+1],realXY.y[:knownN+1] ] #observed path
+    XY = [ realXY.x[knownN:],realXY.y[knownN:] ]        #rest of the path
     ax.imshow(img)
-    for i in range(n):
-        colorId = i%len(color)
-        plt.plot(ox[i],oy[i],color[colorId],lw=2.0)
-        plt.plot(x[i],y[i],color[colorId]+'--',lw=2.0)
+    plt.plot(obsXY[0],obsXY[1],'c',lw=2.0)
+    plt.plot(XY[0],XY[1],'c--',lw=2.0)
+    plt.plot(sampleXY[0],sampleXY[1],'m',lw=2.0)
+    plt.plot(predXY[0],predXY[1],'b',lw=2.0)
     s = img.shape
     v = [0,s[1],s[0],0]
     plt.axis(v)
+    plt.show()
+    
+def sequence_of_observations_predmean_samples(img,realXY,knownN,predXY,sampleXY):
+    N        = len(knownN) # Number of images
+    n, m = 1, 1
+    if(N%3 == 0):
+        n = 3
+        m = int(N/3)
+    elif(N%2 == 0):
+        n = 2
+        m = int(N/2)
+    else:
+        m = N
+    fig, axes = plt.subplots(n,m)
+    for i in range(n):
+        for j in range(m):
+            axes[i,j].set_aspect('equal')
+            # Show the image
+            axes[i,j].imshow(img)
+            # Plot each test
+            k = (i*m)+j
+            obsXY = [ realXY.x[:knownN[k]+1],realXY.y[:knownN[k]+1] ] #observed path
+            XY = [ realXY.x[knownN[k]:],realXY.y[knownN[k]:] ]        #rest of the path
+            
+            axes[i,j].plot(obsXY[0],obsXY[1],'c',lw=2.0)
+            axes[i,j].plot(XY[0],XY[1],'c--',lw=2.0)
+            axes[i,j].plot(predXY[k][0],predXY[k][1],'b--',lw=2.0)
+            axes[i,j].plot(sampleXY[k][0],sampleXY[k][1],linestyle = '--', color ='hotpink',lw=2.0)
+            axes[i,j].axis('off')
     plt.show()
 
 
