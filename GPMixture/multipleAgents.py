@@ -171,8 +171,8 @@ def interaction_potential_for_a_set_of_trajectories(pathSet):
             #Simple Interaction Potential
             #val = interaction_potential(pathSet[i],pathSet[j])
             #Interaction potential using approximation
-            #val = interaction_potential_using_approximation(pathSet[i],pathSet[j])
+            val = interaction_potential_using_approximation(pathSet[i],pathSet[j])
             #interaction potental using Distance of Closest Approach
-            val = interaction_potential_DCA(pathSet[i],pathSet[j])
+            #val = interaction_potential_DCA(pathSet[i],pathSet[j])
             potentialProduct *= val
     return potentialProduct
