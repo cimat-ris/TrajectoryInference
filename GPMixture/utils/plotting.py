@@ -443,6 +443,38 @@ def plot_interaction_with_sampling_test(img,observedPaths, samplesVec, potential
                 axes[i,j].set_title('w = '+string)
             axes[i,j].axis('off')
     plt.show()
+#Grafica con subplots los tests del sampling dado un conjunto de observaciones
+def plot_interaction_test_weight_and_error(img,observedPaths, samplesVec, potentialVec, errorVec):
+    N        = len(samplesVec) # Number of joint samples
+    numPaths = len(observedPaths)
+    n, m = 1, 1
+    if(N%3 == 0):
+        n = 3
+        m = int(N/3)
+    elif(N%2 == 0):
+        n = 2
+        m = int(N/2)
+    else:
+        m = N
+    fig, axes = plt.subplots(n,m)
+    for i in range(n):
+        for j in range(m):
+            axes[i,j].set_aspect('equal')
+            # Show the image
+            axes[i,j].imshow(img)
+            # Plot each test
+            t = (i*m)+j
+            for k in range(numPaths):
+                colorId = (k)%len(color)
+                ox,oy = observedPaths[k].x,observedPaths[k].y
+                axes[i,j].plot(ox,oy,color[colorId],lw=2.0)
+                sx,sy = samplesVec[t][k].x,samplesVec[t][k].y
+                axes[i,j].plot(sx,sy,color[colorId]+'--',lw=2.0)
+                w = "{0:1.3e}".format(potentialVec[t])
+                error = "{0:.2f}".format(errorVec[t])
+                axes[i,j].set_title('w = '+w+'\nerror = '+error)
+            axes[i,j].axis('off')
+    plt.show()
 
 def plot_interaction_with_sampling(img, observedPaths, samples, potential, error):
     n = len(observedPaths)
