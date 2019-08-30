@@ -24,9 +24,10 @@ areas    = data.values[:6,2:]
 areasAxis= data.values[:6,1]
 nGoals   = len(areas)
 img      = mpimg.imread('imgs/goals.jpg')
+station_img = mpimg.imread('imgs/train_station.jpg')
 
 # Al leer cortamos las trayectorias multiobjetivos por pares consecutivos
-# y las aimportgregamos como trayectorias independientes
+# y las agregamos como trayectorias independientes
 dataPaths, multigoal = get_paths_from_file('datasets/CentralStation_paths_10000.txt',areas)
 usefulPaths = getUsefulPaths(dataPaths,areas)
 
@@ -40,7 +41,9 @@ pathMat, learnSet = filter_path_matrix(startToGoalPath, nGoals, nGoals)
 sortedPaths = sorted(learnSet, key=time_compare)
 showDataset = False
 if showDataset:
-    plotPaths(pathMat, img)
+    plotPathSet(station_img, dataPaths) #All paths
+    plotPathSet(img, learnSet)          #Learning set
+    plotPaths(pathMat, img)             
 print("[INF] Number of filtered paths: ",len(learnSet))
 
 # Form the object goalsLearnedStructure
@@ -222,8 +225,8 @@ if interactionWithSamplingTest == True:
         meanError = meanError/len(sortedSet)
         print("Mean error:",meanError)
         errorVec.append(meanError)
-    plot_interaction_with_sampling_test(img,observedPaths,samplesJointTrajectories,potentialVec)
-
+    #plot_interaction_with_sampling_test(img,observedPaths,samplesJointTrajectories,potentialVec)
+    plot_interaction_test_weight_and_error(img,observedPaths, samplesJointTrajectories, potentialVec, errorVec)
     maxPotential = 0
     maxId = -1
     for i in range(len(potentialVec)):
@@ -344,13 +347,12 @@ if boxPlots == True:
         title = 'Error comparing %d'%(steps) + ' steps'
         joint_multiple_boxplots(predMeanBoxes, samplesBoxes, title)
 
-plotPathSet(img,learnSet)
-
 """
 #Plots a partial path, the predictive mean to the most likely goal and the best among 50 samples 
 realPath = testingPaths[0]
 real_path_predicted_mean_and_sample(img,realPath,areas,goalsData,stepUnit)
 """
+
 #Prueba el error de la prediccion variando:
 # - el numero de muestras del punto final
 # - numero de pasos a comparar dado un objetivo final
