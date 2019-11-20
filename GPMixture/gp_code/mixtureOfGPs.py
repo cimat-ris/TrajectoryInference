@@ -14,6 +14,8 @@ class mixtureOfGPs:
 
     # Constructor
     def __init__(self, startG, stepUnit, goalsData):
+        # Mode: Trautman handles time and uses a different kernel
+        #self.TrautmanMode    = True or False  #necesitamos definir e modo desde el inicio
         # The goals structure
         self.goalsData       = goalsData
         # Sub-set of likely goals
