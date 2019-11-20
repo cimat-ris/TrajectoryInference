@@ -92,6 +92,27 @@ def get_prediction_set_given_size(lastKnownPoint, finishPoint, unit, steps):
 
     return newset, l + dist*unit
 
+#****************** Functions for Trautmans code ******************
+
+#usa una unidad de distancia segun el promedio de la arc-len de las trayectorias
+#start, last know (x,y,l), indices del los goals de inicio y fin, unitMat, numero de pasos
+def get_prediction_set_T(lastKnownPoint, finishPoint, distUnit, stepUnit, speed):
+    x, y, t = lastKnownPoint[0], lastKnownPoint[1], lastKnownPoint[2]
+    _x, _y  = finishPoint[0], finishPoint[1]
+
+    euclideanDist = euclidean_distance([x,y], [_x,_y])
+    finishTime = int(euclideanDist/speed)
+    dist          = euclideanDist*distUnit
+    numSteps      = int(dist*stepUnit)
+    newset = []
+    if(numSteps > 0):
+        step = dist/float(numSteps)
+        stepTime = int(step/speed)
+        for i in range(1,numSteps+1):
+            newset.append( t + i*stepTime )
+    return newset, finishTime, dist
+
+#******************
 # Compute the arc-length from one point to the final points
 # given the unit
 def get_arclen_to_finish_point(point, finishPoint, unit):
