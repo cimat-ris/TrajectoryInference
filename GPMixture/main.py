@@ -145,7 +145,10 @@ if animateMixtureTest==True:
         print('[INF] Performing prediction')
         predictedXYVec,varXYVec = mgps.predict()
         print('[INF] Plotting')
-        animate_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
+        animate_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec,False)
+        if i==3:
+            animate_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec,True)
+
 
 
 # Test function: evaluation of interaction potentials on complete trajectories from the dataset
