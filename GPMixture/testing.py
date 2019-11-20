@@ -327,7 +327,7 @@ def interaction_using_sampling_test(img,pathSet,startGoals,finishGoals,stepUnit,
 
 def real_path_predicted_mean_and_sample(img,realPath,areas,goalsData,stepUnit):
     futureSteps = [8]
-    partNum = 7
+    partNum = 10
     nSamples = 50
     nGoals = goalsData.nGoals
     PM, samples, knownData = [], [], []
@@ -375,9 +375,6 @@ def real_path_predicted_mean_and_sample(img,realPath,areas,goalsData,stepUnit):
             PM.append(PredMean)
             samples.append(sample)
             knownData.append(knownN)
-            #plot_observations_predictive_mean_and_sample(img,realPath,knownN,PredMean,sample)
-    sequence_of_observations_predmean_samples(img,realPath,knownData,PM,samples)
-
-
-
+            plot_observations_predictive_mean_and_sample(img,realPath,knownN,PredMean,sample)
+    #sequence_of_observations_predmean_samples(img,realPath,knownData,PM,samples)
 
