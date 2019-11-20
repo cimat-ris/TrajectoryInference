@@ -32,7 +32,7 @@ def set_kernel(name):
         kernel = squaredExponentialKernel(parameters[0],parameters[1],nsigma)
     elif(name == "combinedTrautman"):
         parameters = [60., 80., 80.]  #{Precision of the line constant, Covariance magnitude factor, Characteristic length}
-        kernel = combinedKernel(parameters[0],parameters[1],parameters[2],nsigma)
+        kernel = combinedTrautmanKernel(parameters[0],parameters[1],parameters[2],nsigma)
     elif(name == "exponential"):
         parameters = [80., 80.]  #{Covariance magnitude factor, Characteristic length}
         kernel = exponentialKernel(parameters[0],parameters[1])
@@ -44,7 +44,7 @@ def set_kernel(name):
         kernel = rationalQuadraticKernel(parameters[0],parameters[1],nsigma)
     elif(name == "squaredExponentialAndNoise"):
         parameters = [80., 80.] #{Covariance magnitude factor, Characteristic length}
-        kernel = expKernel(parameters[0],parameters[1],nsigma)
+        kernel = squaredExponentialAndNoiseKernel(parameters[0],parameters[1],nsigma)
     elif(name == "linePriorCombined"):
         parameters = [0.01,1.0, 80., 80.]  #{Standard deviation slope, Standard deviation constant, Covariance magnitude factor, Characteristic length}
         kernel = linePriorCombinedKernel(parameters[0],parameters[1],parameters[2],parameters[3],nsigma)

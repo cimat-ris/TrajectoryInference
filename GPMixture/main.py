@@ -16,6 +16,7 @@ from matplotlib.patches import Ellipse
 from copy import copy
 from copy import deepcopy
 import pandas as pd
+from statistics import * 
 
 # Read the areas data from a file and take only the first 6 goals
 data     = pd.read_csv('parameters/CentralStation_areasDescriptions.csv')
@@ -23,9 +24,10 @@ areas    = data.values[:6,2:]
 areasAxis= data.values[:6,1]
 nGoals   = len(areas)
 img      = mpimg.imread('imgs/goals.jpg')
+station_img = mpimg.imread('imgs/train_station.jpg')
 
 # Al leer cortamos las trayectorias multiobjetivos por pares consecutivos
-# y las aimportgregamos como trayectorias independientes
+# y las agregamos como trayectorias independientes
 dataPaths, multigoal = get_paths_from_file('datasets/CentralStation_paths_10000.txt',areas)
 usefulPaths = getUsefulPaths(dataPaths,areas)
 
@@ -39,7 +41,9 @@ pathMat, learnSet = filter_path_matrix(startToGoalPath, nGoals, nGoals)
 sortedPaths = sorted(learnSet, key=time_compare)
 showDataset = False
 if showDataset:
-    plotPaths(pathMat, img)
+    plotPathSet(station_img, dataPaths) #All paths
+    plotPathSet(img, learnSet)          #Learning set
+    plotPaths(pathMat, img)             
 print("[INF] Number of filtered paths: ",len(learnSet))
 
 # Form the object goalsLearnedStructure
@@ -109,10 +113,11 @@ if singleTest==True:
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 # Test function: prediction of single trajectories with multiple goals
-mixtureTest =  False
+mixtureTest = False
 if mixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
-    part_num = 10
+    nSamples = 50
+    part_num = 5
     # For different sub-parts of the trajectory
     for i in range(1,part_num-1):
         knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
@@ -127,11 +132,11 @@ if mixtureTest==True:
         print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
         print("[RES] Mean likelihood:", mgps.meanLikelihood)
         print('[INF] Generating samples')
-        vecX,vecY,__ = mgps.generate_samples(100)
+        vecX,vecY,__ = mgps.generate_samples(nSamples)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 # Test function: prediction of single paths with multiple goals
-animateMixtureTest = True
+animateMixtureTest = False
 if animateMixtureTest==True:
     mgps = mixtureOfGPs(startG,stepUnit,goalsData)
     part_num = 10
@@ -152,7 +157,7 @@ if animateMixtureTest==True:
 
 
 # Test function: evaluation of interaction potentials on complete trajectories from the dataset
-interactionTest = True
+interactionTest = False
 if interactionTest == True:
     # Get trajectories within some time interval
     sortedSet     = get_path_set_given_time_interval(sortedPaths,200,700)
@@ -163,14 +168,14 @@ if interactionTest == True:
     plotPathSet(sortedSet,img)
 
 # Test function: evaluation of interaction potentials on sampled trajectories
-interactionWithSamplingTest = True
+interactionWithSamplingTest = False
 if interactionWithSamplingTest == True:
     # Get all the trajectories that exist in the dataset within some time interval
     sortedSet = get_path_set_given_time_interval(sortedPaths,350,750)
     #plotPathSet(sortedSet,img)
 
-    samplesJointTrajectories, potentialVec = [], []
-    observedPaths, samplesVec, potentialVec = [], [], []# Guardan en i: [obsX, obsY] y [sampleX, sampleY]
+    samplesJointTrajectories, potentialVec, errorVec = [], [], []
+    observedPaths, samplesVec = [], []# Guardan en i: [obsX, obsY] y [sampleX, sampleY]
 
     numTests = 6
     part_num = 3
@@ -222,11 +227,13 @@ if interactionWithSamplingTest == True:
                 potentialVec.append(interactionPotential)
         meanError = meanError/len(sortedSet)
         print("Mean error:",meanError)
-    plot_interaction_with_sampling_test(img,observedPaths,samplesJointTrajectories,potentialVec)
-
+        errorVec.append(meanError)
+    #plot_interaction_with_sampling_test(img,observedPaths,samplesJointTrajectories,potentialVec)
+    plot_interaction_test_weight_and_error(img,observedPaths, samplesJointTrajectories, potentialVec, errorVec)
     maxPotential = 0
     maxId = -1
     for i in range(len(potentialVec)):
+        plot_interaction_with_sampling(img, observedPaths, samplesJointTrajectories[i], potentialVec[i], errorVec[i])
         if(potentialVec[i] > maxPotential):
             maxPotential = potentialVec[i]
             maxId = i
@@ -326,17 +333,27 @@ if errorTablesTest == True:
 
 boxPlots = False
 if boxPlots == True:
-    futureSteps = [8,10]
+    futureSteps = [8,10,12]
     partNum = 5
+    
     for steps in futureSteps:
-        for j in range(1,partNum-2):
+        predMeanBoxes, samplesBoxes = [], []
+        for j in range(partNum-1):
             plotName = 'Predictive mean\n'+'%d'%(steps)+' steps | %d'%(j+1)+'/%d'%(partNum)+' data'
             predData = read_data('results/Prediction_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
-            boxplot(predData, plotName)
-
+            predMeanBoxes.append(predData)
+            
             plotName = 'Best of samples\n'+'%d'%(steps)+' steps | %d'%(j+1)+'/%d'%(partNum)+' data'
             samplingData = read_data('results/Sampling_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
-            boxplot(samplingData, plotName)
+            samplesBoxes.append(samplingData)
+        #plot multiple boxplots
+        title = 'Error comparing %d'%(steps) + ' steps'
+        joint_multiple_boxplots(predMeanBoxes, samplesBoxes, title)
+
+
+#Plots a partial path, the predictive mean to the most likely goal and the best among 50 samples 
+realPath = testingPaths[0]
+real_path_predicted_mean_and_sample(img,realPath,areas,goalsData,stepUnit)
 
 
 #Prueba el error de la prediccion variando:

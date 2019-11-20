@@ -15,8 +15,11 @@ from matplotlib.patches import Ellipse
 from matplotlib.animation import FuncAnimation
 import pandas as pd
 import time
+import random
 
-color = ['g','m','r','b','c','y','w','k']
+color = ['g','m','r','b','steelblue','y','tomato','orange','gold','yellow','lime',
+         'springgreen','cyan','teal','deepskyblue','dodgerblue','royalblue','blueviolet','indigo',
+         'purple','magenta','deeppink','hotpink','sandybrown','darkorange','coral','lightgreen']
 
 #******************************************************************************#
 """ PLOT FUNCTIONS """
@@ -34,7 +37,7 @@ def plotPaths(vec):
     plt.show()
 
 # Takes as an input a set of paths and plot them all on img
-def plotPathSet(vec, img):
+def plotPathSet(img, vec):
     n = len(vec)
     if(n == 0):
         return
@@ -328,7 +331,7 @@ def plot_scene_structure(img,goalsData):
     plt.axis(v)
     plt.show()
 
-# Plot a set of sample trajectories and an observed partial trajectories
+# Plot a set of sample trajectories and an observed partial trajectory
 def plot_path_samples_with_observations(img,ox,oy,x,y):
     n = len(x)
     if(n == 0):
@@ -337,15 +340,17 @@ def plot_path_samples_with_observations(img,ox,oy,x,y):
     ax.set_aspect('equal')
     # Show the image
     ax.imshow(img)
-    plt.plot(ox,oy,'c')
+    plt.plot(ox,oy,'c',lw=2.0)
     for i in range(n):
-        plt.plot(x[i],y[i])
+        Color = color[random.randint(0,len(color)-1) ]
+        plt.plot(x[i],y[i], color=Color)
         plt.plot([ox[-1],x[i][0]],[oy[-1],y[i][0]])
     s = img.shape
     v = [0,s[1],s[0],0]
     plt.axis(v)
     plt.show()
 
+# Plots a set of observed paths and their corresponding sample
 def plot_path_set_samples_with_observations(img,ox,oy,x,y):
     n = len(x)
     if(n == 0):
@@ -362,6 +367,53 @@ def plot_path_set_samples_with_observations(img,ox,oy,x,y):
     v = [0,s[1],s[0],0]
     plt.axis(v)
     plt.show()
+    
+# Plots a set of observed paths and their corresponding sample
+def plot_observations_predictive_mean_and_sample(img,realXY,knownN,predXY,sampleXY):
+    fig,ax = plt.subplots(1)
+    ax.set_aspect('equal')
+    # Show the image
+    obsXY = [ realXY.x[:knownN+1],realXY.y[:knownN+1] ] #observed path
+    XY = [ realXY.x[knownN:],realXY.y[knownN:] ]        #rest of the path
+    ax.imshow(img)
+    plt.plot(obsXY[0],obsXY[1],'c',lw=2.0)
+    plt.plot(XY[0],XY[1],'c--',lw=2.0)
+    plt.plot(sampleXY[0],sampleXY[1],'m--',lw=2.0)
+    plt.plot(predXY[0],predXY[1],'b--',lw=2.0)
+    s = img.shape
+    v = [0,s[1],s[0],0]
+    plt.axis(v)
+    plt.show()
+    
+def sequence_of_observations_predmean_samples(img,realXY,knownN,predXY,sampleXY):
+    N        = len(knownN) # Number of images
+    n, m = 1, 1
+    if(N%3 == 0):
+        n = 3
+        m = int(N/3)
+    elif(N%2 == 0):
+        n = 2
+        m = int(N/2)
+    else:
+        m = N
+    fig, axes = plt.subplots(n,m)
+    for i in range(n):
+        for j in range(m):
+            axes[i,j].set_aspect('equal')
+            # Show the image
+            axes[i,j].imshow(img)
+            # Plot each test
+            k = (i*m)+j
+            obsXY = [ realXY.x[:knownN[k]+1],realXY.y[:knownN[k]+1] ] #observed path
+            XY = [ realXY.x[knownN[k]:],realXY.y[knownN[k]:] ]        #rest of the path
+            
+            axes[i,j].plot(obsXY[0],obsXY[1],'c',lw=2.0)
+            axes[i,j].plot(XY[0],XY[1],'c--',lw=2.0)
+            axes[i,j].plot(predXY[k][0],predXY[k][1],'b--',lw=2.0)
+            axes[i,j].plot(sampleXY[k][0],sampleXY[k][1],linestyle = '--', color ='hotpink',lw=2.0)
+            axes[i,j].axis('off')
+    plt.show()
+
 
 #Grafica con subplots los tests del sampling dado un conjunto de observaciones
 def plot_interaction_with_sampling_test(img,observedPaths, samplesVec, potentialVec):
@@ -391,33 +443,62 @@ def plot_interaction_with_sampling_test(img,observedPaths, samplesVec, potential
                 sx,sy = samplesVec[t][k].x,samplesVec[t][k].y
                 axes[i,j].plot(sx,sy,color[colorId]+'--',lw=2.0)
                 string = "{0:1.3e}".format(potentialVec[t])#str(potentialVec[t])
-                axes[i,j].set_title('w='+string)
+                axes[i,j].set_title('w = '+string)
+            axes[i,j].axis('off')
+    plt.show()
+#Grafica con subplots los tests del sampling dado un conjunto de observaciones
+def plot_interaction_test_weight_and_error(img,observedPaths, samplesVec, potentialVec, errorVec):
+    N        = len(samplesVec) # Number of joint samples
+    numPaths = len(observedPaths)
+    n, m = 1, 1
+    if(N%3 == 0):
+        n = 3
+        m = int(N/3)
+    elif(N%2 == 0):
+        n = 2
+        m = int(N/2)
+    else:
+        m = N
+    fig, axes = plt.subplots(n,m)
+    for i in range(n):
+        for j in range(m):
+            axes[i,j].set_aspect('equal')
+            # Show the image
+            axes[i,j].imshow(img)
+            # Plot each test
+            t = (i*m)+j
+            for k in range(numPaths):
+                colorId = (k)%len(color)
+                ox,oy = observedPaths[k].x,observedPaths[k].y
+                axes[i,j].plot(ox,oy,color[colorId],lw=2.0)
+                sx,sy = samplesVec[t][k].x,samplesVec[t][k].y
+                axes[i,j].plot(sx,sy,color[colorId]+'--',lw=2.0)
+                w = "{0:1.3e}".format(potentialVec[t])
+                error = "{0:.2f}".format(errorVec[t])
+                axes[i,j].set_title('w = '+w+'\nerror = '+error)
             axes[i,j].axis('off')
     plt.show()
 
-def plot_table__():
-    data = [[ 66386, 174296,  75131, 577908,  32015],
-        [ 58230, 381139,  78045,  99308, 160454],
-        [ 89135,  80552, 152558, 497981, 603535],
-        [ 78415,  81858, 150656, 193263,  69638],
-        [139361, 331509, 343164, 781380,  52269]]
-    stringData = []
-    n, m = len(data), len(data[0])
+def plot_interaction_with_sampling(img, observedPaths, samples, potential, error):
+    n = len(observedPaths)
+    
+    fig, ax = plt.subplots(1)
+    ax.set_aspect('equal')
+    ax.imshow(img)
     for i in range(n):
-        row = []
-        for j in range(m):
-            string = "{0:1.3e}".format(data[i][j])
-            row.append(string)
-        stringData.append(row)
-
-    fig, axes = plt.subplots(1)
-
-    axes.xaxis.set_visible(False)
-    axes.yaxis.set_visible(False)
-    # Show the image
-    plt.table(cellText=stringData,loc='center')
+        ind = i%len(color)
+        Color = color[ind]
+        plt.plot(observedPaths[i].x, observedPaths[i].y,Color,lw=2.0)
+        plt.plot(samples[i].x, samples[i].y,Color+'--',lw=2.0)
+        strPotential = "{0:1.3e}".format(potential)
+        strError = "{0:.2f}".format(error)
+    plt.title('w = '+strPotential + '\nerror = '+strError)
+    #plt.title('\nerror = '+strError)
+    s = img.shape
+    v = [0,s[1],s[0],0]
+    plt.axis(v)
     plt.show()
-
+    
 def plot_table(data, rowLabels, colLabels, tittle):
     stringData = []
     n, m = len(data), len(data[0])
@@ -448,3 +529,63 @@ def boxplot(data, title):
     fig, ax = plt.subplots()
     ax.set_title(title)
     ax.boxplot(data, boxprops=boxprops, whiskerprops=dict(linestyle='-', linewidth=1.2, color='black'), flierprops=flierprops, meanprops=meanlineprops, showmeans=True, meanline=True)
+
+#plot an array of data in multiple boxplots
+def multiple_boxplots(data, labels):
+    num_boxes = len(data)
+    blackbox = dict(linewidth=1.2, color='black')
+    bluebox = dict(linewidth=1.2, color='blue')
+    flierprops = dict(marker='o', markerfacecolor='blue', markersize=8)
+    meanlineprops = dict(linestyle='--', linewidth=2.3, color='green')
+    
+    boxprops = []
+    for i in range(num_boxes):
+        if i%2 == 0:
+            boxprops.append(bluebox)
+        else:
+            boxprops.append(blackbox)
+            
+    
+    fig, ax = plt.subplots()    
+    ax.boxplot(data, labels = labels, boxprops=blackbox, whiskerprops=dict(linestyle='-', linewidth=1.2, color='black'))
+    plt.show()
+
+def joint_multiple_boxplots(data_a, data_b, title):
+    color_a = 'm'
+    color_b = '#2C7BB6'
+    ticks = ['1/5', '2/5', '3/5', '4/5']
+    
+    plt.figure()
+    
+    bp_a = plt.boxplot(data_a, positions=np.array(range(len(data_a)))*2.0-0.4, widths=0.6, whiskerprops=dict(linestyle='-', linewidth=1.2, color=color_a), showfliers=True)
+    bp_b = plt.boxplot(data_b, positions=np.array(range(len(data_b)))*2.0+0.4, widths=0.6, whiskerprops=dict(linestyle='-', linewidth=1.2, color=color_b), showfliers=True)
+    set_box_color(bp_a, color_a)    
+    plt.setp(bp_a['medians'], color='indigo')
+    set_box_color(bp_b, color_b)
+    plt.setp(bp_b['medians'], color='blue')
+    
+    plt.title(title)
+    #legend
+    plt.plot([], c=color_a, label='Predictive mean')
+    plt.plot([], c=color_b, label='Best of samples')
+    plt.legend()
+
+    plt.xticks(range(0, len(ticks) * 2, 2), ticks)
+    plt.xlim(-2, len(ticks)*2)
+    maxy = 0
+    for i in range(len(data_a)):
+        current_max = max(data_a[i])
+        if current_max > maxy:
+            maxy = current_max
+    plt.ylim(0, maxy)
+    
+    plt.xlabel('Observed data')
+    plt.ylabel('Error in pixels')
+    plt.tight_layout()
+
+def set_box_color(bp, color):
+    plt.setp(bp['boxes'], color=color)
+    plt.setp(bp['whiskers'], color=color)
+    plt.setp(bp['caps'], color=color)
+
+
