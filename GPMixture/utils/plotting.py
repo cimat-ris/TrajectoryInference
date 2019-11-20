@@ -208,7 +208,7 @@ def plot_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goals
     plt.axis(v)
     plt.show()
 
-def animate_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goalsLikelihood,predictedXYVec,varXYVec):
+def animate_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goalsLikelihood,predictedXYVec,varXYVec,toFile):
     realX, realY = [],[]
     partialX, partialY = [], []
     N = int(len(x))
@@ -281,7 +281,10 @@ def animate_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,go
 
 
     anim = FuncAnimation(fig, animate,frames=100,interval=100)
-    plt.show()
+    if toFile:
+        anim.save('test-%d.mp4' % i)
+    else:
+        plt.show()
     return
 
 
