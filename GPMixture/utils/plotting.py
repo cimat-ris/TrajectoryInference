@@ -375,8 +375,8 @@ def plot_observations_predictive_mean_and_sample(img,realXY,knownN,predXY,sample
     ax.imshow(img)
     plt.plot(obsXY[0],obsXY[1],'c',lw=2.0)
     plt.plot(XY[0],XY[1],'c--',lw=2.0)
-    plt.plot(sampleXY[0],sampleXY[1],'m',lw=2.0)
-    plt.plot(predXY[0],predXY[1],'b',lw=2.0)
+    plt.plot(sampleXY[0],sampleXY[1],'m--',lw=2.0)
+    plt.plot(predXY[0],predXY[1],'b--',lw=2.0)
     s = img.shape
     v = [0,s[1],s[0],0]
     plt.axis(v)
