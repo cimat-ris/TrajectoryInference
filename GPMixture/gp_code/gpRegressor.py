@@ -9,10 +9,12 @@ from gp_code.sampling import *
 
 class gpRegressor:
     # Constructor
-    def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis,linearPriorX=None, linearPriorY=None):
+    def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis,linearPriorX=None, linearPriorY=None, mode=None):
+        self.mode            = mode #mode: Trautman o None       
         self.observedX       = None
         self.observedY       = None
         self.observedL       = None
+        self.speed           = None
         self.Kx              = None
         self.Ky              = None
         self.kx              = None
@@ -41,12 +43,18 @@ class gpRegressor:
         self.observedX       = np.zeros((n+1,1))
         self.observedY       = np.zeros((n+1,1))
         self.observedL       = np.zeros((n+1,1))
+        if mode == "Trautman" and n>1:
+            dist = sqrt( (self.observedX[n-1] - self.observedX[n-2]) + (self.observedY[n-1] - self.observedY[n-2]) )
+            self.speed =  dist/(self.observedL[n-1] - self.observedL[n-2]) #en este caso L es tiempo
         self.Kx              = np.zeros((n+1,n+1))
         self.Ky              = np.zeros((n+1,n+1))
         # Last really observed point
         lastObservedPoint = [observedX[-1], observedY[-1], observedL[-1]]
         # Generate the set of l values at which to predict x,y
-        self.newL, finalL, self.dist = get_prediction_set(lastObservedPoint,self.finalAreaCenter,self.unit,self.stepUnit)
+        if mode == "Trautman":
+            self.newL, finalL, self.dist = get_prediction_set_T(lastObservedPoint,self.finalAreaCenter,self.unit,self.stepUnit,self.speed)
+        else:
+            self.newL, finalL, self.dist = get_prediction_set(lastObservedPoint,self.finalAreaCenter,self.unit,self.stepUnit)
         # Fill in K (n+1 x n+1)
         for i in range(n):
             self.Kx[i][i] = self.kernelX(observedL[i],observedL[i])
