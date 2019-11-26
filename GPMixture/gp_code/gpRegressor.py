@@ -43,15 +43,15 @@ class gpRegressor:
         self.observedX       = np.zeros((n+1,1))
         self.observedY       = np.zeros((n+1,1))
         self.observedL       = np.zeros((n+1,1))
-        if mode == "Trautman" and n>1:
-            dist = sqrt( (self.observedX[n-1] - self.observedX[n-2]) + (self.observedY[n-1] - self.observedY[n-2]) )
+        if self.mode == "Trautman" and n>1:
+            dist = sqrt( (self.observedX[n-1] - self.observedX[n-2])**2 + (self.observedY[n-1] - self.observedY[n-2])**2 )
             self.speed =  dist/(self.observedL[n-1] - self.observedL[n-2]) #en este caso L es tiempo
         self.Kx              = np.zeros((n+1,n+1))
         self.Ky              = np.zeros((n+1,n+1))
         # Last really observed point
         lastObservedPoint = [observedX[-1], observedY[-1], observedL[-1]]
         # Generate the set of l values at which to predict x,y
-        if mode == "Trautman":
+        if self.mode == "Trautman":
             self.newL, finalL, self.dist = get_prediction_set_T(lastObservedPoint,self.finalAreaCenter,self.unit,self.stepUnit,self.speed)
         else:
             self.newL, finalL, self.dist = get_prediction_set(lastObservedPoint,self.finalAreaCenter,self.unit,self.stepUnit)
