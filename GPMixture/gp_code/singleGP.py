@@ -9,7 +9,8 @@ from gp_code.gpRegressor import *
 class singleGP:
 
     # Constructor
-    def __init__(self, startG, endG, stepUnit, goalsData):
+    def __init__(self, startG, endG, stepUnit, goalsData, mode = None):
+        self.mode            = mode
         self.goalsData       = goalsData
         self.nPoints         = 5
         self.stepUnit        = stepUnit
@@ -18,7 +19,10 @@ class singleGP:
         self.predictedMeans  = None
         self.predictedVars   = None
         # The basic element here is this object, that will do the regression work
-        self.gpPathRegressor = gpRegressor(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],goalsData.units[self.startG][self.endG],stepUnit,self.goalsData.areas[self.endG],self.goalsData.areasAxis[self.endG],self.goalsData.linearPriorsX[self.startG][self.endG], self.goalsData.linearPriorsY[self.startG][self.endG])
+        if mode == "Trautman":
+            self.gpPathRegressor = gpRegressor(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],goalsData.units[self.startG][self.endG],stepUnit,self.goalsData.areas[self.endG],self.goalsData.areasAxis[self.endG],None,None,self.mode)
+        else:
+            self.gpPathRegressor = gpRegressor(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],goalsData.units[self.startG][self.endG],stepUnit,self.goalsData.areas[self.endG],self.goalsData.areasAxis[self.endG],self.goalsData.linearPriorsX[self.startG][self.endG], self.goalsData.linearPriorsY[self.startG][self.endG])
 
     # Update observations and compute likelihood based on observations
     def update(self,observedX,observedY,observedL):
