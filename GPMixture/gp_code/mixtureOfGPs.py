@@ -13,9 +13,9 @@ from statistics import mean
 class mixtureOfGPs:
 
     # Constructor
-    def __init__(self, startG, stepUnit, goalsData):
+    def __init__(self, startG, stepUnit, goalsData, mode = None):
         # Mode: Trautman handles time and uses a different kernel
-        #self.TrautmanMode    = True or False  #necesitamos definir e modo desde el inicio
+        self.mode            = mode  #mode = Trautman o None
         # The goals structure
         self.goalsData       = goalsData
         # Sub-set of likely goals
@@ -46,14 +46,21 @@ class mixtureOfGPs:
         self.gpPathRegressor = [None]*n
         for i in range(self.goalsData.nGoals):
             # One regressor per goal
-            self.gpPathRegressor[i] = gpRegressor(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i], self.goalsData.linearPriorsY[self.startG][i])
+            if self.mode == "Trautman":
+                self.gpPathRegressor[i] = gpRegressor(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],None,None,self.mode)
+            else:
+                self.gpPathRegressor[i] = gpRegressor(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i], self.goalsData.linearPriorsY[self.startG][i])
+
             ## TODO:
             subareas = get_subgoals_areas(self.nSubgoals, self.goalsData.areas[i],self.goalsData.areasAxis[i])
             # For sub-goals
             for j in range(self.nSubgoals):
                 k= i+(j+1)*self.goalsData.nGoals
-                self.gpPathRegressor[k] = gpRegressor(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i],self.goalsData.linearPriorsY[self.startG][i])
-
+                if self.mode == "Trautman":
+                    self.gpPathRegressor[k] = gpRegressor(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areasAxis[i],None,None,self.mode)
+                else:
+                    self.gpPathRegressor[k] = gpRegressor(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i],self.goalsData.linearPriorsY[self.startG][i])
+                    
 
     # Update observations and compute likelihoods based on observations
     def update(self,observedX,observedY,observedL):
