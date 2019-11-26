@@ -64,8 +64,8 @@ def get_prediction_set_from_data(l,knownN):
     newL = l[knownN-1:N]
     return newL
 
-#usa una unidad de distancia segun el promedio de la arc-len de las trayectorias
-#start, last know (x,y,l), indices del los goals de inicio y fin, unitMat, numero de pasos
+#distUnit - unidad de distancia segun el promedio de la arc-len de las trayectorias
+#last know (x,y,l), finish point, distUnit, stepUnit - pasos por unidad de dist
 def get_prediction_set(lastKnownPoint, finishPoint, distUnit, stepUnit):
     x, y, l = lastKnownPoint[0], lastKnownPoint[1], lastKnownPoint[2]
     _x, _y  = finishPoint[0], finishPoint[1]
@@ -94,8 +94,8 @@ def get_prediction_set_given_size(lastKnownPoint, finishPoint, unit, steps):
 
 #****************** Functions for Trautmans code ******************
 
-#usa una unidad de distancia segun el promedio de la arc-len de las trayectorias
-#start, last know (x,y,l), indices del los goals de inicio y fin, unitMat, numero de pasos
+#distUnit - unidad de distancia segun el promedio de la arc-len de las trayectorias
+#last know (x,y,l), finish point, distUnit, stepUnit - pasos por unidad de dist, speed
 def get_prediction_set_T(lastKnownPoint, finishPoint, distUnit, stepUnit, speed):
     x, y, t = lastKnownPoint[0], lastKnownPoint[1], lastKnownPoint[2]
     _x, _y  = finishPoint[0], finishPoint[1]
@@ -106,7 +106,7 @@ def get_prediction_set_T(lastKnownPoint, finishPoint, distUnit, stepUnit, speed)
     numSteps      = int(dist*stepUnit)
     newset = []
     if(numSteps > 0):
-        step = dist/float(numSteps)
+        step = euclideanDist/float(numSteps)
         stepTime = int(step/speed)
         for i in range(1,numSteps+1):
             newset.append( t + i*stepTime )
