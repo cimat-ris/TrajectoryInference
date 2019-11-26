@@ -352,8 +352,10 @@ if boxPlots == True:
 
 
 #Plots a partial path, the predictive mean to the most likely goal and the best among 50 samples 
-realPath = testingPaths[0]
-real_path_predicted_mean_and_sample(img,realPath,areas,goalsData,stepUnit)
+plotsPredMeanSamples = False
+if plotsPredMeanSamples:
+    realPath = testingPaths[0]
+    real_path_predicted_mean_and_sample(img,realPath,areas,goalsData,stepUnit)
 
 
 #Prueba el error de la prediccion variando:
