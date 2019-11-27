@@ -47,7 +47,7 @@ class singleGP:
     def generate_samples(self,nSamples):
         vecX, vecY = [], []
         for k in range(nSamples):
-            x, y = self.sample()
+            x, y, __ = self.sample()
             vecX.append(x)
             vecY.append(y)
         return vecX,vecY
