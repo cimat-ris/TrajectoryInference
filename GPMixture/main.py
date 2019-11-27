@@ -90,15 +90,16 @@ if samplingViz==True:
     path_sampling_test(img,stepUnit,goalsData)
 
 # Test function: prediction of single paths with single goals
-singleTest = False
+singleTest = True
 if singleTest==True:
-    gp = singleGP(startG,nextG,stepUnit,goalsData)
-    part_num = 10
-    steps    = 10
+    gp = singleGP(startG,nextG,stepUnit,goalsData,"Trautman")       #Trautmans mode
+    #gp = singleGP(startG,nextG,stepUnit,goalsData)
+    part_num = 5
     for i in range(1,part_num-1):
         # Data we will suppose known
         knownN = int((i+1)*(pathSize/part_num))
-        trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
+        trueX,trueY,trueL = get_known_set(pathX,pathY,pathT,knownN) #time instead of arclen
+        #trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
         """Single goal prediction test"""
         # Update the GP
         # TODO: too slow
@@ -109,7 +110,7 @@ if singleTest==True:
         print('[INF] Plotting')
         print("[RES] [Likelihood]: ",likelihood)
         # Generate samples
-        vecX,vecY,__         = gp.generate_samples(100)
+        vecX,vecY         = gp.generate_samples(100)
         plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 # Test function: prediction of single trajectories with multiple goals
