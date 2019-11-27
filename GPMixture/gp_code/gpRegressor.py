@@ -44,8 +44,8 @@ class gpRegressor:
         self.observedY       = np.zeros((n+1,1))
         self.observedL       = np.zeros((n+1,1))
         if self.mode == "Trautman" and n>1:
-            dist = sqrt( (self.observedX[n-1] - self.observedX[n-2])**2 + (self.observedY[n-1] - self.observedY[n-2])**2 )
-            self.speed =  dist/(self.observedL[n-1] - self.observedL[n-2]) #en este caso L es tiempo
+            dist = math.sqrt( (observedX[n-1] - observedX[n-2])**2 + (observedY[n-1] - observedY[n-2])**2 )
+            self.speed =  dist/(observedL[n-1] - observedL[n-2]) #en este caso L es tiempo
         self.Kx              = np.zeros((n+1,n+1))
         self.Ky              = np.zeros((n+1,n+1))
         # Last really observed point
@@ -225,7 +225,10 @@ class gpRegressor:
     # Generate a sample from the predictive distribution with a perturbed finish point
     def sample_with_perturbed_finish_point(self):
         # Sample end point around the sampled goal
-        finishX, finishY, axis = uniform_sampling_1D_around_point(1, self.finalAreaCenter, self.finalAreaAxis)
+        #finishX, finishY, axis = uniform_sampling_1D(1, self.finalAreaCenter, self.finalAreaAxis)
+        size = self.finalAreaSize[self.finalAreaAxis]
+        #print("\n***Final Area axis***\n", self.finalAreaAxis)
+        finishX, finishY, axis = uniform_sampling_1D_around_point(1, self.finalAreaCenter,size, self.finalAreaAxis)
         # Use a pertubation approach to get the sample
         deltaX = finishX[0]-self.finalAreaCenter[0]
         deltaY = finishY[0]-self.finalAreaCenter[1]
