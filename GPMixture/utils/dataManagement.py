@@ -643,10 +643,11 @@ def arclen_to_time(initTime,l,speed):
     return t
 
 """GET OBSERVED DATA"""
+# Function to get the ground truth data: knownN data
 def get_known_set(x,y,z,knownN):
     trueX,trueY, trueZ = [],[],[]
     knownN = int(knownN)
-    for j in range(knownN): #numero de datos conocidos
+    for j in range(knownN): #numero de datos observados
         trueX.append(x[j])
         trueY.append(y[j])
         trueZ.append(z[j])
