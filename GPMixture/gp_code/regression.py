@@ -49,14 +49,6 @@ def joint_regression(l,x_meanl,lnew,kernel,linearPriorMean=None):
     var = C - kK_1kt
     return xnew, var
 
-# Function to get the ground truth data: knownN data
-# TODO: not sure if it is the good place
-def get_known_set(x,y,l,knownN):
-    trueX = x[0:knownN]
-    trueY = y[0:knownN]
-    trueL = l[0:knownN]
-    return trueX, trueY, trueL
-
 # Determines the set of l values to predict from a given set of data,
 # where knownN are specified as known
 def get_prediction_set_from_data(l,knownN):
@@ -101,7 +93,7 @@ def get_prediction_set_T(lastKnownPoint, finishPoint, distUnit, stepUnit, speed)
     _x, _y  = finishPoint[0], finishPoint[1]
 
     euclideanDist = euclidean_distance([x,y], [_x,_y])
-    finishTime = int(euclideanDist/speed)
+    finishTime = t + int(euclideanDist/speed)
     dist          = euclideanDist*distUnit
     numSteps      = int(dist*stepUnit)
     newset = []
