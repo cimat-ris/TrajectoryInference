@@ -13,19 +13,21 @@ class goalsLearnedStructure:
 
     # Constructor
     def __init__(self, areas, areasAxis, trajData):
-        self.nGoals   = len(areas)
-        self.areas    = areas
-        self.areasAxis= areasAxis
+        self.nGoals    = len(areas)
+        self.areas     = areas
+        self.areasAxis = areasAxis
         # Mean length for all pairs of goals
         self.meanLengths  = np.zeros((self.nGoals,self.nGoals))
         self.euclideanDistances = np.zeros((self.nGoals,self.nGoals))
-        self.units    = np.zeros((self.nGoals,self.nGoals))
-        self.meanUnit = 0.0
+        self.units     = np.zeros((self.nGoals,self.nGoals))
+        self.meanUnit  = 0.0
         self.priorTransitions = np.zeros((self.nGoals,self.nGoals))
-        self.linearPriorsX = np.empty((self.nGoals, self.nGoals),dtype=object)
-        self.linearPriorsY = np.empty((self.nGoals, self.nGoals),dtype=object)
-        self.kernelsX = np.empty((self.nGoals, self.nGoals),dtype=object)
-        self.kernelsY = np.empty((self.nGoals, self.nGoals),dtype=object)
+        self.linearPriorsX    = np.empty((self.nGoals, self.nGoals),dtype=object)
+        self.linearPriorsY    = np.empty((self.nGoals, self.nGoals),dtype=object)
+        self.kernelsX  = np.empty((self.nGoals, self.nGoals),dtype=object)
+        self.kernelsY  = np.empty((self.nGoals, self.nGoals),dtype=object)
+        self.timeTransitionMeans = np.empty((self.nGoals, self.nGoals),dtype=object)
+        self.timeTransitionStd   = np.empty((self.nGoals, self.nGoals),dtype=object)
         # Compute the mean lengths
         self.compute_mean_lengths(trajData)
         # Compute the distances between pairs of goals (as a nGoalsxnGoals matrix)
@@ -34,6 +36,8 @@ class goalsLearnedStructure:
         self.compute_distance_units()
         # Computer prior probabilities between goals
         self.compute_prior_transitions(trajData)
+        # Compute transition probabilities between goals
+        self.compute_time_transitions(trajData)
 
     # Fills in the matrix with the
     # mean length of the trajectories
@@ -137,3 +141,18 @@ class goalsLearnedStructure:
                     stop = timeit.default_timer()
                     execution_time = stop - start
                     print("[OPT] Parameter optimization done in %.2f seconds"%execution_time)
+    
+    
+    # Fills in the probability transition matrix
+    def compute_time_transitions(self,pathMat):
+        for i in range(self.nGoals):
+            for j in range(self.nGoals):
+                m, std = 0,0
+                if(len(pathMat[i][j]) > 0):
+                    time = get_paths_duration(pathMat[i][j])
+                    m   = np.median(time)
+                    std = np.std(time)
+                self.timeTransitionMeans[i][j] = m
+                self.timeTransitionStd[i][j]   = std
+        print("\n*** time transition means ***\n", self.timeTransitionMeans)
+        print("\n*** time transition std ***\n", self.timeTransitionStd)
