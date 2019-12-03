@@ -372,13 +372,13 @@ def histogram(paths,flag):
     plt.vlines(x,ymin,ymax,colors='b',linestyles='solid')
 
 def get_paths_duration(paths):
-    x,y,z = get_data_from_paths(paths,"time")
-    t = []
+    x,y,t = get_data_from_paths(paths,"time")
+    vec = []
     for i in range(len(paths)):
-        N = len(z[i])
-        t.append(z[i][N-1])
+        N = len(t[i])
+        vec.append(t[i][N-1] - t[i][0])
 
-    return t
+    return vec
 
 # Takes as an input a list of trajectories and outputs a vector with the corresponding total lengths
 def get_paths_arcLength(paths):
