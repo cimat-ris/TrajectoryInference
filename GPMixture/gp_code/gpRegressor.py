@@ -9,8 +9,8 @@ from gp_code.sampling import *
 
 class gpRegressor:
     # Constructor
-    def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis,linearPriorX=None, linearPriorY=None, mode=None):
-        self.mode            = mode #mode: Trautman o None       
+    def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis,linearPriorX=None, linearPriorY=None, mode=None, timeData = None):
+        self.mode            = mode # mode: Trautman or None       
         self.observedX       = None
         self.observedY       = None
         self.observedL       = None
@@ -36,6 +36,7 @@ class gpRegressor:
         self.finalArea       = finalArea
         self.finalAreaAxis   = finalAreaAxis
         self.finalAreaCenter, self.finalAreaSize = goal_center_and_size(finalArea)
+        self.timeTransitionData = timeData # Data = {mean, std}
 
     # Update observations for the Gaussian process (matrix K)
     def updateObservations(self,observedX,observedY,observedL):
@@ -52,7 +53,11 @@ class gpRegressor:
         lastObservedPoint = [observedX[-1], observedY[-1], observedL[-1]]
         # Generate the set of l values at which to predict x,y
         if self.mode == "Trautman":
-            self.newL, finalL, self.dist = get_prediction_set_T(lastObservedPoint,self.finalAreaCenter,self.unit,self.stepUnit,self.speed)
+            timeStep = (observedL[n-1] - observedL[n-2])  # Time difference between the last two observations
+            duration =  observedL[-1] - observedL[0]
+            #print("\n*** Time Data *** \n",self.timeTransitionData)
+            self.newL, finalL, self.dist = get_prediction_set_T(lastObservedPoint,duration,self.timeTransitionData,timeStep)
+    
         else:
             self.newL, finalL, self.dist = get_prediction_set(lastObservedPoint,self.finalAreaCenter,self.unit,self.stepUnit)
         # Fill in K (n+1 x n+1)
@@ -71,13 +76,15 @@ class gpRegressor:
             self.Ky[i][n] = self.kernelY(observedL[i],finalL)
             self.Ky[n][i] = self.Ky[i][n]
         self.Kx[n][n] = self.kernelX(finalL,finalL)
-        if self.finalAreaAxis==0:
-            s              = self.finalAreaSize[0]
-            self.Kx[n][n] += s*s*math.exp(-self.dist/s)
         self.Ky[n][n] = self.kernelY(finalL,finalL)
-        if self.finalAreaAxis==1:
-            s              = self.finalAreaSize[1]
-            self.Ky[n][n] += s*s*math.exp(-self.dist/s)
+        
+        if self.mode == None:
+            if self.finalAreaAxis==0:
+                s              = self.finalAreaSize[0]
+                self.Kx[n][n] += s*s*math.exp(-self.dist/s)
+            if self.finalAreaAxis==1:
+                s              = self.finalAreaSize[1]
+                self.Ky[n][n] += s*s*math.exp(-self.dist/s)
         self.Kx_1 = inv(self.Kx)
         self.Ky_1 = inv(self.Ky)
         for i in range(n):
@@ -189,7 +196,7 @@ class gpRegressor:
         deltaY       = np.zeros((n,1))
         deltaY[n-1,0]= deltay
         # A first order approximation of the new final l
-        deltal       = deltax*(self.finalAreaCenter[0]-self.observedX[n-2])/self.dist + deltay*(self.finalAreaCenter[1]--self.observedY[n-2])/self.dist
+        deltal       = deltax*(self.finalAreaCenter[0]-self.observedX[n-2])/self.dist + deltay*(self.finalAreaCenter[1]-self.observedY[n-2])/self.dist
         # In this approximation, only the predictive mean is adapted (will be used for sampling)
         # First order term #1: variation in observedX
         newx = self.newX + self.ktKx_1.dot(deltaX)
