@@ -17,15 +17,16 @@ from copy import copy
 
 #******************************************************************************#
 
+
 # Lectura de los nombres de los archivos de datos
-def readDataset(name):
+def readDataset(name):# in dataManagement
     file = open(name,'r')
     lines = file.readlines()
     for i in range(len(lines)):
         lines[i]=lines[i].strip("\n")
     return lines
 
-def histogram(paths,flag):
+def histogram(paths,flag):# in dataManagement
     n = len(paths)
     if flag == "duration":
         vec, vmin, vmax = getDuration(paths)
@@ -45,7 +46,7 @@ def histogram(paths,flag):
 
 # Regresa una matriz de trayectorias:
 # en la entrada (i,j) estan los caminos que comienzan en g_i y terminan en g_j
-def define_trajectories_start_and_end_areas(goals,paths):
+def define_trajectories_start_and_end_areas(goals,paths):# in dataManagement
     goalNum = len(goals)
     mat = np.empty((goalNum,goalNum),dtype=object)
     arclenMat = np.empty((goalNum,goalNum),dtype=object)
@@ -91,7 +92,7 @@ def next_goal_probability_matrix(M, nGoals):
     return probMat
 
 
-def geomError(mError):
+def geomError(mError): #not needed
     Ex, Ey = 0, 0
     for i in range(len(mError)):
         Ex += mError[i][0]
@@ -100,7 +101,7 @@ def geomError(mError):
     Ey = Ey/len(mError)
     return math.sqrt(Ex**2+Ey**2)
 
-def getKnownData(x,y,z,percent):
+def getKnownData(x,y,z,percent):#not needed
     trueX, trueY, trueZ = [],[],[]
     for j in range(len(x)):
         M = int(len(x[j])*percent)
@@ -122,6 +123,7 @@ def getKnownData(x,y,z,percent):
 
     return trueX, trueY, trueZ
 
+#not needed
 #regresa un vector para cada goal g con la cantidad de trayectorias que van de g a gi
 def getNextGoal(M, numGoals): #matriz con tray. de gi a gj
     numVec,aux,indVec = [],[],[]
