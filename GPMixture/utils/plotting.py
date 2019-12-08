@@ -1,20 +1,14 @@
-# -*- coding: utf-8 -*-
 """
 Plotting functions
-
-@author: karenlc
 """
 
 import numpy as np
 import math
-from copy import copy
 import matplotlib.pyplot as plt
-import matplotlib
 #matplotlib.use('TkAgg')
 from matplotlib.patches import Ellipse
 from matplotlib.animation import FuncAnimation
 import pandas as pd
-import time
 import random
 
 color = ['g','m','r','b','steelblue','y','tomato','orange','gold','yellow','lime',
@@ -23,7 +17,7 @@ color = ['g','m','r','b','steelblue','y','tomato','orange','gold','yellow','lime
 
 #******************************************************************************#
 """ PLOT FUNCTIONS """
-def plotPaths(vec):
+def plotPaths(img, vec):
     fig,ax = plt.subplots(1)
     ax.set_aspect('equal')
     # Show the image
