@@ -1,22 +1,13 @@
-"""
-@author: karenlc
-"""
-
 import numpy as np
 import math
 import matplotlib.pyplot as plt
 from numpy.linalg import inv
-from scipy.optimize import minimize
-from gp_code.kernels import *
 from gp_code.path import *
 import matplotlib.image as mpimg
-from matplotlib.patches import Ellipse
 from gp_code.io_parameters import *
 from copy import copy
-import random
 
-#manejo de data
-""" READ DATA """
+"""********** READ DATA **********"""
 # Lectura de los nombres de los archivos de datos
 def readDataset(fileName):
     file = open(fileName,'r')
@@ -75,8 +66,8 @@ def get_uncut_paths_from_file(file):
             paths.append(newPath)
     return paths
 
-"""Recibe un conjunto de paths y obtiene los puntos (x,y,z)
-con z = {tiempo, long de arco} si flag = {"time", "length"}"""
+# Gets a set of paths and get the points (x,y,z)
+# z = {time, arc-len} according to flag = {"time", "length"}
 def get_data_from_paths(paths, flag):
     for i in range(len(paths)):
         auxX, auxY, auxT = paths[i].x, paths[i].y, paths[i].t
@@ -96,10 +87,9 @@ def get_data_from_paths(paths, flag):
         z = l
     return x, y, z
 
-"""
-Lee la lista de archivos y obtiene los puntos (x,y,z),
-con z = {tiempo, long de arco} si flag = {"time", "length"}
-"""
+
+# Reads the set of files and gets the points (x,y,z),
+# z = {time, arc-len} according to flag = {"time", "length"}
 def get_data_from_files(files, flag):
     for i in range(len(files)):
         auxX, auxY, auxT = read_file(files[i])
@@ -119,6 +109,7 @@ def get_data_from_files(files, flag):
         z = l
     return x, y, z
 
+# Writes in a file the paths that we can use for the algorithm
 def write_useful_paths_file(paths): #paths es un vector de indices
     N = len(paths)
     #f = open("usefulPaths_%d.txt"%N,"w")
@@ -159,9 +150,9 @@ def read_data(fileName):
     return data
     
 
-""" FILTER PATHS """
-""" Regresa una matriz de trayectorias:
-en la entrada (i,j) estan los caminos que comienzan en g_i y terminan en g_j"""
+"""********** FILTER PATHS **********"""
+# Returns a matrix of trajectories:
+# the entry (i,j) has the paths tha go from the goal i to the goal j
 def define_trajectories_start_and_end_areas(startGoals, finishGoals, paths):
     # Number of starting goals
     nRows = len(startGoals)
@@ -184,10 +175,10 @@ def define_trajectories_start_and_end_areas(startGoals, finishGoals, paths):
         startIndex, endIndex = -1, -1
         # Determine which starting/ending indices they correspond to
         for j in range(nRows):
-            if(isInArea([startX,startY], startGoals[j])):
+            if(is_in_area([startX,startY], startGoals[j])):
                 startIndex = j
         for k in range(nColumns):
-            if(isInArea([endX,endY], finishGoals[k])):
+            if(is_in_area([endX,endY], finishGoals[k])):
                 endIndex = k
         if(startIndex > -1 and endIndex > -1):
             # Keep the trajectory
@@ -246,9 +237,9 @@ def getUsefulPaths(paths, goals):
         last = [paths[i].x[pathLen-1],paths[i].y[pathLen-1]]
         isFirst, isLast = -1, -1
         for j in range(len(goals)):
-            if(isInArea(first,goals[j])):
+            if(is_in_area(first,goals[j])):
                 isFirst = j
-            if(isInArea(last,goals[j])):
+            if(is_in_area(last,goals[j])):
                 isLast = j
         if(isFirst > -1 and isLast > -1 and pathLen > 3):
             useful.append(paths[i])
@@ -272,11 +263,11 @@ def get_path_set_given_time_interval(paths, startT, finishT):
         print("[pathTime]:", paths[j].t)
     return pathSet
 
-""" GOAL RELATED FUNCTIONS """
+"""********** GOAL RELATED FUNCTIONS **********"""
 def startGoal(p,goals):
     x, y = p.x[0], p.y[0]
     for i in range(len(goals)):
-        if isInArea(x,y,goals[i]):
+        if is_in_area(x,y,goals[i]):
             return i
     return -1
 
@@ -285,7 +276,7 @@ def get_goal_sequence(p, goals):
     for i in range(len(p.x)):
         for j in range(len(goals)):
             xy = [p.x[i], p.y[i]]
-            if isInArea(xy, goals[j])==1:
+            if is_in_area(xy, goals[j])==1:
                 if len(g) == 0:
                     g.append(j)
                 else:
@@ -327,7 +318,7 @@ def break_multigoal_path(multigoalPath, goalVec, goals):
         if goalInd < len(g)-1:
             nextgoal = g[goalInd+1]
             xy = [p.x[j], p.y[j]]
-            if isInArea(xy,goals[nextgoal]):
+            if is_in_area(xy,goals[nextgoal]):
                 new = path(newT,newX,newY)
                 newPath.append(new)
                 newX, newY, newT = [p.x[j]], [p.y[j]], [p.t[j]]
@@ -350,8 +341,44 @@ def get_goal_center_and_boundaries(goal):
     points.append(q3)
     points.append(q4)
     return points
+    
 
-"""DATA RELATED FUNCTIONS"""
+def get_goal_of_point(p, goals):
+    for i in range(len(goals)):
+        if(is_in_area(p,goals[i])):
+            return i
+    return -1
+    
+def get_path_start_goal(observedPath, goals):
+    initPoint = [observedPath.x[0], observedPath.y[0]]
+    for i in range(len(goals)):
+        if(is_in_area(initPoint,goals[i])):
+            return i
+
+def get_path_finish_goal(observedPath, goals):
+    n = len(observedPath.x)
+    finishPoint = [observedPath.x[n-1], observedPath.y[n-1]]
+    for i in range(len(goals)):
+        if(is_in_area(finishPoint,goals[i])):
+            return i
+    return -1
+
+# Centroid of an area
+def middle_of_area(rectangle):
+    n = len(R)
+    dx, dy = rectangle[n-2]-rectangle[0], rectangle[n-1]-rectangle[1]
+    middle = [rectangle[0] + dx/2., rectangle[1] + dy/2.]
+    return middle
+    
+# Centroid and size of an area
+def goal_center_and_size(R):
+    n = len(R)
+    dx, dy = R[n-2]-R[0], R[n-1]-R[1]
+    center = [R[0] + dx/2., R[1] + dy/2.]
+    size = [dx, dy]
+    return center, size
+    
+"""********** DATA STATISTICS FUNCTIONS **********"""
 
 def histogram(paths,flag):
     if flag == "duration":
@@ -465,7 +492,7 @@ def get_pedestrian_average_speed(paths):
     return avSpeed
 
 
-""" LINEAR PRIOR MEAN"""
+"""********** LINEAR PRIOR MEAN **********"""
 # Linear regression: for data l,f(l), the function returns a, b for the line between the
 # starting and ending points
 def get_line_parameters(path, flag):
@@ -532,7 +559,7 @@ def get_linear_prior_mean(paths, flag):
     vars         = get_line_variances(lineParameters, mean)
     return mean, cov, vars
 
-""" HELPFUL FUNCTIONS"""
+"""********** HELPFUL FUNCTIONS **********"""
 def equal(vx,vy,x,y):
     N = len(vx)
     if N == 0:
@@ -540,18 +567,6 @@ def equal(vx,vy,x,y):
 
     if vx[N-1] == x and vy[N-1] == y:
         return 1
-    else:
-        return 0
-
-# Test if a point (x,y) belongs to an area R
-def isInArea(p,R):
-    x = p[0]
-    y = p[1]
-    if(x >= R[0] and x <= R[len(R)-2]):
-        if(y >= R[1] and y <= R[len(R)-1]):
-            return 1
-        else:
-            return 0
     else:
         return 0
 
@@ -572,19 +587,6 @@ def euclidean_distance(p, q): #p = (x,y)
     dist = math.sqrt( (p[0]-q[0])**2 + (p[1]-q[1])**2 )
     return dist
 
-# Centroid of an area
-def middle_of_area(rectangle):
-    dx, dy = rectangle[6]-rectangle[0], rectangle[7]-rectangle[1]
-    middle = [rectangle[0] + dx/2., rectangle[1] + dy/2.]
-    return middle
-    
-# Centroid and size of an area
-def goal_center_and_size(R):
-    dx, dy = R[6]-R[0], R[7]-R[1]
-    center = [R[0] + dx/2., R[1] + dy/2.]
-    size = [dx, dy]
-    return center, size
-
 def copy_unitMat(unitMat, nGoals, nSubgoals):
     mat = []
     m = int(nSubgoals/nGoals)
@@ -598,12 +600,6 @@ def copy_unitMat(unitMat, nGoals, nSubgoals):
 
 def time_compare(path):
     return path.t[0]
-
-def get_goal_of_point(p, goals):
-    for i in range(len(goals)):
-        if(is_in_area(p,goals[i])):
-            return i
-    return -1
 
 def column(matrix, i):
     return [row[i] for row in matrix]
@@ -633,7 +629,7 @@ def positive_definite(M):
             return 0
     return 1
 
-"""ARC LENGHT TO TIME"""
+"""********** ARC LENGHT TO TIME **********"""
 def arclen_to_time(initTime,l,speed):
     t = [initTime]
     #print("acrlen to time l:",l)
@@ -642,7 +638,7 @@ def arclen_to_time(initTime,l,speed):
         t.append(time_i)
     return t
 
-"""GET OBSERVED DATA"""
+"""********** GET OBSERVED DATA **********"""
 # Function to get the ground truth data: knownN data
 def get_known_set(x,y,z,knownN):
     trueX,trueY, trueZ = [],[],[]
@@ -658,20 +654,6 @@ def get_partial_path(fullPath, knownN):
     x,y,t = fullPath.x[0:knownN], fullPath.y[0:knownN], fullPath.t[0:knownN]
     partialPath = path(t,x,y)
     return partialPath
-
-def get_path_start_goal(observedPath, goals):
-    initPoint = [observedPath.x[0], observedPath.y[0]]
-    for i in range(len(goals)):
-        if(is_in_area(initPoint,goals[i])):
-            return i
-
-def get_path_finish_goal(observedPath, goals):
-    n = len(observedPath.x)
-    finishPoint = [observedPath.x[n-1], observedPath.y[n-1]]
-    for i in range(len(goals)):
-        if(is_in_area(finishPoint,goals[i])):
-            return i
-    return -1
 
 def get_observed_path_given_current_time(fullPath, currentTime):
     x, y, t= [],[],[]
