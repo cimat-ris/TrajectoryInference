@@ -47,7 +47,7 @@ class mixtureOfGPs:
         for i in range(self.goalsData.nGoals):
             # One regressor per goal
             if self.mode == "Trautman":
-                timeData = [self.goalsData.timeTransitionMeans[self.startG][i], self.timeTransitionStd[self.startG][i]  ]
+                timeData = [self.goalsData.timeTransitionMeans[self.startG][i], self.goalsData.timeTransitionStd[self.startG][i]  ]
                 self.gpPathRegressor[i] = gpRegressor(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],None,None,self.mode, timeData)
             else:
                 self.gpPathRegressor[i] = gpRegressor(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i], self.goalsData.linearPriorsY[self.startG][i])
