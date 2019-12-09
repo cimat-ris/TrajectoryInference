@@ -28,9 +28,9 @@ station_img = mpimg.imread('imgs/train_station.jpg')
 
 # Al leer cortamos las trayectorias multiobjetivos por pares consecutivos
 # y las agregamos como trayectorias independientes
-dataPaths, multigoal = get_paths_from_file('datasets/CentralStation_paths_10000.txt',areas)
+dataPaths, multigoal = get_paths_from_file('datasets/CentralStation_trainingSet.txt',areas)
 usefulPaths = getUsefulPaths(dataPaths,areas)
-plotPathSet(img,dataPaths)
+#plotPathSet(img,dataPaths)
 print("[INF] Number of useful paths: ",len(usefulPaths))
 
 # Split the trajectories into pairs of goals
