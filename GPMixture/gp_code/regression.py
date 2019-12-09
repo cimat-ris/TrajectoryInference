@@ -99,7 +99,11 @@ def get_prediction_set_T(lastKnownPoint, duration, timeTransitionData, timeStep)
         step = int(finishTime/float(numSteps) )
         for i in range(1,numSteps+1):
             newset.append( t + i*step )
-    
+        if newset[numSteps-1] < t+ finishTime:
+            newset.append(t+finishTime)
+    elif finishTime > 0:
+        newset.append(t+finishTime)
+        
     return newset, t + finishTime, finishTime
 
 #******************
