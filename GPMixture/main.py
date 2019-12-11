@@ -16,7 +16,7 @@ from matplotlib.patches import Ellipse
 from copy import copy
 from copy import deepcopy
 import pandas as pd
-from statistics import * 
+from statistics import *
 
 # Read the areas data from a file and take only the first 6 goals
 data     = pd.read_csv('parameters/CentralStation_areasDescriptions.csv')
@@ -26,12 +26,13 @@ nGoals   = len(areas)
 img      = mpimg.imread('imgs/goals.jpg')
 station_img = mpimg.imread('imgs/train_station.jpg')
 
-# Al leer cortamos las trayectorias multiobjetivos por pares consecutivos
-# y las agregamos como trayectorias independientes
+# We process here multi-objective trajectories into sub-trajectories
 dataPaths, multigoal = get_paths_from_file('datasets/CentralStation_trainingSet.txt',areas)
 usefulPaths = getUsefulPaths(dataPaths,areas)
+
+# Plot all the paths
 #plotPathSet(img,dataPaths)
-print("[INF] Number of useful paths: ",len(usefulPaths))
+print("[INF] Number of useful paths: ",len(usefulPaths),"/",len(dataPaths))
 
 # Split the trajectories into pairs of goals
 startToGoalPath, arclenMat = define_trajectories_start_and_end_areas(areas,areas,usefulPaths)
@@ -43,7 +44,7 @@ showDataset = False
 if showDataset:
     plotPathSet(station_img, dataPaths) #All paths
     plotPathSet(img, learnSet)          #Learning set
-    plotPaths(pathMat, img)             
+    plotPaths(pathMat, img)
 print("[INF] Number of filtered paths: ",len(learnSet))
 
 # Form the object goalsLearnedStructure
@@ -88,53 +89,6 @@ pathSize = len(pathX)
 samplingViz = False
 if samplingViz==True:
     path_sampling_test(img,stepUnit,goalsData)
-
-# Test function: prediction of single paths with single goals
-singleTest = True
-if singleTest==True:
-    gp = singleGP(startG,nextG,stepUnit,goalsData,"Trautman")       #Trautmans mode
-    #gp = singleGP(startG,nextG,stepUnit,goalsData)
-    part_num = 5
-    for i in range(1,part_num-1):
-        # Data we will suppose known
-        knownN = int((i+1)*(pathSize/part_num))
-        trueX,trueY,trueL = get_known_set(pathX,pathY,pathT,knownN) #time instead of arclen
-        #trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
-        """Single goal prediction test"""
-        # Update the GP
-        # TODO: too slow
-        likelihood        = gp.update(trueX,trueY,trueL)
-        # Perform prediction
-        predictedXY,varXY = gp.predict()
-        plot_prediction(img,pathX,pathY,knownN,predictedXY,varXY)
-        print('[INF] Plotting')
-        print("[RES] [Likelihood]: ",likelihood)
-        # Generate samples
-        vecX,vecY         = gp.generate_samples(100)
-        plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
-
-# Test function: prediction of single trajectories with multiple goals
-mixtureTest = False
-if mixtureTest==True:
-    mgps = mixtureOfGPs(startG,stepUnit,goalsData)
-    nSamples = 50
-    part_num = 5
-    # For different sub-parts of the trajectory
-    for i in range(1,part_num-1):
-        knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
-        trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
-        """Multigoal prediction test"""
-        print('[INF] Updating likelihoods')
-        likelihoods = mgps.update(trueX,trueY,trueL)
-        print('[INF] Performing prediction')
-        predictedXYVec,varXYVec = mgps.predict()
-        print('[INF] Plotting')
-        plot_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
-        print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
-        print("[RES] Mean likelihood:", mgps.meanLikelihood)
-        print('[INF] Generating samples')
-        vecX,vecY,__ = mgps.generate_samples(nSamples)
-        plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
 
 # Test function: prediction of single paths with multiple goals
 animateMixtureTest = False
@@ -336,14 +290,14 @@ boxPlots = False
 if boxPlots == True:
     futureSteps = [8,10,12]
     partNum = 5
-    
+
     for steps in futureSteps:
         predMeanBoxes, samplesBoxes = [], []
         for j in range(partNum-1):
             plotName = 'Predictive mean\n'+'%d'%(steps)+' steps | %d'%(j+1)+'/%d'%(partNum)+' data'
             predData = read_data('results/Prediction_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
             predMeanBoxes.append(predData)
-            
+
             plotName = 'Best of samples\n'+'%d'%(steps)+' steps | %d'%(j+1)+'/%d'%(partNum)+' data'
             samplingData = read_data('results/Sampling_error_'+'%d'%(steps)+'_steps_%d'%(j+1)+'_of_%d'%(partNum)+'_data.txt')
             samplesBoxes.append(samplingData)
@@ -352,7 +306,7 @@ if boxPlots == True:
         joint_multiple_boxplots(predMeanBoxes, samplesBoxes, title)
 
 
-#Plots a partial path, the predictive mean to the most likely goal and the best among 50 samples 
+#Plots a partial path, the predictive mean to the most likely goal and the best among 50 samples
 plotsPredMeanSamples = False
 if plotsPredMeanSamples:
     realPath = testingPaths[0]

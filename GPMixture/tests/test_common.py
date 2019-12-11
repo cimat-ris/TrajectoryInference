@@ -9,6 +9,7 @@ from gp_code.io_parameters import read_and_set_parameters
 from gp_code.goalsLearnedStructure import *
 from utils.plotting import plot_prediction
 from utils.plotting import plot_path_samples_with_observations
+from utils.plotting import plot_multiple_predictions_and_goal_likelihood
 import utils
 import pandas as pd
 import numpy as np

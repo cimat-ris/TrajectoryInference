@@ -2,7 +2,7 @@
 @author: karenlc
 """
 from test_common import *
-from gp_code.singleGP import singleGP
+from gp_code.mixtureOfGPs import mixtureOfGPs
 
 # Read the areas data from a file and take only the first 6 goals
 data     = pd.read_csv('parameters/CentralStation_areasDescriptions.csv')
@@ -59,28 +59,26 @@ pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t
 # Total path length
 pathSize = len(pathX)
 
-# Prediction of single paths with single goals
-gp = singleGP(startG,nextG,stepUnit,goalsData,"Trautman")       #Trautmans mode
-#gp = singleGP(startG,nextG,stepUnit,goalsData)
+# Prediction of single paths with a mixture model
+mgps     = mixtureOfGPs(startG,stepUnit,goalsData)
+nSamples = 50
 
 # Divides the trajectory in part_num parts and consider
 part_num = 5
+
+# For different sub-parts of the trajectory
 for i in range(1,part_num-1):
-    # Data we will suppose known
-    knownN = int((i+1)*(pathSize/part_num))
-    trueX,trueY,trueL = get_known_set(pathX,pathY,pathT,knownN) #time instead of arclen
-    #trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
-    """Single goal prediction test"""
-    # Update the GP
-    start      = time.process_time()
-    likelihood = gp.update(trueX,trueY,trueL)
-    stop       = time.process_time()
-    print("CPU process time: %.1f [ms]" % (1000.0*(stop-start)))
-    # Perform prediction
-    predictedXY,varXY = gp.predict()
-    plot_prediction(img,pathX,pathY,knownN,predictedXY,varXY)
+    knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
+    trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
+    """Multigoal prediction test"""
+    print('[INF] Updating likelihoods')
+    likelihoods = mgps.update(trueX,trueY,trueL)
+    print('[INF] Performing prediction')
+    predictedXYVec,varXYVec = mgps.predict()
     print('[INF] Plotting')
-    print("[RES] [Likelihood]: ",likelihood)
-    # Generate samples
-    vecX,vecY         = gp.generate_samples(100)
+    plot_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
+    print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
+    print("[RES] Mean likelihood:", mgps.meanLikelihood)
+    print('[INF] Generating samples')
+    vecX,vecY,__ = mgps.generate_samples(nSamples)
     plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
