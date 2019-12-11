@@ -5,7 +5,6 @@ Functions to handle interaction of multiple agents
 """
 
 from utils.plotting import *
-from utils.dataManagement import*
 from gp_code.kernels import *
 from gp_code.sampling import*
 import matplotlib.pyplot as plt
@@ -76,7 +75,7 @@ def interaction_potential_DCA(fi, fj):
     n, m = len(fi.t), len(fj.t)
     potentialVal = 0.
     dca = 1100
-    
+
     while(i < n and j < m):
         ti, tj = fi.t[i], fj.t[j]
         if ti < tj:
@@ -88,7 +87,7 @@ def interaction_potential_DCA(fi, fj):
                 dist = euclidean_distance(p,q)
                 if dist < dca:
                     potentialVal = potential_value([fi.x[i],fi.y[i]], [x,y])
-                    dca = dist   
+                    dca = dist
             if i < n:
                 i += 1
         elif tj < ti:
@@ -100,7 +99,7 @@ def interaction_potential_DCA(fi, fj):
                 dist = euclidean_distance(p,q)
                 if dist < dca:
                     potentialVal = potential_value([fj.x[j],fj.y[j]], [x,y])
-                    dca = dist  
+                    dca = dist
             if j < m:
                 j += 1
         else:
@@ -134,7 +133,7 @@ def interaction_potential_DCA_(fi, fj):
     p = [fi.x[iMin], fi.y[iMin]]
     q = [fj.x[jMin], fj.y[jMin]]
     val = potential_value(p,q)
-    
+
     return val
 
 #Para un par de agentes regresa el valor del potencial

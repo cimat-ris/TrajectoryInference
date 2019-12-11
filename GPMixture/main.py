@@ -1,57 +1,26 @@
 """
 @author: karenlc
 """
-from gp_code.io_parameters import *
-from gp_code.goalsLearnedStructure import *
-from gp_code.mixtureOfGPs import *
-from gp_code.singleGP import *
-from utils.plotting import *
-from utils.dataManagement import *
-from testing import *
-from multipleAgents import *
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-from matplotlib.patches import Ellipse
-from copy import copy
-from copy import deepcopy
+import gp_code
+import gp_code.io_parameters
+from gp_code.goalsLearnedStructure import goalsLearnedStructure
+from gp_code.io_parameters import read_and_set_parameters
+from utils.io_trajectories import read_and_filter
+from utils.manip_trajectories import get_known_set, getUsefulPaths
+from utils.io_trajectories import get_uncut_paths_from_file
+from utils.plotting import plot_prediction
+from utils.plotting import plot_path_samples_with_observations
+from utils.plotting import plot_multiple_predictions_and_goal_likelihood
 import pandas as pd
-from statistics import *
+import numpy as np
+import time
+import matplotlib.image as mpimg
 
-# Read the areas data from a file and take only the first 6 goals
-data     = pd.read_csv('parameters/CentralStation_areasDescriptions.csv')
-areas    = data.values[:6,2:]
-areasAxis= data.values[:6,1]
-nGoals   = len(areas)
-img      = mpimg.imread('imgs/goals.jpg')
+img         = mpimg.imread('imgs/goals.jpg')
 station_img = mpimg.imread('imgs/train_station.jpg')
-
-# We process here multi-objective trajectories into sub-trajectories
-dataPaths, multigoal = get_paths_from_file('datasets/CentralStation_trainingSet.txt',areas)
-usefulPaths = getUsefulPaths(dataPaths,areas)
-
-# Plot all the paths
-#plotPathSet(img,dataPaths)
-print("[INF] Number of useful paths: ",len(usefulPaths),"/",len(dataPaths))
-
-# Split the trajectories into pairs of goals
-startToGoalPath, arclenMat = define_trajectories_start_and_end_areas(areas,areas,usefulPaths)
-
-# Remove the trajectories that are either too short or too long
-pathMat, learnSet = filter_path_matrix(startToGoalPath, nGoals, nGoals)
-sortedPaths = sorted(learnSet, key=time_compare)
-showDataset = False
-if showDataset:
-    plotPathSet(station_img, dataPaths) #All paths
-    plotPathSet(img, learnSet)          #Learning set
-    plotPaths(pathMat, img)
-print("[INF] Number of filtered paths: ",len(learnSet))
-
-# Form the object goalsLearnedStructure
-goalsData = goalsLearnedStructure(areas,areasAxis,pathMat)
-
-stepUnit = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals)
-speed    = 1.65033755511     #get_pedestrian_average_speed(dataPaths)
+# Read the areas file, dataset, and form the goalsLearnedStructure object
+goalsData, pathMat, __ = read_and_filter('parameters/CentralStation_areasDescriptions.csv','datasets/CentralStation_trainingSet.txt')
+stepUnit  = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals)
 
 # For each pair of goals, determine the line priors
 useLinearPriors = True
@@ -142,7 +111,7 @@ if interactionWithSamplingTest == True:
         observedPaths.append(get_observed_path_given_current_time(sortedSet[j], currentTime))
         trueX,trueY,trueL = observedPaths[j].x.copy(), observedPaths[j].y.copy(), observedPaths[j].l.copy()
         # Determine the starting goal
-        startG      = get_path_start_goal(observedPaths[j],areas)
+        startG      = get_path_start_goal(observedPaths[j],goalsData.areas)
         # Create the mixture, and update it with the observed data
         mgps        = mixtureOfGPs(startG,stepUnit,goalsData)
         likelihoods = mgps.update(trueX,trueY,trueL)
@@ -194,7 +163,7 @@ if interactionWithSamplingTest == True:
             maxId = i
 
 testingData = get_uncut_paths_from_file('datasets/CentralStation_paths_10000-12500.txt')
-testingPaths = getUsefulPaths(testingData,areas)
+testingPaths = getUsefulPaths(testingData,goalsData.areas)
 #problematic paths:
 testingPaths.pop(106)
 testingPaths.pop(219)
@@ -227,7 +196,7 @@ if errorTablesTest == True:
             for j in range(nPaths):
                 print("\nPath #",j)
                 currentPath = testingPaths[j]
-                startG = get_path_start_goal(currentPath,areas)
+                startG = get_path_start_goal(currentPath,goalsData.areas)
                 mgps = mixtureOfGPs(startG,stepUnit,goalsData)
 
                 print("Observed data:",i+1,"/",partNum)
@@ -310,7 +279,7 @@ if boxPlots == True:
 plotsPredMeanSamples = False
 if plotsPredMeanSamples:
     realPath = testingPaths[0]
-    real_path_predicted_mean_and_sample(img,realPath,areas,goalsData,stepUnit)
+    real_path_predicted_mean_and_sample(img,realPath,goalsData.areas,goalsData,stepUnit)
 
 
 #Prueba el error de la prediccion variando:
