@@ -6,7 +6,6 @@ Created on Mon Sep 10 17:56:43 2018
 import numpy as np
 import math
 
-
 def goal_sequence(L, n):
     s = []
     for i in range(n):

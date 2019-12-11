@@ -2,12 +2,10 @@
 @author: karenlc
 """
 import gp_code
-import gp_code.io_parameters
-from gp_code.goalsLearnedStructure import goalsLearnedStructure
-from gp_code.io_parameters import read_and_set_parameters
-from utils.io_trajectories import read_and_filter
+from gp_code.goals_structure import goalsLearnedStructure
 from utils.manip_trajectories import get_known_set, getUsefulPaths
-from utils.io_trajectories import get_uncut_paths_from_file
+from utils.io_parameters import read_and_set_parameters
+from utils.io_trajectories import read_and_filter, get_uncut_paths_from_file
 from utils.plotting import plot_prediction
 from utils.plotting import plot_path_samples_with_observations
 from utils.plotting import plot_multiple_predictions_and_goal_likelihood

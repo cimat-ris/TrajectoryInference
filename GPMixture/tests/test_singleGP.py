@@ -2,7 +2,7 @@
 @author: karenlc
 """
 from test_common import *
-from gp_code.singleGP import singleGP
+from gp_code.single_gp import singleGP
 
 img         = mpimg.imread('imgs/goals.jpg')
 station_img = mpimg.imread('imgs/train_station.jpg')

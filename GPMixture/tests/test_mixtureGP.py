@@ -2,7 +2,7 @@
 @author: karenlc
 """
 from test_common import *
-from gp_code.mixtureOfGPs import mixtureOfGPs
+from gp_code.mixture_gp import mixtureOfGPs
 
 img         = mpimg.imread('imgs/goals.jpg')
 station_img = mpimg.imread('imgs/train_station.jpg')

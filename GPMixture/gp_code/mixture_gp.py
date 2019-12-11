@@ -6,7 +6,7 @@ import math
 from gp_code.regression import *
 from gp_code.evaluation import *
 from gp_code.sampling import *
-from gp_code.gpRegressor import *
+from gp_code.gp_regressor import *
 from utils.manip_trajectories import euclidean_distance
 from statistics import mean
 

@@ -1,7 +1,7 @@
 import numpy as np
 import math
 from gp_code.path import path
-from gp_code.goalsLearnedStructure import goalsLearnedStructure
+from gp_code.goals_structure import goalsLearnedStructure
 from utils.manip_trajectories import *
 import pandas as pd
 
