@@ -1,3 +1,6 @@
+"""
+@author: karenlc
+"""
 from utils.plotting import *
 from gp_code.kernels import *
 import matplotlib.pyplot as plt
@@ -15,9 +18,14 @@ def evaluateCovarianceMatrix(kernel,length):
             C[i][j]=kernel(i,j)
     return C
 
+# Number of points to evaluate
 s = 1000
 
-
+# parameters[0]: For linear kernels, Standard deviation on slope.
+# parameters[1]: for linear kernels, Standard deviation on constant.
+# parameters[2]: Covariance multiplicative factor (gives the order of magnitude).
+# parameters[3]: Characteristic length (gives radius of influence).
+# parameters[4]: Standard deviation of noise.
 parameters = [0.01, 2000, 500., 200., 1.0]
 kernel = squaredExponentialKernel(parameters[2],parameters[3])
 CSqe   = evaluateCovarianceMatrix(kernel,s)
@@ -37,6 +45,7 @@ CSqeN  = evaluateCovarianceMatrix(kernel,s)
 kernel = exponentialAndNoiseKernel(parameters[2],parameters[3],parameters[4])
 Cexp   = evaluateCovarianceMatrix(kernel,s)
 
+# Display the covariance matrices
 fg, axes = plt.subplots(2, 3, sharey=True)
 axes[0][0].matshow(CSqe)
 axes[0][1].matshow(CM)

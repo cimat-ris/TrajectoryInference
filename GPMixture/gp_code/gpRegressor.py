@@ -10,7 +10,7 @@ from gp_code.sampling import *
 class gpRegressor:
     # Constructor
     def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis,linearPriorX=None, linearPriorY=None, mode=None, timeData = None):
-        self.mode            = mode # mode: Trautman or None       
+        self.mode            = mode # mode: Trautman or None
         self.observedX       = None
         self.observedY       = None
         self.observedL       = None
@@ -40,6 +40,7 @@ class gpRegressor:
 
     # Update observations for the Gaussian process (matrix K)
     def updateObservations(self,observedX,observedY,observedL):
+        # TODO: Kx,Ky could be simply updated instead of being redefined all the time
         n                    = len(observedX)
         self.observedX       = np.zeros((n+1,1))
         self.observedY       = np.zeros((n+1,1))
@@ -57,7 +58,7 @@ class gpRegressor:
             duration =  observedL[-1] - observedL[0]
             #print("\n*** Time Data *** \n",self.timeTransitionData)
             self.newL, finalL, self.dist = get_prediction_set_T(lastObservedPoint,duration,self.timeTransitionData,timeStep)
-    
+
         else:
             self.newL, finalL, self.dist = get_prediction_set(lastObservedPoint,self.finalAreaCenter,self.unit,self.stepUnit)
         # Fill in K (n+1 x n+1)
@@ -77,7 +78,7 @@ class gpRegressor:
             self.Ky[n][i] = self.Ky[i][n]
         self.Kx[n][n] = self.kernelX(finalL,finalL)
         self.Ky[n][n] = self.kernelY(finalL,finalL)
-        
+
         if self.mode == None:
             if self.finalAreaAxis==0:
                 s              = self.finalAreaSize[0]

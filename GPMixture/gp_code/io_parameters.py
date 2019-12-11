@@ -11,7 +11,6 @@ from matplotlib.patches import Ellipse
 from copy import copy
 import random
 import timeit
-from termcolor import colored
 
 # Takes as an input a matrix of kernels. Exports the parameters, line by line
 def write_parameters(matrix,rows,columns,fileName):

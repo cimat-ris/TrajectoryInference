@@ -111,7 +111,7 @@ class linearKernel(Kernel):
     def dkdy(self,x,y):
         return self.sigmaSq_a*x
 
-#kernel Trautman
+# Kernel Trautman
 class linearKernelTrautman(Kernel):
     # Constructor
     def __init__(self, gamma):
