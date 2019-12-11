@@ -1,7 +1,6 @@
 import numpy as np
 import math
-from gp_code.path import *
-from gp_code.io_parameters import *
+from gp_code.path import path
 
 # Gets a set of paths and get the points (x,y,z)
 # z = {time, arc-len} according to flag = {"time", "length"}

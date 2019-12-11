@@ -1,7 +1,5 @@
 import numpy as np
 from gp_code.kernels import create_kernel_matrix
-import random
-import timeit
 
 # Takes as an input a matrix of kernels. Exports the parameters, line by line
 def write_parameters(matrix,rows,columns,fileName):
