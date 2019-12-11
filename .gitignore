@@ -1,0 +1,8 @@
+
+*.pyc
+
+GPMixture/linearpriorcombined5x5_x\.txt
+
+GPMixture/linearpriorcombined5x5_y\.txt
+
+GPMixture/double_pendulum_sgskip\.py
