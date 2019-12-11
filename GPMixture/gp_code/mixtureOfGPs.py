@@ -7,6 +7,7 @@ from gp_code.regression import *
 from gp_code.evaluation import *
 from gp_code.sampling import *
 from gp_code.gpRegressor import *
+from utils.manip_trajectories import euclidean_distance
 from statistics import mean
 
 # Class for performing path regression with a mixture of Gaussian processes
@@ -62,7 +63,7 @@ class mixtureOfGPs:
                     self.gpPathRegressor[k] = gpRegressor(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areasAxis[i],None,None,self.mode,timeData)
                 else:
                     self.gpPathRegressor[k] = gpRegressor(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i],self.goalsData.linearPriorsY[self.startG][i])
-                    
+
 
     # Update observations and compute likelihoods based on observations
     def update(self,observedX,observedY,observedL):
@@ -100,7 +101,7 @@ class mixtureOfGPs:
             if self.goalsLikelihood[i] > self.goalsLikelihood[mostLikely]:
                 mostLikely = i
         self.mostLikelyGoal = mostLikely
-        
+
         return self.goalsLikelihood
 
     # Performs prediction

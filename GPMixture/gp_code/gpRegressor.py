@@ -6,6 +6,8 @@ import math
 from gp_code.regression import *
 from gp_code.evaluation import *
 from gp_code.sampling import *
+from utils.manip_trajectories import goal_center_and_size
+from utils.manip_trajectories import euclidean_distance, positive_definite
 
 class gpRegressor:
     # Constructor

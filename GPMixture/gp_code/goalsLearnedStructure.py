@@ -1,8 +1,8 @@
-from gp_code.kernels import *
-from utils.dataManagement import*
+from gp_code.kernels import set_kernel
 from gp_code.sampling import*
 from gp_code.optimize_parameters import *
-import matplotlib.pyplot as plt
+from utils.manip_trajectories import get_paths_arcLength, get_paths_duration
+from utils.manip_trajectories import goal_center_and_size, get_linear_prior_mean
 import numpy as np
 import math
 from copy import copy
@@ -141,8 +141,8 @@ class goalsLearnedStructure:
                     stop = timeit.default_timer()
                     execution_time = stop - start
                     print("[OPT] Parameter optimization done in %.2f seconds"%execution_time)
-    
-    
+
+
     # Fills in the probability transition matrix
     def compute_time_transitions(self,pathMat):
         for i in range(self.nGoals):

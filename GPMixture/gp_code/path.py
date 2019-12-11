@@ -6,7 +6,6 @@ Created on Sun Oct 30 15:13:31 2016
 """
 import numpy as np
 import math
-from utils.dataManagement import *
 
 class path:
     # Constructor
@@ -30,7 +29,7 @@ class path:
             self.l.append( int(l[i]) )
             self.t.append(arcLenToTime[i])
         return self
-    
+
     def join_path_with_sample(self,sampleX,sampleY,sampleL,speed):
         self.x = self.x + list(sampleX[:,0])
         self.y = self.y + list(sampleY[:,0])

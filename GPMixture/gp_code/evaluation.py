@@ -5,8 +5,7 @@ import numpy as np
 import math
 from numpy import linalg as la
 from gp_code.regression import *
-from utils.dataManagement import *
-
+from utils.manip_trajectories import goal_center_and_size
 
 D = 150.
 
@@ -38,7 +37,7 @@ def mean_displacement_error(true_XY, prediction_XY):
         error += math.sqrt((trueX[i]-predictionX[i])**2 + (trueY[i]-predictionY[i])**2)
     if(l>0):
         error = error/l
-        
+
     return error
 
 #The distance between the predicted final destination and the true final destination
@@ -147,7 +146,7 @@ def ADE_given_future_steps(fullPath, predictedXY, knownN, futureSteps):
 
     error = mean_displacement_error([realX,realY],[predX,predY])
     return error
-    
+
 def nearestPD(A):
     B = (A + np.transpose(A)) / 2
     _, s, V = la.svd(B)

@@ -1,14 +1,5 @@
 import numpy as np
-import math
-import matplotlib.pyplot as plt
-from numpy.linalg import inv
-from scipy.optimize import minimize
-from scipy.linalg import *
-from gp_code.kernels import *
-from utils.dataManagement import *
-import matplotlib.image as mpimg
-from matplotlib.patches import Ellipse
-from copy import copy
+from gp_code.kernels import create_kernel_matrix
 import random
 import timeit
 

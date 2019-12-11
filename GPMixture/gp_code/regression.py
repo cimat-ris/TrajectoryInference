@@ -5,14 +5,10 @@ import numpy as np
 import math
 from numpy.linalg import inv
 from scipy.linalg import *
-from gp_code.kernels import *
-from utils.dataManagement import *
-import matplotlib.image as mpimg
 from matplotlib.patches import Ellipse
 from copy import copy
+from utils.manip_trajectories import euclidean_distance
 import random
-import timeit
-from termcolor import colored
 
 # The main regression function: perform regression for a vector of values lnew
 def joint_regression(l,x_meanl,lnew,kernel,linearPriorMean=None):
@@ -20,7 +16,7 @@ def joint_regression(l,x_meanl,lnew,kernel,linearPriorMean=None):
     n    = len(l)
     # Number of predicted data
     nnew = len(lnew)
-    # Compute K (nxn), k (nxnnew), C (nnewxnnew)
+    # Compute K (nxn), k (nxnnew), C (nnewxnnew)kernel
     K  = np.zeros((n,n))
     k  = np.zeros((n,nnew))
     C  = np.zeros((nnew,nnew))
@@ -92,7 +88,7 @@ def get_prediction_set_T(lastKnownPoint, duration, timeTransitionData, timeStep)
     x, y, t = lastKnownPoint[0], lastKnownPoint[1], lastKnownPoint[2]
     transitionTime = int(np.random.normal(timeTransitionData[0], timeTransitionData[1]) )
     finishTime = transitionTime - duration
-    
+
     numSteps      = int(finishTime/timeStep)
     newset = []
     if(numSteps > 0):
@@ -103,7 +99,7 @@ def get_prediction_set_T(lastKnownPoint, duration, timeTransitionData, timeStep)
             newset.append(t+finishTime)
     elif finishTime > 0:
         newset.append(t+finishTime)
-        
+
     return newset, t + finishTime, finishTime
 
 #******************
