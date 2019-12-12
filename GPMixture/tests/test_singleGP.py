@@ -8,6 +8,7 @@ img         = mpimg.imread('imgs/goals.jpg')
 station_img = mpimg.imread('imgs/train_station.jpg')
 # Read the areas file, dataset, and form the goalsLearnedStructure object
 goalsData, pathMat, __ = read_and_filter('parameters/CentralStation_areasDescriptions.csv','datasets/CentralStation_trainingSet.txt')
+# TODO: we should remove this parameter; a priori it could be deduced in some way with the speed
 stepUnit  = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals)
 
 # For each pair of goals, determine the line priors
@@ -54,7 +55,7 @@ for i in range(1,part_num-1):
     trueX,trueY,trueL = get_known_set(pathX,pathY,pathT,knownN)
     #trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
     """Single goal prediction test"""
-    # Update the GP
+    # Update the GP with (real) observations
     start      = time.process_time()
     likelihood = gp.update(trueX,trueY,trueL)
     stop       = time.process_time()

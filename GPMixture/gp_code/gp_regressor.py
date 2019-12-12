@@ -56,13 +56,16 @@ class gpRegressor:
         lastObservedPoint = [observedX[-1], observedY[-1], observedL[-1]]
         # Generate the set of l values at which to predict x,y
         if self.mode == "Trautman":
-            timeStep = (observedL[n-1] - observedL[n-2])  # Time difference between the last two observations
-            duration =  observedL[-1] - observedL[0]
+            # Time difference between the last two observations
+            timeStep    = (observedL[n-1] - observedL[n-2])
+            # Elapsed time
+            elapsedTime =  observedL[-1] - observedL[0]
             #print("\n*** Time Data *** \n",self.timeTransitionData)
-            self.newL, finalL, self.dist = get_prediction_set_T(lastObservedPoint,duration,self.timeTransitionData,timeStep)
+            self.newL, finalL, self.dist = get_prediction_set_time(lastObservedPoint,elapsedTime,self.timeTransitionData,timeStep)
 
         else:
-            self.newL, finalL, self.dist = get_prediction_set(lastObservedPoint,self.finalAreaCenter,self.unit,self.stepUnit)
+            # Determine the set of arclengths to predict
+            self.newL, finalL, self.dist = get_prediction_set_arclengths(lastObservedPoint,self.finalAreaCenter,self.unit,self.stepUnit)
         # Fill in K (n+1 x n+1)
         for i in range(n):
             self.Kx[i][i] = self.kernelX(observedL[i],observedL[i])

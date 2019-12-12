@@ -54,11 +54,14 @@ def get_prediction_set_from_data(l,knownN):
 
 #distUnit - unidad de distancia segun el promedio de la arc-len de las trayectorias
 #last know (x,y,l), finish point, distUnit, stepUnit - pasos por unidad de dist
-def get_prediction_set(lastKnownPoint, finishPoint, distUnit, stepUnit):
+def get_prediction_set_arclengths(lastKnownPoint, finishPoint, distUnit, stepUnit):
+    # Coordinates of the last observed point
     x, y, l = lastKnownPoint[0], lastKnownPoint[1], lastKnownPoint[2]
+    # Coordinates if the assumed finish point
     _x, _y  = finishPoint[0], finishPoint[1]
-
+    # Euclidean distance between the last observed point and the finish point
     euclideanDist = euclidean_distance([x,y], [_x,_y])
+    # Rough estimate of the remaining arc length
     dist          = euclideanDist*distUnit
     numSteps      = int(dist*stepUnit)
     newset = []
@@ -81,26 +84,25 @@ def get_prediction_set_given_size(lastKnownPoint, finishPoint, unit, steps):
     return newset, l + dist*unit
 
 #****************** Functions for Trautmans code ******************
-
-#distUnit - unidad de distancia segun el promedio de la arc-len de las trayectorias
 #last know (x,y,l), finish point, distUnit, stepUnit - pasos por unidad de dist, speed
-def get_prediction_set_T(lastKnownPoint, duration, timeTransitionData, timeStep):
+def get_prediction_set_time(lastKnownPoint, elapsedTime, timeTransitionData, timeStep):
+    # Coordinates of the last observed point
     x, y, t = lastKnownPoint[0], lastKnownPoint[1], lastKnownPoint[2]
+    # TODO: I think we should first do here a fully deterministic model (conditioned on the mean transition time)
+    # Sample a duration
     transitionTime = int(np.random.normal(timeTransitionData[0], timeTransitionData[1]) )
-    finishTime = transitionTime - duration
-
-    numSteps      = int(finishTime/timeStep)
-    newset = []
+    # Remaining time
+    remainingTime = transitionTime - elapsedTime
+    numSteps      = int(remainingTime/timeStep)
+    newset        = []
     if(numSteps > 0):
-        step = int(finishTime/float(numSteps) )
         for i in range(1,numSteps+1):
-            newset.append( t + i*step )
-        if newset[numSteps-1] < t+ finishTime:
-            newset.append(t+finishTime)
+            newset.append( t + i*timeStep )
+        if newset[numSteps-1] < t+ remainingTime:
+            newset.append(t+remainingTime)
     elif finishTime > 0:
-        newset.append(t+finishTime)
-
-    return newset, t + finishTime, finishTime
+        newset.append(t+remainingTime)
+    return newset, t + remainingTime, remainingTime
 
 #******************
 # Compute the arc-length from one point to the final points
