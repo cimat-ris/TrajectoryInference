@@ -57,27 +57,6 @@ samplingViz = False
 if samplingViz==True:
     path_sampling_test(img,stepUnit,goalsData)
 
-# Test function: prediction of single paths with multiple goals
-animateMixtureTest = False
-if animateMixtureTest==True:
-    mgps = mixtureOfGPs(startG,stepUnit,goalsData)
-    part_num = 10
-    # For different sub-parts of the trajectory
-    for i in range(1,part_num-1):
-        knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
-        trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
-        """Multigoal prediction test"""
-        print('[INF] Updating likelihoods')
-        likelihoods = mgps.update(trueX,trueY,trueL)
-        print('[INF] Performing prediction')
-        predictedXYVec,varXYVec = mgps.predict()
-        print('[INF] Plotting')
-        animate_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec,False)
-        if i==3:
-            animate_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec,True)
-
-
-
 # Test function: evaluation of interaction potentials on complete trajectories from the dataset
 interactionTest = False
 if interactionTest == True:

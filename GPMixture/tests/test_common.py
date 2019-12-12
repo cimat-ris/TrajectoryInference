@@ -10,6 +10,7 @@ from utils.manip_trajectories import get_known_set
 from utils.plotting import plot_prediction
 from utils.plotting import plot_path_samples_with_observations
 from utils.plotting import plot_multiple_predictions_and_goal_likelihood
+from utils.plotting import animate_multiple_predictions_and_goal_likelihood
 import pandas as pd
 import numpy as np
 import time
