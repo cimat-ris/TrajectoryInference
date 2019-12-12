@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 # Gets a set of paths and get the points (x,y,z)
 # z = {time, arc-len} according to flag = {"time", "length"}
@@ -64,25 +65,37 @@ def get_pedestrian_average_speed(trajectories):
     avSpeed = speed/ validPaths
     return avSpeed
 
-# Plot the histogram of duration or
-def histogram(trajectories,flag):
-    if flag == "duration":
-        vec = get_paths_duration(trajectories)
-    if flag == "length":
-        vec = get_paths_arclength(trajectories)
-    _max = max(vec)
+# Plot the histogram of duration and lengths
+def histogram(trajectories):
+    fig, (pht,phl) = plt.subplots(2, 1)
+    vect = get_paths_duration(trajectories)
+    vecl = get_paths_arclength(trajectories)
+    _max = max(vect)
     # Taking bins of size 10
     numBins = int(_max/10)+1
-    # Define the histogram
-    h = np.histogram(vec, bins = numBins)
-    x = []
-    ymin = []
-    ymax = []
-    for i in range(len(h[0])):
-        x.append(h[1][i])
-        ymin.append(0)
-        ymax.append(h[0][i])
-    plt.vlines(x,ymin,ymax,colors='b',linestyles='solid')
+    # Define the duration histogram
+    ht = np.histogram(vect, bins = numBins)
+    xt = []
+    ytmin = []
+    ytmax = []
+    for i in range(len(ht[0])):
+        xt.append(ht[1][i])
+        ytmin.append(0)
+        ytmax.append(ht[0][i])
+    pht.vlines(xt,ytmin,ytmax,colors='b',linestyles='solid')
+    pht.set_title('Distribution of durations')    
+    # Define the duration histogram
+    hl    = np.histogram(vecl, bins = numBins)
+    xl    = []
+    ylmin = []
+    ylmax = []
+    for i in range(len(hl[0])):
+        xl.append(hl[1][i])
+        ylmin.append(0)
+        ylmax.append(hl[0][i])
+    phl.vlines(xl,ylmin,ylmax,colors='b',linestyles='solid')
+    phl.set_title('Distribution of lengths')
+    plt.show()
 
 def get_paths_duration(trajectories):
     x,y,t = get_data_from_paths(trajectories,"time")

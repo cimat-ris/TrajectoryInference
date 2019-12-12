@@ -51,7 +51,7 @@ part_num = 10
 for i in range(1,part_num-1):
     # Data we will suppose known
     knownN = int((i+1)*(pathSize/part_num))
-    trueX,trueY,trueL = get_known_set(pathX,pathY,pathT,knownN) #time instead of arclen
+    trueX,trueY,trueL = get_known_set(pathX,pathY,pathT,knownN)
     #trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
     """Single goal prediction test"""
     # Update the GP
