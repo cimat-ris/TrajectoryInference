@@ -47,7 +47,7 @@ gp = singleGP(startG,nextG,stepUnit,goalsData,"Trautman")       #Trautmans mode
 #gp = singleGP(startG,nextG,stepUnit,goalsData)
 
 # Divides the trajectory in part_num parts and consider
-part_num = 5
+part_num = 10
 for i in range(1,part_num-1):
     # Data we will suppose known
     knownN = int((i+1)*(pathSize/part_num))
@@ -58,9 +58,12 @@ for i in range(1,part_num-1):
     start      = time.process_time()
     likelihood = gp.update(trueX,trueY,trueL)
     stop       = time.process_time()
-    print("CPU process time: %.1f [ms]" % (1000.0*(stop-start)))
+    print("CPU process time (update): %.1f [ms]" % (1000.0*(stop-start)))
+    start = stop
     # Perform prediction
     predictedXY,varXY = gp.predict()
+    stop       = time.process_time()
+    print("CPU process time (prediction): %.1f [ms]" % (1000.0*(stop-start)))
     plot_prediction(img,pathX,pathY,knownN,predictedXY,varXY)
     print('[INF] Plotting')
     print("[RES] [Likelihood]: ",likelihood)

@@ -1,7 +1,7 @@
 from gp_code.kernels import set_kernel
 from gp_code.sampling import*
 from gp_code.optimize_parameters import *
-from utils.manip_trajectories import get_paths_arcLength, get_paths_duration
+from utils.stats_trajectories import get_paths_arclength, get_paths_duration
 from utils.manip_trajectories import goal_center_and_size, get_linear_prior_mean
 import numpy as np
 import math
@@ -45,7 +45,7 @@ class goalsLearnedStructure:
         for i in range(self.nGoals):
             for j in range(self.nGoals):
                 if(len(M[i][j]) > 0):
-                    arclen = get_paths_arcLength(M[i][j])
+                    arclen = get_paths_arclength(M[i][j])
                     m = np.median(arclen)
                 else:
                     m = 0

@@ -21,6 +21,7 @@ class singleGP:
         self.timeTransitionData = [goalsData.timeTransitionMeans[startG][endG], goalsData.timeTransitionStd[startG][endG] ] # Data = {mean, std}
         # The basic element here is this object, that will do the regression work
         if mode == "Trautman":
+            # The regressor has a different constructor in that case
             self.gpPathRegressor = gpRegressor(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],goalsData.units[self.startG][self.endG],stepUnit,self.goalsData.areas[self.endG],self.goalsData.areasAxis[self.endG],None,None,self.mode,self.timeTransitionData)
         else:
             self.gpPathRegressor = gpRegressor(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],goalsData.units[self.startG][self.endG],stepUnit,self.goalsData.areas[self.endG],self.goalsData.areasAxis[self.endG],self.goalsData.linearPriorsX[self.startG][self.endG], self.goalsData.linearPriorsY[self.startG][self.endG])

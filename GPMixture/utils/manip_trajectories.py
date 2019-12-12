@@ -1,27 +1,7 @@
 import numpy as np
 import math
 from gp_code.path import path
-
-# Gets a set of paths and get the points (x,y,z)
-# z = {time, arc-len} according to flag = {"time", "length"}
-def get_data_from_paths(paths, flag):
-    for i in range(len(paths)):
-        auxX, auxY, auxT = paths[i].x, paths[i].y, paths[i].t
-        auxL = arclength(auxX, auxY)
-        if(i==0):
-            x, y, t = [auxX], [auxY], [auxT]
-            l = [auxL]
-        else:
-            x.append(auxX)
-            y.append(auxY)
-            t.append(auxT)
-            l.append(auxL)
-
-    if(flag == "time"):
-        z = t
-    if(flag == "length"):
-        z = l
-    return x, y, z
+from utils.stats_trajectories import get_paths_arclength
 
 """********** FILTER PATHS **********"""
 # Returns a matrix of trajectories:
@@ -64,7 +44,7 @@ def define_trajectories_start_and_end_areas(startGoals, finishGoals, paths):
 # If any trajectory within this list differs with more than s from m, it is filtered out
 def filter_path_vec(vec):
     # Get the list of arclengths
-    arclen = get_paths_arcLength(vec)
+    arclen = get_paths_arclength(vec)
     # Median
     m = np.median(arclen)
     # Standard deviation
@@ -250,120 +230,6 @@ def goal_center_and_size(R):
     center = [R[0] + dx/2., R[1] + dy/2.]
     size = [dx, dy]
     return center, size
-
-"""********** DATA STATISTICS FUNCTIONS **********"""
-
-def histogram(paths,flag):
-    if flag == "duration":
-        vec = get_paths_duration(paths)
-    if flag == "length":
-        vec = get_paths_arcLength(paths)
-    _max = max(vec)
-    # Taking bins of size 10
-    numBins = int(_max/10)+1
-    h = np.histogram(vec, bins = numBins)
-    x = []
-    ymin = []
-    ymax = []
-    for i in range(len(h[0])):
-        x.append(h[1][i])
-        ymin.append(0)
-        ymax.append(h[0][i])
-    plt.vlines(x,ymin,ymax,colors='b',linestyles='solid')
-
-def get_paths_duration(paths):
-    x,y,t = get_data_from_paths(paths,"time")
-    vec = []
-    for i in range(len(paths)):
-        N = len(t[i])
-        vec.append(t[i][N-1] - t[i][0])
-
-    return vec
-
-# Takes as an input a list of trajectories and outputs a vector with the corresponding total lengths
-def get_paths_arcLength(paths):
-    x,y,z = get_data_from_paths(paths,"length")
-    l = []
-    for i in range(len(paths)):
-        N = len(z[i])
-        l.append(z[i][N-1])
-    return l
-
-#calcula la longitud de arco de un conjunto de puntos (x,y)
-def arclength(x,y):
-    l = [0]
-    for i in range(len(x)):
-        if i > 0:
-            l.append(np.sqrt( (x[i]-x[i-1])**2 + (y[i]-y[i-1])**2 ) )
-    for i in range(len(x)):
-        if(i>0):
-            l[i] = l[i] +l[i-1]
-    return l
-
-def get_number_of_steps_unit(Mat, nGoals):
-    unit = 0.0
-    numUnits = 0
-    for i in range(nGoals):
-        for j in range(nGoals):
-            numPaths = len(Mat[i][j])
-            meanU = 0.0
-            for k in range(numPaths):
-                path = Mat[i][j][k]
-                l = path.l[len(path.l)-1]
-                if(l == 0):
-                    numPaths -= 1
-                else:
-                    stps = len(path.l)
-                    u = stps/l
-                    meanU += u
-            if(numPaths > 0):
-                meanU = meanU/numPaths
-            if(meanU >0):
-                unit += meanU
-                numUnits += 1
-    unit = unit/numUnits
-    return unit
-
-#regresa la duracion minima y maxima de un conjunto de trayectorias
-def get_min_and_max_Duration(paths):
-    n = len(paths)
-    duration = np.zeros(n)
-    maxDuration = 0
-    minDuration = 10000
-
-    for i in range(n):
-        duration[i] = paths[i].duration
-        if(duration[i] > maxDuration):
-            # Determine max. duration
-            maxDuration = duration[i]
-        if(duration[i] < minDuration):
-            # Determine min. duration
-            minDuration = duration[i]
-    return duration, minDuration, maxDuration
-
-def get_min_and_max_arcLength(paths):
-    n = len(paths)
-    arcLen = []
-    maxl = 0
-    minl = 10000
-
-    for i in range(n):
-        arcLen.append(paths[i].length)
-        if(arcLen[i] > maxl):
-            maxl = arcLen[i]
-        if(arcLen[i] < minl):
-            minl = arcLen[i]
-    return arcLen, minl, maxl
-
-def get_pedestrian_average_speed(paths):
-    speed, validPaths = 0., 0
-    for i in range(len(paths)):
-        if paths[i].duration > 0:
-            speed += paths[i].speed
-            validPaths += 1
-    avSpeed = speed/ validPaths
-    return avSpeed
-
 
 """********** LINEAR PRIOR MEAN **********"""
 # Linear regression: for data l,f(l), the function returns a, b for the line between the

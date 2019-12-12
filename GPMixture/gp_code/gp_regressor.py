@@ -88,6 +88,7 @@ class gpRegressor:
             if self.finalAreaAxis==1:
                 s              = self.finalAreaSize[1]
                 self.Ky[n][n] += s*s*math.exp(-self.dist/s)
+        # Heavy
         self.Kx_1 = inv(self.Kx)
         self.Ky_1 = inv(self.Ky)
         for i in range(n):
