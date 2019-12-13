@@ -2,26 +2,20 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
-# Gets a set of paths and get the points (x,y,z)
-# z = {time, arc-len} according to flag = {"time", "length"}
-def get_data_from_paths(paths, flag):
-    for i in range(len(paths)):
-        auxX, auxY, auxT = paths[i].x, paths[i].y, paths[i].t
-        auxL = arclength(auxX, auxY)
+# Gets a set of trajectories and get the points (x,y,z)
+def get_data_from_paths(trajectories):
+    for i in range(len(trajectories)):
+        auxX, auxY, auxT, auxS = trajectories[i].x, trajectories[i].y, trajectories[i].t, trajectories[i].s
+        auxL = trajectories[i].l
         if(i==0):
-            x, y, t = [auxX], [auxY], [auxT]
-            l = [auxL]
+            x, y, t, l, s = [auxX], [auxY], [auxT], [auxL], [auxS]
         else:
             x.append(auxX)
             y.append(auxY)
             t.append(auxT)
             l.append(auxL)
-
-    if(flag == "time"):
-        z = t
-    if(flag == "length"):
-        z = l
-    return x, y, z
+            s.append(auxS)
+    return x, y, t, l, s
 
 # Get a numpy vector of durations for trajectories, plus the min and max values
 def get_min_and_max_duration(trajectories):
@@ -83,7 +77,7 @@ def histogram(trajectories):
         ytmin.append(0)
         ytmax.append(ht[0][i])
     pht.vlines(xt,ytmin,ytmax,colors='b',linestyles='solid')
-    pht.set_title('Distribution of durations')    
+    pht.set_title('Distribution of durations')
     # Define the duration histogram
     hl    = np.histogram(vecl, bins = numBins)
     xl    = []
@@ -97,24 +91,24 @@ def histogram(trajectories):
     phl.set_title('Distribution of lengths')
     plt.show()
 
+# Takes as an input a list of trajectories and outputs a vector with the corresponding times
 def get_paths_duration(trajectories):
-    x,y,t = get_data_from_paths(trajectories,"time")
+    __,__,t,__,__ = get_data_from_paths(trajectories)
     vec = []
     for i in range(len(trajectories)):
         N = len(t[i])
         vec.append(t[i][N-1] - t[i][0])
-
     return vec
 
-# Takes as an input a list of trajectories and outputs a vector with the corresponding total lengths
-def get_paths_arclength(paths):
+# Takes as an input a list of trajectories and outputs a vector with the corresponding arc lengths
+def get_paths_arclength(trajectories):
     # Get the x,y,arclengths
-    x,y,z = get_data_from_paths(paths,"length")
-    l = []
-    for i in range(len(paths)):
-        N = len(z[i])
-        l.append(z[i][N-1])
-    return l
+    __,__,__,l,__ = get_data_from_paths(trajectories)
+    vec = []
+    for i in range(len(trajectories)):
+        N = len(l[i])
+        vec.append(l[i][N-1])
+    return vec
 
 # Computes the arclength of a curve described by a set of points (x,y)
 def arclength(x,y):
@@ -127,6 +121,7 @@ def arclength(x,y):
             l[i] = l[i] +l[i-1]
     return l
 
+# TODO: should be removed and we should use an estimate of the velocity instead
 def get_number_of_steps_unit(Mat, nGoals):
     unit = 0.0
     numUnits = 0

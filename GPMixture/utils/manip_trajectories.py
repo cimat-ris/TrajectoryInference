@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from gp_code.path import path
+from gp_code.trajectory import trajectory
 from utils.stats_trajectories import get_paths_arclength
 
 """********** FILTER PATHS **********"""
@@ -172,7 +172,7 @@ def break_multigoal_path(multigoalPath, goalVec, goals):
             nextgoal = g[goalInd+1]
             xy = [p.x[j], p.y[j]]
             if is_in_area(xy,goals[nextgoal]):
-                new = path(newT,newX,newY)
+                new = trajectory(newT,newX,newY)
                 newPath.append(new)
                 newX, newY, newT = [p.x[j]], [p.y[j]], [p.t[j]]
                 goalInd += 1

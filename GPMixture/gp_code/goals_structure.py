@@ -1,5 +1,4 @@
 from gp_code.kernels import set_kernel
-from gp_code.sampling import*
 from gp_code.optimize_parameters import *
 from utils.stats_trajectories import get_paths_arclength, get_paths_duration
 from utils.manip_trajectories import goal_center_and_size, get_linear_prior_mean

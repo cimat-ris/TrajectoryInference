@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from gp_code.path import path
+from gp_code.trajectory import trajectory
 from gp_code.goals_structure import goalsLearnedStructure
 from utils.manip_trajectories import *
 import pandas as pd
@@ -32,7 +32,7 @@ def get_paths_from_file(path_file,areas):
                     auxX.append(x_)
                     auxY.append(y_)
                     auxT.append(t_)
-            auxPath = path(auxT,auxX,auxY)
+            auxPath = trajectory(auxT,auxX,auxY)
             gi = get_goal_sequence(auxPath,areas)
             if len(gi) > 2:
                 multigoal_paths.append(auxPath)
@@ -60,7 +60,7 @@ def get_uncut_paths_from_file(file):
                     dataX.append(x_)
                     dataY.append(y_)
                     dataT.append(t_)
-            newPath = path(dataT,dataX,dataY)
+            newPath = trajectory(dataT,dataX,dataY)
             paths.append(newPath)
     return paths
 
