@@ -62,12 +62,13 @@ class trajectory:
     # Compute all instantaneous speeds
     def path_speed(self):
         n      = len(self.x)
-        speeds = [0]
+        speeds = [0,0]
         for i in range(n):
-            if i > 0:
-                dl    = np.sqrt( (self.x[i]-self.x[i-1])**2 + (self.y[i]-self.y[i-1])**2 )
-                dt    = self.t[i]-self.t[i-1]
+            if i > 1:
+                dl    = np.sqrt( (self.x[i]-self.x[i-2])**2 + (self.y[i]-self.y[i-2])**2 )
+                dt    = self.t[i]-self.t[i-2]
                 speeds.append(dl/dt)
-        if n>1:
-            speeds[0]=speeds[1]
+        if n>2:
+            speeds[0]=speeds[2]
+            speeds[1]=speeds[2]
         return speeds

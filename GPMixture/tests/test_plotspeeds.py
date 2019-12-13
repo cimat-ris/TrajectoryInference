@@ -4,6 +4,7 @@
 from test_common import *
 from gp_code.single_gp import singleGP
 from utils.stats_trajectories import get_data_from_paths
+import matplotlib.pyplot as plt
 
 img         = mpimg.imread('imgs/goals.jpg')
 station_img = mpimg.imread('imgs/train_station.jpg')
@@ -14,5 +15,11 @@ stepUnit  = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals)
 # We give the start and ending goals
 startG  = 0
 nextG   = 2
-x,y,t,l = get_data_from_paths(pathMat[startG][nextG])
-#v = path_speed(x,y,t)
+x,y,t,l,s = get_data_from_paths(pathMat[startG][nextG])
+
+fig,ax = plt.subplots(1)
+n = len(s)
+n = 30
+for i in range(n):
+    plt.plot(s[i])
+plt.show()
