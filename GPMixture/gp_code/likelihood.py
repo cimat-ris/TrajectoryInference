@@ -4,7 +4,8 @@ Error and likelihood evaluation
 import numpy as np
 import math
 from numpy import linalg as la
-from gp_code.regression import *
+from gp_code.regression import prediction_xy
+from utils.manip_trajectories import euclidean_distance
 from utils.manip_trajectories import goal_center_and_size
 
 D = 150.
@@ -62,6 +63,12 @@ def compute_prediction_error_1D(trueX, trueY, prediction, flag):
         if flag == 1:
             error += abs(trueY[i] - prediction[i])
     return error
+
+# For a given dataset (knownX,knownY,knownL),
+# takes half of the data as known and predicts the remaining half. Then, evaluate the likelihood.
+def likelihood_from_partial_path(nPoints,observedX,observedY,observedL,startG,finishG,goalsData):
+    error = compute_prediction_error_of_points_along_the_path(nPoints,observedX,observedY,observedL,startG,finishG,goalsData)
+    return (math.exp(-1.*( error**2)/D**2 ))
 
 # For a given dataset (knownX,knownY,knownL), takes half of the data as known
 # and predicts the remaining half. Then, evaluate the prediction error.

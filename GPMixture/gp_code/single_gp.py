@@ -3,7 +3,7 @@ A class for handling a single GP in trajectory prediction
 """
 import numpy as np
 import math
-from gp_code.gp_regressor import *
+from gp_code.path_regression import *
 
 # Class for performing path regression with a single Gaussian Process
 class singleGP:
@@ -22,9 +22,9 @@ class singleGP:
         # The basic element here is this object, that will do the regression work
         if mode == "Trautman":
             # The regressor has a different constructor in that case
-            self.gpPathRegressor = gpRegressor(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],goalsData.units[self.startG][self.endG],stepUnit,self.goalsData.areas[self.endG],self.goalsData.areasAxis[self.endG],None,None,self.mode,self.timeTransitionData)
+            self.gpPathRegressor = path_regression(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],goalsData.units[self.startG][self.endG],stepUnit,self.goalsData.areas[self.endG],self.goalsData.areasAxis[self.endG],None,None,self.mode,self.timeTransitionData)
         else:
-            self.gpPathRegressor = gpRegressor(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],goalsData.units[self.startG][self.endG],stepUnit,self.goalsData.areas[self.endG],self.goalsData.areasAxis[self.endG],self.goalsData.linearPriorsX[self.startG][self.endG], self.goalsData.linearPriorsY[self.startG][self.endG])
+            self.gpPathRegressor = path_regression(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],goalsData.units[self.startG][self.endG],stepUnit,self.goalsData.areas[self.endG],self.goalsData.areasAxis[self.endG],self.goalsData.linearPriorsX[self.startG][self.endG], self.goalsData.linearPriorsY[self.startG][self.endG])
 
     # Update observations and compute likelihood based on observations
     def update(self,observedX,observedY,observedL):

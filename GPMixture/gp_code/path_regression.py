@@ -1,15 +1,15 @@
 """
-A class for GP regression
+A class for GP-based path regression
 """
 import numpy as np
 import math
 from gp_code.regression import *
-from gp_code.evaluation import *
+from gp_code.likelihood import likelihood_from_partial_path
 from gp_code.sampling import *
 from utils.manip_trajectories import goal_center_and_size
 from utils.manip_trajectories import euclidean_distance, positive_definite
 
-class gpRegressor:
+class path_regression:
     # Constructor
     def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis,linearPriorX=None, linearPriorY=None, mode=None, timeData = None):
         self.mode            = mode # mode: Trautman or None
@@ -127,8 +127,7 @@ class gpRegressor:
     # Compute the likelihood
     def computeLikelihood(self,observedX,observedY,observedL,startG,finishG,stepsToCompare,goalsData):
         # TODO: remove the goalsData structure
-        error = compute_prediction_error_of_points_along_the_path(stepsToCompare,observedX,observedY,observedL,startG,finishG,goalsData)
-        self.likelihood = goalsData.priorTransitions[startG][finishG]*(math.exp(-1.*( error**2)/D**2 ))
+        self.likelihood = goalsData.priorTransitions[startG][finishG]*likelihood_from_partial_path(stepsToCompare,observedX,observedY,observedL,startG,finishG,goalsData)
         return self.likelihood
 
     # The main regression function: perform regression for a vector of values

@@ -4,9 +4,8 @@ Handling mixtures of GPs in trajectory prediction
 import numpy as np
 import math
 from gp_code.regression import *
-from gp_code.evaluation import *
 from gp_code.sampling import *
-from gp_code.gp_regressor import *
+from gp_code.path_regression import *
 from utils.manip_trajectories import euclidean_distance
 from statistics import mean
 
@@ -49,9 +48,9 @@ class mixtureOfGPs:
             # One regressor per goal
             if self.mode == "Trautman":
                 timeData = [self.goalsData.timeTransitionMeans[self.startG][i], self.goalsData.timeTransitionStd[self.startG][i]  ]
-                self.gpPathRegressor[i] = gpRegressor(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],None,None,self.mode, timeData)
+                self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],None,None,self.mode, timeData)
             else:
-                self.gpPathRegressor[i] = gpRegressor(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i], self.goalsData.linearPriorsY[self.startG][i])
+                self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i], self.goalsData.linearPriorsY[self.startG][i])
 
             ## TODO:
             subareas = get_subgoals_areas(self.nSubgoals, self.goalsData.areas[i],self.goalsData.areasAxis[i])
@@ -60,9 +59,9 @@ class mixtureOfGPs:
                 k= i+(j+1)*self.goalsData.nGoals
                 if self.mode == "Trautman":
                     timeData = [self.goalsData.timeTransitionMeans[self.startG][i], self.timeTransitionStd[self.startG][i]  ]
-                    self.gpPathRegressor[k] = gpRegressor(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areasAxis[i],None,None,self.mode,timeData)
+                    self.gpPathRegressor[k] = path_regression(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areasAxis[i],None,None,self.mode,timeData)
                 else:
-                    self.gpPathRegressor[k] = gpRegressor(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i],self.goalsData.linearPriorsY[self.startG][i])
+                    self.gpPathRegressor[k] = path_regression(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i],self.goalsData.linearPriorsY[self.startG][i])
 
 
     # Update observations and compute likelihoods based on observations

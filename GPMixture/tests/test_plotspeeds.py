@@ -13,13 +13,12 @@ goalsData, pathMat, __ = read_and_filter('parameters/CentralStation_areasDescrip
 stepUnit  = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals)
 
 # We give the start and ending goals
-startG  = 0
-nextG   = 2
+startG  = 1
+nextG   = 3
 x,y,t,l,s = get_data_from_paths(pathMat[startG][nextG])
 
 fig,ax = plt.subplots(1)
-n = len(s)
-n = 30
+n = min(len(s),30)
 for i in range(n):
     plt.plot(s[i])
 plt.show()
