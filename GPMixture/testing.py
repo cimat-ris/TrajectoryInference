@@ -8,7 +8,7 @@ Testing functions
 from gp_code.regression import *
 from gp_code.kernels import *
 from gp_code.sampling import*
-from multipleAgents import*
+from multipleAgents import *
 import matplotlib.pyplot as plt
 import numpy as np
 import math

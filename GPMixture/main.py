@@ -3,10 +3,12 @@
 """
 import gp_code
 from gp_code.goals_structure import goalsLearnedStructure
+from gp_code.interactions import interaction_potential_for_a_set_of_trajectories
 from utils.manip_trajectories import get_known_set, getUsefulPaths
+from utils.manip_trajectories import get_path_set_given_time_interval, time_compare
 from utils.io_parameters import read_and_set_parameters
 from utils.io_trajectories import read_and_filter, get_uncut_paths_from_file
-from utils.plotting import plot_prediction
+from utils.plotting import plot_prediction, plot_pathset
 from utils.plotting import plot_path_samples_with_observations
 from utils.plotting import plot_multiple_predictions_and_goal_likelihood
 import pandas as pd
@@ -53,15 +55,16 @@ pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t
 pathSize = len(pathX)
 
 # Test function: evaluation of interaction potentials on complete trajectories from the dataset
-interactionTest = False
+interactionTest = True
 if interactionTest == True:
+    sortedPaths = sorted(pathMat[startG][nextG], key=time_compare)
     # Get trajectories within some time interval
-    sortedSet     = get_path_set_given_time_interval(sortedPaths,200,700)
+    sortedSet     = get_path_set_given_time_interval(sortedPaths,100,1000)
     print("[INF] Number of trajectories in the selected time interval:",len(sortedSet))
     # Potential is evaluated based on the timestamps (array t)
     pot = interaction_potential_for_a_set_of_trajectories(sortedSet)
     print("[RES] Potential value: ",'{:1.4e}'.format(pot))
-    plotPathSet(sortedSet,img)
+    plot_pathset(img,sortedSet)
 
 # Test function: evaluation of interaction potentials on sampled trajectories
 interactionWithSamplingTest = False

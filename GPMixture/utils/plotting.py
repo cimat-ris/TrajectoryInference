@@ -30,7 +30,7 @@ def plotPaths(img, vec):
     plt.show()
 
 # Takes as an input a set of paths and plot them all on img
-def plotPathSet(img, vec):
+def plot_pathset(img, vec):
     n = len(vec)
     if(n == 0):
         return

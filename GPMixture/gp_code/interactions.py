@@ -5,6 +5,7 @@ Functions to handle interaction of multiple agents
 """
 
 from utils.plotting import *
+from utils.manip_trajectories import euclidean_distance
 from gp_code.kernels import *
 from gp_code.sampling import*
 import matplotlib.pyplot as plt
