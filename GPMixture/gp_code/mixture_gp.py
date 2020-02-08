@@ -6,6 +6,7 @@ import math
 from gp_code.regression import *
 from gp_code.sampling import *
 from gp_code.path_regression import *
+from gp_code.likelihood import nearestPD
 from utils.manip_trajectories import euclidean_distance
 from statistics import mean
 

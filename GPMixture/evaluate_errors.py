@@ -3,11 +3,13 @@
 """
 import gp_code
 from gp_code.goals_structure import goalsLearnedStructure
+from gp_code.likelihood import ADE_given_future_steps, nearestPD
+from gp_code.mixture_gp import mixtureOfGPs
 from gp_code.interactions import interaction_potential_for_a_set_of_trajectories
-from utils.manip_trajectories import get_known_set, getUsefulPaths
+from utils.manip_trajectories import get_known_set, getUsefulPaths, get_path_start_goal, get_prediction_arrays
 from utils.manip_trajectories import get_path_set_given_time_interval, time_compare
 from utils.io_parameters import read_and_set_parameters
-from utils.io_trajectories import read_and_filter, get_uncut_paths_from_file
+from utils.io_trajectories import read_and_filter, get_uncut_paths_from_file, write_data
 from utils.plotting import plot_prediction, plot_pathset
 from utils.plotting import plot_path_samples_with_observations
 from utils.plotting import plot_multiple_predictions_and_goal_likelihood
@@ -37,93 +39,6 @@ goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined6x6_
 
 """******************************************************************************"""
 """**************    Testing                           **************************"""
-# We give the start and ending goals
-startG = 0
-nextG = 2
-
-# Kernels for this pair of goals
-kernelX = goalsData.kernelsX[startG][nextG]
-kernelY = goalsData.kernelsY[startG][nextG]
-
-# Index of the trajectory to predict
-pathId = 3
-# Get the ground truth path
-_path = pathMat[startG][nextG][pathId]
-# Get the path data
-pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t
-# Total path length
-pathSize = len(pathX)
-
-# Test function: evaluation of interaction potentials on sampled trajectories
-interactionWithSamplingTest = False
-if interactionWithSamplingTest == True:
-    # Get all the trajectories that exist in the dataset within some time interval
-    sortedSet = get_path_set_given_time_interval(sortedPaths,350,750)
-    #plotPathSet(sortedSet,img)
-
-    samplesJointTrajectories, potentialVec, errorVec = [], [], []
-    observedPaths, samplesVec = [], []# Guardan en i: [obsX, obsY] y [sampleX, sampleY]
-
-    numTests = 6
-    part_num = 3
-    currentTime = 800
-    allSampleTrajectories = []
-    # Perform numTests sampling for all trajectories
-    for j in range(len(sortedSet)):
-        # Get the partial path up to now
-        observedPaths.append(get_observed_path_given_current_time(sortedSet[j], currentTime))
-        trueX,trueY,trueL = observedPaths[j].x.copy(), observedPaths[j].y.copy(), observedPaths[j].l.copy()
-        # Determine the starting goal
-        startG      = get_path_start_goal(observedPaths[j],goalsData.areas)
-        # Create the mixture, and update it with the observed data
-        mgps        = mixtureOfGPs(startG,stepUnit,goalsData)
-        likelihoods = mgps.update(trueX,trueY,trueL)
-        mgps.predict()
-        # Generate samples
-        vecX,vecY,vecL  = mgps.generate_samples(numTests)
-        allSampleTrajectories.append([vecX,vecY,vecL])
-
-    # Use the previously sampled trajectories to form joint samples
-    for i in range(numTests):
-        jointTrajectories    = []
-        # For all the paths in the set
-        print("_____Test #",i+1,"_____")
-        meanError = 0.
-        for j in range(len(sortedSet)):
-            currentPath = sortedSet[j]
-            knownN = len(observedPaths[j].x)
-            sampleX = allSampleTrajectories[j][0][i][:,0]
-            sampleY = allSampleTrajectories[j][1][i][:,0]
-            currentSample = [sampleX, sampleY]
-            steps = 8
-            error = ADE_given_future_steps(currentPath, currentSample, knownN, steps)
-            print("ADE",steps,"future steps | Path",j,"Sample",i,":",error)
-            meanError += error
-
-            # Form trajectory from path
-            sampleX,sampleY,sampleL = allSampleTrajectories[j]
-            predictedTrajectory     = deepcopy(observedPaths[j])
-            predictedTrajectory.join_path_with_sample(sampleX[i],sampleY[i],sampleL[i],speed)#     = get_trajectory_from_path(predictedTrajectory,sampleX[i],sampleY[i],sampleL[i],speed)
-            # Keep trajectory as an element of the joint sample
-            jointTrajectories.append(predictedTrajectory)
-            # When we have all the predictions to get one joint prediction
-            if(len(jointTrajectories) == len(sortedSet)):
-                samplesJointTrajectories.append(jointTrajectories)
-                # Evaluation of the potential
-                interactionPotential = interaction_potential_for_a_set_of_trajectories(jointTrajectories)
-                potentialVec.append(interactionPotential)
-        meanError = meanError/len(sortedSet)
-        print("Mean error:",meanError)
-        errorVec.append(meanError)
-    #plot_interaction_with_sampling_test(img,observedPaths,samplesJointTrajectories,potentialVec)
-    plot_interaction_test_weight_and_error(img,observedPaths, samplesJointTrajectories, potentialVec, errorVec)
-    maxPotential = 0
-    maxId = -1
-    for i in range(len(potentialVec)):
-        plot_interaction_with_sampling(img, observedPaths, samplesJointTrajectories[i], potentialVec[i], errorVec[i])
-        if(potentialVec[i] > maxPotential):
-            maxPotential = potentialVec[i]
-            maxId = i
 
 ## Evaluation of the prediction
 testingData = get_uncut_paths_from_file('datasets/CentralStation_paths_10000-12500.txt')
@@ -142,44 +57,58 @@ if errorTablesTest == True:
     predictionTable, samplingTable = [], []
     rows, columns = [], []
     # Evaluation at 8,10,12 steps
-    futureSteps = [8,10,12,14]
+    # futureSteps = [8,10,12,14]
+    futureSteps = [8]
     partNum = 5
     nSamples = 50
     nPaths = len(testingPaths)
-    # For possible horizon windows
+
+    # Iterate over possible horizon windows
     for steps in futureSteps:
         rows.append( str(steps) )
-        print("__Comparing",steps,"steps__")
+        print("[EVL] Comparing",steps,"steps")
+        # Comparison: errors from the most probable trajectory vs. best-of-many
         meanPredError = []
         meanSampleError = []
-        #
+        # Iterate
         for i in range(partNum-1):
+            # Files are written for each horizon, for each portion of observed trajectory
             predictionFile = 'results/Prediction_error_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(partNum)+'_data.txt'
             samplingFile   = 'results/Sampling_error_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(partNum)+'_data.txt'
 
             predError, samplingError = [], []
             meanP, meanS = 0., 0.
+            # Iterate over all the paths
             for j in range(nPaths):
-                print("\nPath #",j)
+                print("\n[EVL] Path #",j)
+                # Get the path
                 currentPath = testingPaths[j]
+                # Goal id
                 startG = get_path_start_goal(currentPath,goalsData.areas)
-                mgps = mixtureOfGPs(startG,stepUnit,goalsData)
+                # Define a mixture of GPs for this starting goal
+                mgps   = mixtureOfGPs(startG,stepUnit,goalsData)
 
-                print("Observed data:",i+1,"/",partNum)
+                print("[EVL] Observed data:",i+1,"/",partNum)
                 pathSize = len(currentPath.x)
-                knownN = int((i+1)*(pathSize/partNum)) #numero de datos conocidos
+                # Partnum is the number of parts we consider within the trajectory for testing in partnum points
+                knownN = int((i+1)*(pathSize/partNum))
+                # Get the observed data as i+1 first parts
                 trueX,trueY,trueL = get_known_set(currentPath.x,currentPath.y,currentPath.l,knownN)
-                """Multigoal prediction test"""
-                likelihoods = mgps.update(trueX,trueY,trueL)
+                """Prediction from the most likely trajectory"""
+                # Predict based on the observations and the goals. Determine the likeliest goal
+                likelihoods             = mgps.update(trueX,trueY,trueL)
                 predictedMeans,varXYVec = mgps.predict()
-                predictedXYVec = get_prediction_arrays(predictedMeans)
-
-                mostLikelyG = mgps.mostLikelyGoal
-                if mgps.gpPathRegressor[mostLikelyG + nGoals] != None:
+                predictedXYVec          = get_prediction_arrays(predictedMeans)
+                mostLikelyG             = mgps.mostLikelyGoal
+                # When there are subgoals available
+                if mgps.gpPathRegressor[mostLikelyG + goalsData.nGoals] != None:
                     sgError = []
+                    # Keep the error associate to the most likely goal
                     sgError.append(ADE_given_future_steps(currentPath, predictedXYVec[mostLikelyG], knownN, steps))
+                    # Iterate over the subgoals
                     for it in range(mgps.nSubgoals):
-                        k = mostLikelyG + (it+1)*nGoals
+                        k = mostLikelyG + (it+1)*goalsData.nGoals
+                        # Keep the error associate to the most likely sub-goal
                         sgError.append(ADE_given_future_steps(currentPath, predictedXYVec[k], knownN, steps))
                     minId = 0
                     for ind in range(len(sgError)):
@@ -189,20 +118,28 @@ if errorTablesTest == True:
                             minId = ind
                     error = sgError[minId]
                 else:
+                    # Compute the ADE
                     error = ADE_given_future_steps(currentPath, predictedXYVec[mostLikelyG], knownN, steps)
+                # Add the ADE
                 predError.append(error)
                 meanP += error
-                """Sampling"""
-                # Generate samples
+
+                """Prediction from best of many samples"""
+                # Generate samples over goals and trajectories
                 vecX,vecY,vecL  = mgps.generate_samples(nSamples)
                 samplesError = []
+                # Iterate over the generated samples
                 for k in range(nSamples):
                     sampleXY = [vecX[k][:,0], vecY[k][:,0]]
+                    # ADE for a specific sample
                     error = ADE_given_future_steps(currentPath,sampleXY, knownN, steps)
                     samplesError.append(error)
+                # Take the minimum error value
                 samplingError.append(min(samplesError))
+                # Add to the mean
                 meanS += min(samplesError)
 
+                # TODO: indentation error?
                 write_data(predError,predictionFile)
                 write_data(samplingError,samplingFile)
             meanP /= nPaths

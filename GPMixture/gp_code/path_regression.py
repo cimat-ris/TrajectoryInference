@@ -4,7 +4,7 @@ A class for GP-based path regression
 import numpy as np
 import math
 from gp_code.regression import *
-from gp_code.likelihood import likelihood_from_partial_path
+from gp_code.likelihood import likelihood_from_partial_path, nearestPD
 from gp_code.sampling import *
 from utils.manip_trajectories import goal_center_and_size
 from utils.manip_trajectories import euclidean_distance, positive_definite
