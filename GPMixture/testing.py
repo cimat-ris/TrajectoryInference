@@ -5,10 +5,7 @@ Testing functions
 @author: karenlc
 """
 
-from gp_code.gpRegressor import *
-from gp_code.mixtureOfGPs import *
 from gp_code.regression import *
-from gp_code.evaluation import *
 from gp_code.kernels import *
 from gp_code.sampling import*
 from multipleAgents import*
@@ -163,30 +160,6 @@ def prediction_test(img,x,y,z,knownN,startG,finishG,goals,unitMat,meanLenMat,ste
     newX,newY,varX,varY = prediction_XY(trueX,trueY,trueZ,newZ,kernelX,kernelY)
     plot_prediction(img,x,y,knownN,newX,newY,varX,varY,[0,0])
 
-# Sampling 3 trajectories between all the pairs of goals
-def path_sampling_test(img,stepUnit,goalsData):
-    vecX, vecY = [], []
-    for i in range(goalsData.nGoals):
-        for j in range(i,goalsData.nGoals):
-            if(i != j):
-                iCenter = middle_of_area(goalsData.areas[i])
-                jCenter = middle_of_area(goalsData.areas[j])
-                # The basic element here is this object, that will do the regression work
-                gp = gpRegressor(goalsData.kernelsX[i][j], goalsData.kernelsY[i][j],goalsData.units[i][j],stepUnit,goalsData.areas[j],goalsData.areasAxis[j],goalsData.linearPriorsX[i][j], goalsData.linearPriorsY[i][j])
-                gp.updateObservations([iCenter[0]],[iCenter[1]],[0.0])
-                gp.prediction_to_finish_point()
-                for k in range(3): #num of samples
-                    #x, y,__,__,__  = sample_path_between_goals(i,j,stepUnit,goalsData)
-                    # Sample end point around the sampled goal
-                    finishX, finishY, axis = uniform_sampling_1D(1, goalsData.areas[j], goalsData.areasAxis[i])
-                    # Use a pertubation approach to get the sample
-                    deltaX = finishX[0]-jCenter[0]
-                    deltaY = finishY[0]-jCenter[1]
-                    x,y = gp.sample_with_perturbed_finish_point()
-                    vecX.append(x)
-                    vecY.append(y)
-    plot_path_samples(img, vecX,vecY)
-
 #Devuelve el punto con menor error de n muestras comparando k pasos
 def sample_finish_point(nSamples,kSteps,knownX, knownY, knownL, finishGoal, goals, kernelX, kernelY, unit, samplingAxis):
     n = len(knownX)
@@ -333,7 +306,7 @@ def real_path_predicted_mean_and_sample(img,realPath,areas,goalsData,stepUnit):
     PM, samples, knownData = [], [], []
     for steps in futureSteps:
         print("__Comparing",steps,"steps__")
-        
+
         for i in range(partNum-1):
             currentPath = realPath
             startG = get_path_start_goal(currentPath,areas)
@@ -365,7 +338,7 @@ def real_path_predicted_mean_and_sample(img,realPath,areas,goalsData,stepUnit):
             vecX,vecY,vecL  = mgps.generate_samples(nSamples) #Generate samples
             #Save the sample that gives the minimum error
             sample = [vecX[0][:,0], vecY[0][:,0]]
-            minSampleError = ADE_given_future_steps(currentPath, sample, knownN, steps) 
+            minSampleError = ADE_given_future_steps(currentPath, sample, knownN, steps)
             for k in range(nSamples):
                 sampleXY = [vecX[k][:,0], vecY[k][:,0]]
                 error = ADE_given_future_steps(currentPath, sampleXY, knownN, steps)
@@ -377,4 +350,3 @@ def real_path_predicted_mean_and_sample(img,realPath,areas,goalsData,stepUnit):
             knownData.append(knownN)
             plot_observations_predictive_mean_and_sample(img,realPath,knownN,PredMean,sample)
     #sequence_of_observations_predmean_samples(img,realPath,knownData,PM,samples)
-
