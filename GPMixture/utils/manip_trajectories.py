@@ -209,7 +209,7 @@ def get_path_finish_goal(observedPath, goals):
 
 # Centroid of an area
 def middle_of_area(rectangle):
-    n = len(R)
+    n = len(rectangle)
     dx, dy = rectangle[n-2]-rectangle[0], rectangle[n-1]-rectangle[1]
     middle = [rectangle[0] + dx/2., rectangle[1] + dy/2.]
     return middle

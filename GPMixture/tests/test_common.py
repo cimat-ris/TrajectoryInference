@@ -8,6 +8,7 @@ from utils.io_parameters import read_and_set_parameters
 from utils.io_trajectories import read_and_filter
 from utils.manip_trajectories import get_known_set
 from utils.plotting import plot_prediction
+from utils.plotting import plot_path_samples
 from utils.plotting import plot_path_samples_with_observations
 from utils.plotting import plot_multiple_predictions_and_goal_likelihood
 from utils.plotting import animate_multiple_predictions_and_goal_likelihood

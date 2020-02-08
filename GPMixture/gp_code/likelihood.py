@@ -75,13 +75,12 @@ def likelihood_from_partial_path(nPoints,observedX,observedY,observedL,startG,fi
 def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observedY,observedL,startG,finishG,goalsData):
     # Known data
     observedN = len(observedX)
-    halfN     = int(observedN/2)
+    halfN     = max(1,int(observedN/2))
 
     # First half of the known data
     trueX = observedX[0:halfN]
     trueY = observedY[0:halfN]
     trueL = observedL[0:halfN]
-
     # Get the last point and add it to the observed data
     finishXY,__ = goal_center_and_size(goalsData.areas[finishG])
     finishD     = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
@@ -90,7 +89,10 @@ def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observed
     trueL.append(finishD*goalsData.units[startG][finishG])
 
     d = int(halfN/nPoints)
-    realX, realY, predictionSet = [],[],[]
+    if d<1:
+        return 1.0
+
+    realX, realY, predictionSet = [],[],[]        
     # Prepare the ground truths and the list of l to evaluate
     for i in range(nPoints):
         realX.append(observedX[halfN + i*d])

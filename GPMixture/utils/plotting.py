@@ -5,7 +5,6 @@ Plotting functions
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-#matplotlib.use('TkAgg')
 from matplotlib.patches import Ellipse
 from matplotlib.animation import FuncAnimation
 import pandas as pd
@@ -361,7 +360,7 @@ def plot_path_set_samples_with_observations(img,ox,oy,x,y):
     v = [0,s[1],s[0],0]
     plt.axis(v)
     plt.show()
-    
+
 # Plots a set of observed paths and their corresponding sample
 def plot_observations_predictive_mean_and_sample(img,realXY,knownN,predXY,sampleXY):
     fig,ax = plt.subplots(1)
@@ -378,7 +377,7 @@ def plot_observations_predictive_mean_and_sample(img,realXY,knownN,predXY,sample
     v = [0,s[1],s[0],0]
     plt.axis(v)
     plt.show()
-    
+
 def sequence_of_observations_predmean_samples(img,realXY,knownN,predXY,sampleXY):
     N        = len(knownN) # Number of images
     n, m = 1, 1
@@ -400,7 +399,7 @@ def sequence_of_observations_predmean_samples(img,realXY,knownN,predXY,sampleXY)
             k = (i*m)+j
             obsXY = [ realXY.x[:knownN[k]+1],realXY.y[:knownN[k]+1] ] #observed path
             XY = [ realXY.x[knownN[k]:],realXY.y[knownN[k]:] ]        #rest of the path
-            
+
             axes[i,j].plot(obsXY[0],obsXY[1],'c',lw=2.0)
             axes[i,j].plot(XY[0],XY[1],'c--',lw=2.0)
             axes[i,j].plot(predXY[k][0],predXY[k][1],'b--',lw=2.0)
@@ -475,7 +474,7 @@ def plot_interaction_test_weight_and_error(img,observedPaths, samplesVec, potent
 
 def plot_interaction_with_sampling(img, observedPaths, samples, potential, error):
     n = len(observedPaths)
-    
+
     fig, ax = plt.subplots(1)
     ax.set_aspect('equal')
     ax.imshow(img)
@@ -492,7 +491,7 @@ def plot_interaction_with_sampling(img, observedPaths, samples, potential, error
     v = [0,s[1],s[0],0]
     plt.axis(v)
     plt.show()
-    
+
 def plot_table(data, rowLabels, colLabels, tittle):
     stringData = []
     n, m = len(data), len(data[0])
@@ -531,16 +530,16 @@ def multiple_boxplots(data, labels):
     bluebox = dict(linewidth=1.2, color='blue')
     flierprops = dict(marker='o', markerfacecolor='blue', markersize=8)
     meanlineprops = dict(linestyle='--', linewidth=2.3, color='green')
-    
+
     boxprops = []
     for i in range(num_boxes):
         if i%2 == 0:
             boxprops.append(bluebox)
         else:
             boxprops.append(blackbox)
-            
-    
-    fig, ax = plt.subplots()    
+
+
+    fig, ax = plt.subplots()
     ax.boxplot(data, labels = labels, boxprops=blackbox, whiskerprops=dict(linestyle='-', linewidth=1.2, color='black'))
     plt.show()
 
@@ -548,16 +547,16 @@ def joint_multiple_boxplots(data_a, data_b, title):
     color_a = 'm'
     color_b = '#2C7BB6'
     ticks = ['1/5', '2/5', '3/5', '4/5']
-    
+
     plt.figure()
-    
+
     bp_a = plt.boxplot(data_a, positions=np.array(range(len(data_a)))*2.0-0.4, widths=0.6, whiskerprops=dict(linestyle='-', linewidth=1.2, color=color_a), showfliers=True)
     bp_b = plt.boxplot(data_b, positions=np.array(range(len(data_b)))*2.0+0.4, widths=0.6, whiskerprops=dict(linestyle='-', linewidth=1.2, color=color_b), showfliers=True)
-    set_box_color(bp_a, color_a)    
+    set_box_color(bp_a, color_a)
     plt.setp(bp_a['medians'], color='indigo')
     set_box_color(bp_b, color_b)
     plt.setp(bp_b['medians'], color='blue')
-    
+
     plt.title(title)
     #legend
     plt.plot([], c=color_a, label='Predictive mean')
@@ -572,7 +571,7 @@ def joint_multiple_boxplots(data_a, data_b, title):
         if current_max > maxy:
             maxy = current_max
     plt.ylim(0, maxy)
-    
+
     plt.xlabel('Observed data')
     plt.ylabel('Error in pixels')
     plt.tight_layout()
@@ -581,5 +580,3 @@ def set_box_color(bp, color):
     plt.setp(bp['boxes'], color=color)
     plt.setp(bp['whiskers'], color=color)
     plt.setp(bp['caps'], color=color)
-
-

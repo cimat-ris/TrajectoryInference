@@ -52,11 +52,6 @@ pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t
 # Total path length
 pathSize = len(pathX)
 
-# Test function: simple path sampling
-samplingViz = False
-if samplingViz==True:
-    path_sampling_test(img,stepUnit,goalsData)
-
 # Test function: evaluation of interaction potentials on complete trajectories from the dataset
 interactionTest = False
 if interactionTest == True:
