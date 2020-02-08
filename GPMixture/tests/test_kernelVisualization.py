@@ -1,12 +1,9 @@
 """
 @author: karenlc
 """
+from test_common import *
 from utils.plotting import *
 from gp_code.kernels import *
-import matplotlib.pyplot as plt
-import numpy as np
-import math
-from copy import copy
 
 
 # Evaluate covariance matrices on the interval [0,length]
