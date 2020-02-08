@@ -137,15 +137,6 @@ def get_goal_sequence(p, goals):
                         g.append(j)
     return g
 
-def getGoalSeqSet(vec,goals):
-    x,y,z = get_data_from_paths(vec,"length")
-    g = []
-    for i in range(len(vec)):
-        gi = get_goal_sequence(vec[i],goals)
-        g.append(gi)
-
-    return g
-
 def getMultigoalPaths(paths,goals):
     N = len(paths)
     p = []

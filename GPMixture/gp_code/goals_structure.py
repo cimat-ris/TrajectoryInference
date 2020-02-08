@@ -2,6 +2,7 @@ from gp_code.kernels import set_kernel
 from gp_code.optimize_parameters import *
 from utils.stats_trajectories import get_paths_arclength, get_paths_duration
 from utils.manip_trajectories import goal_center_and_size, get_linear_prior_mean
+from utils.stats_trajectories import get_data_from_paths
 import numpy as np
 import math
 from copy import copy
@@ -33,7 +34,7 @@ class goalsLearnedStructure:
         self.compute_euclidean_distances()
         # Compute the ratios between average path lengths and inter-goal distances
         self.compute_distance_units()
-        # Computer prior probabilities between goals
+        # Computer prior probabispeedRegressorlities between goals
         self.compute_prior_transitions(trajData)
         # Compute transition probabilities between goals
         self.compute_time_transitions(trajData)
@@ -115,26 +116,26 @@ class goalsLearnedStructure:
                 if len(paths) > 0:
                     start = timeit.default_timer()
                     # Get the path data as x,y,z (z is arclength)
-                    x,y,z = get_data_from_paths(paths,"length")
+                    x,y,__,l,__ = get_data_from_paths(paths)
                     # Build a kernel with the specified type and initial parameters theta
                     ker   = set_kernel(kernelType)
                     params= ker.get_parameters()
                     theta = ker.get_optimizable_parameters()
                     print("[OPT] Init parameters ",theta)
                     print("[OPT] [",i,"][",j,"]")
-                    print("[OPT] #trajectories: ",len(z))
+                    print("[OPT] #trajectories: ",len(l))
                     # Learn parameters in X
                     params[0] = self.linearPriorsX[i][j][1][0]
                     params[1] = self.linearPriorsX[i][j][1][1]
                     ker.set_parameters(params)
-                    thetaX  = learn_parameters(z,x,ker,theta)
+                    thetaX  = learn_parameters(l,x,ker,theta)
                     print("[OPT] x: ",thetaX)
                     self.kernelsX[i][j].set_parameters(ker.get_parameters())
                     # Learn parameters in Y
                     params[0] = self.linearPriorsY[i][j][1][0]
                     params[1] = self.linearPriorsY[i][j][1][1]
                     ker.set_parameters(params)
-                    thetaY  = learn_parameters(z,y,ker,theta)
+                    thetaY  = learn_parameters(l,y,ker,theta)
                     print("[OPT] y: ",thetaY)
                     self.kernelsY[i][j].set_parameters(ker.get_parameters())
                     stop = timeit.default_timer()

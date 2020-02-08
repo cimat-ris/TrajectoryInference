@@ -1,16 +1,16 @@
 """
 @author: karenlc
 """
-from gp_code.io_parameters import *
-from gp_code.goalsLearnedStructure import *
-from testing import *
-from multipleAgents import *
+from gp_code.goals_structure import *
+from utils.io_parameters import *
+from utils.manip_trajectories import getUsefulPaths,time_compare,filter_path_matrix,define_trajectories_start_and_end_areas
+from utils.io_trajectories import get_paths_from_file
+from utils.stats_trajectories import get_data_from_paths
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-from matplotlib.patches import Ellipse
-from copy import copy
 import pandas as pd
+
 # Read the areas data from a file and take only the first 6 goals
 data     = pd.read_csv('parameters/CentralStation_areasDescriptions.csv')
 areas    = data.values[:6,2:]
