@@ -29,7 +29,7 @@ def mean_abs_error(trueX, trueY, predX, predY):
     return e
 
 # Average L2 distance between ground truth and our prediction
-def mean_displacement_error(true_XY, prediction_XY):
+def average_displacement_error(true_XY, prediction_XY):
     error = 0.
     trueX, trueY = true_XY[0], true_XY[1]
     predictionX, predictionY = prediction_XY[0], prediction_XY[1]
@@ -104,7 +104,7 @@ def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observed
     goalsData.linearPriorsX[startG][finishG],goalsData.linearPriorsY[startG][finishG])
 
     # Evaluate the error
-    return mean_displacement_error([realX,realY],[predX,predY])
+    return average_displacement_error([realX,realY],[predX,predY])
 
 #Toma N-nPoints como datos conocidos y predice los ultimos nPoints, regresa el error de la prediccion
 def compute_prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goal,unit,stepUnit,kernelX,kernelY):
@@ -147,14 +147,19 @@ def get_approximation(val,path,index):
     _y = (1-val)*path.y[index-1] + val*path.y[index]
     return _x,_y
 
-def ADE_given_future_steps(fullPath, predictedXY, knownN, futureSteps):
-    realX = fullPath.x[knownN : knownN+futureSteps]
-    realY = fullPath.y[knownN : knownN+futureSteps]
+# Compute ADE and FDE
+def ADE_FDE(full_path, predicted_xy, observed, future_steps):
+    real_x = full_path.x[observed : observed+future_steps]
+    real_y = full_path.y[observed : observed+future_steps]
+    pred_x = predicted_xy[0][:future_steps]
+    pred_y = predicted_xy[1][:future_steps]
 
-    predX = predictedXY[0][:futureSteps]
-    predY = predictedXY[1][:futureSteps]
+    real_x_l = full_path.x[observed+future_steps-1:observed+future_steps]
+    real_y_l = full_path.y[observed+future_steps-1:observed+future_steps]
+    pred_x_l = predicted_xy[0][:future_steps]
+    pred_y_l = predicted_xy[1][:future_steps]
 
-    return mean_displacement_error([realX,realY],[predX,predY])
+    return average_displacement_error([real_x,real_y],[pred_x,pred_y]), average_displacement_error([real_x_l,real_y_l],[pred_x_l,pred_y_l])
 
 def nearestPD(A):
     B = (A + np.transpose(A)) / 2

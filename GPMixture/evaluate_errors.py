@@ -3,7 +3,7 @@
 """
 import gp_code
 from gp_code.goals_structure import goalsLearnedStructure
-from gp_code.likelihood import ADE_given_future_steps, nearestPD
+from gp_code.likelihood import ADE_FDE
 from gp_code.mixture_gp import mixtureOfGPs
 from gp_code.interactions import interaction_potential_for_a_set_of_trajectories
 from utils.manip_trajectories import get_known_set, getUsefulPaths, get_path_start_goal, get_prediction_arrays
@@ -52,14 +52,16 @@ testing_paths.pop(386)
 plot_pathset(img,testing_paths)
 print("Testing dataset size:",len(testing_paths))
 
-table_sp, table_mp = [], []
+table_ade_sp, table_ade_mp = [], []
+table_fde_sp, table_fde_mp = [], []
+
 # For the table
 rows, columns = [], []
 # Evaluation at 8,10,12 steps
-# futureSteps = [8,10,12,14]
-future_steps = [8]
-#part_num     = 5
-part_num     = 2
+future_steps = [6,8,10,12,14]
+# future_steps = [8]
+part_num     = 6
+#part_num     = 2
 n_samples    = 50
 n_paths      = len(testing_paths)
 
@@ -68,19 +70,24 @@ for steps in future_steps:
     rows.append( str(steps)+" steps " )
     print("[EVL] Comparing",steps,"steps")
     # Comparison: errors from the most probable trajectory vs. best-of-many
-    error_mp_avgs = []
-    error_sp_avgs = []
+    ade_mp_avgs = []
+    ade_sp_avgs = []
+    fde_mp_avgs = []
+    fde_sp_avgs = []
     # Iterate over parts of the trajectories
     for i in range(part_num-1):
         # Files are written for each horizon, for each portion of observed trajectory
-        file_mp = 'results/error_mp_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(part_num)+'_data.txt'
-        file_sp = 'results/error_sp_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(part_num)+'_data.txt'
+        file_ade_mp = 'results/ade_mp_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(part_num)+'_data.txt'
+        file_ade_sp = 'results/ade_sp_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(part_num)+'_data.txt'
 
-        error_mp,     error_sp     = [], []
-        error_mp_avg, error_sp_avg = 0., 0.
+        ade_mp,     ade_sp     = [], []
+        fde_mp,     fde_sp     = [], []
+        ade_mp_avg, ade_sp_avg = 0., 0.
+        fde_mp_avg, fde_sp_avg = 0., 0.
+
         # Iterate over all the paths
         for j in range(n_paths):
-            print("\n[EVL] Path #",j)
+            print("\n[EVL] Path #",j,"/",n_paths)
             # Get the path
             path = testing_paths[j]
             # Goal id
@@ -101,20 +108,18 @@ for steps in future_steps:
             predictedXYVec          = get_prediction_arrays(predictedMeans)
             most_likely_g           = mgps.mostLikelyGoal
 
-            # Check among sub-goals
-            error_sub_goal = []
             # Keep the error associate to the most likely goal
-            error = ADE_given_future_steps(path, predictedXYVec[most_likely_g], observed, steps)
-            kmin  = most_likely_g
+            ade,fde = ADE_FDE(path, predictedXYVec[most_likely_g], observed, steps)
+            kmin    = most_likely_g
             # Iterate over the subgoals
             for it in range(mgps.nSubgoals):
                 k = most_likely_g + (it+1)*goalsData.nGoals
                 # Keep the error associate to the most likely sub-goal
-                error_sg = ADE_given_future_steps(path, predictedXYVec[k], observed, steps)
-                if error_sg > 0:
-                    if error<=0 or error>error_sg:
-                        error          = error_sg
-                        kmin           = k
+                ade_sg,fde_sg = ADE_FDE(path, predictedXYVec[k], observed, steps)
+                if ade_sg > 0:
+                    if ade<=0 or ade>ade_sg:
+                        ade          = ade_sg
+                        kmin         = k
 
             #realX = path.x[observed : observed+steps]
             #realY = path.y[knownN : knownN+futureSteps]
@@ -124,43 +129,60 @@ for steps in future_steps:
             #print(predX)
             #print(error)
             #plot_prediction(img,path.x,path.y,observed,predictedMeans[kmin],varXYVec[kmin])
-            # Add the ADE
-            error_mp.append(error)
-            error_mp_avg += error
-
+            # Add the ADE and the FDE
+            ade_mp.append(ade)
+            ade_mp_avg += ade
+            fde_mp.append(fde)
+            fde_mp_avg += fde
             """Prediction from best of many samples"""
             # Generate samples over goals and trajectories
             sp_x,sp_y,sp_l  = mgps.generate_samples(n_samples)
-            error_sps       = []
+            ade_sps       = []
+            fde_sps       = []
             # Iterate over the generated samples
             for k in range(n_samples):
                 sp    = [sp_x[k][:,0], sp_y[k][:,0]]
                 # ADE for a specific sample
-                error = ADE_given_future_steps(path, sp, observed, steps)
-                error_sps.append(error)
+                ade,fde = ADE_FDE(path, sp, observed, steps)
+                ade_sps.append(ade)
+                fde_sps.append(fde)
+
             # Take the minimum error value
-            error_sp.append(min(error_sps))
+            ade_sp.append(min(ade_sps))
+            fde_sp.append(min(fde_sps))
             # Add to the mean
-            error_sp_avg += min(error_sps)
+            ade_sp_avg += min(ade_sps)
+            fde_sp_avg += min(ade_sps)
 
         # Write the results
-        write_data(error_mp,file_mp)
-        write_data(error_sp,file_sp)
-        error_mp_avg /= n_paths
-        error_sp_avg /= n_paths
-        error_mp_avgs.append(error_mp_avg)
-        error_sp_avgs.append(error_sp_avg)
-    table_mp.append(error_mp_avgs)
-    table_sp.append(error_sp_avgs)
-    print("Error with most likely trajectory:\n",table_mp)
-    print("Error with best-of-many samples:\n",table_sp)
+        write_data(ade_mp,file_ade_mp)
+        write_data(ade_sp,file_ade_sp)
+        ade_mp_avg /= n_paths
+        ade_sp_avg /= n_paths
+        fde_mp_avg /= n_paths
+        fde_sp_avg /= n_paths
+
+        ade_mp_avgs.append(ade_mp_avg)
+        ade_sp_avgs.append(ade_sp_avg)
+        fde_mp_avgs.append(fde_mp_avg)
+        fde_sp_avgs.append(fde_sp_avg)
+
+    table_ade_mp.append(ade_mp_avgs)
+    table_ade_sp.append(ade_sp_avgs)
+    table_fde_mp.append(fde_mp_avgs)
+    table_fde_sp.append(fde_sp_avgs)
+
+    print("Error with most likely trajectory:\n",table_ade_mp)
+    print("Error with best-of-many samples:\n",table_ade_sp)
 
 for i in range(part_num-1):
     s = str(i+1) + '/' + str(part_num)
     columns.append(s)
 # Plot tables
-plot_table(table_mp,rows,columns,'Error with most likely trajectory')
-plot_table(table_sp,rows,columns,'Error with best-of-many samples')
+plot_table(table_ade_mp,rows,columns,'ADE with most likely trajectory')
+plot_table(table_ade_sp,rows,columns,'ADE with best-of-many samples')
+plot_table(table_fde_mp,rows,columns,'FDE with most likely trajectory')
+plot_table(table_fde_sp,rows,columns,'FDE with best-of-many samples')
 
 boxPlots = False
 if boxPlots == True:
