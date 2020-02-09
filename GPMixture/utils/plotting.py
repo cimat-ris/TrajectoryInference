@@ -75,7 +75,6 @@ def plot_prediction(img,trueX,trueY,knownN,predictedXY,varXY):
     fig,ax = plt.subplots(1)
     ax.set_aspect('equal')
     ax.imshow(img) # Show the image
-
     plt.plot(knownX,knownY,'c',predictedXY[:,0],predictedXY[:,1],'b')
     plt.plot([knownX[-1],predictedXY[0,0]],[knownY[-1],predictedXY[0,1]],'b')
     predictedN = predictedXY.shape[0]

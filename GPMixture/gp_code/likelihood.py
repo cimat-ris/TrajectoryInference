@@ -38,7 +38,8 @@ def mean_displacement_error(true_XY, prediction_XY):
         error += math.sqrt((trueX[i]-predictionX[i])**2 + (trueY[i]-predictionY[i])**2)
     if(l>0):
         error = error/l
-
+    else:
+        return -1.0
     return error
 
 #The distance between the predicted final destination and the true final destination
@@ -92,7 +93,7 @@ def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observed
     if d<1:
         return 1.0
 
-    realX, realY, predictionSet = [],[],[]        
+    realX, realY, predictionSet = [],[],[]
     # Prepare the ground truths and the list of l to evaluate
     for i in range(nPoints):
         realX.append(observedX[halfN + i*d])
@@ -153,8 +154,7 @@ def ADE_given_future_steps(fullPath, predictedXY, knownN, futureSteps):
     predX = predictedXY[0][:futureSteps]
     predY = predictedXY[1][:futureSteps]
 
-    error = mean_displacement_error([realX,realY],[predX,predY])
-    return error
+    return mean_displacement_error([realX,realY],[predX,predY])
 
 def nearestPD(A):
     B = (A + np.transpose(A)) / 2

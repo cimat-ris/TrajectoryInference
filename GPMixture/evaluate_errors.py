@@ -10,7 +10,7 @@ from utils.manip_trajectories import get_known_set, getUsefulPaths, get_path_sta
 from utils.manip_trajectories import get_path_set_given_time_interval, time_compare
 from utils.io_parameters import read_and_set_parameters
 from utils.io_trajectories import read_and_filter, get_uncut_paths_from_file, write_data
-from utils.plotting import plot_prediction, plot_pathset
+from utils.plotting import plot_prediction, plot_pathset, plot_table
 from utils.plotting import plot_path_samples_with_observations
 from utils.plotting import plot_multiple_predictions_and_goal_likelihood
 import pandas as pd
@@ -41,122 +41,126 @@ goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined6x6_
 """**************    Testing                           **************************"""
 
 ## Evaluation of the prediction
-testingData = get_uncut_paths_from_file('datasets/CentralStation_paths_10000-12500.txt')
-testingPaths = getUsefulPaths(testingData,goalsData.areas)
+testing_data = get_uncut_paths_from_file('datasets/CentralStation_paths_10000-12500.txt')
+testing_paths = getUsefulPaths(testing_data,goalsData.areas)
 #problematic paths:
-testingPaths.pop(106)
-testingPaths.pop(219)
-testingPaths.pop(244)
-testingPaths.pop(321)
-testingPaths.pop(386)
-plot_pathset(img,testingPaths)
-print("Testing dataset size:",len(testingPaths))
+testing_paths.pop(106)
+testing_paths.pop(219)
+testing_paths.pop(244)
+testing_paths.pop(321)
+testing_paths.pop(386)
+plot_pathset(img,testing_paths)
+print("Testing dataset size:",len(testing_paths))
 
-errorTablesTest = True
-if errorTablesTest == True:
-    predictionTable, samplingTable = [], []
-    rows, columns = [], []
-    # Evaluation at 8,10,12 steps
-    # futureSteps = [8,10,12,14]
-    futureSteps = [8]
-    partNum = 5
-    nSamples = 50
-    nPaths = len(testingPaths)
+table_sp, table_mp = [], []
+# For the table
+rows, columns = [], []
+# Evaluation at 8,10,12 steps
+# futureSteps = [8,10,12,14]
+future_steps = [8]
+#part_num     = 5
+part_num     = 2
+n_samples    = 50
+n_paths      = len(testing_paths)
 
-    # Iterate over possible horizon windows
-    for steps in futureSteps:
-        rows.append( str(steps) )
-        print("[EVL] Comparing",steps,"steps")
-        # Comparison: errors from the most probable trajectory vs. best-of-many
-        meanPredError = []
-        meanSampleError = []
-        # Iterate
-        for i in range(partNum-1):
-            # Files are written for each horizon, for each portion of observed trajectory
-            predictionFile = 'results/Prediction_error_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(partNum)+'_data.txt'
-            samplingFile   = 'results/Sampling_error_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(partNum)+'_data.txt'
+# Iterate over possible horizon windows
+for steps in future_steps:
+    rows.append( str(steps)+" steps " )
+    print("[EVL] Comparing",steps,"steps")
+    # Comparison: errors from the most probable trajectory vs. best-of-many
+    error_mp_avgs = []
+    error_sp_avgs = []
+    # Iterate over parts of the trajectories
+    for i in range(part_num-1):
+        # Files are written for each horizon, for each portion of observed trajectory
+        file_mp = 'results/error_mp_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(part_num)+'_data.txt'
+        file_sp = 'results/error_sp_'+'%d'%(steps)+'_steps_%d'%(i+1)+'_of_%d'%(part_num)+'_data.txt'
 
-            predError, samplingError = [], []
-            meanP, meanS = 0., 0.
-            # Iterate over all the paths
-            for j in range(nPaths):
-                print("\n[EVL] Path #",j)
-                # Get the path
-                currentPath = testingPaths[j]
-                # Goal id
-                startG = get_path_start_goal(currentPath,goalsData.areas)
-                # Define a mixture of GPs for this starting goal
-                mgps   = mixtureOfGPs(startG,stepUnit,goalsData)
+        error_mp,     error_sp     = [], []
+        error_mp_avg, error_sp_avg = 0., 0.
+        # Iterate over all the paths
+        for j in range(n_paths):
+            print("\n[EVL] Path #",j)
+            # Get the path
+            path = testing_paths[j]
+            # Goal id
+            g_id = get_path_start_goal(path,goalsData.areas)
+            # Define a mixture of GPs for this starting goal
+            mgps = mixtureOfGPs(g_id,stepUnit,goalsData)
 
-                print("[EVL] Observed data:",i+1,"/",partNum)
-                pathSize = len(currentPath.x)
-                # Partnum is the number of parts we consider within the trajectory for testing in partnum points
-                knownN = int((i+1)*(pathSize/partNum))
-                # Get the observed data as i+1 first parts
-                trueX,trueY,trueL = get_known_set(currentPath.x,currentPath.y,currentPath.l,knownN)
-                """Prediction from the most likely trajectory"""
-                # Predict based on the observations and the goals. Determine the likeliest goal
-                likelihoods             = mgps.update(trueX,trueY,trueL)
-                predictedMeans,varXYVec = mgps.predict()
-                predictedXYVec          = get_prediction_arrays(predictedMeans)
-                mostLikelyG             = mgps.mostLikelyGoal
-                # When there are subgoals available
-                if mgps.gpPathRegressor[mostLikelyG + goalsData.nGoals] != None:
-                    sgError = []
-                    # Keep the error associate to the most likely goal
-                    sgError.append(ADE_given_future_steps(currentPath, predictedXYVec[mostLikelyG], knownN, steps))
-                    # Iterate over the subgoals
-                    for it in range(mgps.nSubgoals):
-                        k = mostLikelyG + (it+1)*goalsData.nGoals
-                        # Keep the error associate to the most likely sub-goal
-                        sgError.append(ADE_given_future_steps(currentPath, predictedXYVec[k], knownN, steps))
-                    minId = 0
-                    for ind in range(len(sgError)):
-                        if sgError[minId] == 0 and sgError[ind] > 0:
-                            minId = ind
-                        elif sgError[minId] > sgError[ind] and sgError[ind] > 0:
-                            minId = ind
-                    error = sgError[minId]
-                else:
-                    # Compute the ADE
-                    error = ADE_given_future_steps(currentPath, predictedXYVec[mostLikelyG], knownN, steps)
-                # Add the ADE
-                predError.append(error)
-                meanP += error
+            print("[EVL] Observed data:",i+1,"/",part_num)
+            path_size = len(path.x)
+            # part_num is the number of parts we consider within the trajectory for testing in part_num points
+            observed = int((i+1)*(path_size/part_num))
+            # Get the observed data as i+1 first parts
+            observed_x,observed_y,observed_l = get_known_set(path.x,path.y,path.l,observed)
+            """Prediction from the most likely trajectory"""
+            # Predict based on the observations and the goals. Determine the likeliest goal
+            likelihoods             = mgps.update(observed_x,observed_y,observed_l)
+            predictedMeans,varXYVec = mgps.predict()
+            predictedXYVec          = get_prediction_arrays(predictedMeans)
+            most_likely_g           = mgps.mostLikelyGoal
 
-                """Prediction from best of many samples"""
-                # Generate samples over goals and trajectories
-                vecX,vecY,vecL  = mgps.generate_samples(nSamples)
-                samplesError = []
-                # Iterate over the generated samples
-                for k in range(nSamples):
-                    sampleXY = [vecX[k][:,0], vecY[k][:,0]]
-                    # ADE for a specific sample
-                    error = ADE_given_future_steps(currentPath,sampleXY, knownN, steps)
-                    samplesError.append(error)
-                # Take the minimum error value
-                samplingError.append(min(samplesError))
-                # Add to the mean
-                meanS += min(samplesError)
+            # Check among sub-goals
+            error_sub_goal = []
+            # Keep the error associate to the most likely goal
+            error = ADE_given_future_steps(path, predictedXYVec[most_likely_g], observed, steps)
+            kmin  = most_likely_g
+            # Iterate over the subgoals
+            for it in range(mgps.nSubgoals):
+                k = most_likely_g + (it+1)*goalsData.nGoals
+                # Keep the error associate to the most likely sub-goal
+                error_sg = ADE_given_future_steps(path, predictedXYVec[k], observed, steps)
+                if error_sg > 0:
+                    if error<=0 or error>error_sg:
+                        error          = error_sg
+                        kmin           = k
 
-                # TODO: indentation error?
-                write_data(predError,predictionFile)
-                write_data(samplingError,samplingFile)
-            meanP /= nPaths
-            meanS /= nPaths
-            meanPredError.append(meanP)
-            meanSampleError.append(meanS)
-        predictionTable.append(meanPredError)
-        samplingTable.append(meanSampleError)
-    print("Prediction error:\n",predictionTable)
-    print("Sampling error:\n",samplingTable)
+            #realX = path.x[observed : observed+steps]
+            #realY = path.y[knownN : knownN+futureSteps]
+            #predX = predictedXYVec[kmin][0][:steps]
+            #predY = predictedXYVec[kmin][1][:futureSteps]
+            #print(realX)
+            #print(predX)
+            #print(error)
+            #plot_prediction(img,path.x,path.y,observed,predictedMeans[kmin],varXYVec[kmin])
+            # Add the ADE
+            error_mp.append(error)
+            error_mp_avg += error
 
-    for i in range(partNum-1):
-        s = str(i+1) + '/' + str(partNum)
-        columns.append(s)
-    #Plot tables
-    plot_table(predictionTable,rows,columns,'Prediction Error')
-    plot_table(samplingTable,rows,columns,'Sampling Error')
+            """Prediction from best of many samples"""
+            # Generate samples over goals and trajectories
+            sp_x,sp_y,sp_l  = mgps.generate_samples(n_samples)
+            error_sps       = []
+            # Iterate over the generated samples
+            for k in range(n_samples):
+                sp    = [sp_x[k][:,0], sp_y[k][:,0]]
+                # ADE for a specific sample
+                error = ADE_given_future_steps(path, sp, observed, steps)
+                error_sps.append(error)
+            # Take the minimum error value
+            error_sp.append(min(error_sps))
+            # Add to the mean
+            error_sp_avg += min(error_sps)
+
+        # Write the results
+        write_data(error_mp,file_mp)
+        write_data(error_sp,file_sp)
+        error_mp_avg /= n_paths
+        error_sp_avg /= n_paths
+        error_mp_avgs.append(error_mp_avg)
+        error_sp_avgs.append(error_sp_avg)
+    table_mp.append(error_mp_avgs)
+    table_sp.append(error_sp_avgs)
+    print("Error with most likely trajectory:\n",table_mp)
+    print("Error with best-of-many samples:\n",table_sp)
+
+for i in range(part_num-1):
+    s = str(i+1) + '/' + str(part_num)
+    columns.append(s)
+# Plot tables
+plot_table(table_mp,rows,columns,'Error with most likely trajectory')
+plot_table(table_sp,rows,columns,'Error with best-of-many samples')
 
 boxPlots = False
 if boxPlots == True:
