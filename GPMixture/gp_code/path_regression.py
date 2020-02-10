@@ -134,13 +134,13 @@ class path_regression:
     # lnew, that has been computed in update
     def prediction_to_finish_point(self):
         if self.newL==None:
-            return None
+            return None, None, None, None, None
         # Number of observed data
         n    = self.observedX.shape[0]
         # Number of predicted data
         nnew = len(self.newL)
         if nnew == 0:
-            return None
+            return None, None, None, None, None
         # Compute k (nxnnew), C (nnewxnnew)
         self.kx  = np.zeros((n,nnew))
         self.ky  = np.zeros((n,nnew))
@@ -196,6 +196,8 @@ class path_regression:
     def prediction_to_perturbed_finish_point(self,deltax,deltay):
         n            = len(self.observedX)
         nnew         = len(self.newL)
+        if nnew == 0:
+            return None, None, None, None, None
         # Express the displacement wrt the nominal ending point, as a nx1 vector
         deltaX       = np.zeros((n,1))
         deltaX[n-1,0]= deltax
@@ -225,6 +227,8 @@ class path_regression:
     def sample_with_perturbation(self,deltaX,deltaY):
         # newx, newy, newl, varx, vary = self.prediction_to_finish_point() #we call this function to obtain newX, newY
         predictedX, predictedY, predictedL, varX, varY = self.prediction_to_perturbed_finish_point(deltaX,deltaY)
+        if predictedX is None:
+            return None,None,None
         # Number of predicted points
         nPredictions = len(predictedX)
         # Noise from a normal distribution

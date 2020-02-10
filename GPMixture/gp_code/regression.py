@@ -35,7 +35,7 @@ def joint_regression(l,x_meanl,lnew,kernel,linearPriorMean=None):
             C[i][j] = kernel(lnew[i],lnew[j],False)
     # Predictive mean
     xnew = k.transpose().dot(K_1.dot(x_meanl))
-    if linearPriorMean!=None:
+    if linearPriorMean is not None:
         for j in range(nnew):
             xnew[j] += linear_mean(lnew[j],linearPriorMean[0])
     # Estimate the variance
@@ -170,7 +170,7 @@ def get_subgoals_center_and_size(nSubgoals, goal, axis):
 # Applies joint regression for a whole set newL of values L, given knownL, knownX
 def joint_estimate_new_set_of_values(observedL,observedX,newL,kernel,linearPriorMean=None):
     centeredX = np.zeros((len(observedL),1),dtype=float)
-    if linearPriorMean==None:
+    if linearPriorMean is None:
         for i in range(len(observedL)):
             centeredX[i][0] = observedX[i]
     else:

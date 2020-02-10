@@ -141,11 +141,12 @@ for steps in future_steps:
             fde_sps       = []
             # Iterate over the generated samples
             for k in range(n_samples):
-                sp    = [sp_x[k][:,0], sp_y[k][:,0]]
-                # ADE for a specific sample
-                ade,fde = ADE_FDE(path, sp, observed, steps)
-                ade_sps.append(ade)
-                fde_sps.append(fde)
+                if sp_x[k] is not None:
+                    sp    = [sp_x[k][:,0], sp_y[k][:,0]]
+                    # ADE for a specific sample
+                    ade,fde = ADE_FDE(path, sp, observed, steps)
+                    ade_sps.append(ade)
+                    fde_sps.append(fde)
 
             # Take the minimum error value
             ade_sp.append(min(ade_sps))
