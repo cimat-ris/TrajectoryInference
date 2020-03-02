@@ -5,18 +5,18 @@ import numpy as np
 import math
 from gp_code.regression import *
 from gp_code.sampling import *
-from gp_code.path_regression import *
+from gp_code.path_regression import path_regression
+from gp_code.trajectory_regression import trajectory_regression
 from gp_code.likelihood import nearestPD
 from utils.manip_trajectories import euclidean_distance
+from utils.manip_trajectories import goal_center_and_size
 from statistics import mean
 
 # Class for performing path regression with a mixture of Gaussian processes
 class mixtureOfGPs:
 
     # Constructor
-    def __init__(self, startG, stepUnit, goalsData, mode = None):
-        # Mode: Trautman handles time and uses a different kernel
-        self.mode            = mode  #mode = Trautman o None
+    def __init__(self, startG, stepUnit, goalsData):
         # The goals structure
         self.goalsData       = goalsData
         # Sub-set of likely goals
@@ -45,24 +45,18 @@ class mixtureOfGPs:
         self.observedL       = None
         # The basic element here is this object, that will do the regression work
         self.gpPathRegressor = [None]*n
+        self.gpTrajectoryRegressor = [None]*n
         for i in range(self.goalsData.nGoals):
             # One regressor per goal
-            if self.mode == "Trautman":
-                timeData = [self.goalsData.timeTransitionMeans[self.startG][i], self.goalsData.timeTransitionStd[self.startG][i]  ]
-                self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],None,None,self.mode, timeData)
-            else:
-                self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i], self.goalsData.linearPriorsY[self.startG][i])
+            self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i], self.goalsData.linearPriorsY[self.startG][i])
+            self.gpTrajectoryRegressor[i] = trajectory_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i], self.goalsData.linearPriorsY[self.startG][i])
 
             ## TODO:
             subareas = get_subgoals_areas(self.nSubgoals, self.goalsData.areas[i],self.goalsData.areasAxis[i])
             # For sub-goals
             for j in range(self.nSubgoals):
                 k= i+(j+1)*self.goalsData.nGoals
-                if self.mode == "Trautman":
-                    timeData = [self.goalsData.timeTransitionMeans[self.startG][i], self.timeTransitionStd[self.startG][i]  ]
-                    self.gpPathRegressor[k] = path_regression(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areasAxis[i],None,None,self.mode,timeData)
-                else:
-                    self.gpPathRegressor[k] = path_regression(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i],self.goalsData.linearPriorsY[self.startG][i])
+                self.gpPathRegressor[k] = path_regression(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i],self.goalsData.linearPriorsY[self.startG][i])
 
 
     # Update observations and compute likelihoods based on observations

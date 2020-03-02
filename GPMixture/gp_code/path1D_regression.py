@@ -22,6 +22,7 @@ class path1D_regression:
         self.k               = None
         self.C               = None
         self.sqRootVar       = np.empty((0, 0))
+        # Regularization factor
         self.epsilon         = 0.5
         self.kernel          = kernel
         self.linearPrior     = linearPrior
@@ -66,13 +67,11 @@ class path1D_regression:
 
     # Update single observation i
     def updateObserved(self,i,x,l):
+        self.observedX[i][0] = x
+        self.observedL[i][0] = l
         # Center the data in case we use the linear prior
-        if self.linearPrior==None:
-            self.observedX[i][0] = x
-            self.observedL[i][0] = l
-        else:
+        if self.linearPrior!=None:
             self.observedX[i][0] = x - linear_mean(l, self.linearPrior[0])
-            self.observedL[i][0] = l
 
     # The main regression function: perform regression for a vector of values
     # lnew, that has been computed in update
@@ -143,7 +142,7 @@ class path1D_regression:
         return self.predictedL, newx, self.varX
 
     # Generate a random variation to the mean
-    def generate_variation(self):
+    def generate_random_variation(self):
         nPredictions = len(self.predictedL)
         sX           = np.random.normal(size=(nPredictions,1))
         if self.sqRootVar.shape[0]>0:

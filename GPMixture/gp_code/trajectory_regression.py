@@ -23,8 +23,9 @@ from gp_code.speed_regression import *
 # else:
 
 
-class trajectory_regression:
+class trajectory_regression(path_regression):
 
     # Constructor
-    def __init__(self):
+    def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis,linearPriorX=None, linearPriorY=None):
+        self.speedRegressor = speed_regression(kernelX)
         pass
