@@ -1,7 +1,7 @@
 import numpy as np
 import math
 from gp_code.trajectory import trajectory
-from gp_code.goals_structure import goalsLearnedStructure
+from gp_code.goal_pairs import goal_pairs
 from utils.manip_trajectories import *
 import pandas as pd
 
@@ -145,5 +145,5 @@ def read_and_filter(areasFile,traectoriesFile):
     sortedPaths = sorted(learnSet, key=time_compare)
     print("[INF] Number of filtered paths: ",len(learnSet))
     # Form the object goalsLearnedStructure
-    goalsData = goalsLearnedStructure(areas,areasAxis,pathMat)
+    goalsData = goal_pairs(areas,areasAxis,pathMat)
     return goalsData,pathMat,learnSet
