@@ -2,7 +2,7 @@
 @author: karenlc
 """
 import gp_code
-from gp_code.goals_structure import goalsLearnedStructure
+from gp_code.goal_pairs import goal_pairs
 from gp_code.likelihood import ADE_FDE
 from gp_code.mixture_gp import mixtureOfGPs
 from gp_code.interactions import interaction_potential_for_a_set_of_trajectories

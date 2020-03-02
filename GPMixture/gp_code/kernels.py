@@ -13,7 +13,7 @@ def create_kernel_matrix(kerType, rows, columns):
     parameters = []
     # For goal i
     for i in range(rows):
-        aux = []
+        aux  = []
         auxP = []
         # For goal j
         for j in range(columns):
@@ -48,7 +48,6 @@ def set_kernel(name):
     elif(name == "linePriorCombined"):
         parameters = [0.01,1.0, 80., 80.]  #{Standard deviation slope, Standard deviation constant, Covariance magnitude factor, Characteristic length}
         kernel = linePriorCombinedKernel(parameters[0],parameters[1],parameters[2],parameters[3],nsigma)
-
     return kernel
 
 # Kronecker delta

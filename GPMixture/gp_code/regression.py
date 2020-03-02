@@ -100,7 +100,7 @@ def get_prediction_set_time(lastKnownPoint, elapsedTime, timeTransitionData, tim
             newset.append( t + i*timeStep )
         if newset[numSteps-1] < t+ remainingTime:
             newset.append(t+remainingTime)
-    elif finishTime > 0:
+    else:
         newset.append(t+remainingTime)
     return newset, t + remainingTime, remainingTime
 

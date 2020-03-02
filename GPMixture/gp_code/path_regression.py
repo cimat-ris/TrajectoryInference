@@ -13,6 +13,7 @@ class path_regression:
     # Constructor
     def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis,linearPriorX=None, linearPriorY=None, mode=None, timeData = None):
         self.mode            = mode # mode: Trautman or None
+        # Observations
         self.observedX       = None
         self.observedY       = None
         self.observedL       = None
@@ -66,7 +67,7 @@ class path_regression:
         else:
             # Determine the set of arclengths to predict
             self.newL, finalL, self.dist = get_prediction_set_arclengths(lastObservedPoint,self.finalAreaCenter,self.unit,self.stepUnit)
-        # Fill in K (n+1 x n+1)
+        # Fill in K, first elements (nxn)
         for i in range(n):
             self.Kx[i][i] = self.kernelX(observedL[i],observedL[i])
             self.Ky[i][i] = self.kernelY(observedL[i],observedL[i])
@@ -193,7 +194,7 @@ class path_regression:
         return self.newX, self.newY, self.newL, self.varx, self.vary
 
     # Prediction as a perturbation of the "normal" prediction done to the center of an area
-    def prediction_to_perturbed_finish_point(self,deltax,deltay):
+    def __prediction_to_perturbed_finish_point(self,deltax,deltay):
         n            = len(self.observedX)
         nnew         = len(self.newL)
         if nnew == 0:
@@ -225,8 +226,8 @@ class path_regression:
 
     # Generate a sample from perturbations
     def sample_with_perturbation(self,deltaX,deltaY):
-        # newx, newy, newl, varx, vary = self.prediction_to_finish_point() #we call this function to obtain newX, newY
-        predictedX, predictedY, predictedL, varX, varY = self.prediction_to_perturbed_finish_point(deltaX,deltaY)
+        # Given a perturbation of the final point, determine the new characteristics of the GP
+        predictedX, predictedY, predictedL, varX, varY = self.__prediction_to_perturbed_finish_point(deltaX,deltaY)
         if predictedX is None:
             return None,None,None
         # Number of predicted points
@@ -234,6 +235,7 @@ class path_regression:
         # Noise from a normal distribution
         sX = np.random.normal(size=(nPredictions,1))
         sY = np.random.normal(size=(nPredictions,1))
+        # Generate a sample from this Gaussian distribution
         if self.sqRootVarX.shape[0]>0 and self.sqRootVarY.shape[0]>0:
             return predictedX+self.sqRootVarX.dot(sX), predictedY+self.sqRootVarY.dot(sY), predictedL
         else:
@@ -242,9 +244,7 @@ class path_regression:
     # Generate a sample from the predictive distribution with a perturbed finish point
     def sample_with_perturbed_finish_point(self):
         # Sample end point around the sampled goal
-        #finishX, finishY, axis = uniform_sampling_1D(1, self.finalAreaCenter, self.finalAreaAxis)
         size = self.finalAreaSize[self.finalAreaAxis]
-        #print("\n***Final Area axis***\n", self.finalAreaAxis)
         finishX, finishY, axis = uniform_sampling_1D_around_point(1, self.finalAreaCenter,size, self.finalAreaAxis)
         # Use a pertubation approach to get the sample
         deltaX = finishX[0]-self.finalAreaCenter[0]
