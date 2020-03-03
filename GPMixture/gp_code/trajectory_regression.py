@@ -28,4 +28,6 @@ class trajectory_regression(path_regression):
     # Constructor
     def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis,linearPriorX=None, linearPriorY=None):
         self.speedRegressor = speed_regression(kernelX)
+        #self.timeTransitionData = [goalsData.timeTransitionMeans[startG][endG], goalsData.timeTransitionStd[startG][endG] ] # Data = {mean, std}
+
         pass

@@ -4,7 +4,6 @@
 from test_common import *
 from gp_code.mixture_gp import mixtureOfGPs
 
-img         = mpimg.imread('imgs/goals.jpg')
 station_img = mpimg.imread('imgs/train_station.jpg')
 # Read the areas file, dataset, and form the goalsLearnedStructure object
 goalsData, pathMat, __ = read_and_filter('parameters/CentralStation_areasDescriptions.csv','datasets/CentralStation_trainingSet.txt')
@@ -49,8 +48,12 @@ nSamples = 50
 # Divides the trajectory in part_num parts and consider
 part_num = 5
 
+
 # For different sub-parts of the trajectory
 for i in range(1,part_num-1):
+    p = plotter(station_img)
+    p.plot_scene_structure(goalsData)
+
     knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
     trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
     """Multigoal prediction test"""
@@ -59,9 +62,10 @@ for i in range(1,part_num-1):
     print('[INF] Performing prediction')
     predictedXYVec,varXYVec = mgps.predict()
     print('[INF] Plotting')
-    plot_multiple_predictions_and_goal_likelihood(img,pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
+    p.plot_multiple_predictions_and_goal_likelihood(pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
     print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
     print("[RES] Mean likelihood:", mgps.meanLikelihood)
     print('[INF] Generating samples')
     vecX,vecY,__ = mgps.generate_samples(nSamples)
-    plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
+    p.plot_path_samples_with_observations(trueX,trueY,vecX,vecY)
+    p.show()

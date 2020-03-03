@@ -7,12 +7,101 @@ import math
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 from matplotlib.animation import FuncAnimation
+from utils.manip_trajectories import goal_center_and_size
+from gp_code.regression import get_subgoals_center_and_size
 import pandas as pd
 import random
 
 color = ['g','m','r','b','steelblue','y','tomato','orange','gold','yellow','lime',
          'springgreen','cyan','teal','deepskyblue','dodgerblue','royalblue','blueviolet','indigo',
          'purple','magenta','deeppink','hotpink','sandybrown','darkorange','coral','lightgreen']
+
+
+class plotter():
+    def __init__(self,img):
+        self.fig,self.ax = plt.subplots(1)
+        plt.margins(0, 0)
+        plt.gca().set_axis_off()
+        plt.gca().xaxis.set_major_locator(plt.NullLocator())
+        plt.gca().yaxis.set_major_locator(plt.NullLocator())
+        self.ax.set_aspect('equal')
+        self.ax.imshow(img)
+        s = img.shape
+        v = [0,s[1],s[0],0]
+        plt.axis(v)
+
+    # Plot the scene structure: goals and sub-goals
+    def plot_scene_structure(self,goalsData):
+        for i in range(goalsData.nGoals):
+            self.plot_subgoals(goalsData.areas[i], 2, goalsData.areasAxis[i])
+
+    # Plot the sub goals
+    def plot_subgoals(self, goal, numSubgoals, axis):
+        subgoalsCenter, size = get_subgoals_center_and_size(numSubgoals, goal, axis)
+
+        for i in range(numSubgoals):
+            xy  = [subgoalsCenter[i][0],subgoalsCenter[i][1]]
+            if axis==0:
+                self.ax.plot([subgoalsCenter[i][0]-size[0]/2.0,subgoalsCenter[i][0]+size[0]/2.0],[subgoalsCenter[i][1],subgoalsCenter[i][1]],color[i],linewidth=7.0)
+            else:
+                self.ax.plot([subgoalsCenter[i][0],subgoalsCenter[i][0]],[subgoalsCenter[i][1]-size[1]/2.0,subgoalsCenter[i][1]+size[1]/2.0],color[i],linewidth=7.0)
+
+    # Plot multiple predictions
+    def plot_multiple_predictions_and_goal_likelihood(self,x,y,nUsedData,nGoals,goalsLikelihood,predictedXYVec,varXYVec):
+        realX, realY = [],[]
+        partialX, partialY = [], []
+        N = int(len(x))
+        # Observed data
+        for i in range(int(nUsedData)):
+            partialX.append(x[i])
+            partialY.append(y[i])
+        # Data to predict (ground truth)
+        for i in range(int(nUsedData-1),N):
+            realX.append(x[i])
+            realY.append(y[i])
+
+        # Plot the observed data
+        self.ax.plot(partialX,partialY,'c')
+
+        maxLikelihood = max(goalsLikelihood)
+        maxLW = 2
+        for i in range(len(predictedXYVec)):
+            if (predictedXYVec[i].shape[0]==0):
+                continue
+            print('[RES] Plotting GP ',i)
+            # For each goal/subgoal, draws the prediction
+            self.ax.plot(predictedXYVec[i][:,0],predictedXYVec[i][:,1],'b--')
+            self.ax.plot([partialX[-1],predictedXYVec[i][0,0]],[partialY[-1],predictedXYVec[i][0,1]],'b--')
+            predictedN = predictedXYVec[i].shape[0]
+            # For the jth predicted element
+            for j in range(predictedN):
+                xy = [predictedXYVec[i][j,0],predictedXYVec[i][j,1]]
+                # 6.0 = 2.0 x 3.0
+                # It is: to have 3.0 sigmas. Then, the Ellipse constructor asks for the diameter, hence the 2.0
+                vx  = varXYVec[i][0,j,j]
+                vy  = varXYVec[i][1,j,j]
+                ell = Ellipse(xy,6.0*math.sqrt(math.fabs(vx)),6.0*math.sqrt(math.fabs(vy)))
+                lw = (goalsLikelihood[i%nGoals]/maxLikelihood)*maxLW
+                ell.set_lw(lw)
+                ell.set_fill(0)
+                ell.set_edgecolor(color[i%nGoals])
+                self.ax.add_patch(ell)
+
+            self.ax.plot(realX,realY,'c--')
+
+    # Plot a set of sample trajectories and an observed partial trajectory
+    def plot_path_samples_with_observations(self,ox,oy,x,y):
+        n = len(x)
+        if (n == 0):
+            return
+        self.ax.plot(ox,oy,'c',lw=2.0)
+        for i in range(n):
+            Color = color[random.randint(0,len(color)-1) ]
+            self.ax.plot(x[i],y[i], color=Color)
+            self.ax.plot([ox[-1],x[i][0]],[oy[-1],y[i][0]])
+
+    def show(self):
+        plt.show()
 
 #******************************************************************************#
 """ PLOT FUNCTIONS """
@@ -147,61 +236,6 @@ def plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,finalXY):
     plt.axis(v)
     plt.show()
 
-def plot_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goalsLikelihood,predictedXYVec,varXYVec):
-    realX, realY = [],[]
-    partialX, partialY = [], []
-    N = int(len(x))
-    # Observed data
-    for i in range(int(nUsedData)):
-        partialX.append(x[i])
-        partialY.append(y[i])
-    # Data to predict (ground truth)
-    for i in range(int(nUsedData-1),N):
-        realX.append(x[i])
-        realY.append(y[i])
-
-    fig,ax = plt.subplots(1)
-    plt.margins(0, 0)
-    plt.gca().set_axis_off()
-    plt.gca().xaxis.set_major_locator(plt.NullLocator())
-    plt.gca().yaxis.set_major_locator(plt.NullLocator())
-    ax.set_aspect('equal')
-    # Show the image
-    ax.imshow(img)
-    # Plot the observed data
-    plt.plot(partialX,partialY,'c')
-
-    maxLikelihood = max(goalsLikelihood)
-    maxLW = 2
-    for i in range(len(predictedXYVec)):
-        if (predictedXYVec[i].shape[0]==0):
-            continue
-        print('[RES] Plotting GP ',i)
-        # For each goal/subgoal, draws the prediction
-        #plt.plot(knownX,knownY,'c',predictedXY[:,0],predictedXY[:,1],'b')
-        #plt.plot([knownX[-1],predictedXY[0,0]],[knownY[-1],predictedXY[0,1]],'b')
-
-        plt.plot(predictedXYVec[i][:,0],predictedXYVec[i][:,1],'b--')
-        plt.plot([partialX[-1],predictedXYVec[i][0,0]],[partialY[-1],predictedXYVec[i][0,1]],'b--')
-        predictedN = predictedXYVec[i].shape[0]
-        # For the jth predicted element
-        for j in range(predictedN):
-            xy = [predictedXYVec[i][j,0],predictedXYVec[i][j,1]]
-            # 6.0 = 2.0 x 3.0
-            # It is: to have 3.0 sigmas. Then, the Ellipse constructor asks for the diameter, hence the 2.0
-            vx  = varXYVec[i][0,j,j]
-            vy  = varXYVec[i][1,j,j]
-            ell = Ellipse(xy,6.0*math.sqrt(math.fabs(vx)),6.0*math.sqrt(math.fabs(vy)))
-            lw = (goalsLikelihood[i%nGoals]/maxLikelihood)*maxLW
-            ell.set_lw(lw)
-            ell.set_fill(0)
-            ell.set_edgecolor(color[i%nGoals])
-            ax.add_patch(ell)
-
-    plt.plot(realX,realY,'c--')
-    v = [0,img.shape[1],img.shape[0],0]
-    plt.axis(v)
-    plt.show()
 
 def animate_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goalsLikelihood,predictedXYVec,varXYVec,toFile):
     realX, realY = [],[]
@@ -282,18 +316,6 @@ def animate_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,go
         plt.show()
     return
 
-
-def plot_subgoals(img, goal, numSubgoals, axis):
-    subgoalsCenter, size = get_subgoals_center_and_size(numSubgoals, goal, axis)
-
-    for i in range(numSubgoals):
-        xy  = [subgoalsCenter[i][0],subgoalsCenter[i][1]]
-        if axis==0:
-            plt.plot([subgoalsCenter[i][0]-size[0]/2.0,subgoalsCenter[i][0]+size[0]/2.0],[subgoalsCenter[i][1],subgoalsCenter[i][1]],color[i])
-        else:
-            plt.plot([subgoalsCenter[i][0],subgoalsCenter[i][0]],[subgoalsCenter[i][1]-size[1]/2.0,subgoalsCenter[i][1]+size[1]/2.0],color[i])
-
-
 # Plot a set of sample trajectories
 def plot_path_samples(img,x,y):
     n = len(x)
@@ -310,37 +332,7 @@ def plot_path_samples(img,x,y):
     plt.axis(v)
     plt.show()
 
-# Plot the scene structure: goals and sub-goals
-def plot_scene_structure(img,goalsData):
-    fig,ax = plt.subplots(1)
-    ax.set_aspect('equal')
-    ax.imshow(img)
 
-    for i in range(goalsData.nGoals):
-        plot_subgoals(img, goalsData.areas[i], 2, goalsData.areasAxis[i])
-    s = img.shape
-    v = [0,s[1],s[0],0]
-    plt.axis(v)
-    plt.show()
-
-# Plot a set of sample trajectories and an observed partial trajectory
-def plot_path_samples_with_observations(img,ox,oy,x,y):
-    n = len(x)
-    if(n == 0):
-        return
-    fig,ax = plt.subplots(1)
-    ax.set_aspect('equal')
-    # Show the image
-    ax.imshow(img)
-    plt.plot(ox,oy,'c',lw=2.0)
-    for i in range(n):
-        Color = color[random.randint(0,len(color)-1) ]
-        plt.plot(x[i],y[i], color=Color)
-        plt.plot([ox[-1],x[i][0]],[oy[-1],y[i][0]])
-    s = img.shape
-    v = [0,s[1],s[0],0]
-    plt.axis(v)
-    plt.show()
 
 # Plots a set of observed paths and their corresponding sample
 def plot_path_set_samples_with_observations(img,ox,oy,x,y):

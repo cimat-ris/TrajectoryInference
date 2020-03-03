@@ -9,8 +9,7 @@ from gp_code.path_regression import *
 class singleGP:
 
     # Constructor
-    def __init__(self, startG, endG, stepUnit, goalsData, mode = None):
-        self.mode            = mode
+    def __init__(self, startG, endG, stepUnit, goalsData):
         self.goalsData       = goalsData
         self.nPoints         = 5
         self.stepUnit        = stepUnit
@@ -18,7 +17,6 @@ class singleGP:
         self.endG            = endG
         self.predictedMeans  = None
         self.predictedVars   = None
-        self.timeTransitionData = [goalsData.timeTransitionMeans[startG][endG], goalsData.timeTransitionStd[startG][endG] ] # Data = {mean, std}
         # The basic element here is this object, that will do the regression work
         if mode == "Trautman":
             # The regressor has a different constructor in that case
