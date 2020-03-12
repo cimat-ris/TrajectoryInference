@@ -1,5 +1,5 @@
 
 *.pyc
 
-*/parameters/*
+*/parameters/*.txt
 */results/*
