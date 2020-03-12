@@ -44,12 +44,13 @@ pathX, pathY, pathL, pathT = _path.x, _path.y, _path.l, _path.t
 pathSize = len(pathX)
 
 # Prediction of single paths with single goals
-gp = singleGP(startG,nextG,stepUnit,goalsData,"Trautman")       #Trautmans mode
-#gp = singleGP(startG,nextG,stepUnit,goalsData)
+gp = singleGP(startG,nextG,stepUnit,goalsData)
 
 # Divides the trajectory in part_num parts and consider
 part_num = 10
 for i in range(1,part_num-1):
+    p = plotter(station_img)
+    p.plot_scene_structure(goalsData)
     # Data we will suppose known
     knownN = int((i+1)*(pathSize/part_num))
     trueX,trueY,trueL = get_known_set(pathX,pathY,pathT,knownN)
@@ -65,9 +66,10 @@ for i in range(1,part_num-1):
     predictedXY,varXY = gp.predict()
     stop       = time.process_time()
     print("CPU process time (prediction): %.1f [ms]" % (1000.0*(stop-start)))
-    plot_prediction(img,pathX,pathY,knownN,predictedXY,varXY)
     print('[INF] Plotting')
     print("[RES] [Likelihood]: ",likelihood)
     # Generate samples
-    vecX,vecY         = gp.generate_samples(100)
-    plot_path_samples_with_observations(img,trueX,trueY,vecX,vecY)
+    vecX,vecY         = gp.generate_samples(10)
+    p.plot_path_samples_with_observations(trueX,trueY,vecX,vecY)
+    p.plot_prediction(pathX,pathY,knownN,predictedXY,varXY)
+    p.show()

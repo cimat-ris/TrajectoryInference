@@ -25,6 +25,7 @@ class plotter():
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
         self.ax.set_aspect('equal')
+        # Use the image as a background
         self.ax.imshow(img)
         s = img.shape
         v = [0,s[1],s[0],0]
@@ -45,6 +46,28 @@ class plotter():
                 self.ax.plot([subgoalsCenter[i][0]-size[0]/2.0,subgoalsCenter[i][0]+size[0]/2.0],[subgoalsCenter[i][1],subgoalsCenter[i][1]],color[i],linewidth=7.0)
             else:
                 self.ax.plot([subgoalsCenter[i][0],subgoalsCenter[i][0]],[subgoalsCenter[i][1]-size[1]/2.0,subgoalsCenter[i][1]+size[1]/2.0],color[i],linewidth=7.0)
+
+    # Plot the true data, the predicted ones and their variance
+    def plot_prediction(self,trueX,trueY,knownN,predictedXY,varXY):
+        realX, realY = [],[]
+        N = int(len(trueX))
+
+        knownX = trueX[0:knownN]
+        knownY = trueY[0:knownN]
+        realX = trueX[knownN-1:N]
+        realY = trueY[knownN-1:N]
+
+        self.ax.plot(knownX,knownY,'c',predictedXY[:,0],predictedXY[:,1],'b')
+        self.ax.plot([knownX[-1],predictedXY[0,0]],[knownY[-1],predictedXY[0,1]],'b')
+        predictedN = predictedXY.shape[0]
+        for i in range(predictedN):
+            xy = [predictedXY[i,0],predictedXY[i,1]]
+            ell = Ellipse(xy,6.0*math.sqrt(math.fabs(varXY[0][i,i])),6.0*math.sqrt(math.fabs(varXY[1][i,i])))
+            ell.set_lw(1.)
+            ell.set_fill(0)
+            ell.set_edgecolor('m')
+            self.ax.add_patch(ell)
+        self.ax.plot(realX,realY,'c--')
 
     # Plot multiple predictions
     def plot_multiple_predictions_and_goal_likelihood(self,x,y,nUsedData,nGoals,goalsLikelihood,predictedXYVec,varXYVec):
@@ -97,26 +120,21 @@ class plotter():
         self.ax.plot(ox,oy,'c',lw=2.0)
         for i in range(n):
             Color = color[random.randint(0,len(color)-1) ]
-            self.ax.plot(x[i],y[i], color=Color)
-            self.ax.plot([ox[-1],x[i][0]],[oy[-1],y[i][0]])
+            self.ax.plot(x[i],y[i], color=Color, alpha=0.5)
+            self.ax.plot([ox[-1],x[i][0]],[oy[-1],y[i][0]], alpha=0.5)
 
+    # Plot a set of paths
+    def plot_paths(img, path_set):
+        for path in path_set:
+            self.ax.plot(path.x,path.y)
+
+    # Show the plots
     def show(self):
         plt.show()
 
 #******************************************************************************#
 """ PLOT FUNCTIONS """
-def plotPaths(img, vec):
-    fig,ax = plt.subplots(1)
-    ax.set_aspect('equal')
-    # Show the image
-    ax.imshow(img)
-    n = len(vec)
-    for i in range(n):
-        plt.plot(vec[i].x,vec[i].y)
 
-    v = [0,1920,1080,0]
-    plt.axis(v)
-    plt.show()
 
 # Takes as an input a set of paths and plot them all on img
 def plot_pathset(img, vec):
@@ -149,35 +167,6 @@ def plotPaths(pathSetMat, img):
             for k in range(n):
                 axes[i,j].plot(pathSetMat[i][j][k].x,pathSetMat[i][j][k].y)
             axes[i,j].axis('off')
-    plt.show()
-
-# Plot the true data, the predicted ones and their variance
-def plot_prediction(img,trueX,trueY,knownN,predictedXY,varXY):
-    realX, realY = [],[]
-    N = int(len(trueX))
-
-    knownX = trueX[0:knownN]
-    knownY = trueY[0:knownN]
-    realX = trueX[knownN-1:N]
-    realY = trueY[knownN-1:N]
-
-    fig,ax = plt.subplots(1)
-    ax.set_aspect('equal')
-    ax.imshow(img) # Show the image
-    plt.plot(knownX,knownY,'c',predictedXY[:,0],predictedXY[:,1],'b')
-    plt.plot([knownX[-1],predictedXY[0,0]],[knownY[-1],predictedXY[0,1]],'b')
-    predictedN = predictedXY.shape[0]
-    for i in range(predictedN):
-        xy = [predictedXY[i,0],predictedXY[i,1]]
-        ell = Ellipse(xy,6.0*math.sqrt(math.fabs(varXY[0][i,i])),6.0*math.sqrt(math.fabs(varXY[1][i,i])))
-        ell.set_lw(1.)
-        ell.set_fill(0)
-        ell.set_edgecolor('m')
-        ax.add_patch(ell)
-    plt.plot(realX,realY,'c--')
-
-    v = [0,img.shape[1],img.shape[0],0]
-    plt.axis(v)
     plt.show()
 
 #Pinta las predicciones de los subgoals
