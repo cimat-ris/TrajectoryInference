@@ -18,13 +18,15 @@ color = ['g','m','r','b','steelblue','y','tomato','orange','gold','yellow','lime
 
 
 class plotter():
-    def __init__(self,img):
+    def __init__(self,img,title=None):
         self.fig,self.ax = plt.subplots(1)
         plt.margins(0, 0)
         plt.gca().set_axis_off()
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
         self.ax.set_aspect('equal')
+        if title!=None:
+            self.ax.set_title(title)
         # Use the image as a background
         self.ax.imshow(img)
         s = img.shape
@@ -124,7 +126,7 @@ class plotter():
             self.ax.plot([ox[-1],x[i][0]],[oy[-1],y[i][0]], alpha=0.5)
 
     # Plot a set of paths
-    def plot_paths(img, path_set):
+    def plot_paths(self, path_set):
         for path in path_set:
             self.ax.plot(path.x,path.y)
 
@@ -151,22 +153,6 @@ def plot_pathset(img, vec):
     s = img.shape
     v = [0,s[1],s[0],0]
     plt.axis(v)
-    plt.show()
-
-# Takes as an input a matrix of sets of paths and plot them all on img
-def plotPaths(pathSetMat, img):
-    s         = pathSetMat.shape
-    fig, axes = plt.subplots(s[0], s[1])
-    for i in range(s[0]):
-        for j in range(s[1]):
-            n = len(pathSetMat[i][j])
-            axes[i,j].set_aspect('equal')
-            # Show the image
-            axes[i,j].imshow(img)
-            # Plot each trajectory
-            for k in range(n):
-                axes[i,j].plot(pathSetMat[i][j][k].x,pathSetMat[i][j][k].y)
-            axes[i,j].axis('off')
     plt.show()
 
 #Pinta las predicciones de los subgoals
