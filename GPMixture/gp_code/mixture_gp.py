@@ -48,15 +48,15 @@ class mixtureOfGPs:
         self.gpTrajectoryRegressor = [None]*n
         for i in range(self.goalsData.nGoals):
             # One regressor per goal
-            self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i], self.goalsData.linearPriorsY[self.startG][i])
-            self.gpTrajectoryRegressor[i] = trajectory_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas[i],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i], self.goalsData.linearPriorsY[self.startG][i])
+            self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas_coordinates[i],self.goalsData.areas_axis[i],self.goalsData.linearPriorsX[self.startG][i], self.goalsData.linearPriorsY[self.startG][i])
+            self.gpTrajectoryRegressor[i] = trajectory_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas_coordinates[i],self.goalsData.areas_axis[i],self.goalsData.linearPriorsX[self.startG][i], self.goalsData.linearPriorsY[self.startG][i])
 
             ## TODO:
-            subareas = get_subgoals_areas(self.nSubgoals, self.goalsData.areas[i],self.goalsData.areasAxis[i])
+            subareas = get_subgoals_areas(self.nSubgoals, self.goalsData.areas_coordinates[i],self.goalsData.areas_axis[i])
             # For sub-goals
             for j in range(self.nSubgoals):
                 k= i+(j+1)*self.goalsData.nGoals
-                self.gpPathRegressor[k] = path_regression(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areasAxis[i],self.goalsData.linearPriorsX[self.startG][i],self.goalsData.linearPriorsY[self.startG][i])
+                self.gpPathRegressor[k] = path_regression(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areas_axis[i],self.goalsData.linearPriorsX[self.startG][i],self.goalsData.linearPriorsY[self.startG][i])
 
 
     # Update observations and compute likelihoods based on observations
@@ -66,7 +66,7 @@ class mixtureOfGPs:
         self.observedL       = observedL
         # Update each regressor with its corresponding observations
         for i in range(self.goalsData.nGoals):
-            goalCenter,__= goal_center_and_size(self.goalsData.areas[i])
+            goalCenter,__= goal_center_and_size(self.goalsData.areas_coordinates[i])
             distToGoal   = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
             dist         = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
             # When close to the goal, define sub-goals
@@ -103,7 +103,7 @@ class mixtureOfGPs:
         # For all likely goals
         for i in range(self.goalsData.nGoals):
             print('[INF] Predicting to goal ',i)
-            goalCenter,__ = goal_center_and_size(self.goalsData.areas[i])
+            goalCenter,__ = goal_center_and_size(self.goalsData.areas_coordinates[i])
             distToGoal    = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
             dist          = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
 
@@ -135,11 +135,11 @@ class mixtureOfGPs:
         k          = end
         # Sample end point around the sampled goal
         if self.predictedMeans[end].shape[0]>0:
-            finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.areas[end], self.goalsData.areasAxis[end])
+            finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.areas_coordinates[end], self.goalsData.areas_axis[end])
         else:
             # Use subgoals: choose one randomly and sample
-            subgoalsCenter, size = get_subgoals_center_and_size(self.nSubgoals, self.goalsData.areas[end], self.goalsData.areasAxis[end])
-            if self.goalsData.areasAxis[end]==0:
+            subgoalsCenter, size = get_subgoals_center_and_size(self.nSubgoals, self.goalsData.areas_coordinates[end], self.goalsData.areas_axis[end])
+            if self.goalsData.areas_axis[end]==0:
                 s = size[0]
             else:
                 s = size[1]
@@ -147,7 +147,7 @@ class mixtureOfGPs:
             j = np.random.choice(self.nSubgoals)
             k = end+(1+j)*self.goalsData.nGoals
             # We call this in case the subgoals haven't been updated
-            finishX, finishY, axis = uniform_sampling_1D_around_point(1, subgoalsCenter[j], s, self.goalsData.areasAxis[end])
+            finishX, finishY, axis = uniform_sampling_1D_around_point(1, subgoalsCenter[j], s, self.goalsData.areas_axis[end])
 
         # Use a pertubation approach to get the sample
         deltaX = finishX[0]-self.gpPathRegressor[k].finalAreaCenter[0]

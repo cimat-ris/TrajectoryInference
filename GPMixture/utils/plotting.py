@@ -36,7 +36,7 @@ class plotter():
     # Plot the scene structure: goals and sub-goals
     def plot_scene_structure(self,goalsData):
         for i in range(goalsData.nGoals):
-            self.plot_subgoals(goalsData.areas[i], 2, goalsData.areasAxis[i])
+            self.plot_subgoals(goalsData.areas_coordinates[i], 2, goalsData.areas_axis[i])
 
     # Plot the sub goals
     def plot_subgoals(self, goal, numSubgoals, axis):

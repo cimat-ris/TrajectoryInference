@@ -12,10 +12,11 @@ from copy import copy
 class goal_pairs:
 
     # Constructor
-    def __init__(self, areas, areasAxis, trajData):
-        self.nGoals    = len(areas)
-        self.areas     = areas
-        self.areasAxis = areasAxis
+    def __init__(self, areas_coordinates, areas_axis, trajectories, min_traj_number=15):
+        self.nGoals                = len(areas_coordinates)
+        self.areas_coordinates     = areas_coordinates
+        self.areas_axis            = areas_axis
+        self.min_traj_number       = min_traj_number
         # Mean length for all pairs of goals
         self.meanLengths        = np.zeros((self.nGoals,self.nGoals))
         self.euclideanDistances = np.zeros((self.nGoals,self.nGoals))
@@ -29,15 +30,15 @@ class goal_pairs:
         self.timeTransitionMeans= np.empty((self.nGoals, self.nGoals),dtype=object)
         self.timeTransitionStd  = np.empty((self.nGoals, self.nGoals),dtype=object)
         # Compute the mean lengths
-        self.compute_mean_lengths(trajData)
+        self.compute_mean_lengths(trajectories)
         # Compute the distances between pairs of goals (as a nGoalsxnGoals matrix)
         self.compute_euclidean_distances()
         # Compute the ratios between average path lengths and inter-goal distances
         self.compute_distance_units()
         # Computer prior probabispeedRegressorlities between goals
-        self.compute_prior_transitions(trajData)
+        self.compute_prior_transitions(trajectories)
         # Compute transition probabilities between goals
-        self.compute_time_transitions(trajData)
+        self.compute_time_transitions(trajectories)
 
     # Fills in the matrix with the
     # mean length of the trajectories
@@ -55,10 +56,10 @@ class goal_pairs:
     def compute_euclidean_distances(self):
         for i in range(self.nGoals):
             # Take the centroid of the ROI i
-            p,__ = goal_center_and_size(self.areas[i])
+            p,__ = goal_center_and_size(self.areas_coordinates[i])
             for j in range(self.nGoals):
                 # Take the centroid of the ROI j
-                q,__ = goal_center_and_size(self.areas[j])
+                q,__ = goal_center_and_size(self.areas_coordinates[j])
                 # Compute the euclidean distance between the two centroids i and j
                 d = np.sqrt((p[0]-q[0])**2 + (p[1]-q[1])**2)
                 self.euclideanDistances[i][j] = d
@@ -113,7 +114,7 @@ class goal_pairs:
             for j in range(self.nGoals):
                 # Get the paths that go from i to j
                 paths = trainingSet[i][j]
-                if len(paths) > 0:
+                if len(paths) > self.min_traj_number:
                     start = timeit.default_timer()
                     # Get the path data as x,y,z (z is arclength)
                     x,y,__,l,__ = get_data_from_paths(paths)
@@ -124,23 +125,26 @@ class goal_pairs:
                     print("[OPT] Init parameters ",theta)
                     print("[OPT] [",i,"][",j,"]")
                     print("[OPT] #trajectories: ",len(l))
-                    # Learn parameters in X
+                    # Fit parameters in X
                     params[0] = self.linearPriorsX[i][j][1][0]
                     params[1] = self.linearPriorsX[i][j][1][1]
                     ker.set_parameters(params)
-                    thetaX  = learn_parameters(l,x,ker,theta)
+                    thetaX  = fit_parameters(l,x,ker,theta)
                     print("[OPT] x: ",thetaX)
                     self.kernelsX[i][j].set_parameters(ker.get_parameters())
                     # Learn parameters in Y
                     params[0] = self.linearPriorsY[i][j][1][0]
                     params[1] = self.linearPriorsY[i][j][1][1]
                     ker.set_parameters(params)
-                    thetaY  = learn_parameters(l,y,ker,theta)
+                    thetaY  = fit_parameters(l,y,ker,theta)
                     print("[OPT] y: ",thetaY)
                     self.kernelsY[i][j].set_parameters(ker.get_parameters())
                     stop = timeit.default_timer()
                     execution_time = stop - start
                     print("[OPT] Parameter optimization done in %.2f seconds"%execution_time)
+                else:
+                    self.kernelsX[i][j] = None
+                    self.kernelsY[i][j] = None
 
 
     # Fills in the probability transition matrix
@@ -148,11 +152,9 @@ class goal_pairs:
         for i in range(self.nGoals):
             for j in range(self.nGoals):
                 m, std = 0,0
-                if(len(pathMat[i][j]) > 0):
+                if(len(pathMat[i][j]) > self.min_traj_number):
                     time = get_paths_duration(pathMat[i][j])
                     m   = np.median(time)
                     std = np.std(time)
                 self.timeTransitionMeans[i][j] = m
                 self.timeTransitionStd[i][j]   = std
-        print("\n*** time transition means ***\n", self.timeTransitionMeans)
-        print("\n*** time transition std ***\n", self.timeTransitionStd)
