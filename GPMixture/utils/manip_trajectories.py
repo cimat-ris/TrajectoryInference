@@ -8,23 +8,22 @@ from utils.stats_trajectories import get_paths_arclength
 # the entry (i,j) has the paths tha go from the goal i to the goal j
 def define_trajectories_start_and_end_areas(startGoals, finishGoals, paths):
     # Number of starting goals
-    nRows = len(startGoals)
+    nRows    = len(startGoals)
     # Number of ending goals
     nColumns = len(finishGoals)
     # Matrix to be built
-    mat = np.empty((nRows,nColumns),dtype=object)
+    mat       = np.empty((nRows,nColumns),dtype=object)
     arclenMat = np.empty((nRows,nColumns),dtype=object)
     # Initialize the matrix elements to empty lists
     for i in range(nRows):
         for j in range(nColumns):
-            mat[i][j]=[]
+            mat[i][j]       = []
             arclenMat[i][j] = []
     # For all trajectories
-    for i in range(len(paths)):
-        lenData = len(paths[i].x) # Number of data for each trajectory
+    for path in paths:
         # Start and finish points
-        startX, startY = paths[i].x[0], paths[i].y[0]
-        endX, endY = paths[i].x[lenData-1], paths[i].y[lenData-1]
+        startX, startY = path.x[ 0], path.y[ 0]
+        endX, endY     = path.x[-1], path.y[-1]
         startIndex, endIndex = -1, -1
         # Determine which starting/ending indices they correspond to
         for j in range(nRows):
@@ -35,51 +34,51 @@ def define_trajectories_start_and_end_areas(startGoals, finishGoals, paths):
                 endIndex = k
         if(startIndex > -1 and endIndex > -1):
             # Keep the trajectory
-            mat[startIndex][endIndex].append(paths[i])
+            mat[startIndex][endIndex].append(path)
             # Keep the trajectory length
-            arclenMat[startIndex][endIndex].append(paths[i].length)
+            arclenMat[startIndex][endIndex].append(path.length)
     return mat, arclenMat
 
 # Computes the median m and the standard deviation s of a list of paths
 # If any trajectory within this list differs with more than s from m, it is filtered out
-def filter_path_vec(vec):
+def filter_path_vec(path_set):
     # Get the list of arclengths
-    arclen = get_paths_arclength(vec)
+    arclen_set = get_paths_arclength(path_set)
     # Median
-    m = np.median(arclen)
+    median_arclen = np.median(arclen_set)
     # Standard deviation
-    SD = np.sqrt(np.var(arclen))
+    SD = np.sqrt(np.var(arclen_set))
     # Resulting filtered set
-    learnSet = []
-    for i in range(len(arclen)):
-        if abs(arclen[i] - m) <= SD:
-            learnSet.append(vec[i])
-    return learnSet
+    filtered_set = []
+    for arclen,path in zip(arclen_set,path_set):
+        if abs(arclen - median_arclen) <= SD:
+            filtered_set.append(path)
+    return filtered_set
 
 # Takes the start-goal matrix of lists of trajectories and filter them
 # Output is:
 # - matrix of filtered lists of trajectories
 # - one big list of all the remaining trajectories
-def filter_path_matrix(M, nRows, mColumns):#nGoals):
-    learnSet = []
+def filter_path_matrix(raw_path_set_matrix, nRows, mColumns):#nGoals):
+    all_trajectories = []
     # Initialize a nRowsxnCols matrix with empty lists
-    mat = np.empty((nRows, mColumns),dtype=object)
+    filtered_path_set_matrix = np.empty((nRows, mColumns),dtype=object)
     for i in range(nRows):
         for j in range(mColumns):
-            mat[i][j]=[]
+            filtered_path_set_matrix[i][j]=[]
 
     for i in range(nRows):
         for j in range(mColumns):
             # If the list of trajectories is non-empty, filter it
-            if(len(M[i][j]) > 0):
-                aux = filter_path_vec(M[i][j])
-            # Add the filtered trajectories to the element list M[i][j]
-            for m in range(len(aux)):
-                mat[i][j].append(aux[m])
-            # Add the filtered trajectories to the list learnSet
-            for k in range(len(aux)):
-                learnSet.append(aux[k])
-    return mat, learnSet
+            if(len(raw_path_set_matrix[i][j]) > 0):
+                filtered = filter_path_vec(raw_path_set_matrix[i][j])
+                # Add the filtered trajectories
+                # to the element list raw_path_set_matrix[i][j]
+                for trajectory in filtered:
+                    filtered_path_set_matrix[i][j].append(trajectory)
+                    # Add the filtered trajectories to the list learnSet
+                    all_trajectories.append(trajectory)
+    return filtered_path_set_matrix, all_trajectories
 
 #Devuelve un conjunto con las trayectorias que van entre los goals
 def getUsefulPaths(paths, goals):

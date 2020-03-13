@@ -28,9 +28,12 @@ print("[INF] Number of useful paths: ",len(usefulPaths))
 
 # Split the trajectories into pairs of goals
 startToGoalPath, arclenMat = define_trajectories_start_and_end_areas(areas,areas,usefulPaths)
-
+print('paths')
+print(startToGoalPath[1][1])
 # Remove the trajectories that are either too short or too long
 pathMat, learnSet = filter_path_matrix(startToGoalPath, nGoals, nGoals)
+print('paths')
+print(pathMat[1][1])
 sortedPaths = sorted(learnSet, key=time_compare)
 
 # Form the object goal_pairs
@@ -41,7 +44,7 @@ showDataset = True
 if showDataset:
     s = areas.shape
     for i in range(s[0]):
-        for j in range(s[1]):
+        for j in range(s[0]):
             p = plotter(img,title=f"Trajectories from {i} to {j}")
             p.plot_scene_structure(goalsData)
             p.plot_paths(pathMat[i][j])
