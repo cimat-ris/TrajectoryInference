@@ -270,7 +270,7 @@ def get_line_variances(lineParameters, mean):
 def get_linear_prior_mean(paths, flag):
     n = len(paths)
     if(n == 0):
-        return [0.,0.]
+        return [0.,0.,0.]
 
     lineParameters = []
     sum_a = 0.
