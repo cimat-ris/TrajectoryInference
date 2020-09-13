@@ -80,22 +80,25 @@ def filter_path_matrix(raw_path_set_matrix, nRows, mColumns):#nGoals):
                     all_trajectories.append(trajectory)
     return filtered_path_set_matrix, all_trajectories
 
-#Devuelve un conjunto con las trayectorias que van entre los goals
-def getUsefulPaths(paths, goals):
+# Filter paths that start and end in a goal zone
+def get_paths_in_areas(paths, goals):
     useful = []
     for i in range(len(paths)):
         pathLen = len(paths[i].x)
-        first = [paths[i].x[0],paths[i].y[0]]
-        last = [paths[i].x[pathLen-1],paths[i].y[pathLen-1]]
+        # Start pos
+        first   = [paths[i].x[0],paths[i].y[0]]
+        # End pos
+        last    = [paths[i].x[pathLen-1],paths[i].y[pathLen-1]]
         isFirst, isLast = -1, -1
+        # For all goal zones, check if start/end pos belongs to it
         for j in range(len(goals)):
             if(is_in_area(first,goals[j])):
                 isFirst = j
             if(is_in_area(last,goals[j])):
                 isLast = j
+        # Filter
         if(isFirst > -1 and isLast > -1 and pathLen > 3):
             useful.append(paths[i])
-
     return useful
 
 def get_path_set_given_time_interval(paths, startT, finishT):

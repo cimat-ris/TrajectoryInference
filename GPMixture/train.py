@@ -4,7 +4,7 @@
 from gp_code.goal_pairs import *
 from utils.plotting import plotter
 from utils.io_parameters import *
-from utils.manip_trajectories import getUsefulPaths,time_compare,filter_path_matrix,define_trajectories_start_and_end_areas
+from utils.manip_trajectories import get_paths_in_areas,time_compare,filter_path_matrix,define_trajectories_start_and_end_areas
 from utils.io_trajectories import get_paths_from_file
 from utils.stats_trajectories import get_data_from_paths
 import numpy as np
@@ -12,18 +12,19 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import pandas as pd
 
-# Read the areas data from a file
+# Read the areas data from a csv file
 data     = pd.read_csv('parameters/CentralStation_GoalsDescriptions.csv')
 areas    = data.values[:,2:].astype(float)
 areasAxis= data.values[:,1].astype(int)
 
-# This array will contain the zones of interest
+# The areas array will contain the zones of interest
 nGoals    = len(areas)
 img       = mpimg.imread('imgs/goals.jpg')
 
 # This function segments the trajectories in function of the goal areas
 dataPaths, multigoal = get_paths_from_file('datasets/CentralStation_paths_10000.txt',areas)
-usefulPaths          = getUsefulPaths(dataPaths,areas)
+# Filter paths
+usefulPaths          = get_paths_in_areas(dataPaths,areas)
 print("[INF] Number of useful paths: ",len(usefulPaths))
 
 # Split the trajectories into pairs of goals
