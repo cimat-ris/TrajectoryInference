@@ -131,12 +131,12 @@ def read_and_filter(areasFile,traectoriesFile):
     # Read the areas data from a file
     data     = pd.read_csv(areasFile)
     # TODO: handle the 6
-    areas    = data.values[:6,2:]
-    areasAxis= data.values[:6,1]
+    areas    = data.values[:,2:]
+    areasAxis= data.values[:,1]
     nGoals   = len(areas)
     # We process here multi-objective trajectories into sub-trajectories
-    dataPaths, multigoal = get_paths_from_file('datasets/CentralStation_trainingSet.txt',areas)
-    usefulPaths          = getUsefulPaths(dataPaths,areas)
+    dataPaths,__ = get_paths_from_file('datasets/CentralStation_trainingSet.txt',areas)
+    usefulPaths          = get_paths_in_areas(dataPaths,areas)
     print("[INF] Number of useful paths: ",len(usefulPaths),"/",len(dataPaths))
     # Split the trajectories into pairs of goals
     startToGoalPath, arclenMat = define_trajectories_start_and_end_areas(areas,areas,usefulPaths)
