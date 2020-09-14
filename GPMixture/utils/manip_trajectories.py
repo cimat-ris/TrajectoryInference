@@ -41,7 +41,7 @@ def define_trajectories_start_and_end_areas(startGoals, finishGoals, paths):
 
 # Computes the median m and the standard deviation s of a list of paths
 # If any trajectory within this list differs with more than s from m, it is filtered out
-def filter_path_vec(path_set):
+def filter_paths(path_set):
     # Get the list of arclengths
     arclen_set = get_paths_arclength(path_set)
     # Median
@@ -51,7 +51,7 @@ def filter_path_vec(path_set):
     # Resulting filtered set
     filtered_set = []
     for arclen,path in zip(arclen_set,path_set):
-        if abs(arclen - median_arclen) <= SD:
+        if abs(arclen - median_arclen) <= 3.0*SD:
             filtered_set.append(path)
     return filtered_set
 
@@ -59,7 +59,7 @@ def filter_path_vec(path_set):
 # Output is:
 # - matrix of filtered lists of trajectories
 # - one big list of all the remaining trajectories
-def filter_path_matrix(raw_path_set_matrix, nRows, mColumns):#nGoals):
+def filter_path_matrix(raw_path_set_matrix, nRows, mColumns):
     all_trajectories = []
     # Initialize a nRowsxnCols matrix with empty lists
     filtered_path_set_matrix = np.empty((nRows, mColumns),dtype=object)
@@ -71,12 +71,12 @@ def filter_path_matrix(raw_path_set_matrix, nRows, mColumns):#nGoals):
         for j in range(mColumns):
             # If the list of trajectories is non-empty, filter it
             if(len(raw_path_set_matrix[i][j]) > 0):
-                filtered = filter_path_vec(raw_path_set_matrix[i][j])
+                filtered = filter_paths(raw_path_set_matrix[i][j])
                 # Add the filtered trajectories
                 # to the element list raw_path_set_matrix[i][j]
                 for trajectory in filtered:
                     filtered_path_set_matrix[i][j].append(trajectory)
-                    # Add the filtered trajectories to the list learnSet
+                    # Add the filtered trajectories to the list all_trajectories
                     all_trajectories.append(trajectory)
     return filtered_path_set_matrix, all_trajectories
 

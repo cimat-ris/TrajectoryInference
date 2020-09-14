@@ -104,7 +104,7 @@ class goal_pairs:
                 self.linearPriorsY[i][j] = (meanY,varY)
 
     # For each pair of goals, realize the optimization of the kernel parameters
-    def optimize_kernel_parameters(self,kernelType, trainingSet):
+    def optimize_kernel_parameters(self,kernelType,trainingSet):
         # Build the kernel matrices with the default values
         self.kernelsX, parametersX = create_kernel_matrix(kernelType, self.nGoals, self.nGoals)
         self.kernelsY, parametersY = create_kernel_matrix(kernelType, self.nGoals, self.nGoals)
@@ -112,8 +112,9 @@ class goal_pairs:
         for i in range(self.nGoals):
             # For goal j
             for j in range(self.nGoals):
-                # Get the paths that go from i to j
+                # Get the set of paths that go from i to j
                 paths = trainingSet[i][j]
+                # We define a GP only if we have enough trajectories
                 if len(paths) > self.min_traj_number:
                     start = timeit.default_timer()
                     # Get the path data as x,y,z (z is arclength)

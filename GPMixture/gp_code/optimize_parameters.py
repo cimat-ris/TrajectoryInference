@@ -12,10 +12,10 @@ import random
 import timeit
 from termcolor import colored
 
-# Evaluate the minus log-likelihood, for a given value of the hyper-parameters (theta), and for a given trajectory
+# Evaluate the minus log-likelihood, for a given value of the hyper-parameters and for a given trajectory
 def mlog_p(x,y,kernel):
     n = len(x)
-    # Evaluate the Gramian matrix
+    # Evaluate the Gram matrix
     K = np.zeros((n,n))
     for i in range(n):
         for j in range(i+1):
@@ -50,7 +50,7 @@ def optimize_kernel_parameters(t,x,theta,kernel):
     # TODO: set these bounds elsewhere
     bnds = ((100.0, 5000.0), (10.0, 200.0))
     try:
-        parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='Nelder-Mead', options={'maxiter':25,'disp': False})
+        parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='Nelder-Mead',options={'maxiter':25,'disp': False})
         px          = parametersX.x
     except Exception as e:
         print(colored("[ERR] {:s} ".format(e),'red'))
@@ -58,6 +58,7 @@ def optimize_kernel_parameters(t,x,theta,kernel):
     kernel.set_optimizable_parameters(px)
     return px
 
-# Learn parameters of the kernel, given l,x,y as data (will maximize likelihood)
+# Optimize parameters of the kernel, given l,x as data (will maximize likelihood), kernel as the kernel
+# and parameters as the current values of the parameters
 def fit_parameters(l,x,kernel,parameters):
     return optimize_kernel_parameters(l,x,parameters,kernel)
