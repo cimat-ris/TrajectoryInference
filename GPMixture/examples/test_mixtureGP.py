@@ -6,34 +6,28 @@ from gp_code.mixture_gp import mixtureOfGPs
 
 station_img = mpimg.imread('imgs/train_station.jpg')
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-goalsData, pathMat, __ = read_and_filter('parameters/CentralStation_areasDescriptions.csv','datasets/CentralStation_trainingSet.txt')
-stepUnit  = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals)
-
-# For each pair of goals, determine the line priors
-useLinearPriors = True
-if useLinearPriors:
-    goalsData.compute_linear_priors(pathMat)
+goalsData, pathMat, __ = read_and_filter('parameters/CentralStation_GoalsDescriptions.csv','datasets/CentralStation_trainingSet.txt')
+stepUnit   = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals)
 
 # Selection of the kernel type
 kernelType = "linePriorCombined"#"combined"
-nParameters = 4
+nParameters= 4
 
 # Read the kernel parameters from file
-goalsData.kernelsX = read_and_set_parameters("parameters/linearpriorcombined6x6_x.txt",nParameters)
-goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined6x6_y.txt",nParameters)
+goalsData.kernelsX = read_and_set_parameters("parameters/linearpriorcombined20x20_x.txt",nParameters)
+goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined20x20_y.txt",nParameters)
 
 """******************************************************************************"""
 """**************    Testing                           **************************"""
-# We give the start and ending goals
+# We give the start and ending goals and the index of the trajectory to predict
 startG = 0
-nextG = 2
+nextG  = 6
+pathId = 3
 
 # Kernels for this pair of goals
 kernelX = goalsData.kernelsX[startG][nextG]
 kernelY = goalsData.kernelsY[startG][nextG]
 
-# Index of the trajectory to predict
-pathId = 3
 # Get the ground truth path
 _path = pathMat[startG][nextG][pathId]
 # Get the path data

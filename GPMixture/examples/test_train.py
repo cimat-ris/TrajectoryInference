@@ -2,16 +2,9 @@
 @author: karenlc
 """
 from test_common import *
-#from gp_code.goal_pairs import *
-#from utils.plotting import plotter
 from utils.io_parameters import *
 from utils.manip_trajectories import get_paths_in_areas,time_compare,filter_path_matrix,define_trajectories_start_and_end_areas
 from utils.io_trajectories import get_paths_from_file
-#from utils.stats_trajectories import get_data_from_paths
-#import numpy as np
-#import matplotlib.pyplot as plt
-#import matplotlib.image as mpimg
-#import pandas as pd
 
 # Read the areas data from a csv file
 data     = pd.read_csv('parameters/CentralStation_GoalsDescriptions.csv')
