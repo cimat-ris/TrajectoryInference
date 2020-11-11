@@ -126,24 +126,10 @@ class goal_pairs:
                     print("[OPT] Init parameters ",theta)
                     print("[OPT] [",i,"][",j,"]")
                     print("[OPT] #trajectories: ",len(l))
-                    # Case we use a linear prior: use the first four parameters for mean and variance
-                    if self.linearPriorsX[i][j]!=None:
-                        params[0] = self.linearPriorsX[i][j][0][0]
-                        params[1] = self.linearPriorsX[i][j][0][1]
-                        params[2] = self.linearPriorsX[i][j][1][0]
-                        params[3] = self.linearPriorsX[i][j][1][1]
-                        ker.set_parameters(params)
                     # Fit parameters in X
                     thetaX  = fit_parameters(l,x,ker,theta)
                     print("[OPT] x: ",thetaX)
                     self.kernelsX[i][j].set_parameters(ker.get_parameters())
-                    # Case we use a linear prior: use the first four parameters for mean and variance
-                    if self.linearPriorsY[i][j]!=None:
-                        params[0] = self.linearPriorsY[i][j][0][0]
-                        params[1] = self.linearPriorsY[i][j][0][1]
-                        params[2] = self.linearPriorsY[i][j][1][0]
-                        params[3] = self.linearPriorsY[i][j][1][1]
-                        ker.set_parameters(params)
                     # Fit parameters in Y
                     thetaY  = fit_parameters(l,y,ker,theta)
                     print("[OPT] y: ",thetaY)
@@ -153,11 +139,9 @@ class goal_pairs:
                     print("[OPT] Parameter optimization done in %.2f seconds"%execution_time)
                     # Evaluate steps_unit
                     # self.stepUnit = get_steps_unit(paths)
-
                 else:
                     self.kernelsX[i][j] = None
                     self.kernelsY[i][j] = None
-
 
     # Fills in the probability transition matrix
     def compute_time_transitions(self,pathMat):
