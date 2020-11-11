@@ -121,27 +121,17 @@ def arclength(x,y):
             l[i] = l[i] +l[i-1]
     return l
 
-# TODO: should be removed and we should use an estimate of the velocity instead
-def get_number_of_steps_unit(Mat, nGoals):
-    unit = 0.0
-    numUnits = 0
-    for i in range(nGoals):
-        for j in range(nGoals):
-            numPaths = len(Mat[i][j])
-            meanU = 0.0
-            for k in range(numPaths):
-                path = Mat[i][j][k]
-                l = path.l[len(path.l)-1]
-                if(l == 0):
-                    numPaths -= 1
-                else:
-                    stps = len(path.l)
-                    u = stps/l
-                    meanU += u
-            if(numPaths > 0):
-                meanU = meanU/numPaths
-            if(meanU >0):
-                unit += meanU
-                numUnits += 1
-    unit = unit/numUnits
-    return unit
+# Estimate the steps_units for a path set (unit = ratio between the distance to the goal and the length of the trajectory).
+def get_steps_unit(pathSet):
+    unit     = 0.0
+    numPaths = len(pathSet)
+    meanU = 0.0
+    for path in pathSet:
+        l = path.l[len(path.l)-1]
+        if(l == 0):
+            numPaths -= 1
+        else:
+            meanU += len(path.l)/l
+    if(numPaths > 0):
+        meanU = meanU/numPaths
+    return meanU
