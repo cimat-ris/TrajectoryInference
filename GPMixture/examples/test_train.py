@@ -16,7 +16,7 @@ nGoals    = len(areas)
 img       = mpimg.imread('imgs/goals.jpg')
 
 # This function segments the trajectories in function of the goal areas
-dataPaths,__ = get_paths_from_file('datasets/CentralStation_paths_10000.txt',areas)
+dataPaths,__ = get_paths_from_file('datasets/GCS/CentralStation_paths_10000.txt',areas)
 # Filter paths
 usefulPaths  = get_paths_in_areas(dataPaths,areas)
 

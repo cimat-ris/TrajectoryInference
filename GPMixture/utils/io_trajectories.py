@@ -135,7 +135,7 @@ def read_and_filter(areasFile,traectoriesFile):
     areasAxis= data.values[:,1]
     nGoals   = len(areas)
     # We process here multi-objective trajectories into sub-trajectories
-    dataPaths,__ = get_paths_from_file('datasets/CentralStation_trainingSet.txt',areas)
+    dataPaths,__ = get_paths_from_file('datasets/GCS/CentralStation_trainingSet.txt',areas)
     usefulPaths          = get_paths_in_areas(dataPaths,areas)
     print("[INF] Number of useful paths: ",len(usefulPaths),"/",len(dataPaths))
     # Split the trajectories into pairs of goals
