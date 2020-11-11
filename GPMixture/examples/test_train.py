@@ -53,6 +53,6 @@ kernelType  = "linePriorCombined"
 """**************    Learning GP parameters     **************************"""
 print("[INF] Starting the learning phase")
 goalsData.optimize_kernel_parameters(kernelType, pathMat)
-write_parameters(goalsData.kernelsX,nGoals,nGoals,"parameters/linearpriorcombined6x6_x.txt")
-write_parameters(goalsData.kernelsY,nGoals,nGoals,"parameters/linearpriorcombined6x6_y.txt")
+write_parameters(goalsData.kernelsX,nGoals,nGoals,"parameters/linearpriorcombined20x20_x.txt")
+write_parameters(goalsData.kernelsY,nGoals,nGoals,"parameters/linearpriorcombined20x20_y.txt")
 print("[INF] End of the learning phase")
