@@ -200,7 +200,7 @@ def prediction_to_finish_point(observedX,observedY,observedL,nObservations,finis
     observedL.pop()
     return newX, newY, newL, varX, varY
 
-# Mean of the Gaussian process with a linear prior
+# Mean of the Gaussian process with a linear prior (slope and constant)
 def linear_mean(l, priorMean):
     m = priorMean[0]*l + priorMean[1]
     return m

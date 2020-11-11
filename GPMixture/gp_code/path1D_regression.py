@@ -12,7 +12,7 @@ from utils.linalg import positive_definite
 
 class path1D_regression:
     # Constructor
-    def __init__(self, kernel,linearPrior=None):
+    def __init__(self, kernel):
         # Observations
         self.observedX       = None
         self.observedL       = None
@@ -26,7 +26,6 @@ class path1D_regression:
         # Regularization factor
         self.epsilon         = 0.5
         self.kernel          = kernel
-        self.linearPrior     = linearPrior
 
     # Update observations for the Gaussian process (matrix K)
     def updateObservations(self,observedX,observedL,finalX,finalL,finalVar,predictedL):
@@ -68,11 +67,12 @@ class path1D_regression:
 
     # Update single observation i
     def updateObserved(self,i,x,l):
-        self.observedX[i][0] = x
         self.observedL[i][0] = l
         # Center the data in case we use the linear prior
-        if self.linearPrior!=None:
-            self.observedX[i][0] = x - linear_mean(l, self.linearPrior[0])
+        if self.kernel.linearPrior!=False:
+            self.observedX[i][0] = x - (self.kernel.meanSlope*l+self.kernel.meanConstant)
+        else:
+            self.observedX[i][0] = x
 
     # The main regression function: perform regression for a vector of values
     # lnew, that has been computed in update
@@ -101,9 +101,9 @@ class path1D_regression:
         # Predictive mean
         self.K_1o= self.K_1.dot(self.observedX)
         self.predictedX = self.k.transpose().dot(self.K_1o)
-        if self.linearPrior!=None:
+        if self.kernel.linearPrior!=False:
             for j in range(nnew):
-                self.predictedX[j] += linear_mean(self.predictedL[j],self.linearPrior[0])
+                self.predictedX[j] += (self.predictedL[j]*self.kernel.meanSlope+self.kernel.meanConstant)
         # Estimate the variance in x
         self.ktK_1 = self.k.transpose().dot(self.K_1)
         kK_1kt     = self.ktK_1.dot(self.k)

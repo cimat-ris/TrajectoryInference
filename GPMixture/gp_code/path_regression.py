@@ -10,12 +10,13 @@ from gp_code.sampling import *
 from utils.manip_trajectories import goal_center_and_size
 from utils.manip_trajectories import euclidean_distance
 from utils.linalg import positive_definite
+from scipy.optimize import bisect
 
 class path_regression:
     # Constructor
-    def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis,linearPriorX=None, linearPriorY=None):
-        self.regression_x    = path1D_regression(kernelX,linearPriorX)
-        self.regression_y    = path1D_regression(kernelY,linearPriorY)
+    def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis):
+        self.regression_x    = path1D_regression(kernelX)
+        self.regression_y    = path1D_regression(kernelY)
         self.predictedL      = None
         self.unit            = unit
         self.stepUnit        = stepUnit
@@ -29,7 +30,50 @@ class path_regression:
         lastObservedPoint = [observedX[-1], observedY[-1], observedL[-1]]
         # Determine the set of arclengths (predictedL) to predict
         self.predictedL, finalL, self.dist = get_prediction_set_arclengths(lastObservedPoint,self.finalAreaCenter,self.unit,self.stepUnit)
-
+        # TESTING
+        xf= self.finalAreaCenter[0]
+        yf= self.finalAreaCenter[1]
+        l = observedL
+        n = len(observedL)
+        x = list(observedX)
+        y = list(observedY)
+        for i in range(n):
+            x[i] = x[i]-(l[i]*self.regression_x.kernel.meanSlope+self.regression_x.kernel.meanConstant)
+            y[i] = y[i]-(l[i]*self.regression_y.kernel.meanSlope+self.regression_y.kernel.meanConstant)
+        Kx = np.zeros((n,n))
+        Ky = np.zeros((n,n))
+        # Fill in K, first elements (nxn)
+        for i in range(n):
+            Kx[i][i] = self.regression_x.kernel(l[i],l[i])
+            for j in range(i):
+                Kx[i][j] = self.regression_x.kernel(l[i],l[j])
+                Kx[j][i] = Kx[i][j]
+        Kinvx = inv(Kx)
+        for i in range(n):
+            Ky[i][i] = self.regression_y.kernel(l[i],l[i])
+            for j in range(i):
+                Ky[i][j] = self.regression_y.kernel(l[i],l[j])
+                Ky[j][i] = Ky[i][j]
+        Kinvy = inv(Ky)
+        def fx(t):
+            A   = Kinvx.dot(x)
+            res = xf - (t*self.regression_x.kernel.meanSlope+self.regression_x.kernel.meanConstant)
+            for i in range(n):
+                res = res-self.regression_x.kernel(t,l[i])*A[i]
+            return res
+        def fy(t):
+            A   = Kinvy.dot(y)
+            res = yf - (t*self.regression_y.kernel.meanSlope+self.regression_y.kernel.meanConstant)
+            for i in range(n):
+                res = res-self.regression_y.kernel(t,l[i])*A[i]
+            return res
+        print("-----")
+        #print(self.regression_x.kernel.meanConstant,self.regression_y.kernel.meanConstant)
+        print(xf-x[0]-self.regression_x.kernel.meanConstant,yf-y[0]-self.regression_y.kernel.meanConstant)
+        print(fx(0),fy(0),fx(1.5*finalL))
+        if fx(0)*fx(1.5*finalL)<0:
+            root = bisect(fx, 0, 1.5*finalL)
+            print(root,finalL)
         # Define the variance associated to the last point (varies with the area)
         if self.finalAreaAxis==0:
             s              = self.finalAreaSize[0]

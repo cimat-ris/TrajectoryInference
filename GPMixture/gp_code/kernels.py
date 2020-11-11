@@ -46,8 +46,8 @@ def set_kernel(name):
         parameters = [80., 80.] #{Covariance magnitude factor, Characteristic length}
         kernel = squaredExponentialAndNoiseKernel(parameters[0],parameters[1],nsigma)
     elif(name == "linePriorCombined"):
-        parameters = [0.01,1.0, 80., 80.]  #{Standard deviation slope, Standard deviation constant, Covariance magnitude factor, Characteristic length}
-        kernel = linePriorCombinedKernel(parameters[0],parameters[1],parameters[2],parameters[3],nsigma)
+        parameters = [1.0,0.0,0.01,1.0, 80., 80.]  #{Mean slope, mean constant, Standard deviation slope, Standard deviation constant, Covariance magnitude factor, Characteristic length}
+        kernel = linePriorCombinedKernel(parameters[0],parameters[1],parameters[2],parameters[3],parameters[4],parameters[5],nsigma)
     return kernel
 
 # Kronecker delta
@@ -64,7 +64,8 @@ class Kernel:
     # Constructor
     def __init__(self):
         # Type of kernel
-        self.type      = "generic"
+        self.type        = "generic"
+        self.linearPrior = False
 
     # Overload the operator ()
     @abstractmethod
@@ -397,7 +398,10 @@ class exponentialAndNoiseKernel(Kernel):
 # A combined kernel that considers a prior on the line parameters
 class linePriorCombinedKernel(Kernel):
     # Constructor
-    def __init__(self, sigmaSlope, sigmaConstant, sigmaSq, length, sigmaNoise):
+    def __init__(self, meanSlope, meanConstant, sigmaSlope, sigmaConstant, sigmaSq, length, sigmaNoise):
+        self.linearPrior   = True
+        self.meanSlope     = meanSlope
+        self.meanConstant  = meanConstant
         self.sigmaSlope    = sigmaSlope
         self.sigmaConstant = sigmaConstant
         # Covariance magnitude factor
@@ -412,13 +416,15 @@ class linePriorCombinedKernel(Kernel):
 
     # Method to set parameters
     def set_parameters(self,vec):
-        self.sigmaSlope    = vec[0]
-        self.sigmaConstant = vec[1]
+        self.meanSlope     = vec[0]
+        self.meanConstant  = vec[1]
+        self.sigmaSlope    = vec[2]
+        self.sigmaConstant = vec[3]
         # Covariance magnitude factor
-        self.sigmaSq       = vec[2]
+        self.sigmaSq       = vec[4]
         # Characteristic length
-        self.length        = vec[3]
-        self.linear.setParameters(vec)
+        self.length        = vec[5]
+        self.linear.setParameters(vec[2:4])
         mV = [self.sigmaSq, self.length]
         self.matern.setParameters(mV)
 
@@ -443,7 +449,7 @@ class linePriorCombinedKernel(Kernel):
 
     # Method to get parameters
     def get_parameters(self):
-        parameters = [self.sigmaSlope, self.sigmaConstant, self.sigmaSq, self.length]
+        parameters = [self.meanSlope, self.meanConstant, self.sigmaSlope, self.sigmaConstant, self.sigmaSq, self.length]
         return parameters
 
     # Method to get the optimizable parameters

@@ -100,8 +100,7 @@ def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observed
         realY.append(observedY[halfN + i*d])
         predictionSet.append(observedL[halfN + i*d])
     # Get the prediction based on the
-    predX, predY, varX,varY = prediction_xy(trueX,trueY,trueL, predictionSet, goalsData.kernelsX[startG][finishG],goalsData.kernelsY[startG][finishG],
-    goalsData.linearPriorsX[startG][finishG],goalsData.linearPriorsY[startG][finishG])
+    predX, predY, varX,varY = prediction_xy(trueX,trueY,trueL, predictionSet, goalsData.kernelsX[startG][finishG],goalsData.kernelsY[startG][finishG])
 
     # Evaluate the error
     return average_displacement_error([realX,realY],[predX,predY])
