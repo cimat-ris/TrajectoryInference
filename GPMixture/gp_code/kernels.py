@@ -412,10 +412,11 @@ class linePriorCombinedKernel(Kernel):
         self.matern = maternKernel(sigmaSq,length)
         self.noise  = noiseKernel(sigmaNoise)
         # Type of kernel
-        self.type    = "linePriorCombined"
+        self.type   = "linePriorCombined"
 
     # Method to set parameters
     def set_parameters(self,vec):
+        # Linear prior parameters
         self.meanSlope     = vec[0]
         self.meanConstant  = vec[1]
         self.sigmaSlope    = vec[2]
@@ -424,9 +425,9 @@ class linePriorCombinedKernel(Kernel):
         self.sigmaSq       = vec[4]
         # Characteristic length
         self.length        = vec[5]
+        # Set the parameters of the sub-kernels
         self.linear.setParameters(vec[2:4])
-        mV = [self.sigmaSq, self.length]
-        self.matern.setParameters(mV)
+        self.matern.setParameters(vec[4:6])
 
     # Method to set the optimizable parameters
     def set_optimizable_parameters(self,vec):
