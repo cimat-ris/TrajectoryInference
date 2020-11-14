@@ -14,7 +14,6 @@ def readDataset(fileName):
         lines[i] = lines[i].strip("\n")
     return lines
 
-
 def get_paths_from_file(path_file,areas):
     paths, multigoal_paths = [],[]
     # Open file
@@ -64,70 +63,8 @@ def get_uncut_paths_from_file(file):
             paths.append(newPath)
     return paths
 
-
-# Reads the set of files and gets the points (x,y,z),
-# z = {time, arc-len} according to flag = {"time", "length"}
-def get_data_from_files(files, flag):
-    for i in range(len(files)):
-        auxX, auxY, auxT = read_file(files[i])
-        auxL = arclength(auxX, auxY)
-        if(i==0):
-            x, y, t = [auxX], [auxY], [auxT]
-            l = [auxL]
-        else:
-            x.append(auxX)
-            y.append(auxY)
-            t.append(auxT)
-            l.append(auxL)
-
-    if(flag == "time"):
-        z = t
-    if(flag == "length"):
-        z = l
-    return x, y, z
-
-# Writes in a file the paths that we can use for the algorithm
-def write_useful_paths_file(paths): #paths es un vector de indices
-    N = len(paths)
-    #f = open("usefulPaths_%d.txt"%N,"w")
-    f = open("usefulPaths.txt","w")
-    for j in range(N):
-        i = paths[j]
-        if i < 10:
-            s = "Data/00000%d.txt\n"%(i)
-            f.write(s)
-        if i >= 10 and i < 100:
-            s = "Data/0000%d.txt\n"%(i)
-            f.write(s)
-        if i >= 100 and i < 1000:
-            s = "Data/000%d.txt\n"%(i)
-            f.write(s)
-        if i >= 1000 and i <= 2000:
-            s = "Data/00%d.txt\n"%(i)
-            f.write(s)
-    f.close()
-
-
-def write_data(data, fileName):
-    n = len(data)
-    f = open(fileName,"w+")
-    for i in range(n):
-        s = "%d\n"%(data[i])
-        f.write(s)
-    f.close()
-
-def read_data(fileName):
-    data = []
-    f = open(fileName,'r')
-    lines = f.readlines()
-    for i in range(len(lines)):
-        lines[i] = lines[i].strip("\n")
-        data.append( float(lines[i]) )
-    f.close()
-    return data
-
 """********** READ AND FILTER DATA and DEFINE THE STRUCTURES **********"""
-def read_and_filter(areasFile,traectoriesFile):
+def read_and_filter(areasFile,trajectoriesFile):
     # Read the areas data from a file
     data     = pd.read_csv(areasFile)
     # TODO: handle the 6
@@ -136,7 +73,7 @@ def read_and_filter(areasFile,traectoriesFile):
     nGoals   = len(areas)
     # We process here multi-objective trajectories into sub-trajectories
     dataPaths,__ = get_paths_from_file('datasets/GCS/CentralStation_trainingSet.txt',areas)
-    usefulPaths          = get_paths_in_areas(dataPaths,areas)
+    usefulPaths  = get_paths_in_areas(dataPaths,areas)
     print("[INF] Number of useful paths: ",len(usefulPaths),"/",len(dataPaths))
     # Split the trajectories into pairs of goals
     startToGoalPath, arclenMat = define_trajectories_start_and_end_areas(areas,areas,usefulPaths)
