@@ -23,8 +23,6 @@ class goal_pairs:
         self.units              = np.zeros((self.nGoals,self.nGoals))
         self.meanUnit           = 0.0
         self.priorTransitions   = np.zeros((self.nGoals,self.nGoals))
-        #self.linearPriorsX      = np.empty((self.nGoals, self.nGoals),dtype=object)
-        #self.linearPriorsY      = np.empty((self.nGoals, self.nGoals),dtype=object)
         self.kernelsX           = np.empty((self.nGoals, self.nGoals),dtype=object)
         self.kernelsY           = np.empty((self.nGoals, self.nGoals),dtype=object)
         self.timeTransitionMeans= np.empty((self.nGoals, self.nGoals),dtype=object)
@@ -93,15 +91,6 @@ class goal_pairs:
                     self.priorTransitions[i][j] = 0.
                 else:
                     self.priorTransitions[i][j] = float(len(pathMat[i][j])/paths_i)
-
-    # Compute, for X and Y, for each pair of goals, the matrix of the linear prior means
-    def compute_linear_priors(self,pathMat):
-        for i in range(self.nGoals):
-            for j in range(self.nGoals):
-                meanX, covX, varX  = get_linear_prior_mean(pathMat[i][j], 'x')
-                meanY, covY, varY  = get_linear_prior_mean(pathMat[i][j], 'y')
-                self.linearPriorsX[i][j] = (meanX,varX)
-                self.linearPriorsY[i][j] = (meanY,varY)
 
     # For each pair of goals, realize the optimization of the kernel parameters
     def optimize_kernel_parameters(self,kernelType,trainingSet):
