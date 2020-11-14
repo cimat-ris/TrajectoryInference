@@ -53,7 +53,7 @@ def load_edinburgh(path, **kwargs):
     scale = 0.0247
     # load data from all files
     for file in files_list:
-        data = pd.read_csv(file, sep="\n|=", header=None,index_col=None)
+        data = pd.read_csv(file, sep="\n|=", header=None,index_col=None,engine='python')
         data.reset_index(inplace =True)
         properties = data[data['index'].str.startswith('Properties')]
         data = data[data['index'].str.startswith('TRACK')]
@@ -102,7 +102,7 @@ def load_edinburgh(path, **kwargs):
         scene.extend([files_list.index(file)]*len(clean_track))
 
         raw_dataset.extend(clean_track.tolist())
-    raw_dataset = pd.DataFrame(np.array(raw_dataset), columns=csv_columns)
+    raw_dataset = pd.DataFrame(np.array(raw_dataset),columns=csv_columns)
     raw_dataset.reset_index(inplace=True, drop=True)
 
     #find homog matrix
@@ -119,9 +119,7 @@ def load_edinburgh(path, **kwargs):
 
     traj_dataset.data[["frame_id", "agent_id","pos_x", "pos_y"]] = raw_dataset[["frame", "agent_id","centre_x","centre_y"]]
     traj_dataset.data["scene_id"] = kwargs.get("scene_id", scene)
-
     traj_dataset.data["label"] = "pedestrian"
-
     traj_dataset.title = kwargs.get('title', "Edinburgh")
 
     # post-process. For Edinburgh, raw data do not include velocity, velocity info is postprocessed
