@@ -5,7 +5,7 @@ import pathlib
 import numpy as np
 import pandas as pd
 
-from utils.trajdataset import TrajDataset
+from utils.dataset_trajectories import TrajDataset
 
 
 def load_ind(path, **kwargs):
@@ -47,7 +47,6 @@ def load_ind(path, **kwargs):
     traj_dataset.data["label"] = "pedestrian"
     scene_id = kwargs.get("scene_id", recording_data["locationId"][0])
     traj_dataset.data["scene_id"] = scene_id
-    # print("location_id = ", recording_data["locationId"][0])
 
     # post-process
     fps = int(recording_data["frameRate"][0])  # fps = 25
