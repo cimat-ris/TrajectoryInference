@@ -34,7 +34,19 @@ if test_edi:
     traj_set    = traj_dataset.get_trajectories()
     print("[INF] Loaded Edinburgh set, length: {:03d} ".format(len(traj_set)))
 
-read_and_filter('parameters/CentralStation_GoalsDescriptions.csv','datasets/GC/Annotation/')
+goalsData, pathMat, __ = read_and_filter('parameters/CentralStation_GoalsDescriptions.csv','datasets/GC/Annotation/')
 
 traj_dataset,goalsData, pathMat, __ = read_and_filter_new('GCS','parameters/CentralStation_GoalsDescriptions.csv','datasets/GC/Annotation/')
-traj_dataset.plot(40,"imgs/train_station.jpg")
+traj_dataset.plot(200,"imgs/train_station.jpg")
+
+# Plot trajectories and structure
+showDataset = True
+if showDataset:
+    s = goalsData.areas_coordinates.shape
+    for i in range(s[0]):
+        for j in range(s[0]):
+            if len(pathMat[i][j])>0:
+                p = plotter("imgs/train_station.jpg",title=f"Trajectories from {i} to {j}")
+                p.plot_scene_structure(goalsData)
+                p.plot_paths(pathMat[i][j])
+                p.show()

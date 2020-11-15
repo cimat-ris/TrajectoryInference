@@ -5,6 +5,7 @@ Plotting functions
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 from matplotlib.patches import Ellipse
 from matplotlib.animation import FuncAnimation
 from utils.manip_trajectories import goal_center_and_size
@@ -18,7 +19,7 @@ color = ['g','m','r','b','steelblue','y','tomato','orange','gold','yellow','lime
 
 
 class plotter():
-    def __init__(self,img,title=None):
+    def __init__(self,img_background_path,title=None):
         self.fig,self.ax = plt.subplots(1)
         plt.margins(0, 0)
         plt.gca().set_axis_off()
@@ -28,6 +29,7 @@ class plotter():
         if title!=None:
             self.ax.set_title(title)
         # Use the image as a background
+        img = mpimg.imread(img_background_path)
         self.ax.imshow(img)
         s = img.shape
         v = [0,s[1],s[0],0]

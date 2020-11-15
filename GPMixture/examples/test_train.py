@@ -13,7 +13,6 @@ areasAxis= data.values[:,1].astype(int)
 
 # The areas array will contain the zones of interest
 nGoals    = len(areas)
-img       = mpimg.imread('imgs/goals.jpg')
 
 # This function segments the trajectories in function of the goal areas
 dataPaths,__ = get_paths_from_file('datasets/GCS/CentralStation_paths_10000.txt',areas)
@@ -36,16 +35,13 @@ if showDataset:
     for i in range(s[0]):
         for j in range(s[0]):
             if len(pathMat[i][j])>0:
-                p = plotter(img,title=f"Trajectories from {i} to {j}")
+                p = plotter("imgs/train_station.jpg",title=f"Trajectories from {i} to {j}")
                 p.plot_scene_structure(goalsData)
                 p.plot_paths(pathMat[i][j])
                 p.show()
 
 print("[INF] Number of original paths: ",len(dataPaths))
 print("[INF] Number of filtered paths: ",len(learnSet))
-
-# For each pair of goals, determine the line priors
-goalsData.compute_linear_priors(pathMat)
 
 # Selection of the kernel type
 kernelType  = "linePriorCombined"

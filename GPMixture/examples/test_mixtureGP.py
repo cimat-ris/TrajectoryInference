@@ -4,7 +4,6 @@
 from test_common import *
 from gp_code.mixture_gp import mixtureOfGPs
 
-station_img = mpimg.imread('imgs/train_station.jpg')
 # Read the areas file, dataset, and form the goalsLearnedStructure object
 goalsData, pathMat, __ = read_and_filter('parameters/CentralStation_GoalsDescriptions.csv','datasets/GCS/CentralStation_trainingSet.txt')
 stepUnit   = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals)
@@ -45,7 +44,7 @@ part_num = 5
 
 # For different sub-parts of the trajectory
 for i in range(1,part_num-1):
-    p = plotter(station_img)
+    p = plotter("imgs/train_station.jpg")
     p.plot_scene_structure(goalsData)
 
     knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos

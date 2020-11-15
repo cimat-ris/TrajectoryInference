@@ -5,7 +5,6 @@ from test_common import *
 from gp_code.single_gp import singleGP
 
 img         = mpimg.imread('imgs/goals.jpg')
-station_img = mpimg.imread('imgs/train_station.jpg')
 # Read the areas file, dataset, and form the goalsLearnedStructure object
 goalsData, pathMat, __ = read_and_filter('parameters/CentralStation_GoalsDescriptions.csv','datasets/GCS/CentralStation_trainingSet.txt')
 # TODO: we should remove this parameter; a priori it could be deduced in some way with the speed
@@ -40,7 +39,7 @@ gp = singleGP(startG,nextG,stepUnit,goalsData)
 # Divides the trajectory in part_num parts and consider
 part_num = 10
 for i in range(1,part_num-1):
-    p = plotter(station_img)
+    p = plotter("imgs/train_station.jpg")
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
     knownN = int((i+1)*(pathSize/part_num))
