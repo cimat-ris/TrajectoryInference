@@ -3,11 +3,12 @@ import sys
 from gp_code.kernels import create_kernel_matrix
 
 # Takes as an input a matrix of kernels. Exports the parameters, line by line
-def write_parameters(matrix,rows,columns,fileName,kernelType='linePriorCombined'):
+def write_parameters(matrix,fileName,kernelType='linePriorCombined'):
+    s = len(matrix)
     f = open(fileName,"w")
-    f.write('%d %d %s\n' % (rows,columns,kernelType))
-    for i in range(rows):
-        for j in range(columns):
+    f.write('%d %d %s\n' % (s,s,kernelType))
+    for i in range(s):
+        for j in range(s):
             ker = matrix[i][j]
             if ker!=None:
                 f.write('{:d} {:d} '.format(i,j))
