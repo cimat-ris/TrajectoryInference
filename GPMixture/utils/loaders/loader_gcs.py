@@ -24,8 +24,8 @@ def load_gcs(path, **kwargs):
 
     file_list = sorted(os.listdir(path))
     raw_data_list = []  # the data to be converted into Pandas DataFrame
-
-    selected_frames = kwargs.get("frames", range(0, 120001))
+    coordinate_system = kwargs.get("coordinate_system", "img")
+    selected_frames   = kwargs.get("frames", range(0, 120001))
     agent_id_incremental = 0
 
     for annot_file in file_list:
@@ -85,14 +85,13 @@ def load_gcs(path, **kwargs):
              [1.45017874e-01, -3.35678711e-03, 7.97920970e+00],
              [1.36068797e-03, -4.98339188e-05, 1.00000000e+00]]
     # homog = np.eye(3)
-
-    world_coords = image_to_world(raw_dataset[["pos_x", "pos_y"]].to_numpy(), homog)
-    raw_dataset[["pos_x", "pos_y"]] = pd.DataFrame(world_coords * 0.8)
+    if coordinate_system!="img":
+        world_coords = image_to_world(raw_dataset[["pos_x", "pos_y"]].to_numpy(), homog)
+        raw_dataset[["pos_x", "pos_y"]] = pd.DataFrame(world_coords * 0.8)
 
     # copy columns
     traj_dataset.data[["frame_id", "agent_id", "pos_x", "pos_y"]] = \
         raw_dataset[["frame_id", "agent_id", "pos_x", "pos_y"]]
-
     traj_dataset.title = kwargs.get('title', "Grand Central")
     traj_dataset.data["scene_id"] = kwargs.get('scene_id', 0)
     traj_dataset.data["label"] = "pedestrian"
@@ -112,16 +111,3 @@ if __name__ == "__main__":
     opentraj_root = sys.argv[1]
     path = os.path.join(opentraj_root, "datasets/GC/Annotation")
     traj_ds = load_gcs(path)
-    trajs = traj_ds.get_trajectories()
-    trajs = [tr for _, tr in trajs]
-
-    fig, ax = plt.subplots(figsize=(10, 10))
-    plt.grid()
-    for ii, tr in enumerate(trajs):
-        tr_np = tr[["pos_x", "pos_y"]].to_numpy()
-        plt.plot(tr_np[:, 0], tr_np[:, 1])
-        plt.scatter(tr_np[:, 0], tr_np[:, 1])
-        plt.xlim([0, 50])
-        plt.ylim([0, 50])
-        plt.title(str(ii))
-    plt.show()
