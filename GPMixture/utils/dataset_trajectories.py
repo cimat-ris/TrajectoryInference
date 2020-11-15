@@ -4,6 +4,7 @@
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
+import matplotlib.pyplot as plt
 
 
 class TrajDataset:
@@ -202,10 +203,10 @@ class TrajDataset:
         trajectories = [g for _, g in df.groupby(["scene_id", "agent_id"])]
         trl_np_list = []
         for trl in trajectories:
-            trl_np = trl[["pos_x", "pos_y", "vel_x", "vel_y", "timestamp"]].to_numpy()
+            trl_np = trl[["pos_y", "pos_x", "vel_y", "vel_x", "timestamp"]].to_numpy()
             trl_np_list.append(trl_np)
         return(trl_np_list)
-        
+
     # TODO:
     def get_entries(self, agent_ids=[], frame_ids=[], label=""):
         """
@@ -265,6 +266,18 @@ class TrajDataset:
         target_data[["vel_x", "vel_y"]] = np.matmul(tf, vels.T).T
 
         return target_data
+
+    def plot(self,ntrajs,backgd_path):
+        trajs = self.get_trajectories()
+        fig, ax = plt.subplots(figsize=(10, 10))
+        img = plt.imread(backgd_path)
+        ax.imshow(img)
+        plt.grid()
+        for ii, tr in enumerate(trajs):
+            if ii<ntrajs:
+                plt.plot(tr[:, 0], tr[:, 1])
+                plt.scatter(tr[:, 0], tr[:, 1])
+        plt.show()
 
 
 def merge_datasets(dataset_list, new_title=[]):
