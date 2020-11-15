@@ -110,18 +110,27 @@ class goal_pairs:
                     x,y,__,l,__ = get_data_from_paths(paths)
                     # Build a kernel with the specified type and initial parameters theta
                     ker   = set_kernel(kernelType)
+                    # Set the linear prior
+                    if self.kernelsX[i][j].linearPrior:
+                        meanX, covX, varX  = get_linear_prior_mean(trainingSet[i][j], 'x')
+                        ker.set_linear_prior(meanX[0],meanX[1],varX[0],varX[1])
                     params= ker.get_parameters()
                     theta = ker.get_optimizable_parameters()
-                    print("[OPT] Init parameters ",theta)
                     print("[OPT] [",i,"][",j,"]")
                     print("[OPT] #trajectories: ",len(l))
+                    print("[OPT] Initial values for the optimizable parameters: ",theta)
                     # Fit parameters in X
                     thetaX  = fit_parameters(l,x,ker,theta)
-                    print("[OPT] x: ",thetaX)
+                    print("[OPT] Optimized parameters for x: ",thetaX)
+                    print("[OPT] Final parameters for x: ",ker.get_parameters())
                     self.kernelsX[i][j].set_parameters(ker.get_parameters())
                     # Fit parameters in Y
+                    ker   = set_kernel(kernelType)
+                    if self.kernelsY[i][j].linearPrior:
+                        meanY, covY, varY  = get_linear_prior_mean(trainingSet[i][j], 'y')
+                        ker.set_linear_prior(meanY[0],meanY[1],varY[0],varY[1])
                     thetaY  = fit_parameters(l,y,ker,theta)
-                    print("[OPT] y: ",thetaY)
+                    print("[OPT] Optimized parameters for y: ",thetaY)
                     self.kernelsY[i][j].set_parameters(ker.get_parameters())
                     stop = timeit.default_timer()
                     execution_time = stop - start

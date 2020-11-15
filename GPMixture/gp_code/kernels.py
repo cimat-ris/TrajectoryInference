@@ -75,6 +75,14 @@ class Kernel:
     @abstractmethod
     def dkdy(self,x,y): pass
 
+    def set_linear_prior(self,mS,mC,sS,sC):
+        if self.linearPrior:
+            # Linear prior parameters
+            self.meanSlope     = mS
+            self.meanConstant  = mC
+            self.sigmaSlope    = sS
+            self.sigmaConstant = sC
+
 # Linear kernel
 class linearKernel(Kernel):
 
