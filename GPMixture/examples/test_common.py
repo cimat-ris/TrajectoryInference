@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import gp_code
 from gp_code.goal_pairs import goal_pairs
 from utils.io_parameters import read_and_set_parameters
-from utils.io_trajectories import read_and_filter
+from utils.io_trajectories import read_and_filter,read_and_filter_new
 from utils.manip_trajectories import get_known_set
 from utils.plotting import plot_path_samples
 from utils.plotting import plotter
