@@ -4,6 +4,7 @@ from gp_code.trajectory import trajectory
 from utils.stats_trajectories import get_paths_arclength
 
 """********** FILTER PATHS **********"""
+"""
 # Returns a matrix of trajectories:
 # the entry (i,j) has the paths tha go from the goal i to the goal j
 def define_trajectories_start_and_end_areas(startGoals, finishGoals, paths):
@@ -33,6 +34,63 @@ def define_trajectories_start_and_end_areas(startGoals, finishGoals, paths):
             if(is_in_area([endX,endY], finishGoals[k])):
                 endIndex = k
         if(startIndex > -1 and endIndex > -1):
+            # Keep the trajectory
+            mat[startIndex][endIndex].append(path)
+            # Keep the trajectory length
+            arclenMat[startIndex][endIndex].append(path.length)
+    return mat, arclenMat
+
+# Filter paths that start and end in a goal zone
+def get_paths_in_areas(paths, goals):
+    useful = []
+    for i in range(len(paths)):
+        pathLen = len(paths[i].x)
+        # Start pos
+        first   = [paths[i].x[0],paths[i].y[0]]
+        # End pos
+        last    = [paths[i].x[pathLen-1],paths[i].y[pathLen-1]]
+        isFirst, isLast = -1, -1
+        # For all goal zones, check if start/end pos belongs to it
+        for j in range(len(goals)):
+            if(is_in_area(first,goals[j])):
+                isFirst = j
+            if(is_in_area(last,goals[j])):
+                isLast = j
+        # Filter
+        if(isFirst > -1 and isLast > -1 and pathLen > 3):
+            useful.append(paths[i])
+    return useful
+"""
+#New define_trajectories_start_and_end_areas
+# Returns a matrix of trajectories:
+# the entry (i,j) has the paths tha go from the goal i to the goal j
+# We can filter and separate in the same function, instead of 
+#       get useful paths -and then-> separate between goals
+#**Could we avoid using a class for the trajectories?**
+def separate_trajectories_between_goals(trajectories, goals):
+    nGoals    = len(goals)
+    mat       = np.empty((nGoals,nGoals),dtype=object)
+    arclenMat = np.empty((nGoals,nGoals),dtype=object)
+    # Initialize the matrix elements to empty lists
+    for i in range(nGoals):
+        for j in range(nGoals):
+            mat[i][j]       = []
+            arclenMat[i][j] = []
+    # For all trajectories
+    for path in trajectories:
+        pathLen = len(path.x)
+        # Start and finish points
+        startX, startY = path.x[ 0], path.y[ 0]
+        endX, endY     = path.x[-1], path.y[-1]
+        startIndex, endIndex = -1, -1
+        # Find starting and finishing goal
+        for j in range(nGoals):
+            if(is_in_area([startX,startY], goals[j])):
+                startIndex = j
+        for k in range(nGoals):
+            if(is_in_area([endX,endY], goals[k])):
+                endIndex = k
+        if(startIndex > -1 and endIndex > -1 and pathLen > 3):
             # Keep the trajectory
             mat[startIndex][endIndex].append(path)
             # Keep the trajectory length
@@ -80,26 +138,6 @@ def filter_path_matrix(raw_path_set_matrix, nRows, mColumns):
                     all_trajectories.append(trajectory)
     return filtered_path_set_matrix, all_trajectories
 
-# Filter paths that start and end in a goal zone
-def get_paths_in_areas(paths, goals):
-    useful = []
-    for i in range(len(paths)):
-        pathLen = len(paths[i].x)
-        # Start pos
-        first   = [paths[i].x[0],paths[i].y[0]]
-        # End pos
-        last    = [paths[i].x[pathLen-1],paths[i].y[pathLen-1]]
-        isFirst, isLast = -1, -1
-        # For all goal zones, check if start/end pos belongs to it
-        for j in range(len(goals)):
-            if(is_in_area(first,goals[j])):
-                isFirst = j
-            if(is_in_area(last,goals[j])):
-                isLast = j
-        # Filter
-        if(isFirst > -1 and isLast > -1 and pathLen > 3):
-            useful.append(paths[i])
-    return useful
 
 def get_path_set_given_time_interval(paths, startT, finishT):
     if(len(paths) == 0):

@@ -8,16 +8,6 @@ from utils.loaders.loader_edinburgh import load_edinburgh
 from utils.manip_trajectories import *
 import pandas as pd
 
-"""********** READ DATA **********"""
-# Lectura de los nombres de los archivos de datos
-def readDataset(fileName):
-    file = open(fileName,'r')
-    lines = file.readlines()
-    for i in range(len(lines)):
-        lines[i] = lines[i].strip("\n")
-    return lines
-
-
 def get_paths_from_file(path_file,areas):
     paths, multigoal_paths = [],[]
     # Open file
@@ -98,12 +88,13 @@ def read_and_filter_new(dataset_id,areas_file,trajectories_file):
     nGoals   = len(areas)
     # We process here multi-objective trajectories into sub-trajectories
     traj_dataset,dataPaths,__ = get_paths_from_file_new(dataset_id,trajectories_file,areas)
-    usefulPaths  = get_paths_in_areas(dataPaths,areas)
-    print("[INF] Number of useful paths: ",len(usefulPaths),"/",len(dataPaths))
-    # Split the trajectories into pairs of goals
-    startToGoalPath, arclenMat = define_trajectories_start_and_end_areas(areas,areas,usefulPaths)
+        #usefulPaths  = get_paths_in_areas(dataPaths,areas)
+        #trajMat, arclenMat = define_trajectories_start_and_end_areas(areas,areas,usefulPaths)
+    # Get useful paths and split the trajectories into pairs of goals
+    trajMat, arclenMat = separate_trajectories_between_goals(dataPaths, areas)
+    
     # Remove the trajectories that are either too short or too long
-    pathMat, learnSet = filter_path_matrix(startToGoalPath, nGoals, nGoals)
+    pathMat, learnSet = filter_path_matrix(trajMat, nGoals, nGoals)
     sortedPaths = sorted(learnSet, key=time_compare)
     print("[INF] Number of filtered paths: ",len(learnSet))
     # Form the object goalsLearnedStructure
@@ -122,9 +113,9 @@ def read_and_filter(areasFile,trajectoriesFile):
     usefulPaths  = get_paths_in_areas(dataPaths,areas)
     print("[INF] Number of useful paths: ",len(usefulPaths),"/",len(dataPaths))
     # Split the trajectories into pairs of goals
-    startToGoalPath, arclenMat = define_trajectories_start_and_end_areas(areas,areas,usefulPaths)
+    trajMat, arclenMat = define_trajectories_start_and_end_areas(areas,areas,usefulPaths)
     # Remove the trajectories that are either too short or too long
-    pathMat, learnSet = filter_path_matrix(startToGoalPath, nGoals, nGoals)
+    pathMat, learnSet = filter_path_matrix(trajMat, nGoals, nGoals)
     sortedPaths = sorted(learnSet, key=time_compare)
     print("[INF] Number of filtered paths: ",len(learnSet))
     # Form the object goalsLearnedStructure
