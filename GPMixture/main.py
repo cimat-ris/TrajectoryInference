@@ -4,7 +4,7 @@
 import gp_code
 from gp_code.goals_structure import goalsLearnedStructure
 from gp_code.interactions import interaction_potential_for_a_set_of_trajectories
-from utils.manip_trajectories import get_known_set, getUsefulPaths
+from utils.manip_trajectories import observed_data, getUsefulPaths
 from utils.manip_trajectories import get_path_set_given_time_interval, time_compare
 from utils.io_parameters import read_and_set_parameters
 from utils.io_trajectories import read_and_filter, get_uncut_paths_from_file
@@ -74,7 +74,8 @@ if interactionWithSamplingTest == True:
         observedPaths.append(get_observed_path_given_current_time(sortedSet[j], currentTime))
         trueX,trueY,trueL = observedPaths[j].x.copy(), observedPaths[j].y.copy(), observedPaths[j].l.copy()
         # Determine the starting goal
-        startG      = get_path_start_goal(observedPaths[j],goalsData.areas)
+        startPoint = [observedPaths[j].x[0], observedPaths[j].y[0]]
+        startG     = get_goal_of_point(startPoint,goalsData.areas)
         # Create the mixture, and update it with the observed data
         mgps        = mixtureOfGPs(startG,stepUnit,goalsData)
         likelihoods = mgps.update(trueX,trueY,trueL)

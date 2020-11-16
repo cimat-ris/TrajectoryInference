@@ -19,14 +19,14 @@ def mean_euc_error(u,v):
 
 # Mean absolute error (mx,my) between true and predicted data
 def mean_abs_error(trueX, trueY, predX, predY):
-    e = [0,0]
     lp, l = len(predX), len(trueX)
+    ex, ey = 0.0, 0.0
     for i in range(lp):
-        e[0] += abs(trueX[l-1-i]-predX[lp-1-i])
-        e[1] += abs(trueY[l-1-i]-predY[lp-1-i])
-    e[0] = e[0]/len(predX)
-    e[1] = e[1]/len(predY)
-    return e
+        ex += abs(trueX[l-1-i]-predX[lp-1-i])
+        ey += abs(trueY[l-1-i]-predY[lp-1-i])
+    mx = ex/len(predX)
+    my = ey/len(predY)
+    return [mx, my]
 
 # Average L2 distance between ground truth and our prediction
 def average_displacement_error(true_XY, prediction_XY):

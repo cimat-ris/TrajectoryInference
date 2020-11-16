@@ -205,7 +205,7 @@ def break_multigoal_path(multigoalPath, goalVec, goals):
 
 def get_goal_center_and_boundaries(goal):
     points = []
-    p, __ = goal_centroid(goal)
+    p, __ = middle_of_area(goal)
     points.append(p)
     lenX = goal[len(goal) -2] - goal[0]
     lenY = goal[len(goal) -1] - goal[1]
@@ -226,12 +226,26 @@ def get_goal_of_point(p, goals):
             return i
     return -1
 
-#new middle_of_area
-def goal_centroid(R):
-    n = len(R)
-    dx, dy = R[n-2]-R[0], R[n-1]-R[1]
-    center = [R[0] + dx/2., R[1] + dy/2.]
-    return center
+def get_path_start_goal(observedPath, goals):
+    initPoint = [observedPath.x[0], observedPath.y[0]]
+    for i in range(len(goals)):
+        if(is_in_area(initPoint,goals[i])):
+            return i
+
+def get_path_finish_goal(observedPath, goals):
+    n = len(observedPath.x)
+    finishPoint = [observedPath.x[n-1], observedPath.y[n-1]]
+    for i in range(len(goals)):
+        if(is_in_area(finishPoint,goals[i])):
+            return i
+    return -1
+
+# Centroid of an area
+def middle_of_area(rectangle):
+    n = len(rectangle)
+    dx, dy = rectangle[n-2]-rectangle[0], rectangle[n-1]-rectangle[1]
+    middle = [rectangle[0] + dx/2., rectangle[1] + dy/2.]
+    return middle
 
 # Centroid and size of an area
 def goal_center_and_size(R):
@@ -373,11 +387,16 @@ def arclen_to_time(initTime,l,speed):
     return t
 
 """********** GET OBSERVED DATA **********"""
-#new: get_known_set
 # Function to get the ground truth data: knownN data
-def observed_data(x,y,z, knownN):
-    obsX, obsY, obsZ = x[0:knownN], y[0:knownN], z[0:knownN]
-    return obsX, obsY, obsZ
+def get_known_set(x,y,z,knownN):
+    trueX,trueY, trueZ = [],[],[]
+    knownN = int(knownN)
+    for j in range(knownN): #numero de datos observados
+        trueX.append(x[j])
+        trueY.append(y[j])
+        trueZ.append(z[j])
+
+    return trueX, trueY, trueZ
 
 def get_partial_path(fullPath, knownN):
     x,y,t = fullPath.x[0:knownN], fullPath.y[0:knownN], fullPath.t[0:knownN]

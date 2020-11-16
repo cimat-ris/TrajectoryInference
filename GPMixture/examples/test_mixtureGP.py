@@ -48,7 +48,7 @@ for i in range(1,part_num-1):
     p.plot_scene_structure(goalsData)
 
     knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
-    trueX,trueY,trueL = get_known_set(pathX,pathY,pathL,knownN)
+    trueX,trueY,trueL = observed_data(pathX,pathY,pathL,knownN)
     """Multigoal prediction test"""
     print('[INF] Updating likelihoods')
     likelihoods = mgps.update(trueX,trueY,trueL)

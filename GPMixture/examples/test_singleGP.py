@@ -42,7 +42,7 @@ for i in range(1,part_num-1):
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
     knownN = int((i+1)*(pathSize/part_num))
-    trueX,trueY,trueL = get_known_set(pathX,pathY,pathT,knownN)
+    trueX,trueY,trueL = observed_data(pathX,pathY,pathT,knownN)
     """Single goal prediction test"""
     # Update the GP with (real) observations
     start      = time.process_time()
