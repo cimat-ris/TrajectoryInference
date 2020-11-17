@@ -3,6 +3,7 @@ import math as m
 
 # TODO: pass in a different way
 # Standard deviation for the observation noise
+# could we added it to the kernel class?
 nsigma = 7.50
 
 # Returns two rowsxcolumns matrices:

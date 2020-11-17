@@ -7,8 +7,9 @@ from numpy import linalg as la
 from gp_code.regression import prediction_xy
 from utils.manip_trajectories import euclidean_distance
 from utils.manip_trajectories import goal_center_and_size
+from utils.manip_trajectories import goal_centroid
 
-D = 150.
+D = 150. #value for compute_goal_likelihood
 
 # Mean euclidean distance between true and predicted data
 def mean_euc_error(u,v):
@@ -28,8 +29,9 @@ def mean_abs_error(trueX, trueY, predX, predY):
     my = ey/len(predY)
     return [mx, my]
 
+#average_displacement_error
 # Average L2 distance between ground truth and our prediction
-def average_displacement_error(true_XY, prediction_XY):
+def ADE(true_XY, prediction_XY):
     error = 0.
     trueX, trueY = true_XY[0], true_XY[1]
     predictionX, predictionY = prediction_XY[0], prediction_XY[1]
@@ -103,7 +105,7 @@ def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observed
     predX, predY, varX,varY = prediction_xy(trueX,trueY,trueL, predictionSet, goalsData.kernelsX[startG][finishG],goalsData.kernelsY[startG][finishG])
 
     # Evaluate the error
-    return average_displacement_error([realX,realY],[predX,predY])
+    return ADE([realX,realY],[predX,predY])
 
 #Toma N-nPoints como datos conocidos y predice los ultimos nPoints, regresa el error de la prediccion
 def compute_prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goal,unit,stepUnit,kernelX,kernelY):
@@ -112,7 +114,7 @@ def compute_prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,g
     trueY = knownY[0:knownN -nPoints]
     trueL = knownL[0:knownN -nPoints]
 
-    finishXY,__ = middle_of_area(goal)
+    finishXY,__ = goal_centroid(goal)
     finishD     = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
     trueX.append(finishXY[0])
     trueY.append(finishXY[1])
@@ -125,7 +127,7 @@ def compute_prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,g
     predX, predY, varX,varY = prediction_xy(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
     #print("[Prediccion]\n",predX)
     #print(predY)
-    error = average_displacement_error([lastX,lastY],[predX,predY])
+    error = ADE([lastX,lastY],[predX,predY])
     #print("[Error]:",error)
     return error
 
@@ -157,8 +159,9 @@ def ADE_FDE(full_path, predicted_xy, observed, future_steps):
     real_y_l = full_path.y[observed+future_steps-1:observed+future_steps]
     pred_x_l = predicted_xy[0][:future_steps]
     pred_y_l = predicted_xy[1][:future_steps]
-
-    return average_displacement_error([real_x,real_y],[pred_x,pred_y]), average_displacement_error([real_x_l,real_y_l],[pred_x_l,pred_y_l])
+    
+    #***Both ADE?
+    return ADE([real_x,real_y],[pred_x,pred_y]), ADE([real_x_l,real_y_l],[pred_x_l,pred_y_l])
 
 def nearestPD(A):
     B = (A + np.transpose(A)) / 2
