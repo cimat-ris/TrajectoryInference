@@ -331,11 +331,6 @@ def is_in_area(p,R):
     else:
         return 0
 
-# Euclidean distance
-def euclidean_distance(p, q): #p = (x,y)
-    dist = math.sqrt( (p[0]-q[0])**2 + (p[1]-q[1])**2 )
-    return dist
-
 def copy_unitMat(unitMat, nGoals, nSubgoals):
     mat = []
     m = int(nSubgoals/nGoals)
@@ -366,7 +361,6 @@ def get_prediction_arrays(predictedMeans):
 """********** ARC LENGHT TO TIME **********"""
 def arclen_to_time(initTime,l,speed):
     t = [initTime]
-    #print("acrlen to time l:",l)
     for i in range(1,len(l)):
         time_i = int(t[i-1] +(l[i]-l[i-1])/speed)
         t.append(time_i)
