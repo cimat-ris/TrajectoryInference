@@ -29,30 +29,6 @@ def filter_trajectories(trajectories):
 
     return filtered_set
 
-#new filter_path_matrix
-# Output is:
-# - matrix of filtered lists of trajectories
-# - one big list of all the remaining trajectories
-def filter_traj_matrix(raw_path_set_matrix, nRows, mColumns):
-    all_trajectories = []
-    # Initialize a nRowsxnCols matrix with empty lists
-    filtered_matrix = np.empty((nRows, mColumns),dtype=object)
-    for i in range(nRows):
-        for j in range(mColumns):
-            filtered_matrix[i][j] = []
-
-    for i in range(nRows):
-        for j in range(mColumns):
-            # If the list of trajectories is non-empty, filter it
-            if(len(raw_path_set_matrix[i][j]) > 0):
-                filtered = filter_trajectories(raw_path_set_matrix[i][j])
-                
-                filtered_matrix[i][j].extend(filtered)
-                all_trajectories.extend(filtered)
-                
-    return filtered_matrix, all_trajectories
-
-
 """-----------------------------------------------------"""
 
 

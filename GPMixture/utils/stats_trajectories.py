@@ -1,7 +1,6 @@
 import numpy as np
-import math
-import statistics
 import matplotlib.pyplot as plt
+import statistics
 from utils.io_misc import euclidean_distance
 
 """ Alternative functions, without the class trajectory """
@@ -52,8 +51,11 @@ def tr_histogram(trajectories):
     for tr in trajectories:
         duration.append(trajectory_duration(tr))
         arclen.append(trajectory_arclength(tr))
+    _ = plt.hist(duration, bins='auto') 
+    plt.title("Histogram of trajectory duration")
+    plt.show()
         
-"""*****************************************************"""
+"""-----------------------------------------------------"""
 
 # Gets a set of trajectories and get the points (x,y,z)
 def get_data_from_paths(trajectories):
@@ -70,89 +72,7 @@ def get_data_from_paths(trajectories):
             s.append(auxS)
     return x, y, t, l, s
 
-# Get a numpy vector of durations for trajectories, plus the min and max values
-def get_min_and_max_duration(trajectories):
-    n = len(trajectories)
-    duration = np.zeros(n)
-    maxDuration = 0
-    minDuration = 10000
 
-    for i in range(n):
-        duration[i] = trajectories[i].duration
-        if(duration[i] > maxDuration):
-            # Determine max. duration
-            maxDuration = duration[i]
-        if(duration[i] < minDuration):
-            # Determine min. duration
-            minDuration = duration[i]
-    return duration, minDuration, maxDuration
-
-# Get a numpy vector of lengths of trajectories, plus the min and max values
-def get_min_and_max_arclength(trajectories):
-    n = len(trajectories)
-    arcLen = []
-    maxl = 0
-    minl = 10000
-
-    for i in range(n):
-        arcLen.append(trajectories[i].length)
-        if(arcLen[i] > maxl):
-            maxl = arcLen[i]
-        if(arcLen[i] < minl):
-            minl = arcLen[i]
-    return arcLen, minl, maxl
-
-
-# Plot the histogram of duration and lengths
-def histogram(trajectories):
-    fig, (pht,phl) = plt.subplots(2, 1)
-    vect = get_paths_duration(trajectories)
-    vecl = get_paths_arclength(trajectories)
-    _max = max(vect)
-    # Taking bins of size 10
-    numBins = int(_max/10)+1
-    # Define the duration histogram
-    ht = np.histogram(vect, bins = numBins)
-    xt = []
-    ytmin = []
-    ytmax = []
-    for i in range(len(ht[0])):
-        xt.append(ht[1][i])
-        ytmin.append(0)
-        ytmax.append(ht[0][i])
-    pht.vlines(xt,ytmin,ytmax,colors='b',linestyles='solid')
-    pht.set_title('Distribution of durations')
-    # Define the duration histogram
-    hl    = np.histogram(vecl, bins = numBins)
-    xl    = []
-    ylmin = []
-    ylmax = []
-    for i in range(len(hl[0])):
-        xl.append(hl[1][i])
-        ylmin.append(0)
-        ylmax.append(hl[0][i])
-    phl.vlines(xl,ylmin,ylmax,colors='b',linestyles='solid')
-    phl.set_title('Distribution of lengths')
-    plt.show()
-
-# Takes as an input a list of trajectories and outputs a vector with the corresponding times
-def get_paths_duration(trajectories):
-    __,__,t,__,__ = get_data_from_paths(trajectories)
-    vec = []
-    for i in range(len(trajectories)):
-        N = len(t[i])
-        vec.append(t[i][N-1] - t[i][0])
-    return vec
-
-# Takes as an input a list of trajectories and outputs a vector with the corresponding arc lengths
-def get_paths_arclength(trajectories):
-    # Get the x,y,arclengths
-    __,__,__,l,__ = get_data_from_paths(trajectories)
-    vec = []
-    for i in range(len(trajectories)):
-        N = len(l[i])
-        vec.append(l[i][N-1])
-    return vec
 
 # Estimate the steps_units for a path set (unit = ratio between the distance to the goal and the length of the trajectory).
 def get_steps_unit(pathSet):
