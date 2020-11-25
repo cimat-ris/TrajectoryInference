@@ -1,5 +1,4 @@
 import numpy as np
-import math
 from gp_code.trajectory import trajectory
 from gp_code.goal_pairs import goal_pairs
 from utils.loaders.loader_ind import load_ind
@@ -8,33 +7,25 @@ from utils.loaders.loader_edinburgh import load_edinburgh
 from utils.manip_trajectories import *
 import pandas as pd
 
-def get_paths_from_file(path_file,areas):
-    paths, multigoal_paths = [],[]
-    # Open file
-    with open(path_file) as f:
-        # Each line should contain a path
-        for line in f:
-            auxX, auxY, auxT = [],[],[]
-            # Split the line into sub-strings
-            data = line.split()
-            for i in range(0, len(data), 3):
-                x_ = int(data[i])
-                y_ = int(data[i+1])
-                t_ = int(data[i+2])
-                if equal(auxX,auxY,x_,y_) == 0:
-                    auxX.append(x_)
-                    auxY.append(y_)
-                    auxT.append(t_)
-            auxPath = trajectory(auxT,auxX,auxY)
-            gi = get_goal_sequence(auxPath,areas)
-            if len(gi) > 2:
-                multigoal_paths.append(auxPath)
-                new_paths = break_multigoal_path(auxPath,gi,areas)
-                for j in range(len(new_paths)):
-                    paths.append(new_paths[j])
-            else:
-                paths.append(auxPath)
-    return paths, multigoal_paths
+""" Alternative functions, without the class trajectory """
+#new get_paths_from_file_new
+def get_traj_from_file(dataset_id,dataset_traj,goals,coordinate_system='img'):
+    traj_dataset= load_gcs(dataset_traj, coordinate_system=coordinate_system)
+    traj_set    = traj_dataset.get_trajectories()
+    print("[INF] Loaded {:s} set, length: {:03d} ".format(dataset_id,len(traj_set)))
+
+    trajectories = []
+    for tr in traj_set:
+        x, y, t = tr[:,0], tr[:,1], tr[:,4]
+        #NOTE: Should we check if there are repeat positions in the traj?
+        trajectories.append([x,y,t])
+        
+    multigoal_traj = multigoal_trajectories(trajectories, goals)
+    #*** break multigoal traj + add them to the traj set
+    return trajectories
+    
+
+"""-----------------------------------------------------"""
 
 def get_paths_from_file_new(dataset_id,dataset_path,areas,coordinate_system='img'):
     paths, multigoal_paths = [],[]

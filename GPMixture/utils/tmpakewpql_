@@ -109,32 +109,20 @@ def get_trajectories_given_time_interval(trajectories, startT, finishT):
     return trSet
 
 # new get_goal_sequence
-def traj_goal_sequence(tr, goals):
-    goalSeq = []
+def tr_goal_sequence(tr, goals):
+    goalSeq = [] #prev: g
     x, y = tr[0], tr[1]
     
     for i in range(len(x)):
         for j in range(len(goals)):
             xy = [x[i], y[i]]
             if is_in_area(xy, goals[j]):
-                if len(goalSeq) == 0:
-                    goalSeq.append(j)
+                if len(g) == 0:
+                    g.append(j)
                 else:
-                    if j != goalSeq[-1]:
-                        goalSeq.append(j)
-    return goalSeq
-
-# new getMultigoalPaths
-def multigoal_trajectories(trajectories, goals):
-    multigoal_tr = []
-    
-    for tr in trajectories:
-        gSeq = traj_goal_sequence(tr, goals)
-        if len(gSeq) > 2:
-            multigoal_tr.append(tr)
-    
-    return multigoal_tr
-
+                    if j != g[len(g)-1]:
+                        g.append(j)
+    return g
 
 """-----------------------------------------------------"""
 
