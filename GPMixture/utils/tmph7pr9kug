@@ -7,12 +7,14 @@ from utils.stats_trajectories import trajectory_arclength
 #trajectory = [x,y,t]
 
 def separate_trajectories_between_goals_new(trajectories, goals):
-    nGoals = len(goals)
-    mat    = np.empty((nGoals,nGoals),dtype=object)
+    nGoals    = len(goals)
+    mat       = np.empty((nGoals,nGoals),dtype=object)
+    arclenMat = np.empty((nGoals,nGoals),dtype=object)
     # Initialize the matrix elements to empty lists
     for i in range(nGoals):
         for j in range(nGoals):
             mat[i][j]       = []
+            arclenMat[i][j] = []
     # For all trajectories
     for tr in trajectories:
         x, y = tr[0], tr[1]
@@ -31,8 +33,10 @@ def separate_trajectories_between_goals_new(trajectories, goals):
         if(startIndex > -1 and endIndex > -1 and trLen > 3):
             # Keep the trajectory
             mat[startIndex][endIndex].append(tr)
-            
-    return mat
+            # Save trajectory length
+            trArclen = trajectory_arclength(tr)
+            arclenMat[startIndex][endIndex].append(trArclen)
+    return mat, arclenMat
 
 #new filter_paths
 # Computes the median and SD of a trajectory set
@@ -124,36 +128,12 @@ def multigoal_trajectories(trajectories, goals):
     multigoal_tr = []
     
     for tr in trajectories:
-        goalSeq = traj_goal_sequence(tr, goals)
-        if len(goalSeq) > 2:
+        gSeq = traj_goal_sequence(tr, goals)
+        if len(gSeq) > 2:
             multigoal_tr.append(tr)
     
     return multigoal_tr
 
-#new break_multigoal_path
-def fi(tr, goals):
-    x, y, t = tr[0], tr[1], tr[2]
-    trSet = []
-    
-    X, Y, T = [], [], []    #new trajectory
-    lastG = None            #last goal
-    for i in range(len(x) ):
-        X.append(x[i])
-        Y.append(y[i])
-        T.append(t[i])
-        
-        xy = [x[i], y[i]]       #current position
-        for j in range(len(goals)):
-            if is_in_area(xy, goals[j]):
-                if lastG is None:
-                    lastG = j
-                elif lastG != j:
-                    trSet.append([X,Y,T] )
-                    X, Y, T = [], [], [] #start a new trajectory
-                    
-    return trSet     
-                
-        
 
 """-----------------------------------------------------"""
 

@@ -5,6 +5,7 @@ from test_common import *
 from utils.loaders.loader_ind import load_ind
 from utils.loaders.loader_gcs import load_gcs
 from utils.loaders.loader_edinburgh import load_edinburgh
+from utils.manip_trajectories import read_and_filter_
 import matplotlib.pyplot as plt
 
 
@@ -34,9 +35,10 @@ if test_edi:
     traj_set    = traj_dataset.get_trajectories()
     print("[INF] Loaded Edinburgh set, length: {:03d} ".format(len(traj_set)))
 
-goalsData, pathMat, __ = read_and_filter('parameters/CentralStation_GoalsDescriptions.csv','datasets/GC/Annotation/')
+#goalsData, pathMat, __ = read_and_filter('parameters/CentralStation_GoalsDescriptions.csv','datasets/GC/Annotation/')
 
-traj_dataset,goalsData, pathMat, __ = read_and_filter_new('GCS','parameters/CentralStation_GoalsDescriptions.csv','datasets/GC/Annotation/')
+#traj_dataset,goalsData, pathMat, __ = read_and_filter_new('GCS','parameters/CentralStation_GoalsDescriptions.csv','datasets/GC/Annotation/')
+traj_dataset,goalsData, trajMat, __ = read_and_filter_('GCS','parameters/CentralStation_GoalsDescriptions.csv','datasets/GC/Annotation/')
 traj_dataset.plot(200,"imgs/train_station.jpg")
 
 # Plot trajectories and structure
@@ -45,8 +47,8 @@ if showDataset:
     s = goalsData.areas_coordinates.shape
     for i in range(s[0]):
         for j in range(s[0]):
-            if len(pathMat[i][j])>0:
+            if len(trajMat[i][j])>0:
                 p = plotter("imgs/train_station.jpg",title=f"Trajectories from {i} to {j}")
                 p.plot_scene_structure(goalsData)
-                p.plot_paths(pathMat[i][j])
+                p.plot_paths(trajMat[i][j])
                 p.show()
