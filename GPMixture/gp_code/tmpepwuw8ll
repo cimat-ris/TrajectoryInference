@@ -5,6 +5,7 @@ from utils.manip_trajectories import goal_center_and_size, get_linear_prior_mean
 from utils.stats_trajectories import get_data_from_paths
 from utils.io_misc import euclidean_distance
 import numpy as np
+import math
 from copy import copy
 
 # This structure keeps all the learned data
@@ -153,7 +154,7 @@ class goal_pairs:
                     for tr in trMat[i][j]:
                         duration.append(trajectory_duration(tr))
                     M  = np.mean(duration)
-                    SD = np.std(duration) 
+                    SD = np.stdev(duration) 
                    
                 self.timeTransitionMeans[i][j] = M
                 self.timeTransitionStd[i][j]   = SD 

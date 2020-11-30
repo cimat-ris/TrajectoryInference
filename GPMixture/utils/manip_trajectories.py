@@ -1,6 +1,5 @@
 import numpy as np
-from gp_code.trajectory import trajectory
-from utils.stats_trajectories import get_paths_arclength
+#from utils.stats_trajectories import get_paths_arclength
 from utils.stats_trajectories import trajectory_arclength
 
 """ Alternative functions, without the class trajectory """
@@ -131,7 +130,7 @@ def multigoal_trajectories(trajectories, goals):
     return multigoal_tr
 
 #new break_multigoal_path
-def fi(tr, goals):
+def break_multigoal_traj(tr, goals):
     x, y, t = tr[0], tr[1], tr[2]
     trSet = []
     
@@ -272,54 +271,16 @@ def get_goal_sequence(p, goals):
                         g.append(j)
     return g
 
-def getMultigoalPaths(paths,goals):
-    N = len(paths)
-    p = []
-    g = []
-    for i in range(N):
-        gi = get_goal_sequence(paths[i],goals)
-        if len(gi) > 2:
-            p.append(i)
-            g.append(gi)
-    return p, g
-
-def break_multigoal_path(multigoalPath, goalVec, goals):
-    newPath = []
-    p = multigoalPath
-    g = goalVec
-    newX, newY, newT = [], [], []
-    goalInd = 0
-    for j in range(len(p.x)):
-        newX.append(p.x[j])
-        newY.append(p.y[j])
-        newT.append(p.t[j])
-
-        if goalInd < len(g)-1:
-            nextgoal = g[goalInd+1]
-            xy = [p.x[j], p.y[j]]
-            if is_in_area(xy,goals[nextgoal]):
-                new = trajectory(newT,newX,newY)
-                newPath.append(new)
-                newX, newY, newT = [p.x[j]], [p.y[j]], [p.t[j]]
-                goalInd += 1
-    return newPath
-
 
 def get_goal_center_and_boundaries(goal):
-    points = []
     p, __ = goal_centroid(goal)
-    points.append(p)
     lenX = goal[len(goal) -2] - goal[0]
     lenY = goal[len(goal) -1] - goal[1]
     q1 = [p[0]-lenX/2, p[1]]
     q2 = [p[0], p[1]+lenY/2]
     q3 = [p[0]+lenX/2, p[1]]
     q4 = [p[0], p[1]-lenY/2]
-    points.append(q1)
-    points.append(q2)
-    points.append(q3)
-    points.append(q4)
-    return points
+    return [p,q1,q2,q3,q4]
 
 
 def get_goal_of_point(p, goals):
@@ -475,16 +436,10 @@ def observed_data(x,y,z, knownN):
     obsX, obsY, obsZ = x[0:knownN], y[0:knownN], z[0:knownN]
     return obsX, obsY, obsZ
 
-def get_partial_path(fullPath, knownN):
-    x,y,t = fullPath.x[0:knownN], fullPath.y[0:knownN], fullPath.t[0:knownN]
-    partialPath = path(t,x,y)
-    return partialPath
-
-def get_observed_path_given_current_time(fullPath, currentTime):
-    x, y, t= [],[],[]
-    knownN = 0
-    while(fullPath.t[knownN] <= currentTime):
-        knownN += 1
-    x,y,t = fullPath.x[0:knownN], fullPath.y[0:knownN], fullPath.t[0:knownN]
-    observedPath = path(t,x,y)
-    return observedPath
+def observed_data_given_time(x,y,t,time):
+    i = 0
+    while(t[i] <= time):
+        i =+ 1
+    obsX, obsY, obsT = x[0:i], y[0:i], t[0:i]
+    return obsX, obsY, obsT
+    

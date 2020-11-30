@@ -40,7 +40,7 @@ traj_dataset,goalsData, trajMat, __ = read_and_filter_('GCS','parameters/Central
 traj_dataset.plot(200,"imgs/train_station.jpg")
 
 # Plot trajectories and structure
-showDataset = False
+showDataset = True
 if showDataset:
     s = goalsData.areas_coordinates.shape
     for i in range(s[0]):

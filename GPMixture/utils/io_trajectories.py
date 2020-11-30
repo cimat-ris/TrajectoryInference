@@ -1,5 +1,5 @@
 import numpy as np
-from gp_code.trajectory import trajectory
+#from gp_code.trajectory import trajectory
 from gp_code.goal_pairs import goal_pairs
 from utils.loaders.loader_ind import load_ind
 from utils.loaders.loader_gcs import load_gcs
