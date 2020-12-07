@@ -4,8 +4,8 @@
 from test_common import *
 from utils.loaders.loader_ind import load_ind
 from utils.loaders.loader_gcs import load_gcs
-from utils.loaders.loader_edinburgh import load_edinburgh
-from utils.manip_trajectories import read_and_filter_
+#from utils.loaders.loader_edinburgh import load_edinburgh
+from utils.io_trajectories import read_and_filter_
 import matplotlib.pyplot as plt
 
 
@@ -22,7 +22,8 @@ if test_ind:
 # GCS (Grand Central) dataset
 test_gcs = True
 if test_gcs:
-    dataset_dir = "./datasets/GC/Annotation/"
+    dataset_dir = "C:/Users/karen/Desktop/GitHub/TrajectoryInference/GPMixture/datasets/GC/Annotation"
+    #"./datasets/GC/Annotation/"
     traj_dataset= load_gcs(dataset_dir)
     traj_set    = traj_dataset.get_trajectories()
     print("[INF] Loaded GCS set, length: {:03d} ".format(len(traj_set)))
@@ -40,7 +41,7 @@ traj_dataset,goalsData, trajMat, __ = read_and_filter_('GCS','parameters/Central
 traj_dataset.plot(200,"imgs/train_station.jpg")
 
 # Plot trajectories and structure
-showDataset = False
+showDataset = True
 if showDataset:
     s = goalsData.areas_coordinates.shape
     for i in range(s[0]):
@@ -48,5 +49,5 @@ if showDataset:
             if len(trajMat[i][j])>0:
                 p = plotter("imgs/train_station.jpg",title=f"Trajectories from {i} to {j}")
                 p.plot_scene_structure(goalsData)
-                p.plot_paths(trajMat[i][j])
+                p.plot_trajectories(trajMat[i][j])
                 p.show()

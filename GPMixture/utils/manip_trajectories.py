@@ -151,8 +151,38 @@ def break_multigoal_traj(tr, goals):
                     X, Y, T = [], [], [] #start a new trajectory
                     
     return trSet     
-                
+   
+#new get_data_from_paths             
+# Returns {xi,yi,li} where
+# xi = Vector of x values of the traj i 
+def get_data_from_set(trajectories):
+    X, Y, L = [], [], []
+    for tr in trajectories:
+        X.append(tr[0])
+        Y.append(tr[1])
+        L.append(trajectory_arclength(tr) )
+    return X, Y, L
         
+
+'''------------ Linear Prior Mean --------------'''
+#new get_line_parameters
+# Linear regression: for data l,f(l), the function returns a, b for the line between the
+# starting and ending points
+def line_parameters(traj, flag):
+    traj_arclen = trajectory_arclength(traj)
+    arclen = traj_arclen[-1]
+    if arclen == 0:
+        return 0.,0.
+    
+    x, y = traj[0], traj[1]
+    if(flag == 'x'):
+        b = x[0]
+        a = (x[-1]-b)/arclen
+    if(flag == 'y'):
+        b = y[0]
+        a = (y[-1]-b)/arclen
+    return a, b
+    
 
 """-----------------------------------------------------"""
 
@@ -347,8 +377,8 @@ def get_line_variances(lineParameters, mean):
         var[1]=0.001
     return var
 
-# Takes as an input a set of trajectories (between goals) and a flag that says whether the orientation
-# is in x or y
+# Takes as an input a set of trajectories (between goals) 
+# and a flag that says whether the orientation is in x or y
 # Returns the mean value of the line parameters (to be used as a prior)
 def get_linear_prior_mean(paths, flag):
     n = len(paths)
@@ -360,7 +390,8 @@ def get_linear_prior_mean(paths, flag):
     sum_b = 0.
     for i in range(n):
         # For each path, get the corresponding line parameters
-        a, b = get_line_parameters(paths[i], flag)
+        #a, b = get_line_parameters(paths[i], flag)
+        a, b = line_parameters(paths[i], flag)
         lineParameters.append([a,b])
         sum_a += a
         sum_b += b
@@ -429,7 +460,7 @@ def arclen_to_time(initTime,l,speed):
         t.append(time_i)
     return t
 
-"""********** GET OBSERVED DATA **********"""
+"""-------- Get Observed Data -------------"""
 #new: get_known_set
 # Function to get the ground truth data: knownN data
 def observed_data(x,y,z, knownN):

@@ -3,7 +3,7 @@ import numpy as np
 from gp_code.goal_pairs import goal_pairs
 from utils.loaders.loader_ind import load_ind
 from utils.loaders.loader_gcs import load_gcs
-from utils.loaders.loader_edinburgh import load_edinburgh
+#from utils.loaders.loader_edinburgh import load_edinburgh
 from utils.manip_trajectories import multigoal_trajectories
 from utils.manip_trajectories import break_multigoal_traj
 from utils.manip_trajectories import separate_trajectories_between_goals

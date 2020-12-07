@@ -2,7 +2,8 @@ from gp_code.kernels import set_kernel
 from gp_code.optimize_parameters import *
 from utils.stats_trajectories import trajectory_arclength, trajectory_duration
 from utils.manip_trajectories import goal_center_and_size, get_linear_prior_mean
-from utils.stats_trajectories import get_data_from_paths
+#from utils.stats_trajectories import get_data_from_paths
+from utils.manip_trajectories import get_data_from_set
 from utils.io_misc import euclidean_distance
 import numpy as np
 from copy import copy
@@ -99,9 +100,8 @@ class goal_pairs:
         # Build the kernel matrices with the default values
         self.kernelsX, parametersX = create_kernel_matrix(kernelType, self.nGoals, self.nGoals)
         self.kernelsY, parametersY = create_kernel_matrix(kernelType, self.nGoals, self.nGoals)
-        # For goal i
+        # For every pair of goals (gi, gj)
         for i in range(self.nGoals):
-            # For goal j
             for j in range(self.nGoals):
                 # Get the set of paths that go from i to j
                 paths = trainingSet[i][j]
@@ -109,15 +109,16 @@ class goal_pairs:
                 if len(paths) > self.min_traj_number:
                     start = timeit.default_timer()
                     # Get the path data as x,y,z (z is arclength)
-                    x,y,__,l,__ = get_data_from_paths(paths)
+                        #x,y,__,l,__ = get_data_from_paths(paths)
+                    x,y,l = get_data_from_set(paths)
                     # Build a kernel with the specified type and initial parameters theta
                     ker   = set_kernel(kernelType)
                     # Set the linear prior
                     if self.kernelsX[i][j].linearPrior:
                         meanX, covX, varX  = get_linear_prior_mean(trainingSet[i][j], 'x')
                         ker.set_linear_prior(meanX[0],meanX[1],varX[0],varX[1])
-                    params= ker.get_parameters()
-                    theta = ker.get_optimizable_parameters()
+                    params = ker.get_parameters()
+                    theta  = ker.get_optimizable_parameters()
                     print("[OPT] [",i,"][",j,"]")
                     print("[OPT] #trajectories: ",len(l))
                     print("[OPT] Initial values for the optimizable parameters: ",theta)

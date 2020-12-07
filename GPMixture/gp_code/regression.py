@@ -7,7 +7,7 @@ from numpy.linalg import inv
 from scipy.linalg import *
 from matplotlib.patches import Ellipse
 from copy import copy
-from utils.manip_trajectories import euclidean_distance
+from utils.io_misc import euclidean_distance
 import random
 
 # The main regression function: perform regression for a vector of values lnew

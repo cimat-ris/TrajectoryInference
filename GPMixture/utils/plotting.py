@@ -127,6 +127,11 @@ class plotter():
             self.ax.plot(x[i],y[i], color=Color, alpha=0.5)
             self.ax.plot([ox[-1],x[i][0]],[oy[-1],y[i][0]], alpha=0.5)
 
+    # new plot_paths
+    def plot_trajectories(self, trajSet):
+        for tr in trajSet:
+            self.ax.plot(tr[0],tr[1])
+        
     # Plot a set of paths
     def plot_paths(self, path_set):
         for path in path_set:
