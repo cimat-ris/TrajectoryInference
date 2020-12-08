@@ -1,11 +1,12 @@
 import numpy as np
+import statistics as stats
 #from utils.stats_trajectories import get_paths_arclength
 from utils.stats_trajectories import trajectory_arclength
 
 """ Alternative functions, without the class trajectory """
 #trajectory = [x,y,t]
 
-def separate_trajectories_between_goals_new(trajectories, goals):
+def separate_trajectories_between_goals(trajectories, goals):
     nGoals = len(goals)
     mat    = np.empty((nGoals,nGoals),dtype=object)
     # Initialize the matrix elements to empty lists
@@ -16,41 +17,46 @@ def separate_trajectories_between_goals_new(trajectories, goals):
     for tr in trajectories:
         x, y = tr[0], tr[1]
         trLen = len(x)
-        # Start and finish points
-        startX, startY = x[0], y[0]
-        endX, endY     = x[-1], y[-1]
-        startIndex, endIndex = -1, -1
-        # Find starting and finishing goal
-        for j in range(nGoals):
-            if(is_in_area([startX,startY], goals[j])):
-                startIndex = j
-        for k in range(nGoals):
-            if(is_in_area([endX,endY], goals[k])):
-                endIndex = k
-        if(startIndex > -1 and endIndex > -1 and trLen > 3):
-            # Keep the trajectory
-            mat[startIndex][endIndex].append(tr)
-            
+        if trLen > 2:
+            # Start and finish points
+            startX, startY = x[0], y[0]
+            endX, endY     = x[-1], y[-1]
+            startIndex, endIndex = -1, -1
+            # Find starting and finishing goal
+            for j in range(nGoals):
+                if(is_in_area([startX,startY], goals[j])):
+                    startIndex = j
+            for k in range(nGoals):
+                if(is_in_area([endX,endY], goals[k])):
+                    endIndex = k
+            if(startIndex > -1 and endIndex > -1):
+                # Keep the trajectory
+                mat[startIndex][endIndex].append(tr)
+                
     return mat
 
 #new filter_paths
 # Computes the median and SD of a trajectory set
 # Removes trajectories that differ more than 3SD 
 def filter_trajectories(trajectories):
+    if len(trajectories) == 0:
+        return []
+    
     arclen = []
     for tr in trajectories:
-        tr_arclen = trajectory_arclength(tr)
-        if tr_arclen == 0:
-            trajectories.remove(tr)
-        else:
-            arclen.append(tr_arclen)
-    
-    M  = np.median(arclen)
-    SD = np.std(arclen)
+        vec_arclen = trajectory_arclength(tr)
+        tr_arclen  = vec_arclen[-1]
+        arclen.append(tr_arclen)
+        
+    M  = stats.median(arclen)
+    if len(arclen) < 2:
+        SD = 0.0
+    else:
+        SD = stats.stdev(arclen)
     
     filtered_set = []
     for i in range(len(trajectories)):
-        if abs(arclen[i] - M) <= 3.0*SD:
+        if arclen[i] > 0 and abs(arclen[i] - M) <= 3.0*SD:
             filtered_set.append(trajectories[i])
 
     return filtered_set
@@ -198,7 +204,7 @@ def line_parameters(traj, flag):
 # We can filter and separate in the same function, instead of 
 #       get useful paths -and then-> separate between goals
 #**Could we avoid using a class for the trajectories?**
-def separate_trajectories_between_goals(trajectories, goals):
+def separate_trajectories_between_goals_old(trajectories, goals):
     nGoals    = len(goals)
     mat       = np.empty((nGoals,nGoals),dtype=object)
     arclenMat = np.empty((nGoals,nGoals),dtype=object)
@@ -234,7 +240,7 @@ def filter_paths(path_set):
     # Get the list of arclengths
     arclen_set = get_paths_arclength(path_set)
     # Median
-    median_arclen = np.median(arclen_set)
+    median_arclen = stats.median(arclen_set)
     # Standard deviation
     SD = np.sqrt(np.var(arclen_set))
     # Resulting filtered set

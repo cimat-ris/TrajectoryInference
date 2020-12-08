@@ -25,7 +25,8 @@ def get_traj_from_file(dataset_id, dataset_traj, goals, coordinate_system='img')
         trajectories.append([x,y,t])
         
     multigoal_traj = multigoal_trajectories(trajectories, goals)
-    trajectories.extend(break_multigoal_traj(multigoal_traj, goals) )
+    for tr in multigoal_traj:
+        trajectories.extend(break_multigoal_traj(tr, goals) )
     
     return trajectories
     

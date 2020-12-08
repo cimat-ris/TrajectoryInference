@@ -20,10 +20,10 @@ if test_ind:
         print("[INF] Loaded InD set {:02d}, length: {:03d} ".format(i,len(traj_set)))
 
 # GCS (Grand Central) dataset
-test_gcs = True
+test_gcs = False
 if test_gcs:
-    dataset_dir = "C:/Users/karen/Desktop/GitHub/TrajectoryInference/GPMixture/datasets/GC/Annotation"
-    #"./datasets/GC/Annotation/"
+    dataset_dir = "./datasets/GC/Annotation/"
+    #"C:/Users/karen/Desktop/GitHub/TrajectoryInference/GPMixture/datasets/GC/Annotation"
     traj_dataset= load_gcs(dataset_dir)
     traj_set    = traj_dataset.get_trajectories()
     print("[INF] Loaded GCS set, length: {:03d} ".format(len(traj_set)))
@@ -37,8 +37,15 @@ if test_edi:
     print("[INF] Loaded Edinburgh set, length: {:03d} ".format(len(traj_set)))
 
 #traj_dataset,goalsData, pathMat, __ = read_and_filter_new('GCS','parameters/CentralStation_GoalsDescriptions.csv','datasets/GC/Annotation/')
-traj_dataset,goalsData, trajMat, __ = read_and_filter_('GCS','parameters/CentralStation_GoalsDescriptions.csv','datasets/GC/Annotation/')
-traj_dataset.plot(200,"imgs/train_station.jpg")
+#traj_dataset,goalsData, trajMat, __ = read_and_filter_('GCS','parameters/CentralStation_GoalsDescriptions.csv','datasets/GC/Annotation/')
+#traj_dataset.plot(200,"imgs/train_station.jpg")
+
+goalsDescriptions = 'C:/Users/karen/Desktop/GitHub/TrajectoryInference/GPMixture/parameters/CentralStation_GoalsDescriptions.csv'
+trajFile = "C:/Users/karen/Desktop/GitHub/TrajectoryInference/GPMixture/datasets/GC/Annotation/"
+GCSimg = "C:/Users/karen/Desktop/GitHub/TrajectoryInference/GPMixture/imgs/train_station.jpg"
+
+traj_dataset,goalsData, trajMat, __ = read_and_filter_('GCS',goalsDescriptions,trajFile)
+traj_dataset.plot(200,GCSimg)
 
 # Plot trajectories and structure
 showDataset = True
@@ -47,7 +54,8 @@ if showDataset:
     for i in range(s[0]):
         for j in range(s[0]):
             if len(trajMat[i][j])>0:
-                p = plotter("imgs/train_station.jpg",title=f"Trajectories from {i} to {j}")
+                #p = plotter("imgs/train_station.jpg",title=f"Trajectories from {i} to {j}")
+                p = plotter(GCSimg,title=f"Trajectories from {i} to {j}")
                 p.plot_scene_structure(goalsData)
                 p.plot_trajectories(trajMat[i][j])
                 p.show()

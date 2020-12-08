@@ -48,7 +48,8 @@ class goal_pairs:
                 if( nTr > 0):
                     arclen = []
                     for tr in Mat[i][j]:
-                        arclen.append(trajectory_arclength(tr) )
+                        tr_arclen = trajectory_arclength(tr)
+                        arclen.append(tr_arclen[-1])
                     m = np.mean(arclen)
                 else:
                     m = 0
