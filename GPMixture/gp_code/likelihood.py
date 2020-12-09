@@ -5,7 +5,7 @@ import numpy as np
 import math
 from numpy import linalg as la
 from gp_code.regression import prediction_xy
-from utils.manip_trajectories import euclidean_distance
+from utils.io_misc import euclidean_distance
 from utils.manip_trajectories import goal_center_and_size
 from utils.manip_trajectories import goal_centroid
 
@@ -87,49 +87,21 @@ def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observed
     # Get the last point and add it to the observed data
     finishXY,__ = goal_center_and_size(goalsData.areas_coordinates[finishG])
     finishD     = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
-    trueX.append(finishXY[0])
-    trueY.append(finishXY[1])
-    trueL.append(finishD*goalsData.units[startG][finishG])
+    np.append(trueX,finishXY[0])
+    np.append(trueY,finishXY[1])
+    np.append(trueL,finishD*goalsData.units[startG][finishG])
 
     d = int(halfN/nPoints)
     if d<1:
         return 1.0
-
-    realX, realY, predictionSet = [],[],[]
     # Prepare the ground truths and the list of l to evaluate
-    for i in range(nPoints):
-        realX.append(observedX[halfN + i*d])
-        realY.append(observedY[halfN + i*d])
-        predictionSet.append(observedL[halfN + i*d])
-    # Get the prediction based on the
+    realX         = observedX[halfN:halfN+nPoints*d:d]
+    realY         = observedY[halfN:halfN+nPoints*d:d]
+    predictionSet = observedL[halfN:halfN+nPoints*d:d]
+    # Get the prediction based on the GP
     predX, predY, varX,varY = prediction_xy(trueX,trueY,trueL, predictionSet, goalsData.kernelsX[startG][finishG],goalsData.kernelsY[startG][finishG])
-
     # Evaluate the error
     return ADE([realX,realY],[predX,predY])
-
-#Toma N-nPoints como datos conocidos y predice los ultimos nPoints, regresa el error de la prediccion
-def compute_prediction_error_of_last_known_points(nPoints,knownX,knownY,knownL,goal,unit,stepUnit,kernelX,kernelY):
-    knownN = len(knownX)
-    trueX = knownX[0:knownN -nPoints]
-    trueY = knownY[0:knownN -nPoints]
-    trueL = knownL[0:knownN -nPoints]
-
-    finishXY,__ = goal_centroid(goal)
-    finishD     = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
-    trueX.append(finishXY[0])
-    trueY.append(finishXY[1])
-    trueL.append(finishD*unit)
-
-    lastX = knownX[knownN -nPoints: nPoints]
-    lastY = knownY[knownN -nPoints: nPoints]
-    predictionSet = knownL[knownN -nPoints: nPoints]
-
-    predX, predY, varX,varY = prediction_xy(trueX,trueY,trueL, predictionSet, kernelX, kernelY)
-    #print("[Prediccion]\n",predX)
-    #print(predY)
-    error = ADE([lastX,lastY],[predX,predY])
-    #print("[Error]:",error)
-    return error
 
 #Busco un alpha en [0,1] tal que t = alpha*T1 + (1-alpha)*T2
 def search_value(a, b, t, T1, T2):
@@ -159,7 +131,7 @@ def ADE_FDE(full_path, predicted_xy, observed, future_steps):
     real_y_l = full_path.y[observed+future_steps-1:observed+future_steps]
     pred_x_l = predicted_xy[0][:future_steps]
     pred_y_l = predicted_xy[1][:future_steps]
-    
+
     #***Both ADE?
     return ADE([real_x,real_y],[pred_x,pred_y]), ADE([real_x_l,real_y_l],[pred_x_l,pred_y_l])
 

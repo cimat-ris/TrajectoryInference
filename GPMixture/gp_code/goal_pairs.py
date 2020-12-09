@@ -110,7 +110,6 @@ class goal_pairs:
                 if len(paths) > self.min_traj_number:
                     start = timeit.default_timer()
                     # Get the path data as x,y,z (z is arclength)
-                        #x,y,__,l,__ = get_data_from_paths(paths)
                     x,y,l = get_data_from_set(paths)
                     # Build a kernel with the specified type and initial parameters theta
                     ker   = set_kernel(kernelType)
@@ -155,7 +154,7 @@ class goal_pairs:
                     for tr in trMat[i][j]:
                         duration.append(trajectory_duration(tr))
                     M  = np.mean(duration)
-                    SD = np.std(duration) 
-                   
+                    SD = np.std(duration)
+
                 self.timeTransitionMeans[i][j] = M
-                self.timeTransitionStd[i][j]   = SD 
+                self.timeTransitionStd[i][j]   = SD
