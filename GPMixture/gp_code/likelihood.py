@@ -11,21 +11,19 @@ from utils.manip_trajectories import goal_center_and_size
 D = 150. #value for compute_goal_likelihood
 
 # Mean euclidean distance between true and predicted data
-def mean_euc_error(u,v):
-    error = 0.
-    # TODO: Vectorization    
-    for i in range(len(u)):
-        error += math.sqrt((u[i]- v[i])**2)
-    return error/len(u)
+def mean_euc_error(true, predicted):
+    u = np.array(true)
+    v = np.array(predicted)
+    
+    return la.norm(u-v)
 
 # Mean absolute error (mx,my) between true and predicted data
 def mean_abs_error(trueX, trueY, predX, predY):
-    lp, l = len(predX), len(trueX)
     ex, ey = 0.0, 0.0
     # TODO: Vectorization
-    for i in range(lp):
-        ex += abs(trueX[l-1-i]-predX[lp-1-i])
-        ey += abs(trueY[l-1-i]-predY[lp-1-i])
+    for i in range(len(predX)):
+        ex += abs(trueX[-1-i]-predX[-1-i])
+        ey += abs(trueY[-1-i]-predY[-1-i])
     mx = ex/len(predX)
     my = ey/len(predY)
     return [mx, my]
