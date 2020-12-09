@@ -7,13 +7,13 @@ from numpy import linalg as la
 from gp_code.regression import prediction_xy
 from utils.io_misc import euclidean_distance
 from utils.manip_trajectories import goal_center_and_size
-from utils.manip_trajectories import goal_centroid
 
 D = 150. #value for compute_goal_likelihood
 
 # Mean euclidean distance between true and predicted data
 def mean_euc_error(u,v):
     error = 0.
+    # TODO: Vectorization    
     for i in range(len(u)):
         error += math.sqrt((u[i]- v[i])**2)
     return error/len(u)
@@ -22,6 +22,7 @@ def mean_euc_error(u,v):
 def mean_abs_error(trueX, trueY, predX, predY):
     lp, l = len(predX), len(trueX)
     ex, ey = 0.0, 0.0
+    # TODO: Vectorization
     for i in range(lp):
         ex += abs(trueX[l-1-i]-predX[lp-1-i])
         ey += abs(trueY[l-1-i]-predY[lp-1-i])
@@ -33,9 +34,10 @@ def mean_abs_error(trueX, trueY, predX, predY):
 # Average L2 distance between ground truth and our prediction
 def ADE(true_XY, prediction_XY):
     error = 0.
-    trueX, trueY = true_XY[0], true_XY[1]
+    trueX, trueY             = true_XY[0], true_XY[1]
     predictionX, predictionY = prediction_XY[0], prediction_XY[1]
-    l = min(len(trueX),len(predictionX))
+    l    = min(len(trueX),len(predictionX))
+    # TODO: Vectorization
     for i in range(l):
         error += math.sqrt((trueX[i]-predictionX[i])**2 + (trueY[i]-predictionY[i])**2)
     if(l>0):

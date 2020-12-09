@@ -1,6 +1,5 @@
 import numpy as np
 import statistics as stats
-#from utils.stats_trajectories import get_paths_arclength
 from utils.stats_trajectories import trajectory_arclength
 
 """ Alternative functions, without the class trajectory """
@@ -422,8 +421,8 @@ def equal(vx,vy,x,y):
 def is_in_area(p,R):
     x = p[0]
     y = p[1]
-    if(x >= R[0] and x <= R[len(R)-2]):
-        if(y >= R[1] and y <= R[len(R)-1]):
+    if(x >= R[0] and x <= R[-2]):
+        if(y >= R[1] and y <= R[-1]):
             return 1
         else:
             return 0

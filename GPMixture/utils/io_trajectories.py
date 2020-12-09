@@ -37,14 +37,14 @@ def get_complete_traj_from_file(dataset_id,dataset_traj,goals,coordinate_system=
     traj_dataset= load_gcs(dataset_traj, coordinate_system=coordinate_system)
     traj_set    = traj_dataset.get_trajectories()
     print("[INF] Loaded {:s} set, length: {:03d} ".format(dataset_id,len(traj_set)))
-
     trajectories = []
+    # Get trajectories x,y,t
     for tr in traj_set:
         x, y, t = tr[:,0], tr[:,1], tr[:,4]
         trajectories.append([x,y,t])
     return trajectories
 
-# new read_and_firlter_new
+# Main function for reading the data from a dataset
 def read_and_filter_(dataset_id, areas_file, trajectories_file):
     # Read the areas data from the specified file
     data     = pd.read_csv(areas_file)
@@ -54,14 +54,13 @@ def read_and_filter_(dataset_id, areas_file, trajectories_file):
 
     # We process here multi-objective trajectories into sub-trajectories
     traj_dataset = get_traj_from_file(dataset_id,trajectories_file, areas)
-
+    print("[INF] Assignment to goals")
     # Get useful paths and split the trajectories into pairs of goals
     trajMat = separate_trajectories_between_goals(traj_dataset, areas)
     # Remove the trajectories that are either too short or too long
     avgTrMat, avgTrajectories = filter_traj_matrix(trajMat, nGoals, nGoals)
     # Form the object goalsLearnedStructure
     goals_data = goal_pairs(areas, areasAxis, avgTrMat)
-
     return traj_dataset, goals_data, avgTrMat, avgTrajectories
 
 """-----------------------------------------------------"""

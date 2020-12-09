@@ -65,26 +65,18 @@ def load_gcs(path, **kwargs):
         # interpolate frames (2x up-sampling)
         interp_F = np.arange(tr["frame_id"].iloc[0], tr["frame_id"].iloc[-1], 10).astype(int)
         interp_X = interp1d(tr["frame_id"], tr["pos_x"], kind='linear')
-        interp_X_ = interp_X(interp_F)
+        interp_X_= interp_X(interp_F)
         interp_Y = interp1d(tr["frame_id"], tr["pos_y"], kind='linear')
-        interp_Y_ = interp_Y(interp_F)
+        interp_Y_= interp_Y(interp_F)
         agent_id = tr["agent_id"].iloc[0]
         raw_dataset = raw_dataset.append(pd.DataFrame({"frame_id": interp_F,
                                                        "agent_id": agent_id,
                                                        "pos_x": interp_X_,
                                                        "pos_y": interp_Y_}))
     raw_dataset = raw_dataset.reset_index()
-    # homog = []
-    # homog_file = kwargs.get("homog_file", "")
-    # if os.path.exists(homog_file):
-    #     with open(homog_file) as f:
-    #         homog_str = f.read()
-    #         homog = np.array(json.loads(homog_str)['homog'])
-    # else:
     homog = [[4.97412897e-02, -4.24730883e-02, 7.25543911e+01],
              [1.45017874e-01, -3.35678711e-03, 7.97920970e+00],
              [1.36068797e-03, -4.98339188e-05, 1.00000000e+00]]
-    # homog = np.eye(3)
     if coordinate_system!="img":
         world_coords = image_to_world(raw_dataset[["pos_x", "pos_y"]].to_numpy(), homog)
         raw_dataset[["pos_x", "pos_y"]] = pd.DataFrame(world_coords * 0.8)
@@ -99,6 +91,7 @@ def load_gcs(path, **kwargs):
 
     # post-process
     # fps = 30
+    print("[INF] Post-process")
     sampling_rate = kwargs.get('sampling_rate', 1)
     use_kalman = kwargs.get('use_kalman', False)
     traj_dataset.postprocess(fps=fps, sampling_rate=sampling_rate, use_kalman=use_kalman)
