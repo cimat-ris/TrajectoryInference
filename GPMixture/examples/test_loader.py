@@ -40,7 +40,6 @@ trajFile         = './datasets/GC/Annotation/'
 GCSimg           = './imgs/train_station.jpg'
 
 traj_dataset,goalsData, trajMat, __ = read_and_filter_('GCS',goalsDescriptions,trajFile)
-#traj_dataset.plot(200,GCSimg)
 
 # Plot trajectories and structure
 showDataset = True
