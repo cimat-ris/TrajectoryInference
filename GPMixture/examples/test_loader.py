@@ -4,7 +4,7 @@
 from test_common import *
 from utils.loaders.loader_ind import load_ind
 from utils.loaders.loader_gcs import load_gcs
-#from utils.loaders.loader_edinburgh import load_edinburgh
+from utils.loaders.loader_edinburgh import load_edinburgh
 from utils.io_trajectories import read_and_filter_
 import matplotlib.pyplot as plt
 
@@ -23,7 +23,6 @@ if test_ind:
 test_gcs = False
 if test_gcs:
     dataset_dir = "./datasets/GC/Annotation/"
-    #"C:/Users/karen/Desktop/GitHub/TrajectoryInference/GPMixture/datasets/GC/Annotation"
     traj_dataset= load_gcs(dataset_dir)
     traj_set    = traj_dataset.get_trajectories()
     print("[INF] Loaded GCS set, length: {:03d} ".format(len(traj_set)))
@@ -36,16 +35,12 @@ if test_edi:
     traj_set    = traj_dataset.get_trajectories()
     print("[INF] Loaded Edinburgh set, length: {:03d} ".format(len(traj_set)))
 
-#traj_dataset,goalsData, pathMat, __ = read_and_filter_new('GCS','parameters/CentralStation_GoalsDescriptions.csv','datasets/GC/Annotation/')
-#traj_dataset,goalsData, trajMat, __ = read_and_filter_('GCS','parameters/CentralStation_GoalsDescriptions.csv','datasets/GC/Annotation/')
-#traj_dataset.plot(200,"imgs/train_station.jpg")
-
-goalsDescriptions = 'C:/Users/karen/Desktop/GitHub/TrajectoryInference/GPMixture/parameters/CentralStation_GoalsDescriptions.csv'
-trajFile = "C:/Users/karen/Desktop/GitHub/TrajectoryInference/GPMixture/datasets/GC/Annotation/"
-GCSimg = "C:/Users/karen/Desktop/GitHub/TrajectoryInference/GPMixture/imgs/train_station.jpg"
+goalsDescriptions= './parameters/CentralStation_GoalsDescriptions.csv'
+trajFile         = './datasets/GC/Annotation/'
+GCSimg           = './imgs/train_station.jpg'
 
 traj_dataset,goalsData, trajMat, __ = read_and_filter_('GCS',goalsDescriptions,trajFile)
-traj_dataset.plot(200,GCSimg)
+#traj_dataset.plot(200,GCSimg)
 
 # Plot trajectories and structure
 showDataset = True
