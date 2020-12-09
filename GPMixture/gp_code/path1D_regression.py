@@ -7,7 +7,6 @@ from gp_code.regression import *
 from gp_code.likelihood import nearestPD
 from gp_code.sampling import *
 from utils.manip_trajectories import goal_center_and_size
-from utils.manip_trajectories import euclidean_distance
 from utils.linalg import positive_definite
 
 class path1D_regression:

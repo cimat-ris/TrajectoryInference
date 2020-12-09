@@ -8,8 +8,6 @@ from gp_code.path1D_regression import path1D_regression
 from gp_code.likelihood import likelihood_from_partial_path
 from gp_code.sampling import *
 from utils.manip_trajectories import goal_center_and_size
-from utils.manip_trajectories import euclidean_distance
-from utils.linalg import positive_definite
 from scipy.optimize import bisect
 
 class path_regression:
