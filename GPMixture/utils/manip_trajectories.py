@@ -32,28 +32,28 @@ def separate_trajectories_between_goals(trajectories, goals):
             if(startIndex > -1 and endIndex > -1):
                 # Keep the trajectory
                 mat[startIndex][endIndex].append(tr)
-                
+
     return mat
 
 #new filter_paths
 # Computes the median and SD of a trajectory set
-# Removes trajectories that differ more than 3SD 
+# Removes trajectories that differ more than 3SD
 def filter_trajectories(trajectories):
     if len(trajectories) == 0:
         return []
-    
+
     arclen = []
     for tr in trajectories:
         vec_arclen = trajectory_arclength(tr)
         tr_arclen  = vec_arclen[-1]
         arclen.append(tr_arclen)
-        
+
     M  = stats.median(arclen)
     if len(arclen) < 2:
         SD = 0.0
     else:
         SD = stats.stdev(arclen)
-    
+
     filtered_set = []
     for i in range(len(trajectories)):
         if arclen[i] > 0 and abs(arclen[i] - M) <= 3.0*SD:
@@ -78,21 +78,21 @@ def filter_traj_matrix(raw_path_set_matrix, nRows, mColumns):
             # If the list of trajectories is non-empty, filter it
             if(len(raw_path_set_matrix[i][j]) > 0):
                 filtered = filter_trajectories(raw_path_set_matrix[i][j])
-                
+
                 filtered_matrix[i][j].extend(filtered)
                 all_trajectories.extend(filtered)
-                
+
     return filtered_matrix, all_trajectories
 
 #Gets a set of trj that start in a given time interval
 #The list of trajectories is sorted by their initial time
 def get_trajectories_given_time_interval(trajectories, startT, finishT):
     nTr = len(trajectories)
-    
+
     if(nTr == 0):
         print("Empty set")
         return []
-    
+
     trSet = []
     i = 0
     t = startT
@@ -102,17 +102,17 @@ def get_trajectories_given_time_interval(trajectories, startT, finishT):
         if(startT <= t and t <= finishT):
             trSet.append(tr)
         i+=1
-        
+
     for j in range(0):#len(trSet)):
         print("[pathTime]:", trSet[j][2])
-        
+
     return trSet
 
-# new get_goal_sequence
+# Determines the list of goals that a trajectory goes through
 def traj_goal_sequence(tr, goals):
     goalSeq = []
     x, y = tr[0], tr[1]
-    
+
     for i in range(len(x)):
         for j in range(len(goals)):
             xy = [x[i], y[i]]
@@ -124,43 +124,43 @@ def traj_goal_sequence(tr, goals):
                         goalSeq.append(j)
     return goalSeq
 
-# new getMultigoalPaths
+# Select those trajectories that go through more than 2 goals
 def multigoal_trajectories(trajectories, goals):
     multigoal_tr = []
-    
     for tr in trajectories:
+        # Determines the list of goals that a trajectory goes through
         goalSeq = traj_goal_sequence(tr, goals)
         if len(goalSeq) > 2:
             multigoal_tr.append(tr)
-    
     return multigoal_tr
 
-#new break_multigoal_path
+# Split a trajectory into sub-trajectories between pairs of goals
 def break_multigoal_traj(tr, goals):
     x, y, t = tr[0], tr[1], tr[2]
     trSet = []
-    
+
     X, Y, T = [], [], []    #new trajectory
     lastG = None            #last goal
     for i in range(len(x) ):
         X.append(x[i])
         Y.append(y[i])
         T.append(t[i])
-        
+
         xy = [x[i], y[i]]       #current position
         for j in range(len(goals)):
+            # If the position lies in the goal zone
             if is_in_area(xy, goals[j]):
                 if lastG is None:
                     lastG = j
+                # Split the trajectory
                 elif lastG != j:
                     trSet.append([X,Y,T] )
                     X, Y, T = [], [], [] #start a new trajectory
-                    
-    return trSet     
-   
-#new get_data_from_paths             
+
+    return trSet
+
 # Returns {xi,yi,li} where
-# xi = Vector of x values of the traj i 
+# xi = Vector of values x of the traj i
 def get_data_from_set(trajectories):
     X, Y, L = [], [], []
     for tr in trajectories:
@@ -168,10 +168,9 @@ def get_data_from_set(trajectories):
         Y.append(tr[1])
         L.append(trajectory_arclength(tr) )
     return X, Y, L
-        
+
 
 '''------------ Linear Prior Mean --------------'''
-#new get_line_parameters
 # Linear regression: for data l,f(l), the function returns a, b for the line between the
 # starting and ending points
 def line_parameters(traj, flag):
@@ -179,7 +178,7 @@ def line_parameters(traj, flag):
     arclen = traj_arclen[-1]
     if arclen == 0:
         return 0.,0.
-    
+
     x, y = traj[0], traj[1]
     if(flag == 'x'):
         b = x[0]
@@ -188,7 +187,7 @@ def line_parameters(traj, flag):
         b = y[0]
         a = (y[-1]-b)/arclen
     return a, b
-    
+
 
 """-----------------------------------------------------"""
 
@@ -201,7 +200,7 @@ def line_parameters(traj, flag):
 #New define_trajectories_start_and_end_areas
 # Returns a matrix of trajectories:
 # the entry (i,j) has the paths tha go from the goal i to the goal j
-# We can filter and separate in the same function, instead of 
+# We can filter and separate in the same function, instead of
 #       get useful paths -and then-> separate between goals
 #**Could we avoid using a class for the trajectories?**
 def separate_trajectories_between_goals_old(trajectories, goals):
@@ -325,7 +324,7 @@ def get_goal_of_point(p, goals):
             return i
     return -1
 
-#new middle_of_area
+# Middle of a goal area
 def goal_centroid(R):
     n = len(R)
     dx, dy = R[n-2]-R[0], R[n-1]-R[1]
@@ -383,7 +382,7 @@ def get_line_variances(lineParameters, mean):
         var[1]=0.001
     return var
 
-# Takes as an input a set of trajectories (between goals) 
+# Takes as an input a set of trajectories (between goals)
 # and a flag that says whether the orientation is in x or y
 # Returns the mean value of the line parameters (to be used as a prior)
 def get_linear_prior_mean(paths, flag):
@@ -479,4 +478,3 @@ def observed_data_given_time(x,y,t,time):
         i =+ 1
     obsX, obsY, obsT = x[0:i], y[0:i], t[0:i]
     return obsX, obsY, obsT
-    

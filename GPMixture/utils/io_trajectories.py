@@ -12,24 +12,25 @@ from utils.manip_trajectories import *
 import pandas as pd
 
 """ Alternative functions, without the class trajectory """
-#new get_paths_from_file_new
+# Get trajectories from files, and group them by pairs of goals
 def get_traj_from_file(dataset_id, dataset_traj, goals, coordinate_system='img'):
+    # TODO: generalize to several datasets?
     traj_dataset= load_gcs(dataset_traj, coordinate_system=coordinate_system)
     traj_set    = traj_dataset.get_trajectories()
     print("[INF] Loaded {:s} set, length: {:03d} ".format(dataset_id,len(traj_set)))
-
+    # Output will be a list of trajectories
     trajectories = []
     for tr in traj_set:
         x, y, t = tr[:,0], tr[:,1], tr[:,4]
-        #NOTE: Should we check if there are repeat positions in the traj?
+        # TODO: Should we check if there are repeat positions in the traj?
         trajectories.append([x,y,t])
-        
+    # Detect the trajectories that go between more than a pair of goals
     multigoal_traj = multigoal_trajectories(trajectories, goals)
     for tr in multigoal_traj:
+        # Split these multiple-goal trajectories
         trajectories.extend(break_multigoal_traj(tr, goals) )
-    
     return trajectories
-    
+
 # new get_uncut_paths_from_file
 # gets trajectories from the file without modifications
 def get_complete_traj_from_file(dataset_id,dataset_traj,goals,coordinate_system='img'):
@@ -50,18 +51,18 @@ def read_and_filter_(dataset_id, areas_file, trajectories_file):
     areas    = data.values[:,2:]
     areasAxis= data.values[:,1]
     nGoals   = len(areas)
-    
+
     # We process here multi-objective trajectories into sub-trajectories
     traj_dataset = get_traj_from_file(dataset_id,trajectories_file, areas)
-    
+
     # Get useful paths and split the trajectories into pairs of goals
     trajMat = separate_trajectories_between_goals(traj_dataset, areas)
     # Remove the trajectories that are either too short or too long
     avgTrMat, avgTrajectories = filter_traj_matrix(trajMat, nGoals, nGoals)
     # Form the object goalsLearnedStructure
     goals_data = goal_pairs(areas, areasAxis, avgTrMat)
-    
-    return traj_dataset, goals_data, avgTrMat, avgTrajectories 
+
+    return traj_dataset, goals_data, avgTrMat, avgTrajectories
 
 """-----------------------------------------------------"""
 
@@ -100,7 +101,7 @@ def read_and_filter_new(dataset_id,areas_file,trajectories_file):
         #trajMat, arclenMat = define_trajectories_start_and_end_areas(areas,areas,usefulPaths)
     # Get useful paths and split the trajectories into pairs of goals
     trajMat, arclenMat = separate_trajectories_between_goals(dataPaths, areas)
-    
+
     # Remove the trajectories that are either too short or too long
     pathMat, learnSet = filter_path_matrix(trajMat, nGoals, nGoals)
     sortedPaths = sorted(learnSet, key=time_compare)
@@ -108,4 +109,3 @@ def read_and_filter_new(dataset_id,areas_file,trajectories_file):
     # Form the object goalsLearnedStructure
     goalsData = goal_pairs(areas,areasAxis,pathMat)
     return traj_dataset,goalsData,pathMat,learnSet
-

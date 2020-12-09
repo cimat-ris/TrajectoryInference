@@ -57,7 +57,7 @@ def load_edinburgh(path, **kwargs):
         data.reset_index(inplace =True)
         properties = data[data['index'].str.startswith('Properties')]
         data = data[data['index'].str.startswith('TRACK')]
-
+        print("[INF] Loaded Edinburgh dataset file: ",file)
         #reconstruct the data in arrays
         track_data = []
         for row in range(len(data)):
