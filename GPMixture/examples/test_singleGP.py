@@ -9,7 +9,7 @@ goalsDescriptions= './parameters/CentralStation_GoalsDescriptions.csv'
 trajFile         = './datasets/GC/Annotation/'
 GCSimg           = './imgs/train_station.jpg'
 
-traj_dataset,goalsData, trajMat, __ = read_and_filter_('GCS',goalsDescriptions,trajFile)
+traj_dataset,goalsData, trajMat, __ = read_and_filter_('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
 # TODO: we should remove this parameter; a priori it could be deduced in some way with the speed
 stepUnit  = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals)
 

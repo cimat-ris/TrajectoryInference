@@ -10,6 +10,7 @@ from utils.manip_trajectories import separate_trajectories_between_goals
 from utils.manip_trajectories import filter_traj_matrix
 from utils.manip_trajectories import *
 import pandas as pd
+import pickle
 
 """ Alternative functions, without the class trajectory """
 # Get trajectories from files, and group them by pairs of goals
@@ -45,15 +46,27 @@ def get_complete_traj_from_file(dataset_id,dataset_traj,goals,coordinate_system=
     return trajectories
 
 # Main function for reading the data from a dataset
-def read_and_filter_(dataset_id, areas_file, trajectories_file):
+def read_and_filter_(dataset_id, areas_file, trajectories_file, use_pickled_data=False, pickle_dir='pickle/'):
     # Read the areas data from the specified file
     data     = pd.read_csv(areas_file)
     areas    = data.values[:,2:]
     areasAxis= data.values[:,1]
     nGoals   = len(areas)
 
-    # We process here multi-objective trajectories into sub-trajectories
-    traj_dataset = get_traj_from_file(dataset_id,trajectories_file, areas)
+    if not use_pickled_data:
+        # We process here multi-objective trajectories into sub-trajectories
+        traj_dataset = get_traj_from_file(dataset_id,trajectories_file, areas)
+        # Dump trajectory dataset
+        print("[INF] Pickling data...")
+        pickle_out = open(pickle_dir+'/trajectories.pickle',"wb")
+        pickle.dump(traj_dataset, pickle_out, protocol=2)
+        pickle_out.close()
+    else:
+        # Get trajectory dataset from pickle file
+        print("[INF] Unpickling...")
+        pickle_in = open(pickle_dir+'/trajectories.pickle',"rb")
+        traj_dataset = pickle.load(pickle_in)
+
     print("[INF] Assignment to goals")
     # Get useful paths and split the trajectories into pairs of goals
     trajMat = separate_trajectories_between_goals(traj_dataset, areas)
