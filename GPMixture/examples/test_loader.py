@@ -5,7 +5,7 @@ from test_common import *
 from utils.loaders.loader_ind import load_ind
 from utils.loaders.loader_gcs import load_gcs
 from utils.loaders.loader_edinburgh import load_edinburgh
-from utils.io_trajectories import read_and_filter_
+from utils.io_trajectories import read_and_filter
 import matplotlib.pyplot as plt
 
 
@@ -39,7 +39,7 @@ goalsDescriptions= './parameters/CentralStation_GoalsDescriptions.csv'
 trajFile         = './datasets/GC/Annotation/'
 GCSimg           = './imgs/train_station.jpg'
 
-traj_dataset,goalsData, trajMat, __ = read_and_filter_('GCS',goalsDescriptions,trajFile)
+traj_dataset,goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile)
 
 # Plot trajectories and structure
 showDataset = True

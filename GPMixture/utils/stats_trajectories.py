@@ -13,7 +13,7 @@ def trajectory_arclength(tr):
         arclen.append(d)
         arclen[i] = arclen[i] + arclen[i-1]
         
-    return arclen
+    return np.array(arclen)
 
 #Average speed of a trajectory --- new path_speed from trajectory.py
 def avg_speed(tr):

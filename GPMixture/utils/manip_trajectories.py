@@ -1,10 +1,14 @@
 import numpy as np
 import statistics as stats
 from utils.stats_trajectories import trajectory_arclength
+from utils.io_misc import is_in_area
 
 """ Alternative functions, without the class trajectory """
 #trajectory = [x,y,t]
 
+#New define_trajectories_start_and_end_areas
+# Returns a matrix of trajectories:
+# the entry (i,j) has the paths that go from the goal i to the goal j
 def separate_trajectories_between_goals(trajectories, goals):
     nGoals = len(goals)
     mat    = np.empty((nGoals,nGoals),dtype=object)
@@ -190,154 +194,6 @@ def line_parameters(traj, flag):
 
 """-----------------------------------------------------"""
 
-
-"""********** FILTER PATHS **********"""
-#TODO:
-#Function to eliminate "empty" trajectories: arclen = 0
-
-
-#New define_trajectories_start_and_end_areas
-# Returns a matrix of trajectories:
-# the entry (i,j) has the paths tha go from the goal i to the goal j
-# We can filter and separate in the same function, instead of
-#       get useful paths -and then-> separate between goals
-#**Could we avoid using a class for the trajectories?**
-def separate_trajectories_between_goals_old(trajectories, goals):
-    nGoals    = len(goals)
-    mat       = np.empty((nGoals,nGoals),dtype=object)
-    arclenMat = np.empty((nGoals,nGoals),dtype=object)
-    # Initialize the matrix elements to empty lists
-    for i in range(nGoals):
-        for j in range(nGoals):
-            mat[i][j]       = []
-            arclenMat[i][j] = []
-    # For all trajectories
-    for path in trajectories:
-        pathLen = len(path.x)
-        # Start and finish points
-        startX, startY = path.x[ 0], path.y[ 0]
-        endX, endY     = path.x[-1], path.y[-1]
-        startIndex, endIndex = -1, -1
-        # Find starting and finishing goal
-        for j in range(nGoals):
-            if(is_in_area([startX,startY], goals[j])):
-                startIndex = j
-        for k in range(nGoals):
-            if(is_in_area([endX,endY], goals[k])):
-                endIndex = k
-        if(startIndex > -1 and endIndex > -1 and pathLen > 3):
-            # Keep the trajectory
-            mat[startIndex][endIndex].append(path)
-            # Keep the trajectory length
-            arclenMat[startIndex][endIndex].append(path.length)
-    return mat, arclenMat
-
-# Computes the median m and the standard deviation s of a list of paths
-# If any trajectory within this list differs with more than s from m, it is filtered out
-def filter_paths(path_set):
-    # Get the list of arclengths
-    arclen_set = get_paths_arclength(path_set)
-    # Median
-    median_arclen = stats.median(arclen_set)
-    # Standard deviation
-    SD = np.sqrt(np.var(arclen_set))
-    # Resulting filtered set
-    filtered_set = []
-    for arclen,path in zip(arclen_set,path_set):
-        if abs(arclen - median_arclen) <= 3.0*SD:
-            filtered_set.append(path)
-    return filtered_set
-
-# Takes the start-goal matrix of lists of trajectories and filter them
-# Output is:
-# - matrix of filtered lists of trajectories
-# - one big list of all the remaining trajectories
-def filter_path_matrix(raw_path_set_matrix, nRows, mColumns):
-    all_trajectories = []
-    # Initialize a nRowsxnCols matrix with empty lists
-    filtered_path_set_matrix = np.empty((nRows, mColumns),dtype=object)
-    for i in range(nRows):
-        for j in range(mColumns):
-            filtered_path_set_matrix[i][j]=[]
-
-    for i in range(nRows):
-        for j in range(mColumns):
-            # If the list of trajectories is non-empty, filter it
-            if(len(raw_path_set_matrix[i][j]) > 0):
-                filtered = filter_paths(raw_path_set_matrix[i][j])
-                # Add the filtered trajectories
-                # to the element list raw_path_set_matrix[i][j]
-                for trajectory in filtered:
-                    filtered_path_set_matrix[i][j].append(trajectory)
-                    # Add the filtered trajectories to the list all_trajectories
-                    all_trajectories.append(trajectory)
-    return filtered_path_set_matrix, all_trajectories
-
-#Gets a set of trj that start in a given time interval
-def get_path_set_given_time_interval(paths, startT, finishT):
-    if(len(paths) == 0):
-        print("empty set")
-        return []
-    pathSet = []
-    i = 0
-    t = startT
-    while(t <= finishT):
-        t = paths[i].t[0]
-        if(startT <= t and t <= finishT):
-            pathSet.append(paths[i])
-        i+=1
-    n = len(pathSet)
-    for j in range(0):#n):
-        print("[pathTime]:", pathSet[j].t)
-    return pathSet
-
-"""********** GOAL RELATED FUNCTIONS **********"""
-def get_goal_sequence(p, goals):
-    g = []
-    for i in range(len(p.x)):
-        for j in range(len(goals)):
-            xy = [p.x[i], p.y[i]]
-            if is_in_area(xy, goals[j])==1:
-                if len(g) == 0:
-                    g.append(j)
-                else:
-                    if j != g[len(g)-1]:
-                        g.append(j)
-    return g
-
-
-def get_goal_center_and_boundaries(goal):
-    p, __ = goal_centroid(goal)
-    lenX = goal[len(goal) -2] - goal[0]
-    lenY = goal[len(goal) -1] - goal[1]
-    q1 = [p[0]-lenX/2, p[1]]
-    q2 = [p[0], p[1]+lenY/2]
-    q3 = [p[0]+lenX/2, p[1]]
-    q4 = [p[0], p[1]-lenY/2]
-    return [p,q1,q2,q3,q4]
-
-
-def get_goal_of_point(p, goals):
-    for i in range(len(goals)):
-        if(is_in_area(p,goals[i])):
-            return i
-    return -1
-
-# Middle of a goal area
-def goal_centroid(R):
-    n = len(R)
-    dx, dy = R[n-2]-R[0], R[n-1]-R[1]
-    center = [R[0] + dx/2., R[1] + dy/2.]
-    return center
-
-# Centroid and size of an area
-def goal_center_and_size(R):
-    n = len(R)
-    dx, dy = R[n-2]-R[0], R[n-1]-R[1]
-    center = [R[0] + dx/2., R[1] + dy/2.]
-    size = [dx, dy]
-    return center, size
-
 """********** LINEAR PRIOR MEAN **********"""
 # Linear regression: for data l,f(l), the function returns a, b for the line between the
 # starting and ending points
@@ -417,17 +273,6 @@ def equal(vx,vy,x,y):
     else:
         return 0
 
-# Test if a point (x,y) belongs to an area R
-def is_in_area(p,R):
-    x = p[0]
-    y = p[1]
-    if(x >= R[0] and x <= R[-2]):
-        if(y >= R[1] and y <= R[-1]):
-            return 1
-        else:
-            return 0
-    else:
-        return 0
 
 def copy_unitMat(unitMat, nGoals, nSubgoals):
     mat = []
@@ -439,9 +284,6 @@ def copy_unitMat(unitMat, nGoals, nSubgoals):
             r.append(unitMat[i][k])
         mat.append(r)
     return mat
-
-def time_compare(path):
-    return path.t[0]
 
 def column(matrix, i):
     return [row[i] for row in matrix]
@@ -456,13 +298,13 @@ def get_prediction_arrays(predictedMeans):
         XYvec.append([x,y])
     return XYvec
 
-"""********** ARC LENGHT TO TIME **********"""
+"""---------- Arclenght to time ----------"""
 def arclen_to_time(initTime,l,speed):
     t = [initTime]
     for i in range(1,len(l)):
         time_i = int(t[i-1] +(l[i]-l[i-1])/speed)
         t.append(time_i)
-    return t
+    return np.array(t)
 
 """-------- Get Observed Data -------------"""
 #new: get_known_set
