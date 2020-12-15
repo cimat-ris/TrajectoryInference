@@ -3,7 +3,7 @@ import math
 import matplotlib.pyplot as plt
 from numpy.linalg import inv,eig
 from scipy.optimize import minimize
-from utils.io_misc import euclidean_distance
+from utils.stats_trajectories import euclidean_distance
 from utils.linalg import positive_definite
 from scipy.linalg import *
 from gp_code.kernels import *

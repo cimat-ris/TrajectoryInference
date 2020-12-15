@@ -1,8 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from utils.io_misc import euclidean_distance
+import math
 
 #This functions assume that trajectory = [x,y,t]
+
+# Euclidean distance
+def euclidean_distance(p, q): #p = (x,y)
+    dist = math.sqrt( (p[0]-q[0])**2 + (p[1]-q[1])**2 )
+    return dist
 
 #Trajectory arclen  ---  new path_arcLength from trajectory.py
 def trajectory_arclength(tr):

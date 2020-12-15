@@ -1,10 +1,11 @@
 from gp_code.kernels import set_kernel
 from gp_code.optimize_parameters import *
 from utils.stats_trajectories import trajectory_arclength, trajectory_duration
-from utils.manip_trajectories import goal_center_and_size, get_linear_prior_mean
+from utils.manip_trajectories import get_linear_prior_mean
 #from utils.stats_trajectories import get_data_from_paths
 from utils.manip_trajectories import get_data_from_set
-from utils.io_misc import euclidean_distance
+from utils.manip_trajectories import goal_center_and_size
+from utils.stats_trajectories import euclidean_distance
 import numpy as np
 from copy import copy
 

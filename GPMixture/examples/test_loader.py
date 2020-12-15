@@ -4,7 +4,7 @@
 from test_common import *
 from utils.loaders.loader_ind import load_ind
 from utils.loaders.loader_gcs import load_gcs
-from utils.loaders.loader_edinburgh import load_edinburgh
+#from utils.loaders.loader_edinburgh import load_edinburgh
 from utils.io_trajectories import read_and_filter
 import matplotlib.pyplot as plt
 
@@ -37,9 +37,9 @@ if test_edi:
 
 goalsDescriptions= './parameters/CentralStation_GoalsDescriptions.csv'
 trajFile         = './datasets/GC/Annotation/'
-GCSimg           = './imgs/train_station.jpg'
+imgGCS           = './imgs/train_station.jpg'
 
-traj_dataset,goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile)
+traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
 
 # Plot trajectories and structure
 showDataset = True
@@ -49,7 +49,7 @@ if showDataset:
         for j in range(s[0]):
             if len(trajMat[i][j])>0:
                 #p = plotter("imgs/train_station.jpg",title=f"Trajectories from {i} to {j}")
-                p = plotter(GCSimg,title=f"Trajectories from {i} to {j}")
+                p = plotter(imgGCS,title=f"Trajectories from {i} to {j}")
                 p.plot_scene_structure(goalsData)
                 p.plot_trajectories(trajMat[i][j])
                 p.show()
