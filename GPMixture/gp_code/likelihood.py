@@ -14,7 +14,7 @@ D = 150. #value for compute_goal_likelihood
 def mean_euc_error(true, predicted):
     u = np.array(true)
     v = np.array(predicted)
-    
+
     return la.norm(u-v)
 
 # Mean absolute error (mx,my) between true and predicted data
