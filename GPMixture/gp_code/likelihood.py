@@ -5,7 +5,7 @@ import numpy as np
 import math
 from numpy import linalg as la
 from gp_code.regression import prediction_xy
-from utils.io_misc import euclidean_distance
+from utils.stats_trajectories import euclidean_distance
 from utils.manip_trajectories import goal_center_and_size
 
 D = 150. #value for compute_goal_likelihood

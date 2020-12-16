@@ -22,8 +22,9 @@ class goal_pairs:
         # Mean length for all pairs of goals
         self.meanLengths        = np.zeros((self.nGoals,self.nGoals))
         self.euclideanDistances = np.zeros((self.nGoals,self.nGoals))
-        self.units              = np.zeros((self.nGoals,self.nGoals))
-        self.meanUnit           = 0.0
+        self.units = np.zeros((self.nGoals,self.nGoals))
+        self.distUnit           = 1.0
+        self.stepUnit           = 1.0
         self.priorTransitions   = np.zeros((self.nGoals,self.nGoals))
         self.kernelsX           = np.empty((self.nGoals, self.nGoals),dtype=object)
         self.kernelsY           = np.empty((self.nGoals, self.nGoals),dtype=object)
@@ -34,27 +35,30 @@ class goal_pairs:
         # Compute the distances between pairs of goals (as a nGoalsxnGoals matrix)
         self.compute_euclidean_distances()
         # Compute the ratios between average path lengths and inter-goal distances
-        self.compute_distance_units()
+        self.compute_distance_unit()
         # Computer prior probabispeedRegressorlities between goals
         self.compute_prior_transitions(trajectories)
         # Compute transition probabilities between goals
         self.compute_time_transitions(trajectories)
 
-    # Fills in the matrix with the
-    # mean length of the trajectories
+    # Fills in the matrix with the mean length of the trajectories
+    #Computes stepUnit - avg ratio between number of steps and path arc-lenght 
     def compute_mean_lengths(self, Mat):
+        stepsRatio = []
         for i in range(self.nGoals):
             for j in range(self.nGoals):
-                nTr = len(Mat[i][j])
-                if( nTr > 0):
+                if len(Mat[i][j]) > 0:
                     arclen = []
                     for tr in Mat[i][j]:
                         tr_arclen = trajectory_arclength(tr)
                         arclen.append(tr_arclen[-1])
+                        stepsRatio.append(len(tr_arclen)/tr_arclen[-1])
                     m = np.mean(arclen)
                 else:
                     m = 0
+                    stepsRatio.append(1.0)
                 self.meanLengths[i][j] = m
+        self.stepUnit = np.mean(stepsRatio)
 
     # Fills in the Euclidean distances between goals
     def compute_euclidean_distances(self):
@@ -68,22 +72,19 @@ class goal_pairs:
                 self.euclideanDistances[i][j] = d
 
     # Computes the ratio between path length and linear path length (distance between goals)
-    def compute_distance_units(self):
+    #distUnit - avg ratio between path length and linear path length
+    def compute_distance_unit(self):
+        distance = []
         for i in range(self.nGoals):
             for j in range(self.nGoals):
                 if(self.euclideanDistances[i][j] == 0 or self.meanLengths[i][j] == 0):
-                    u = 1
+                    u = 1.0
                 else:
                     # Ratio between mean length and goal-to-goal distance
                     u = self.meanLengths[i][j]/self.euclideanDistances[i][j]
                 self.units[i][j] = u
-
-        # Mean value of the ratio
-        sumUnit = 0.
-        for i in range(self.nGoals):
-            for j in range(self.nGoals):
-                sumUnit += self.units[i][j]
-        self.meanUnit = sumUnit / self.nGoals**2
+                distance.append(u)
+        self.distUnit = np.mean(distance)
 
     # Fills in the probability transition matrix
     def compute_prior_transitions(self,pathMat):

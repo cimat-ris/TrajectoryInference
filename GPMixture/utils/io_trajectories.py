@@ -50,7 +50,7 @@ def read_and_filter(dataset_id, areas_file, trajectories_file, use_pickled_data=
     areas    = data.values[:,2:]
     areasAxis= data.values[:,1]
     nGoals   = len(areas)
-
+    
     if not use_pickled_data:
         # We process here multi-objective trajectories into sub-trajectories
         traj_dataset = get_traj_from_file(dataset_id,trajectories_file, areas)

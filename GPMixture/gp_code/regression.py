@@ -62,7 +62,7 @@ def get_prediction_set_arclengths(lastKnownPoint, finishPoint, distUnit, stepUni
     # Euclidean distance between the last observed point and the finish point
     euclideanDist = euclidean_distance([x,y], [_x,_y])
     # Rough estimate of the remaining arc length
-    dist          = euclideanDist*distUnit
+    dist          = euclideanDist#*distUnit
     numSteps      = int(dist*stepUnit)
     newset = []
     if(numSteps > 0):

@@ -16,7 +16,7 @@ class path_regression:
         self.regression_x    = path1D_regression(kernelX)
         self.regression_y    = path1D_regression(kernelY)
         self.predictedL      = None
-        self.unit            = unit
+        self.distUnit        = unit
         self.stepUnit        = stepUnit
         self.finalArea       = finalArea
         self.finalAreaAxis   = finalAreaAxis
@@ -27,7 +27,7 @@ class path_regression:
         # Last really observed point
         lastObservedPoint = [observedX[-1], observedY[-1], observedL[-1]]
         # Determine the set of arclengths (predictedL) to predict
-        self.predictedL, finalL, self.dist = get_prediction_set_arclengths(lastObservedPoint,self.finalAreaCenter,self.unit,self.stepUnit)
+        self.predictedL, finalL, self.dist = get_prediction_set_arclengths(lastObservedPoint,self.finalAreaCenter,self.distUnit,self.stepUnit)
         # TESTING
         xf= self.finalAreaCenter[0]
         yf= self.finalAreaCenter[1]
