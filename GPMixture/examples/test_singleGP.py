@@ -11,19 +11,16 @@ goalsDescriptions= './parameters/CentralStation_GoalsDescriptions.csv'
 trajFile         = './datasets/GC/Annotation/'
 imgGCS           = './imgs/train_station.jpg'
 
-traj_dataset,goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
-
-# TODO: we should remove this parameter; a priori it could be deduced in some way with the speed
-stepUnit  = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals)
+traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
 
 # Selection of the kernel type
 kernelType = "linePriorCombined"
 nParameters = 4
 # Read the kernel parameters from file
-goalsData.kernelsX = read_and_set_parameters(param_dir +'parameters/linearpriorcombined20x20_x.txt',nParameters)
-goalsData.kernelsY = read_and_set_parameters(param_dir +'parameters/linearpriorcombined20x20_y.txt',nParameters)
+goalsData.kernelsX = read_and_set_parameters('parameters/linearpriorcombined20x20_x.txt',nParameters)
+goalsData.kernelsY = read_and_set_parameters('parameters/linearpriorcombined20x20_y.txt',nParameters)
 
-"""**************    Testing           **************************"""
+"""**********          Testing          ***********"""
 # We select a pair of starting and ending goals, and a trajectory id
 randomPath = False
 if randomPath:
@@ -43,7 +40,7 @@ kernelY = goalsData.kernelsY[gi][gj]
 # Get the ground truth path
 path = trajMat[gi][gj][pathId]
 pathX, pathY, pathT = path
-pathL = trajectory_arclength(path )
+pathL = trajectory_arclength(path)
 # Total path length
 pathSize = len(pathX)
 

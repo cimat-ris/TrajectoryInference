@@ -8,7 +8,7 @@ from gp_code.sampling import *
 from gp_code.path_regression import path_regression
 from gp_code.trajectory_regression import trajectory_regression
 from gp_code.likelihood import nearestPD
-from utils.manip_trajectories import euclidean_distance
+from utils.stats_trajectories import euclidean_distance
 from utils.manip_trajectories import goal_center_and_size
 from statistics import mean
 
@@ -16,7 +16,7 @@ from statistics import mean
 class mixtureOfGPs:
 
     # Constructor
-    def __init__(self, startG, stepUnit, goalsData):
+    def __init__(self, startG, goalsData):
         # The goals structure
         self.goalsData       = goalsData
         # Sub-set of likely goals
@@ -30,7 +30,7 @@ class mixtureOfGPs:
         # Points to evaluate the likelihoods
         self.nPoints         = 5
         # Step unit
-        self.stepUnit        = stepUnit
+        self.stepUnit        = goalsData.stepUnit
         # Starting goal
         self.startG          = startG
         # Likelihoods
@@ -48,7 +48,7 @@ class mixtureOfGPs:
         self.gpTrajectoryRegressor = [None]*n
         for i in range(self.goalsData.nGoals):
             # One regressor per goal
-            self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas_coordinates[i],self.goalsData.areas_axis[i])
+            self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],self.stepUnit,self.goalsData.areas_coordinates[i],self.goalsData.areas_axis[i])
             #self.gpTrajectoryRegressor[i] = trajectory_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas_coordinates[i],self.goalsData.areas_axis[i])
 
             ## TODO:
@@ -56,7 +56,7 @@ class mixtureOfGPs:
             # For sub-goals
             for j in range(self.nSubgoals):
                 k= i+(j+1)*self.goalsData.nGoals
-                self.gpPathRegressor[k] = path_regression(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,subareas[j],self.goalsData.areas_axis[i])
+                self.gpPathRegressor[k] = path_regression(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],self.stepUnit,subareas[j],self.goalsData.areas_axis[i])
 
 
     # Update observations and compute likelihoods based on observations

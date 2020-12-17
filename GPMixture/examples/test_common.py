@@ -6,6 +6,7 @@ import gp_code
 from gp_code.goal_pairs import goal_pairs
 from utils.io_parameters import read_and_set_parameters
 from utils.io_trajectories import read_and_filter
+from utils.stats_trajectories import trajectory_arclength
 from utils.manip_trajectories import observed_data
 from utils.plotting import plot_path_samples
 from utils.plotting import plotter
