@@ -3,17 +3,18 @@
 """
 from test_common import *
 from gp_code.single_gp import singleGP
-from utils.manip_trajectories import middle_of_area
+from utils.manip_trajectories import goal_centroid
 
-img         = mpimg.imread('imgs/goals.jpg')
-station_img = mpimg.imread('imgs/train_station.jpg')
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-goalsData, pathMat, __ = read_and_filter('parameters/CentralStation_GoalsDescriptions.csv','datasets/GCS/CentralStation_trainingSet.txt')
-# TODO: we should remove this parameter; a priori it could be deduced in some way with the speed
-stepUnit  = 0.0438780780171   #get_number_of_steps_unit(pathMat, nGoals)
+goalsDescriptions= './parameters/CentralStation_GoalsDescriptions.csv'
+trajFile         = './datasets/GC/Annotation/'
+imgGCS           = './imgs/train_station.jpg'
+img              = mpimg.imread(imgGCS)
+
+traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
 
 # Selection of the kernel type
-kernelType = "linePriorCombined"#"combined"
+kernelType = "linePriorCombined"
 nParameters = 4
 
 # Read the kernel parameters from file
@@ -25,10 +26,10 @@ vecX, vecY = [], []
 for i in range(goalsData.nGoals):
     for j in range(i,goalsData.nGoals):
         if(i != j):
-            iCenter = middle_of_area(goalsData.areas_coordinates[i])
-            jCenter = middle_of_area(goalsData.areas_coordinates[j])
+            iCenter = goal_centroid(goalsData.areas_coordinates[i])
+            jCenter = goal_centroid(goalsData.areas_coordinates[j])
             # The basic element here is this object, that will do the regression work
-            gp = singleGP(i,j,stepUnit,goalsData)
+            gp = singleGP(i,j,goalsData)
             likelihood = gp.update([iCenter[0]],[iCenter[1]],[0.0])
             predictedXY,varXY = gp.predict()
             # Generate samples
