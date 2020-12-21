@@ -3,6 +3,8 @@ Plotting functions
 """
 
 import numpy as np
+import pandas as pd
+import random
 import math
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -10,12 +12,11 @@ from matplotlib.patches import Ellipse
 from matplotlib.animation import FuncAnimation
 from utils.manip_trajectories import goal_center_and_size
 from gp_code.regression import get_subgoals_center_and_size
-import pandas as pd
-import random
 
-color = ['g','m','r','b','steelblue','y','tomato','orange','gold','yellow','lime',
-         'springgreen','cyan','teal','deepskyblue','dodgerblue','royalblue','blueviolet','indigo',
-         'purple','magenta','deeppink','hotpink','sandybrown','darkorange','coral','lightgreen']
+
+color = ['lightgreen','springgreen','g','b','steelblue','y','tomato','orange','r','gold','yellow','lime',
+         'cyan','teal','deepskyblue','dodgerblue','royalblue','blueviolet','indigo',
+         'purple','magenta','deeppink','hotpink','sandybrown','darkorange','coral']
 
 
 class plotter():
@@ -47,22 +48,17 @@ class plotter():
         for i in range(numSubgoals):
             xy  = [subgoalsCenter[i][0],subgoalsCenter[i][1]]
             if axis==0:
-                self.ax.plot([subgoalsCenter[i][0]-size[0]/2.0,subgoalsCenter[i][0]+size[0]/2.0],[subgoalsCenter[i][1],subgoalsCenter[i][1]],color[i],linewidth=7.0)
+                self.ax.plot([xy[0]-size[0]/2.0,xy[0]+size[0]/2.0],[xy[1],xy[1]],color[i],linewidth=7.0)
             else:
-                self.ax.plot([subgoalsCenter[i][0],subgoalsCenter[i][0]],[subgoalsCenter[i][1]-size[1]/2.0,subgoalsCenter[i][1]+size[1]/2.0],color[i],linewidth=7.0)
+                self.ax.plot([xy[0],xy[0]],[xy[1]-size[1]/2.0,xy[1]+size[1]/2.0],color[i],linewidth=7.0)
 
     # Plot the true data, the predicted ones and their variance
     def plot_prediction(self,trueX,trueY,knownN,predictedXY,varXY):
-        realX, realY = [],[]
-        N = int(len(trueX))
-
-        knownX = trueX[0:knownN]
-        knownY = trueY[0:knownN]
-        realX = trueX[knownN-1:N]
-        realY = trueY[knownN-1:N]
-
-        self.ax.plot(knownX,knownY,'c',predictedXY[:,0],predictedXY[:,1],'b')
-        self.ax.plot([knownX[-1],predictedXY[0,0]],[knownY[-1],predictedXY[0,1]],'b')
+        observedX = trueX[0:knownN]
+        observedY = trueY[0:knownN]
+        self.ax.plot(observedX,observedY,'c',predictedXY[:,0],predictedXY[:,1],'b')
+        self.ax.plot([observedX[-1],predictedXY[0,0]],[observedY[-1],predictedXY[0,1]],'b')
+        
         predictedN = predictedXY.shape[0]
         for i in range(predictedN):
             xy = [predictedXY[i,0],predictedXY[i,1]]
@@ -71,24 +67,16 @@ class plotter():
             ell.set_fill(0)
             ell.set_edgecolor('m')
             self.ax.add_patch(ell)
-        self.ax.plot(realX,realY,'c--')
+            
+        self.ax.plot(trueX[knownN-1:-1],trueY[knownN-1:-1],'c--')
 
     # Plot multiple predictions
     def plot_multiple_predictions_and_goal_likelihood(self,x,y,nUsedData,nGoals,goalsLikelihood,predictedXYVec,varXYVec):
-        realX, realY = [],[]
-        partialX, partialY = [], []
-        N = int(len(x))
-        # Observed data
-        for i in range(int(nUsedData)):
-            partialX.append(x[i])
-            partialY.append(y[i])
-        # Data to predict (ground truth)
-        for i in range(int(nUsedData-1),N):
-            realX.append(x[i])
-            realY.append(y[i])
+        observedX = x[0:nUsedData]
+        observedY = y[0:nUsedData]
 
         # Plot the observed data
-        self.ax.plot(partialX,partialY,'c')
+        self.ax.plot(observedX,observedY,'c')
 
         maxLikelihood = max(goalsLikelihood)
         maxLW = 2
@@ -98,7 +86,7 @@ class plotter():
             print('[RES] Plotting GP ',i)
             # For each goal/subgoal, draws the prediction
             self.ax.plot(predictedXYVec[i][:,0],predictedXYVec[i][:,1],'b--')
-            self.ax.plot([partialX[-1],predictedXYVec[i][0,0]],[partialY[-1],predictedXYVec[i][0,1]],'b--')
+            self.ax.plot([observedX[-1],predictedXYVec[i][0,0]],[observedY[-1],predictedXYVec[i][0,1]],'b--')
             predictedN = predictedXYVec[i].shape[0]
             # For the jth predicted element
             for j in range(predictedN):
@@ -114,28 +102,23 @@ class plotter():
                 ell.set_edgecolor(color[i%nGoals])
                 self.ax.add_patch(ell)
 
-            self.ax.plot(realX,realY,'c--')
+            self.ax.plot(x[nUsedData-1:-1],y[nUsedData-1:-1],'c--')
 
     # Plot a set of sample trajectories and an observed partial trajectory
-    def plot_path_samples_with_observations(self,ox,oy,x,y):
-        n = len(x)
-        if (n == 0):
+    def plot_path_samples_with_observations(self,obsx,obsy,x,y):
+        samples = len(x)
+        if (samples == 0):
             return
-        self.ax.plot(ox,oy,'c',lw=2.0)
-        for i in range(n):
-            Color = color[random.randint(0,len(color)-1) ]
-            self.ax.plot(x[i],y[i], color=Color, alpha=0.5)
-            self.ax.plot([ox[-1],x[i][0]],[oy[-1],y[i][0]], alpha=0.5)
+        self.ax.plot(obsx,obsy,'c',lw=2.0)
+        for i in range(samples):
+            randColor = random.choice(color)
+            self.ax.plot(x[i],y[i], color=randColor, alpha=0.5)
+            self.ax.plot([obsx[-1],x[i][0]],[obsy[-1],y[i][0]], alpha=0.5)
 
     # new plot_paths
     def plot_trajectories(self, trajSet):
         for tr in trajSet:
             self.ax.plot(tr[0],tr[1])
-        
-    # Plot a set of paths
-    def plot_paths(self, path_set):
-        for path in path_set:
-            self.ax.plot(path.x,path.y)
 
     # Show the plots
     def show(self):
@@ -144,39 +127,16 @@ class plotter():
 #******************************************************************************#
 """ PLOT FUNCTIONS """
 
-
-# Takes as an input a set of paths and plot them all on img
-def plot_pathset(img, vec):
-    n = len(vec)
-    if(n == 0):
-        return
-    fig,ax = plt.subplots(1)
-    ax.set_aspect('equal')
-    # Show the image
-    ax.imshow(img)
-    # Plot each trajectory
-    for i in range(n):
-        plt.plot(vec[i].x,vec[i].y)
-    s = img.shape
-    v = [0,s[1],s[0],0]
-    plt.axis(v)
-    plt.show()
-
 #Pinta las predicciones de los subgoals
 def plot_subgoal_prediction(img,trueX,trueY,knownN,nSubgoals,predictedXYVec,varXYVec):
-    N = int(len(trueX))
-
-    partialX = trueX[0:knownN]
-    partialY = trueY[0:knownN]
-
-    realX = trueX[knownN:N]
-    realY = trueY[knownN:N]
+    observedX = trueX[0:knownN]
+    observedY = trueY[0:knownN]
 
     fig,ax = plt.subplots(1)
     ax.set_aspect('equal')
-    ax.imshow(img) # Show the image
+    ax.imshow(img)
 
-    plt.plot(partialX,partialY,'c')
+    plt.plot(observedX,observedY,'c')
 
     for i in range(nSubgoals): #pinta la prediccion para cada subgoal
         plt.plot(predictedXYVec[i][0],predictedXYVec[i][1],'b--')
@@ -189,23 +149,21 @@ def plot_subgoal_prediction(img,trueX,trueY,knownN,nSubgoals,predictedXYVec,varX
             ell.set_edgecolor(color[i])
             ax.add_patch(ell)
 
-    plt.plot(realX,realY,'c--')
+    plt.plot(trueX[knownN:-1],trueY[knownN:-1],'c--')
     v = [0,img.shape[1],img.shape[0],0]
     plt.axis(v)
     plt.show()
 
 #Imagen en seccion 2: partial path + euclidian distance
 def plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,finalXY):
-    partialX, partialY = [], []
-    for i in range(int(knownN)):
-        partialX.append(trueX[i])
-        partialY.append(trueY[i])
+    observedX = trueX[0:knownN]
+    observedY = trueY[0:knownN]
 
     fig,ax = plt.subplots(1)
     ax.set_aspect('equal')
     ax.imshow(img) # Show the image
 
-    plt.plot(partialX,partialY,'c', label='Partial path')
+    plt.plot(observedX,observedY,'c', label='Partial path')
     lineX, lineY =[],[]
     lineX.append(trueX[knownN-1])
     lineX.append(finalXY[0])
@@ -220,25 +178,15 @@ def plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,finalXY):
 
 
 def animate_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goalsLikelihood,predictedXYVec,varXYVec,toFile):
-    realX, realY = [],[]
-    partialX, partialY = [], []
-    N = int(len(x))
-    # Observed data
-    print(nUsedData,N)
-    for i in range(int(nUsedData)):
-        partialX.append(x[i])
-        partialY.append(y[i])
-    # Data to predict (ground truth)
-    for i in range(int(nUsedData-1),N):
-        realX.append(x[i])
-        realY.append(y[i])
-
+    observedX = x[0:nUsedData]
+    observedY = y[0:nUsedData]
+    
     fig,ax = plt.subplots()
     plt.gca().set_axis_off()
     plt.gca().xaxis.set_major_locator(plt.NullLocator())
     plt.gca().yaxis.set_major_locator(plt.NullLocator())
     # Plot the observed data
-    lineObs, = ax.plot(partialX,partialY, lw=3,color='c')
+    lineObs, = ax.plot(observedX,observedY, lw=3,color='c')
 
     # Show the image
     ax.imshow(img)
@@ -266,7 +214,7 @@ def animate_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,go
                 vy  = varXYVec[i][1,0,0]
                 e.center = xy
                 e.width  = 6.0*math.sqrt(math.fabs(vx))
-                e.height = 6.0*math.sqrt(math.fabs(vx))
+                e.height = 6.0*math.sqrt(math.fabs(vy))
                 e.set_edgecolor('b')
                 e.set_lw(lw)
             ax.add_patch(e)
@@ -281,14 +229,14 @@ def animate_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,go
             if (predictedXYVec[j].shape[0]==0):
                 continue
             predictedN = predictedXYVec[j].shape[0]
-            if (i<predictedXYVec[j].shape[0]):
+            if (i<predictedN):
                 p   = [predictedXYVec[j][i,0],predictedXYVec[j][i,1]]
                 vx  = varXYVec[j][0,i,i]
                 vy  = varXYVec[j][1,i,i]
                 pls[j].set_data(predictedXYVec[j][0:i,0],predictedXYVec[j][0:i,1])
                 ells[j].center = p
                 ells[j].width  = 6.0*math.sqrt(math.fabs(vx))
-                ells[j].height = 6.0*math.sqrt(math.fabs(vx))
+                ells[j].height = 6.0*math.sqrt(math.fabs(vy))
 
 
     anim = FuncAnimation(fig, animate,frames=100,interval=100)
@@ -314,44 +262,26 @@ def plot_path_samples(img,x,y):
     plt.axis(v)
     plt.show()
 
-
-
-# Plots a set of observed paths and their corresponding sample
-def plot_path_set_samples_with_observations(img,ox,oy,x,y):
-    n = len(x)
-    if(n == 0):
-        return
+def plot_observations_predictive_mean_and_sample(img,traj,knownN,predXY,sampleXY):
+    x, y = traj[0], traj[1]
+    observedX = x[:knownN]
+    observedY = y[:knownN]
+    
     fig,ax = plt.subplots(1)
     ax.set_aspect('equal')
-    # Show the image
     ax.imshow(img)
-    for i in range(n):
-        colorId = i%len(color)
-        plt.plot(ox[i],oy[i],color[colorId],lw=2.0)
-        plt.plot(x[i],y[i],color[colorId]+'--',lw=2.0)
+    
+    plt.plot(observedX,observedY,'b',lw=2.0)        #observed trajectory
+    plt.plot(x[knownN:],y[knownN:],'b--',lw=2.0)    #true trajectory
+    plt.plot(sampleXY[0],sampleXY[1],'g--',lw=2.0)  #sample
+    plt.plot(predXY[0],predXY[1],'c--',lw=2.0)      #predictive mean
     s = img.shape
     v = [0,s[1],s[0],0]
     plt.axis(v)
     plt.show()
 
-# Plots a set of observed paths and their corresponding sample
-def plot_observations_predictive_mean_and_sample(img,realXY,knownN,predXY,sampleXY):
-    fig,ax = plt.subplots(1)
-    ax.set_aspect('equal')
-    # Show the image
-    obsXY = [ realXY.x[:knownN+1],realXY.y[:knownN+1] ] #observed path
-    XY = [ realXY.x[knownN:],realXY.y[knownN:] ]        #rest of the path
-    ax.imshow(img)
-    plt.plot(obsXY[0],obsXY[1],'c',lw=2.0)
-    plt.plot(XY[0],XY[1],'c--',lw=2.0)
-    plt.plot(sampleXY[0],sampleXY[1],'m--',lw=2.0)
-    plt.plot(predXY[0],predXY[1],'b--',lw=2.0)
-    s = img.shape
-    v = [0,s[1],s[0],0]
-    plt.axis(v)
-    plt.show()
-
-def sequence_of_observations_predmean_samples(img,realXY,knownN,predXY,sampleXY):
+def sequence_of_observations_predmean_samples(img,traj,knownN,predXY,sampleXY):
+    #plot a matrix of images with different sample and prediction
     N        = len(knownN) # Number of images
     n, m = 1, 1
     if(N%3 == 0):
@@ -363,6 +293,8 @@ def sequence_of_observations_predmean_samples(img,realXY,knownN,predXY,sampleXY)
     else:
         m = N
     fig, axes = plt.subplots(n,m)
+    x, y = traj[0], traj[1]
+    
     for i in range(n):
         for j in range(m):
             axes[i,j].set_aspect('equal')
@@ -370,21 +302,21 @@ def sequence_of_observations_predmean_samples(img,realXY,knownN,predXY,sampleXY)
             axes[i,j].imshow(img)
             # Plot each test
             k = (i*m)+j
-            obsXY = [ realXY.x[:knownN[k]+1],realXY.y[:knownN[k]+1] ] #observed path
-            XY = [ realXY.x[knownN[k]:],realXY.y[knownN[k]:] ]        #rest of the path
-
-            axes[i,j].plot(obsXY[0],obsXY[1],'c',lw=2.0)
-            axes[i,j].plot(XY[0],XY[1],'c--',lw=2.0)
-            axes[i,j].plot(predXY[k][0],predXY[k][1],'b--',lw=2.0)
-            axes[i,j].plot(sampleXY[k][0],sampleXY[k][1],linestyle = '--', color ='hotpink',lw=2.0)
+            observedX = x[:knownN[k]+1]
+            observedY = y[:knownN[k]+1]
+            
+            axes[i,j].plot(observedX,observedY,'b',lw=2.0)              #observed trajectory
+            axes[i,j].plot(x[knownN[k]:],y[:knownN[k]+1],'b--',lw=2.0)  #true trajectory
+            axes[i,j].plot(predXY[k][0],predXY[k][1],'g--',lw=2.0)      #predictive mean
+            axes[i,j].plot(sampleXY[k][0],sampleXY[k][1],'c--',lw=2.0)  #sample
             axes[i,j].axis('off')
     plt.show()
 
 
 #Grafica con subplots los tests del sampling dado un conjunto de observaciones
-def plot_interaction_with_sampling_test(img,observedPaths, samplesVec, potentialVec):
+def plot_interaction_with_sampling_test(img,observedTraj, samplesVec, potentialVec):
     N        = len(samplesVec) # Number of joint samples
-    numPaths = len(observedPaths)
+    numPaths = len(observedTraj)
     n, m = 1, 1
     if(N%3 == 0):
         n = 3
@@ -403,15 +335,17 @@ def plot_interaction_with_sampling_test(img,observedPaths, samplesVec, potential
             # Plot each test
             t = (i*m)+j
             for k in range(numPaths):
-                colorId = (k)%len(color)
-                ox,oy = observedPaths[k].x,observedPaths[k].y
-                axes[i,j].plot(ox,oy,color[colorId],lw=2.0)
-                sx,sy = samplesVec[t][k].x,samplesVec[t][k].y
-                axes[i,j].plot(sx,sy,color[colorId]+'--',lw=2.0)
-                string = "{0:1.3e}".format(potentialVec[t])#str(potentialVec[t])
+                col = (k)%len(color)
+                observedX, observedY = observedTraj[k][0],observedTraj[k][1]
+                axes[i,j].plot(observedX,observedY,color[col],lw=2.0)
+                
+                sampleX, sampleY = samplesVec[t][k][0],samplesVec[t][k][1]
+                axes[i,j].plot(sampleX,sampleY,color[col]+'--',lw=2.0)
+                string = "{0:1.3e}".format(potentialVec[t])
                 axes[i,j].set_title('w = '+string)
             axes[i,j].axis('off')
     plt.show()
+    
 #Grafica con subplots los tests del sampling dado un conjunto de observaciones
 def plot_interaction_test_weight_and_error(img,observedPaths, samplesVec, potentialVec, errorVec):
     N        = len(samplesVec) # Number of joint samples
@@ -435,8 +369,8 @@ def plot_interaction_test_weight_and_error(img,observedPaths, samplesVec, potent
             t = (i*m)+j
             for k in range(numPaths):
                 colorId = (k)%len(color)
-                ox,oy = observedPaths[k].x,observedPaths[k].y
-                axes[i,j].plot(ox,oy,color[colorId],lw=2.0)
+                obsx,oy = observedPaths[k].x,observedPaths[k].y
+                axes[i,j].plot(obsx,oy,color[colorId],lw=2.0)
                 sx,sy = samplesVec[t][k].x,samplesVec[t][k].y
                 axes[i,j].plot(sx,sy,color[colorId]+'--',lw=2.0)
                 w = "{0:1.3e}".format(potentialVec[t])
