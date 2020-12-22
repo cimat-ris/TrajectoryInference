@@ -28,11 +28,11 @@ def joint_regression(l,x_meanl,lnew,kernel,linearPriorMean=None):
     # Fill in k
     for i in range(n):
         for j in range(nnew):
-            k[i][j] = kernel(l[i],lnew[j],False)
+            k[i][j] = kernel(l[i],lnew[j])
     # Fill in C
     for i in range(nnew):
         for j in range(nnew):
-            C[i][j] = kernel(lnew[i],lnew[j],False)
+            C[i][j] = kernel(lnew[i],lnew[j])
     # Predictive mean
     xnew = k.transpose().dot(K_1.dot(x_meanl))
     if linearPriorMean is not None:

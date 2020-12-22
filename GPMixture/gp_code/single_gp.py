@@ -34,6 +34,10 @@ class singleGP:
         self.predictedVars  = np.stack([varX, varY],axis=0)
         return self.predictedMeans,self.predictedVars
 
+    # Get a filtered version of the initial observations
+    def filter(self):
+        return self.gpPathRegressor.filterObservations()
+
     # Generate a sample from the current Gaussian predictive distribution
     def sample(self):
         return self.gpPathRegressor.sample_with_perturbed_finish_point()

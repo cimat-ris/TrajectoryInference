@@ -57,9 +57,10 @@ for i in range(1,part_num-1):
     trueX,trueY,trueL = observed_data(pathX,pathY,pathL,knownN)
     """Single goal prediction test"""
     # Update the GP with (real) observations
-    start      = time.process_time()
-    likelihood = gp.update(trueX,trueY,trueL)
-    stop       = time.process_time()
+    start               = time.process_time()
+    likelihood          = gp.update(trueX,trueY,trueL)
+    stop                = time.process_time()
+    filteredX,filteredY = gp.filter()
     print("[INF] CPU process time (update): %.1f [ms]" % (1000.0*(stop-start)))
     start = stop
     # Perform prediction
@@ -68,6 +69,9 @@ for i in range(1,part_num-1):
     print("[INF] CPU process time (prediction): %.1f [ms]" % (1000.0*(stop-start)))
     print('[INF] Plotting')
     print("[RES] [Likelihood]: ",likelihood)
+    # Plot the filtered version of the observations
+    p.plot_filtered(filteredX,filteredY)
+    # Plot the prediction
     p.plot_prediction(pathX,pathY,knownN,predictedXY,varXY)
     p.show()
 

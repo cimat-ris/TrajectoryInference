@@ -4,7 +4,7 @@ import math as m
 # TODO: pass in a different way
 # Standard deviation for the observation noise
 # could we added it to the kernel class?
-nsigma = 7.50
+# nsigma = 7.50
 
 # Returns two rowsxcolumns matrices:
 # - the matrix of kernels with the default parameters
@@ -30,10 +30,10 @@ def create_kernel_matrix(kerType, rows, columns):
 def set_kernel(name):
     if(name == "squaredExponential"):
         parameters = [80., 80.]  #{Covariance magnitude factor, Characteristic length}
-        kernel = squaredExponentialKernel(parameters[0],parameters[1],nsigma)
+        kernel = squaredExponentialKernel(parameters[0],parameters[1])
     elif(name == "combinedTrautman"):
         parameters = [60., 80., 80.]  #{Precision of the line constant, Covariance magnitude factor, Characteristic length}
-        kernel = combinedTrautmanKernel(parameters[0],parameters[1],parameters[2],nsigma)
+        kernel = combinedTrautmanKernel(parameters[0],parameters[1],parameters[2])
     elif(name == "exponential"):
         parameters = [80., 80.]  #{Covariance magnitude factor, Characteristic length}
         kernel = exponentialKernel(parameters[0],parameters[1])
@@ -42,13 +42,13 @@ def set_kernel(name):
         kernel = gammaExponentialKernel(parameters[0],parameters[1])
     elif(name == "rationalQuadratic"):
         parameters = [80.0,10., 5.] #{Covariance magnitude factor, Characteristic length, Alpha parameter}
-        kernel = rationalQuadraticKernel(parameters[0],parameters[1],nsigma)
+        kernel = rationalQuadraticKernel(parameters[0],parameters[1])
     elif(name == "squaredExponentialAndNoise"):
         parameters = [80., 80.] #{Covariance magnitude factor, Characteristic length}
-        kernel = squaredExponentialAndNoiseKernel(parameters[0],parameters[1],nsigma)
+        kernel = squaredExponentialAndNoiseKernel(parameters[0],parameters[1])
     elif(name == "linePriorCombined"):
         parameters = [1.0,0.0,0.01,1.0, 80., 80.]  #{Mean slope, mean constant, Standard deviation slope, Standard deviation constant, Covariance magnitude factor, Characteristic length}
-        kernel = linePriorCombinedKernel(parameters[0],parameters[1],parameters[2],parameters[3],parameters[4],parameters[5],nsigma)
+        kernel = linePriorCombinedKernel(parameters[0],parameters[1],parameters[2],parameters[3],parameters[4],parameters[5])
     return kernel
 
 # Kronecker delta
@@ -407,7 +407,7 @@ class exponentialAndNoiseKernel(Kernel):
 # A combined kernel that considers a prior on the line parameters
 class linePriorCombinedKernel(Kernel):
     # Constructor
-    def __init__(self, meanSlope, meanConstant, sigmaSlope, sigmaConstant, sigmaSq, length, sigmaNoise):
+    def __init__(self, meanSlope, meanConstant, sigmaSlope, sigmaConstant, sigmaSq, length):
         self.linearPrior   = True
         self.meanSlope     = meanSlope
         self.meanConstant  = meanConstant
@@ -419,7 +419,6 @@ class linePriorCombinedKernel(Kernel):
         self.length = length
         self.linear = linearKernel(sigmaSlope, sigmaConstant)
         self.matern = maternKernel(sigmaSq,length)
-        self.noise  = noiseKernel(sigmaNoise)
         # Type of kernel
         self.type   = "linePriorCombined"
 
@@ -447,16 +446,15 @@ class linePriorCombinedKernel(Kernel):
         self.matern.setParameters(vec)
 
     # Overload the operator ()
-    def __call__(self,x,y,useNoise=True):
+    def __call__(self,x,y):
         v = self.matern(x,y)
-        if useNoise:
-            v += self.noise(x,y)
         if self.linearPrior:
             v += self.linear(x,y)
         return v
 
     # Derivative with respect to y
     def dkdy(self,x,y):
+        # TODO: if self.linearPrior:
         return self.matern.dkdy(x,y) + self.linear.dkdy(x,y)
 
     # Method to get parameters

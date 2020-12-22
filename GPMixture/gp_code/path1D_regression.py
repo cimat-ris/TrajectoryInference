@@ -34,23 +34,24 @@ class path1D_regression:
         self.observedL       = np.zeros((n+1,1))
         self.predictedL      = predictedL
         self.K               = np.zeros((n+1,n+1))
-        # TODO: use vectorization
+        # TODO: use vectorization?
         # Fill in K, first elements (nxn)
         for i in range(n):
             # Diagonal elements: should include a noise term
-            self.K[i][i] = self.kernel(observedL[i],observedL[i],useNoise=True)
+            self.K[i][i] = self.kernel(observedL[i],observedL[i])
             for j in range(i):
-                self.K[i][j] = self.kernel(observedL[i],observedL[j],useNoise=False)
+                self.K[i][j] = self.kernel(observedL[i],observedL[j])
                 self.K[j][i] = self.K[i][j]
         # Last row/column
         for i in range(n):
-            self.K[i][n] = self.kernel(observedL[i],finalL,useNoise=False)
+            self.K[i][n] = self.kernel(observedL[i],finalL)
             self.K[n][i] = self.K[i][n]
-        self.K[n][n] = self.kernel(finalL,finalL,useNoise=True)
+        self.K[n][n] = self.kernel(finalL,finalL)
         # Define the variance associated to the last point (varies with the area)
         self.K[n][n] += finalVar
+        # TODO: set the noise parameter somewhere else
         # Heavy
-        self.K_1 = inv(self.K)
+        self.K_1 = inv(self.K+7.5*np.eye(self.K.shape[0]))
         for i in range(n):
             self.updateObserved(i,observedX[i],observedL[i])
         self.updateObserved(n,finalX,finalL)
@@ -64,6 +65,12 @@ class path1D_regression:
         # Fill in deltaKx
         for j in range(n+1):
             self.deltaK[j][0] = self.kernel.dkdy(self.observedL[n],self.observedL[j])
+
+    def filterObservations(self):
+        f = self.K.dot(self.K_1.dot(self.observedX))
+        if self.kernel.linearPrior!=False:
+            f +=self.observedL*self.kernel.meanSlope+self.kernel.meanConstant
+        return f
 
     # Update single observation i
     def updateObserved(self,i,x,l):
@@ -93,13 +100,13 @@ class path1D_regression:
         # Fill in k
         for i in range(n):
             for j in range(nnew):
-                self.k[i][j] = self.kernel(self.observedL[i],self.predictedL[j],False)
+                self.k[i][j] = self.kernel(self.observedL[i],self.predictedL[j])
         # Fill in C
         for i in range(nnew):
             for j in range(nnew):
                 # Note here that we do not add the noise term here (we want to recover the unperturbed data)
                 # As Eq. 2.22 in Rasmussen
-                self.C[i][j] = self.kernel(self.predictedL[i],self.predictedL[j],False)
+                self.C[i][j] = self.kernel(self.predictedL[i],self.predictedL[j])
 
         # Predictive mean
         self.K_1o       = self.K_1.dot(self.observedX)
@@ -114,6 +121,7 @@ class path1D_regression:
         # Regularization to avoid singular matrices
         self.varX += self.epsilon*np.eye(self.varX.shape[0])
         # Cholesky on varX
+        # TODO: use it for the inverse?
         if positive_definite(self.varX):
             try:
                 self.sqRootVar = np.linalg.cholesky(self.varX)
