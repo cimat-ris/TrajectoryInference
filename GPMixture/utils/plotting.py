@@ -58,7 +58,7 @@ class plotter():
         observedY = trueY[0:knownN]
         self.ax.plot(observedX,observedY,'c',predictedXY[:,0],predictedXY[:,1],'b')
         self.ax.plot([observedX[-1],predictedXY[0,0]],[observedY[-1],predictedXY[0,1]],'b')
-        
+
         predictedN = predictedXY.shape[0]
         for i in range(predictedN):
             xy = [predictedXY[i,0],predictedXY[i,1]]
@@ -67,8 +67,12 @@ class plotter():
             ell.set_fill(0)
             ell.set_edgecolor('m')
             self.ax.add_patch(ell)
-            
+
         self.ax.plot(trueX[knownN-1:-1],trueY[knownN-1:-1],'c--')
+
+    # Plot the true data, the predicted ones and their variance
+    def plot_filtered(self,filteredX,filteredY):
+        self.ax.plot(filteredX[:-1],filteredY[:-1],'b--')
 
     # Plot multiple predictions
     def plot_multiple_predictions_and_goal_likelihood(self,x,y,nUsedData,nGoals,goalsLikelihood,predictedXYVec,varXYVec):
@@ -180,7 +184,7 @@ def plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,finalXY):
 def animate_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goalsLikelihood,predictedXYVec,varXYVec,toFile):
     observedX = x[0:nUsedData]
     observedY = y[0:nUsedData]
-    
+
     fig,ax = plt.subplots()
     plt.gca().set_axis_off()
     plt.gca().xaxis.set_major_locator(plt.NullLocator())
@@ -266,11 +270,11 @@ def plot_observations_predictive_mean_and_sample(img,traj,knownN,predXY,sampleXY
     x, y = traj[0], traj[1]
     observedX = x[:knownN]
     observedY = y[:knownN]
-    
+
     fig,ax = plt.subplots(1)
     ax.set_aspect('equal')
     ax.imshow(img)
-    
+
     plt.plot(observedX,observedY,'b',lw=2.0)        #observed trajectory
     plt.plot(x[knownN:],y[knownN:],'b--',lw=2.0)    #true trajectory
     plt.plot(sampleXY[0],sampleXY[1],'g--',lw=2.0)  #sample
@@ -294,7 +298,7 @@ def sequence_of_observations_predmean_samples(img,traj,knownN,predXY,sampleXY):
         m = N
     fig, axes = plt.subplots(n,m)
     x, y = traj[0], traj[1]
-    
+
     for i in range(n):
         for j in range(m):
             axes[i,j].set_aspect('equal')
@@ -304,7 +308,7 @@ def sequence_of_observations_predmean_samples(img,traj,knownN,predXY,sampleXY):
             k = (i*m)+j
             observedX = x[:knownN[k]+1]
             observedY = y[:knownN[k]+1]
-            
+
             axes[i,j].plot(observedX,observedY,'b',lw=2.0)              #observed trajectory
             axes[i,j].plot(x[knownN[k]:],y[:knownN[k]+1],'b--',lw=2.0)  #true trajectory
             axes[i,j].plot(predXY[k][0],predXY[k][1],'g--',lw=2.0)      #predictive mean
@@ -338,14 +342,14 @@ def plot_interaction_with_sampling_test(img,observedTraj, samplesVec, potentialV
                 col = (k)%len(color)
                 observedX, observedY = observedTraj[k][0],observedTraj[k][1]
                 axes[i,j].plot(observedX,observedY,color[col],lw=2.0)
-                
+
                 sampleX, sampleY = samplesVec[t][k][0],samplesVec[t][k][1]
                 axes[i,j].plot(sampleX,sampleY,color[col]+'--',lw=2.0)
                 string = "{0:1.3e}".format(potentialVec[t])
                 axes[i,j].set_title('w = '+string)
             axes[i,j].axis('off')
     plt.show()
-    
+
 #Grafica con subplots los tests del sampling dado un conjunto de observaciones
 def plot_interaction_test_weight_and_error(img,observedPaths, samplesVec, potentialVec, errorVec):
     N        = len(samplesVec) # Number of joint samples

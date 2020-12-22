@@ -51,10 +51,14 @@ class path1D_regression:
         self.K[n][n] += finalVar
         # TODO: set the noise parameter somewhere else
         # Heavy
-        self.K_1 = inv(self.K+7.5*np.eye(self.K.shape[0]))
-        for i in range(n):
-            self.updateObserved(i,observedX[i],observedL[i])
-        self.updateObserved(n,finalX,finalL)
+        self.K_1           = inv(self.K+7.5*np.eye(self.K.shape[0]))
+        self.observedL[:-1,0]= observedL
+        self.observedX[:-1,0]= observedX
+        self.observedL[-1,0] = finalL
+        self.observedX[-1,0] = finalX
+        # Center the data in case we use the linear prior
+        if self.kernel.linearPrior!=False:
+            self.observedX -= (self.kernel.meanSlope*self.observedL+self.kernel.meanConstant)
         # For usage in prediction
         nnew         = len(predictedL)
         self.deltak  = np.zeros((nnew,1))
@@ -66,20 +70,13 @@ class path1D_regression:
         for j in range(n+1):
             self.deltaK[j][0] = self.kernel.dkdy(self.observedL[n],self.observedL[j])
 
+    # Deduce the mean for the filtered distribution for the observations
+    # f = K (K + s I)^-1
     def filterObservations(self):
         f = self.K.dot(self.K_1.dot(self.observedX))
         if self.kernel.linearPrior!=False:
             f +=self.observedL*self.kernel.meanSlope+self.kernel.meanConstant
         return f
-
-    # Update single observation i
-    def updateObserved(self,i,x,l):
-        self.observedL[i][0] = l
-        self.observedX[i][0] = x
-        # Center the data in case we use the linear prior
-        if self.kernel.linearPrior!=False:
-            self.observedX[i][0] -= (self.kernel.meanSlope*l+self.kernel.meanConstant)
-
 
     # The main regression function: perform regression for a vector of values
     # lnew, that has been computed in update
