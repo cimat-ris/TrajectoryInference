@@ -34,18 +34,19 @@ class path1D_regression:
         self.observedL       = np.zeros((n+1,1))
         self.predictedL      = predictedL
         self.K               = np.zeros((n+1,n+1))
+        # TODO: use vectorization
         # Fill in K, first elements (nxn)
         for i in range(n):
-            self.K[i][i] = self.kernel(observedL[i],observedL[i])
+            # Diagonal elements: should include a noise term
+            self.K[i][i] = self.kernel(observedL[i],observedL[i],useNoise=True)
             for j in range(i):
-                self.K[i][j] = self.kernel(observedL[i],observedL[j])
+                self.K[i][j] = self.kernel(observedL[i],observedL[j],useNoise=False)
                 self.K[j][i] = self.K[i][j]
         # Last row/column
         for i in range(n):
-            self.K[i][n] = self.kernel(observedL[i],finalL)
+            self.K[i][n] = self.kernel(observedL[i],finalL,useNoise=False)
             self.K[n][i] = self.K[i][n]
-        self.K[n][n] = self.kernel(finalL,finalL)
-
+        self.K[n][n] = self.kernel(finalL,finalL,useNoise=True)
         # Define the variance associated to the last point (varies with the area)
         self.K[n][n] += finalVar
         # Heavy
@@ -67,15 +68,16 @@ class path1D_regression:
     # Update single observation i
     def updateObserved(self,i,x,l):
         self.observedL[i][0] = l
+        self.observedX[i][0] = x
         # Center the data in case we use the linear prior
         if self.kernel.linearPrior!=False:
-            self.observedX[i][0] = x - (self.kernel.meanSlope*l+self.kernel.meanConstant)
-        else:
-            self.observedX[i][0] = x
+            self.observedX[i][0] -= (self.kernel.meanSlope*l+self.kernel.meanConstant)
+
 
     # The main regression function: perform regression for a vector of values
     # lnew, that has been computed in update
     def prediction_to_finish_point(self):
+        # No prediction to do
         if self.predictedL==None:
             return None, None, None
         # Number of observed data
@@ -95,10 +97,12 @@ class path1D_regression:
         # Fill in C
         for i in range(nnew):
             for j in range(nnew):
+                # Note here that we do not add the noise term here (we want to recover the unperturbed data)
+                # As Eq. 2.22 in Rasmussen
                 self.C[i][j] = self.kernel(self.predictedL[i],self.predictedL[j],False)
 
         # Predictive mean
-        self.K_1o= self.K_1.dot(self.observedX)
+        self.K_1o       = self.K_1.dot(self.observedX)
         self.predictedX = self.k.transpose().dot(self.K_1o)
         if self.kernel.linearPrior!=False:
             for j in range(nnew):

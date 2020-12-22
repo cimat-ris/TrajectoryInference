@@ -447,11 +447,13 @@ class linePriorCombinedKernel(Kernel):
         self.matern.setParameters(vec)
 
     # Overload the operator ()
-    def __call__(self,x,y,n=True):
-        if (n):
-            return self.matern(x,y) + self.linear(x,y) + self.noise(x,y)
-        else:
-            return self.matern(x,y) + self.linear(x,y)
+    def __call__(self,x,y,useNoise=True):
+        v = self.matern(x,y)
+        if useNoise:
+            v += self.noise(x,y)
+        if self.linearPrior:
+            v += self.linear(x,y)
+        return v
 
     # Derivative with respect to y
     def dkdy(self,x,y):
