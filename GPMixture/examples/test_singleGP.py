@@ -47,7 +47,7 @@ pathSize = len(pathX)
 # Prediction of single paths with single goals
 gp = singleGP(gi,gj,goalsData)
 
-# Divides the trajectory in part_num parts and consider
+# Divides the trajectory in part_num parts and infer the posterior over the remaining part
 part_num = 10
 for i in range(1,part_num-1):
     p = plotter(imgGCS)
@@ -68,8 +68,30 @@ for i in range(1,part_num-1):
     print("[INF] CPU process time (prediction): %.1f [ms]" % (1000.0*(stop-start)))
     print('[INF] Plotting')
     print("[RES] [Likelihood]: ",likelihood)
+    p.plot_prediction(pathX,pathY,knownN,predictedXY,varXY)
+    p.show()
+
+# Same as above, with samples instead
+part_num = 10
+for i in range(1,part_num-1):
+    p = plotter(imgGCS)
+    p.plot_scene_structure(goalsData)
+    # Data we will suppose known
+    knownN = int((i+1)*(pathSize/part_num))
+    trueX,trueY,trueL = observed_data(pathX,pathY,pathL,knownN)
+    """Single goal prediction test"""
+    # Update the GP with (real) observations
+    start      = time.process_time()
+    likelihood = gp.update(trueX,trueY,trueL)
+    stop       = time.process_time()
+    print("[INF] CPU process time (update): %.1f [ms]" % (1000.0*(stop-start)))
+    start = stop
     # Generate samples
+    predictedXY,varXY = gp.predict()
     vecX,vecY         = gp.generate_samples(10)
     p.plot_path_samples_with_observations(trueX,trueY,vecX,vecY)
-    p.plot_prediction(pathX,pathY,knownN,predictedXY,varXY)
+    stop       = time.process_time()
+    print("[INF] CPU process time (sampling): %.1f [ms]" % (1000.0*(stop-start)))
+    print('[INF] Plotting')
+    print("[RES] [Likelihood]: ",likelihood)
     p.show()
