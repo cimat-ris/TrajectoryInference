@@ -4,7 +4,6 @@ Error and likelihood evaluation
 import numpy as np
 import math
 from numpy import linalg as la
-from gp_code.regression import prediction_xy
 from utils.stats_trajectories import euclidean_distance
 from utils.manip_trajectories import goal_center_and_size
 
@@ -67,8 +66,8 @@ def compute_prediction_error_1D(trueX, trueY, prediction, flag):
             error += abs(trueY[i] - prediction[i])
     return error
 
-# For a given dataset (knownX,knownY,knownL),
-# takes half of the data as known and predicts the remaining half. Then, evaluate the likelihood.
+# For a given set of observations (observedX,observedY,observedL),
+# takes half of the data to fit a model and predicts the remaining half. Then, evaluate the likelihood.
 def likelihood_from_partial_path(nPoints,observedX,observedY,observedL,startG,finishG,goalsData):
     error = compute_prediction_error_of_points_along_the_path(nPoints,observedX,observedY,observedL,startG,finishG,goalsData)
     return (math.exp(-1.*( error**2)/D**2 ))
@@ -94,14 +93,15 @@ def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observed
     d = int(halfN/nPoints)
     if d<1:
         return 1.0
+    return 1.0
     # Prepare the ground truths and the list of l to evaluate
     realX         = observedX[halfN:halfN+nPoints*d:d]
     realY         = observedY[halfN:halfN+nPoints*d:d]
     predictionSet = observedL[halfN:halfN+nPoints*d:d]
+    # TODO! redo the prediction based on GP model
     # Get the prediction based on the GP
-    predX, predY, varX,varY = prediction_xy(trueX,trueY,trueL, predictionSet, goalsData.kernelsX[startG][finishG],goalsData.kernelsY[startG][finishG])
     # Evaluate the error
-    return ADE([realX,realY],[predX,predY])
+    # return ADE([realX,realY],[predX,predY])
 
 #Busco un alpha en [0,1] tal que t = alpha*T1 + (1-alpha)*T2
 def search_value(a, b, t, T1, T2):

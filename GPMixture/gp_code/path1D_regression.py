@@ -11,7 +11,7 @@ from utils.linalg import positive_definite
 
 class path1D_regression:
     # Constructor
-    def __init__(self, kernel):
+    def __init__(self, kernel, sigmaNoise=7.5):
         # Observations
         self.observedX       = None
         self.observedL       = None
@@ -25,6 +25,7 @@ class path1D_regression:
         # Regularization factor
         self.epsilon         = 0.5
         self.kernel          = kernel
+        self.sigmaNoise      = sigmaNoise
 
     # Update observations for the Gaussian process (matrix K)
     def updateObservations(self,observedX,observedL,finalX,finalL,finalVar,predictedL):
@@ -39,12 +40,12 @@ class path1D_regression:
         self.observedL[-1,0] = finalL
         self.observedX[-1,0] = finalX
         # Fill in K, first elements (nxn)
-        self.K = self.kernel.vectorized(self.observedL[:,0],self.observedL[:,0])
+        self.K       = self.kernel(self.observedL[:,0],self.observedL[:,0])
         # Define the variance associated to the last point (varies with the area)
-        self.K[n][n] += finalVar
+        self.K[n][n]+= finalVar
         # TODO: set the noise parameter somewhere else
         # Heavy
-        self.K_1           = inv(self.K+7.5*np.eye(self.K.shape[0]))
+        self.K_1     = inv(self.K+self.sigmaNoise*np.eye(self.K.shape[0]))
         # Center the data in case we use the linear prior
         if self.kernel.linearPrior!=False:
             self.observedX -= (self.kernel.meanSlope*self.observedL+self.kernel.meanConstant)
@@ -52,6 +53,7 @@ class path1D_regression:
         nnew         = len(predictedL)
         self.deltak  = np.zeros((nnew,1))
         self.deltaK  = np.zeros((n+1,1))
+        # TODO: vectorize too
         # Fill in deltakx
         for j in range(nnew):
             self.deltak[j][0] = self.kernel.dkdy(self.observedL[n],predictedL[j])
@@ -82,17 +84,12 @@ class path1D_regression:
         # Compute k (nxnnew), C (nnewxnnew)
         self.k  = np.zeros((n,nnew))
         self.C  = np.zeros((nnew,nnew))
-
         # Fill in k
-        #for i in range(n):
-        #    for j in range(nnew):
-        #        self.k[i][j] = self.kernel(self.observedL[i],self.predictedL[j])
-        self.k = self.kernel.vectorized(self.observedL[:,0],self.predictedL[:,0])
+        self.k = self.kernel(self.observedL[:,0],self.predictedL[:,0])
         # Fill in C
         # Note here that we do not add the noise term here (we want to recover the unperturbed data)
         # As Eq. 2.22 in Rasmussen
-        self.C = self.kernel.vectorized(self.predictedL[:,0],self.predictedL[:,0])
-
+        self.C = self.kernel(self.predictedL[:,0],self.predictedL[:,0])
         # Predictive mean
         self.K_1o       = self.K_1.dot(self.observedX)
         self.predictedX = self.k.transpose().dot(self.K_1o)

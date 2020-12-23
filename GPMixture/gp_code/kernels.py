@@ -114,12 +114,8 @@ class linearKernel(Kernel):
         return parameters
 
     # Overload the operator ()
-    def vectorized(self,l1,l2):
+    def __call__(self,l1,l2):
         return self.sigmaSq_a*((np.reshape(l1,(l1.shape[0],1))).dot((np.reshape(l2,(l2.shape[0],1))).transpose()))+self.sigmaSq_c
-
-    # Overload the operator ()
-    def __call__(self,x,y):
-        return self.sigmaSq_a*x*y+self.sigmaSq_c
 
     # Derivative with respect to y
     def dkdy(self,x,y):
@@ -190,21 +186,11 @@ class maternKernel(Kernel):
         # Characteristic length
         self.length = vec[1]
 
-    def vectorized(self,l1,l2):
+    # Overload of operator ()
+    def __call__(self,l1,l2):
         rn  = np.abs(l1[:, None] - l2[None, :])/self.length
         rn2 = rn**2
         return self.sigmaSq*(1. + self.sqrootof5*rn + 1.67*rn2)*np.exp(-self.sqrootof5*rn)
-
-    # Overload the operator ()
-    def __call__(self,x,y):
-        rn  = m.fabs((x-y)/self.length)
-        # To avoid overflow
-        if rn>20.0:
-            val = 0.0
-        else:
-            rn2 = rn**2
-            val = self.sigmaSq*(1. + self.sqrootof5*rn + 1.67*rn2)*m.exp(-self.sqrootof5*rn)
-        return val
 
     # Derivative with respect to y
     def dkdy(self,x,y):
@@ -440,15 +426,12 @@ class linePriorCombinedKernel(Kernel):
         self.length        = vec[1]
         self.matern.setParameters(vec)
 
-    def vectorized(self,l1,l2):
-        return self.matern.vectorized(l1,l2)+self.linear.vectorized(l1,l2)
-
     # Overload the operator ()
-    def __call__(self,x,y):
-        v = self.matern(x,y)
+    def __call__(self,l1,l2):
+        K = self.matern(l1,l2)
         if self.linearPrior:
-            v += self.linear(x,y)
-        return v
+            K += self.linear(l1,l2)
+        return K
 
     # Derivative with respect to y
     def dkdy(self,x,y):
