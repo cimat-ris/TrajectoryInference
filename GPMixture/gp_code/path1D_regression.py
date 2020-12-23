@@ -38,9 +38,8 @@ class path1D_regression:
         self.observedX[:-1,0]= observedX
         self.observedL[-1,0] = finalL
         self.observedX[-1,0] = finalX
-        print(self.observedL.shape)
         # Fill in K, first elements (nxn)
-        self.K = self.kernel.vectorized(self.observedL[:,0])
+        self.K = self.kernel.vectorized(self.observedL[:,0],self.observedL[:,0])
         # Define the variance associated to the last point (varies with the area)
         self.K[n][n] += finalVar
         # TODO: set the noise parameter somewhere else
@@ -72,7 +71,7 @@ class path1D_regression:
     # lnew, that has been computed in update
     def prediction_to_finish_point(self):
         # No prediction to do
-        if self.predictedL==None:
+        if self.predictedL.shape[0]==0:
             return None, None, None
         # Number of observed data
         n    = self.observedX.shape[0]
@@ -85,22 +84,20 @@ class path1D_regression:
         self.C  = np.zeros((nnew,nnew))
 
         # Fill in k
-        for i in range(n):
-            for j in range(nnew):
-                self.k[i][j] = self.kernel(self.observedL[i],self.predictedL[j])
+        #for i in range(n):
+        #    for j in range(nnew):
+        #        self.k[i][j] = self.kernel(self.observedL[i],self.predictedL[j])
+        self.k = self.kernel.vectorized(self.observedL[:,0],self.predictedL[:,0])
         # Fill in C
-        for i in range(nnew):
-            for j in range(nnew):
-                # Note here that we do not add the noise term here (we want to recover the unperturbed data)
-                # As Eq. 2.22 in Rasmussen
-                self.C[i][j] = self.kernel(self.predictedL[i],self.predictedL[j])
+        # Note here that we do not add the noise term here (we want to recover the unperturbed data)
+        # As Eq. 2.22 in Rasmussen
+        self.C = self.kernel.vectorized(self.predictedL[:,0],self.predictedL[:,0])
 
         # Predictive mean
         self.K_1o       = self.K_1.dot(self.observedX)
         self.predictedX = self.k.transpose().dot(self.K_1o)
         if self.kernel.linearPrior!=False:
-            for j in range(nnew):
-                self.predictedX[j] += (self.predictedL[j]*self.kernel.meanSlope+self.kernel.meanConstant)
+            self.predictedX += (self.predictedL*self.kernel.meanSlope+self.kernel.meanConstant)
         # Estimate the variance in x
         self.ktK_1 = self.k.transpose().dot(self.K_1)
         kK_1kt     = self.ktK_1.dot(self.k)

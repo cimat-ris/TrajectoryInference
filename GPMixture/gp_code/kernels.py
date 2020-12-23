@@ -114,8 +114,8 @@ class linearKernel(Kernel):
         return parameters
 
     # Overload the operator ()
-    def vectorized(self,l):
-        return self.sigmaSq_a*(l.dot(l.transpose()))+self.sigmaSq_c
+    def vectorized(self,l1,l2):
+        return self.sigmaSq_a*((np.reshape(l1,(l1.shape[0],1))).dot((np.reshape(l2,(l2.shape[0],1))).transpose()))+self.sigmaSq_c
 
     # Overload the operator ()
     def __call__(self,x,y):
@@ -190,8 +190,8 @@ class maternKernel(Kernel):
         # Characteristic length
         self.length = vec[1]
 
-    def vectorized(self,l):
-        rn  = np.abs(l[:, None] - l[None, :])/self.length
+    def vectorized(self,l1,l2):
+        rn  = np.abs(l1[:, None] - l2[None, :])/self.length
         rn2 = rn**2
         return self.sigmaSq*(1. + self.sqrootof5*rn + 1.67*rn2)*np.exp(-self.sqrootof5*rn)
 
@@ -440,8 +440,8 @@ class linePriorCombinedKernel(Kernel):
         self.length        = vec[1]
         self.matern.setParameters(vec)
 
-    def vectorized(self,l):
-        return self.matern.vectorized(l)+self.linear.vectorized(l)
+    def vectorized(self,l1,l2):
+        return self.matern.vectorized(l1,l2)+self.linear.vectorized(l1,l2)
 
     # Overload the operator ()
     def __call__(self,x,y):
