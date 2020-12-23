@@ -10,13 +10,6 @@ from copy import copy
 from utils.stats_trajectories import euclidean_distance
 import random
 
-# Determines the set of l values to predict from a given set of data,
-# where knownN are specified as known
-def get_prediction_set_from_data(l,knownN):
-    N    = len(l)
-    newL = l[knownN-1:N]
-    return newL
-
 #distUnit - unidad de distancia segun el promedio de la arc-len de las trayectorias
 #last know (x,y,l), finish point, distUnit, stepUnit - pasos por unidad de dist
 def get_prediction_set_arclengths(lastKnownPoint, finishPoint, distUnit, stepUnit):
@@ -35,18 +28,6 @@ def get_prediction_set_arclengths(lastKnownPoint, finishPoint, distUnit, stepUni
         for i in range(1,numSteps+1):
             newset[i-1,0] = l + i*step
     return newset, l + dist_to_goal, dist_to_goal
-
-def get_prediction_set_given_size(lastKnownPoint, finishPoint, unit, steps):
-    x, y, l = lastKnownPoint[0], lastKnownPoint[1], lastKnownPoint[2]
-    _x, _y = finishPoint[0], finishPoint[1]
-    dist = math.sqrt( (_x-x)**2 + (_y-y)**2 )
-    newset = []
-    if(steps > 0):
-        step = dist/float(steps)
-        for i in range(steps+1):
-            newset.append( l + i*step*unit )
-
-    return newset, l + dist*unit
 
 #****************** Functions for Trautmans code ******************
 #last know (x,y,l), finish point, distUnit, stepUnit - pasos por unidad de dist, speed

@@ -42,15 +42,15 @@ class path_regression:
         filteredx = self.regression_x.filterObservations()
         filteredy = self.regression_y.filterObservations()
         return filteredx,filteredy
-        
+
     # Compute the likelihood
     def computeLikelihood(self,observedX,observedY,observedL,startG,finishG,stepsToCompare,goalsData):
         # TODO: remove the goalsData structure
         self.likelihood = goalsData.priorTransitions[startG][finishG]*likelihood_from_partial_path(stepsToCompare,observedX,observedY,observedL,startG,finishG,goalsData)
         return self.likelihood
 
-    # The main regression function: perform regression for a
-    # vector of values of L, that has been computed in update
+    # The main path regression function: perform regression for a
+    # vector of values of future L, that has been computed in update
     def prediction_to_finish_point(self):
         pL,pX,vX = self.regression_x.prediction_to_finish_point()
         pL,pY,vY = self.regression_y.prediction_to_finish_point()
