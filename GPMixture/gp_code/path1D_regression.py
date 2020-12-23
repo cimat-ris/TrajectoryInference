@@ -39,6 +39,9 @@ class path1D_regression:
         self.observedX[:-1,0]= observedX
         self.observedL[-1,0] = finalL
         self.observedX[-1,0] = finalX
+        # Center the data in case we use the linear prior
+        if self.kernel.linearPrior!=False:
+            self.observedX -= (self.kernel.meanSlope*self.observedL+self.kernel.meanConstant)
         # Fill in K, first elements (nxn)
         self.K       = self.kernel(self.observedL[:,0],self.observedL[:,0])
         # Define the variance associated to the last point (varies with the area)
@@ -46,9 +49,7 @@ class path1D_regression:
         # TODO: set the noise parameter somewhere else
         # Heavy
         self.K_1     = inv(self.K+self.sigmaNoise*np.eye(self.K.shape[0]))
-        # Center the data in case we use the linear prior
-        if self.kernel.linearPrior!=False:
-            self.observedX -= (self.kernel.meanSlope*self.observedL+self.kernel.meanConstant)
+        self.K_1o    = self.K_1.dot(self.observedX)
         # For usage in prediction
         nnew         = len(predictedL)
         self.deltak  = np.zeros((nnew,1))
@@ -78,12 +79,7 @@ class path1D_regression:
         # Number of observed data
         n    = self.observedX.shape[0]
         # Number of predicted data
-        nnew = len(self.predictedL)
-        if nnew == 0:
-            return None, None, None
-        # Compute k (nxnnew), C (nnewxnnew)
-        self.k  = np.zeros((n,nnew))
-        self.C  = np.zeros((nnew,nnew))
+        nnew = self.predictedL.shape[0]
         # Fill in k
         self.k = self.kernel(self.observedL[:,0],self.predictedL[:,0])
         # Fill in C
@@ -91,7 +87,6 @@ class path1D_regression:
         # As Eq. 2.22 in Rasmussen
         self.C = self.kernel(self.predictedL[:,0],self.predictedL[:,0])
         # Predictive mean
-        self.K_1o       = self.K_1.dot(self.observedX)
         self.predictedX = self.k.transpose().dot(self.K_1o)
         if self.kernel.linearPrior!=False:
             self.predictedX += (self.predictedL*self.kernel.meanSlope+self.kernel.meanConstant)
@@ -102,12 +97,7 @@ class path1D_regression:
         # Regularization to avoid singular matrices
         self.varX += self.epsilon*np.eye(self.varX.shape[0])
         # Cholesky on varX
-        # TODO: use it for the inverse?
         if positive_definite(self.varX):
-            try:
-                self.sqRootVar = np.linalg.cholesky(self.varX)
-            except np.linalg.LinAlgError:
-                    self.varX = nearestPD(self.varX)
             self.sqRootVar     = cholesky(self.varX,lower=True)
         return self.predictedL, self.predictedX, self.varX
 
