@@ -27,9 +27,9 @@ class singleGP:
         return self.gpPathRegressor.computeLikelihood(observedX,observedY,observedL,self.startG,self.endG,self.nPoints,self.goalsData)
 
     # Performs prediction
-    def predict(self):
+    def predict(self,compute_sqRoot=False):
         # Uses the already computed matrices to apply regression over missing data
-        predictedX, predictedY, predictedL, varX, varY = self.gpPathRegressor.prediction_to_finish_point()
+        predictedX, predictedY, predictedL, varX, varY = self.gpPathRegressor.prediction_to_finish_point(compute_sqRoot=compute_sqRoot)
         self.predictedMeans = np.column_stack((predictedX, predictedY, predictedL))
         self.predictedVars  = np.stack([varX, varY],axis=0)
         return self.predictedMeans,self.predictedVars

@@ -91,7 +91,7 @@ for i in range(1,part_num-1):
     print("[INF] CPU process time (update): %.1f [ms]" % (1000.0*(stop-start)))
     start = stop
     # Generate samples
-    predictedXY,varXY = gp.predict()
+    predictedXY,varXY = gp.predict(compute_sqRoot=True)
     vecX,vecY         = gp.generate_samples(10)
     p.plot_path_samples_with_observations(trueX,trueY,vecX,vecY)
     stop       = time.process_time()

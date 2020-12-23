@@ -29,7 +29,6 @@ class path1D_regression:
 
     # Update observations for the Gaussian process (matrix K)
     def updateObservations(self,observedX,observedL,finalX,finalL,finalVar,predictedL):
-        # TODO: K could be simply updated instead of being redefined all the time
         n                    = len(observedX)
         self.observedX       = np.zeros((n+1,1))
         self.observedL       = np.zeros((n+1,1))
@@ -46,7 +45,6 @@ class path1D_regression:
         self.K       = self.kernel(self.observedL[:,0],self.observedL[:,0])
         # Define the variance associated to the last point (varies with the area)
         self.K[n][n]+= finalVar
-        # TODO: set the noise parameter somewhere else
         # Heavy
         self.K_1     = inv(self.K+self.sigmaNoise*np.eye(self.K.shape[0]))
         self.K_1o    = self.K_1.dot(self.observedX)
@@ -72,7 +70,7 @@ class path1D_regression:
 
     # The main regression function: perform regression for a vector of values
     # lnew, that has been computed in update
-    def prediction_to_finish_point(self):
+    def prediction_to_finish_point(self,compute_sqRoot=False):
         # No prediction to do
         if self.predictedL.shape[0]==0:
             return None, None, None
@@ -97,7 +95,7 @@ class path1D_regression:
         # Regularization to avoid singular matrices
         self.varX += self.epsilon*np.eye(self.varX.shape[0])
         # Cholesky on varX
-        if positive_definite(self.varX):
+        if compute_sqRoot and positive_definite(self.varX):
             self.sqRootVar     = cholesky(self.varX,lower=True)
         return self.predictedL, self.predictedX, self.varX
 

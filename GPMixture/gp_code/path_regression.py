@@ -51,9 +51,9 @@ class path_regression:
 
     # The main path regression function: perform regression for a
     # vector of values of future L, that has been computed in update
-    def prediction_to_finish_point(self):
-        pL,pX,vX = self.regression_x.prediction_to_finish_point()
-        pL,pY,vY = self.regression_y.prediction_to_finish_point()
+    def prediction_to_finish_point(self,compute_sqRoot=False):
+        pL,pX,vX = self.regression_x.prediction_to_finish_point(compute_sqRoot=compute_sqRoot)
+        pL,pY,vY = self.regression_y.prediction_to_finish_point(compute_sqRoot=compute_sqRoot)
         return pX, pY, pL, vX, vY
 
     # Generate a sample from perturbations
