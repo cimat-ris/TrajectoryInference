@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import math as m
+import numpy as np
 
 # TODO: pass in a different way
 # Standard deviation for the observation noise
@@ -113,6 +114,10 @@ class linearKernel(Kernel):
         return parameters
 
     # Overload the operator ()
+    def vectorized(self,l):
+        return self.sigmaSq_a*(l.dot(l.transpose()))+self.sigmaSq_c
+
+    # Overload the operator ()
     def __call__(self,x,y):
         return self.sigmaSq_a*x*y+self.sigmaSq_c
 
@@ -185,6 +190,11 @@ class maternKernel(Kernel):
         # Characteristic length
         self.length = vec[1]
 
+    def vectorized(self,l):
+        rn  = np.abs(l[:, None] - l[None, :])/self.length
+        rn2 = rn**2
+        return self.sigmaSq*(1. + self.sqrootof5*rn + 1.67*rn2)*np.exp(-self.sqrootof5*rn)
+
     # Overload the operator ()
     def __call__(self,x,y):
         rn  = m.fabs((x-y)/self.length)
@@ -230,21 +240,6 @@ class maternRasmussenKernel(Kernel):
         rn = m.fabs(x-y)/self.length
         val = self.sigmaSq*(1. + m.sqrt(3)*rn)*m.exp(-1.*m.sqrt(3)*rn)
         return val
-
-class noiseKernel(Kernel):
-    # Constructor
-    def __init__(self, sigmaNoise):
-        # Standard deviation of the noise
-        self.sigmaNoise = sigmaNoise
-        # Type of kernel
-        self.type       = "noise"
-
-    # Overload the operator ()
-    def __call__(self,x,y):
-        if(x == y):
-            return self.sigmaNoise**2.
-        else:
-            return 0.
 
 # The combination used in the Trautman paper
 class combinedTrautmanKernel(Kernel):
@@ -444,6 +439,9 @@ class linePriorCombinedKernel(Kernel):
         # Characteristic length
         self.length        = vec[1]
         self.matern.setParameters(vec)
+
+    def vectorized(self,l):
+        return self.matern.vectorized(l)+self.linear.vectorized(l)
 
     # Overload the operator ()
     def __call__(self,x,y):

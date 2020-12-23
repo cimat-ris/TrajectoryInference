@@ -34,28 +34,18 @@ class path1D_regression:
         self.observedL       = np.zeros((n+1,1))
         self.predictedL      = predictedL
         self.K               = np.zeros((n+1,n+1))
-        # TODO: use vectorization?
+        self.observedL[:-1,0]= observedL
+        self.observedX[:-1,0]= observedX
+        self.observedL[-1,0] = finalL
+        self.observedX[-1,0] = finalX
+        print(self.observedL.shape)
         # Fill in K, first elements (nxn)
-        for i in range(n):
-            # Diagonal elements: should include a noise term
-            self.K[i][i] = self.kernel(observedL[i],observedL[i])
-            for j in range(i):
-                self.K[i][j] = self.kernel(observedL[i],observedL[j])
-                self.K[j][i] = self.K[i][j]
-        # Last row/column
-        for i in range(n):
-            self.K[i][n] = self.kernel(observedL[i],finalL)
-            self.K[n][i] = self.K[i][n]
-        self.K[n][n] = self.kernel(finalL,finalL)
+        self.K = self.kernel.vectorized(self.observedL[:,0])
         # Define the variance associated to the last point (varies with the area)
         self.K[n][n] += finalVar
         # TODO: set the noise parameter somewhere else
         # Heavy
         self.K_1           = inv(self.K+7.5*np.eye(self.K.shape[0]))
-        self.observedL[:-1,0]= observedL
-        self.observedX[:-1,0]= observedX
-        self.observedL[-1,0] = finalL
-        self.observedX[-1,0] = finalX
         # Center the data in case we use the linear prior
         if self.kernel.linearPrior!=False:
             self.observedX -= (self.kernel.meanSlope*self.observedL+self.kernel.meanConstant)
