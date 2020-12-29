@@ -191,52 +191,6 @@ def line_parameters(traj, flag):
         a = (y[-1]-b)/arclen
     return a, b
 
-
-"""-----------------------------------------------------"""
-
-"""********** LINEAR PRIOR MEAN **********"""
-# Linear regression: for data l,f(l), the function returns a, b for the line between the
-# starting and ending points
-def get_line_parameters(path, flag):
-    n = len(path.l)
-    ln = path.l[n-1]
-    if(ln == 0):
-        return 0., 0.
-    if(flag == 'x'):
-        b = path.x[0]
-        a = (path.x[n-1]-b)/ln
-    if(flag == 'y'):
-        b = path.y[0]
-        a = (path.y[n-1]-b)/ln
-    return a, b
-
-# Determine the covariance between line parameters, for a pair of goals
-def get_line_covariance(lineParameters, mean):
-    n = len(lineParameters)
-    sum_ = 0.
-    for i in range(n):
-        sum_ += (lineParameters[i][0] - mean[0])*(lineParameters[i][1] - mean[1])
-    if (n>1):
-        cov = sum_/(n-1)
-    else:
-        cov=0.0
-    return cov
-
-# Determine the variances on line parameters, for a pair of goals
-def get_line_variances(lineParameters, mean):
-    n = len(lineParameters)
-    sum_a, sum_b = 0., 0.
-    for i in range(n):
-        sum_a += (lineParameters[i][0] - mean[0])**2
-        sum_b += (lineParameters[i][1] - mean[1])**2
-    var = [sum_a/n, sum_b/n]
-    # TODO: change this hard-coded value
-    if var[0]<0.001:
-        var[0]=0.001
-    if var[1]<0.001:
-        var[1]=0.001
-    return var
-
 # Takes as an input a set of trajectories (between goals)
 # and a flag that says whether the orientation is in x or y
 # Returns the mean value of the line parameters (to be used as a prior)
@@ -245,22 +199,14 @@ def get_linear_prior_mean(paths, flag):
     if(n == 0):
         return [0.,0.,0.]
 
-    lineParameters = []
-    sum_a = 0.
-    sum_b = 0.
-    for i in range(n):
-        # For each path, get the corresponding line parameters
-        #a, b = get_line_parameters(paths[i], flag)
-        a, b = line_parameters(paths[i], flag)
-        lineParameters.append([a,b])
-        sum_a += a
-        sum_b += b
-    # Get the mean parameters
-    mean = [sum_a/n, sum_b/n]
-    # Get the covariance and standard deviations
-    cov          = get_line_covariance(lineParameters, mean)
-    vars         = get_line_variances(lineParameters, mean)
-    return mean, cov, vars
+    lineParameters = np.array([ line_parameters(paths[i], flag) for i in range(n)])
+    print(lineParameters)
+    mean = [np.mean(lineParameters[:,0]), np.mean(lineParameters[:,1]) ]
+    var = [np.var(lineParameters[:,0]), np.var(lineParameters[:,1]) ]
+    cov = np.cov(lineParameters[:,0],lineParameters[:,1])
+    
+    return mean, var
+"""-----------------------------------------------------"""
 
 """********** HELPFUL FUNCTIONS **********"""
 def equal(vx,vy,x,y):
@@ -353,15 +299,77 @@ def get_goal_of_point(p, goals):
 
 # Middle of a goal area
 def goal_centroid(R):
-    n = len(R)
-    dx, dy = R[n-2]-R[0], R[n-1]-R[1]
+    dx, dy = R[-2]-R[0], R[-1]-R[1]
     center = [R[0] + dx/2., R[1] + dy/2.]
     return center
 
 # Centroid and size of an area
 def goal_center_and_size(R):
-    n = len(R)
-    dx, dy = R[n-2]-R[0], R[n-1]-R[1]
+    dx, dy = R[-2]-R[0], R[-1]-R[1]
     center = [R[0] + dx/2., R[1] + dy/2.]
     size = [dx, dy]
     return center, size
+
+def get_subgoals(n, goal, axis):
+    c, size = goal_center_and_size(goal)
+    d = 0
+    if axis == 'x':
+        d = size[0]
+    else:
+        d = size[1]
+    sgSize = d/n
+    #sg = [ for i in range(n)]
+
+# TODO: REDO IN A BETTER WAY
+def get_subgoals_areas(nSubgoals, goal, axis):
+    goalDX = goal[len(goal) -2] - goal[0]
+    goalDY = goal[len(goal) -1] - goal[1]
+    goalCenterX = goal[0]+ goalDX/2.0
+    goalCenterY = goal[1]+ goalDY/2.0
+    goalMinX    = goal[0]
+    goalMinY    = goal[1]
+    goalMaxX    = goal[-2]
+    goalMaxY    = goal[-1]
+    subGoalsAreas = []
+    if axis == 0:
+        subgoalDX = goalDX/nSubgoals
+        subgoalDY = goalDY
+        for i in range(nSubgoals):
+            subGoalsAreas.append( [goalMinX+i*subgoalDX,goalMinY,goalMinX+(i+1)*subgoalDX,goalMinY,goalMinX+i*subgoalDX,goalMaxY,goalMinX+(i+1)*subgoalDX,goalMaxY] )
+    else:
+        subgoalDX = goalDX
+        subgoalDY = goalDY/nSubgoals
+        _x = goalCenterX
+        _y = goal[1]
+        for i in range(nSubgoals):
+            subGoalsAreas.append([goalMinX,goalMinY+i*subgoalDY,goalMaxX,goalMinY+i*subgoalDY,goalMinX,goalMinY+(i+1)*subgoalDY,goalMaxX,goalMinY+(i+1)*subgoalDY])
+
+    return subGoalsAreas
+
+
+def get_subgoals_center_and_size(nSubgoals, goal, axis):
+    goalX = goal[len(goal) -2] - goal[0]
+    goalY = goal[len(goal) -1] - goal[1]
+    goalCenterX = goal[0]+ goalX/2
+    goalCenterY = goal[1]+ goalY/2
+
+    subgoalsCenter = []
+    subgoalX, subgoalY = 0,0
+    if axis == 0:
+        subgoalX = goalX/nSubgoals
+        subgoalY = goalY
+        _x = goal[0]
+        _y = goalCenterY
+        for i in range(nSubgoals):
+            subgoalsCenter.append( [_x+subgoalX/2.0, _y] )
+            _x += subgoalX
+    else:
+        subgoalX = goalX
+        subgoalY = goalY/nSubgoals
+        _x = goalCenterX
+        _y = goal[1]
+        for i in range(nSubgoals):
+            subgoalsCenter.append( [_x, _y+subgoalY/2.0] )
+            _y += subgoalY
+
+    return subgoalsCenter, [subgoalX, subgoalY]

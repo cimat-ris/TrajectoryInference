@@ -11,7 +11,7 @@ import matplotlib.image as mpimg
 from matplotlib.patches import Ellipse
 from matplotlib.animation import FuncAnimation
 from utils.manip_trajectories import goal_center_and_size
-from gp_code.regression import get_subgoals_center_and_size
+from utils.manip_trajectories import get_subgoals_center_and_size
 
 
 color = ['lightgreen','springgreen','g','b','steelblue','y','tomato','orange','r','gold','yellow','lime',

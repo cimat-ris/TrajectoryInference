@@ -7,18 +7,19 @@ from gp_code.single_gp import singleGP
 from utils.stats_trajectories import trajectory_arclength
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-goalsDescriptions= './parameters/CentralStation_GoalsDescriptions.csv'
-trajFile         = './datasets/GC/Annotation/'
-imgGCS           = './imgs/train_station.jpg'
+goalsDescriptions= '../parameters/CentralStation_GoalsDescriptions.csv'
+trajFile         = '../datasets/GC/Annotation/'
+imgGCS           = '../imgs/train_station.jpg'
 
 traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
 
 # Selection of the kernel type
 kernelType = "linePriorCombined"
 nParameters = 4
+
 # Read the kernel parameters from file
-goalsData.kernelsX = read_and_set_parameters('parameters/linearpriorcombined20x20_x.txt',nParameters)
-goalsData.kernelsY = read_and_set_parameters('parameters/linearpriorcombined20x20_y.txt',nParameters)
+goalsData.kernelsX = read_and_set_parameters('../parameters/linearpriorcombined20x20_x.txt',nParameters)
+goalsData.kernelsY = read_and_set_parameters('../parameters/linearpriorcombined20x20_y.txt',nParameters)
 
 """**********          Testing          ***********"""
 # We select a pair of starting and ending goals, and a trajectory id
@@ -49,7 +50,7 @@ gp = singleGP(gi,gj,goalsData)
 
 # Divides the trajectory in part_num parts and infer the posterior over the remaining part
 part_num = 10
-for i in range(1,part_num-1):
+for i in range(0):#1,part_num-1):
     p = plotter(imgGCS)
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
