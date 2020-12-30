@@ -187,21 +187,18 @@ class maternKernel(Kernel):
 
     # Overload of operator ()
     def __call__(self,l1,l2):
+        l = l1[:, None] - l2[None, :]
         rn  = np.abs(l1[:, None] - l2[None, :])/self.length
         rn2 = rn**2
         return self.sigmaSq*(1. + self.sqrootof5*rn + 1.67*rn2)*np.exp(-self.sqrootof5*rn)
 
     # Derivative with respect to y
-    def dkdy(self,x,y):
-        rn  = m.fabs((x-y)/self.length)
-        # To avoid overflow
-        if rn>20.0:
-            val = 0.0
-        else:
-            rn2 = rn**2
-            rp  = m.copysign(1,y-x)/self.length
-            val = -self.sigmaSq*rn*rp*1.67*(1. + self.sqrootof5*rn)*m.exp(-self.sqrootof5*rn)
-        return val
+    def dkdy(self,l1,l2):
+        l = l1[:, None] - l2[None, :]
+        rn  = np.abs(l1[:, None] - l2[None, :])/self.length
+        rn2 = rn**2
+        rp  = np.copysign(1,l1[:, None] - l2[None, :])/self.length
+        return np.squeeze(-self.sigmaSq*rn*rp*1.67*(1. + self.sqrootof5*rn)*np.exp(-self.sqrootof5*rn),axis=0)
 
 # Matern kernel from Rasmussen
 class maternRasmussenKernel(Kernel):
@@ -366,24 +363,6 @@ class squaredExponentialAndNoiseKernel(Kernel):
         noise = noiseKernel(self.sigmaNoise)
         return sqe(x,y) + noise(x,y)
 
-
-# Combined kernel: exponential and noise
-class exponentialAndNoiseKernel(Kernel):
-    # Constructor
-    def __init__(self, sigmaSq, length, sigmaNoise):
-        self.exponential = exponentialKernel(sigmaSq,length)
-        self.noise       = noiseKernel(sigmaNoise)
-        # Type of kernel
-        self.type    = "exponentialAndNoise"
-
-    # Method to set parameters
-    def set_parameters(self,vec):
-        self.exponential.set_parameters(vec)
-
-    # Overload the operator ()
-    def __call__(self,x,y):
-        return self.exponential(x,y) + self.noise(x,y)
-
 # A combined kernel that considers a prior on the line parameters
 class linePriorCombinedKernel(Kernel):
     # Constructor
@@ -433,9 +412,11 @@ class linePriorCombinedKernel(Kernel):
         return K
 
     # Derivative with respect to y
-    def dkdy(self,x,y):
-        # TODO: if self.linearPrior:
-        return self.matern.dkdy(x,y) + self.linear.dkdy(x,y)
+    def dkdy(self,l1,l2):
+        dkdy = self.matern.dkdy(l1,l2)
+        if self.linearPrior:
+            dkdy += self.linear.dkdy(l1,l2)
+        return dkdy
 
     # Method to get parameters
     def get_parameters(self):

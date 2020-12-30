@@ -18,7 +18,7 @@ class path1D_regression:
         self.predictedX      = None
         self.predictedL      = None
         self.K               = None
-        self.K_1             = None
+        self.Kp_1            = None
         self.k               = None
         self.C               = None
         self.sqRootVar       = np.empty((0, 0))
@@ -29,11 +29,16 @@ class path1D_regression:
 
     # Update observations for the Gaussian process (matrix K)
     def updateObservations(self,observedX,observedL,finalX,finalL,finalVar,predictedL):
+        # Number of "real" observations (we add one: the final point)
         n                    = len(observedX)
+        # Observation vectors: X and L
         self.observedX       = np.zeros((n+1,1))
         self.observedL       = np.zeros((n+1,1))
+        # Values of arc length L at which we predict X
         self.predictedL      = predictedL
+        # Covariance matrix
         self.K               = np.zeros((n+1,n+1))
+        # Set the observations
         self.observedL[:-1,0]= observedL
         self.observedX[:-1,0]= observedX
         self.observedL[-1,0] = finalL
@@ -43,27 +48,24 @@ class path1D_regression:
             self.observedX -= (self.kernel.meanSlope*self.observedL+self.kernel.meanConstant)
         # Fill in K, first elements (nxn)
         self.K       = self.kernel(self.observedL[:,0],self.observedL[:,0])
-        # Define the variance associated to the last point (varies with the area)
+        # Add the variance associated to the last point (varies with the area)
         self.K[n][n]+= finalVar
         # Heavy
-        self.K_1     = inv(self.K+self.sigmaNoise*np.eye(self.K.shape[0]))
-        self.K_1o    = self.K_1.dot(self.observedX)
+        self.Kp_1    = inv(self.K+self.sigmaNoise*np.eye(self.K.shape[0]))
+        self.Kp_1o   = self.Kp_1.dot(self.observedX)
         # For usage in prediction
         nnew         = len(predictedL)
         self.deltak  = np.zeros((nnew,1))
         self.deltaK  = np.zeros((n+1,1))
-        # TODO: vectorize too
         # Fill in deltakx
-        for j in range(nnew):
-            self.deltak[j][0] = self.kernel.dkdy(self.observedL[n],predictedL[j])
+        self.deltak  = self.kernel.dkdy(self.observedL[n],predictedL)
         # Fill in deltaKx
-        for j in range(n+1):
-            self.deltaK[j][0] = self.kernel.dkdy(self.observedL[n],self.observedL[j])
+        self.deltaK = self.kernel.dkdy(self.observedL[n],self.observedL)
 
     # Deduce the mean for the filtered distribution for the observations
     # f = K (K + s I)^-1
     def filterObservations(self):
-        f = self.K.dot(self.K_1.dot(self.observedX))
+        f = self.K.dot(self.Kp_1.dot(self.observedX))
         if self.kernel.linearPrior!=False:
             f +=self.observedL*self.kernel.meanSlope+self.kernel.meanConstant
         return f
@@ -81,20 +83,20 @@ class path1D_regression:
         # Fill in k
         self.k = self.kernel(self.observedL[:,0],self.predictedL[:,0])
         # Fill in C
-        # Note here that we do not add the noise term here (we want to recover the unperturbed data)
+        # Note here that we **do not add the noise term** here (we want to recover the unperturbed data)
         # As Eq. 2.22 in Rasmussen
         self.C = self.kernel(self.predictedL[:,0],self.predictedL[:,0])
         # Predictive mean
-        self.predictedX = self.k.transpose().dot(self.K_1o)
+        self.predictedX = self.k.transpose().dot(self.Kp_1o)
         if self.kernel.linearPrior!=False:
             self.predictedX += (self.predictedL*self.kernel.meanSlope+self.kernel.meanConstant)
         # Estimate the variance in x
-        self.ktK_1 = self.k.transpose().dot(self.K_1)
-        kK_1kt     = self.ktK_1.dot(self.k)
+        self.ktKp_1= self.k.transpose().dot(self.Kp_1)
+        kK_1kt     = self.ktKp_1.dot(self.k)
         self.varX  = self.C - kK_1kt
         # Regularization to avoid singular matrices
         self.varX += self.epsilon*np.eye(self.varX.shape[0])
-        # Cholesky on varX
+        # Cholesky on varX: done only if the compute_sqRoot flag is true
         if compute_sqRoot and positive_definite(self.varX):
             self.sqRootVar     = cholesky(self.varX,lower=True)
         return self.predictedL, self.predictedX, self.varX
@@ -110,16 +112,16 @@ class path1D_regression:
         deltaX[n-1,0]= deltax
         # In this approximation, only the predictive mean is adapted (will be used for sampling)
         # First order term #1: variation in observedX
-        newx = self.predictedX + self.ktK_1.dot(deltaX)
+        newx = self.predictedX + self.ktKp_1.dot(deltaX)
         # First order term #2: variation in kX
-        newx+= self.K_1o[-1][0]*deltal*self.deltak
+        newx+= self.Kp_1o[-1][0]*deltal*self.deltak
         # First order term #3: variation in Kx_1
         #  x= k^T (K+DK)^{-1}x
         #  x= k^T ((I+DK.K^{-1})K)^{-1}x
         #  x= k^T K^{-1}(I+DK.K^{-1})^{-1}x
         # dx=-k^T K^{-1}.DK.K^{-1}x
-        newx-= deltal*self.K_1o[-1][0]*self.ktK_1.dot(self.deltaK)
-        newx-= deltal*self.ktK_1[0][-1]*self.deltaK.transpose().dot(self.K_1o)
+        newx-= deltal*self.Kp_1o[-1][0]*self.ktKp_1.dot(self.deltaK)
+        newx-= deltal*self.ktKp_1[0][-1]*self.deltaK.transpose().dot(self.Kp_1o)
         return self.predictedL, newx, self.varX
 
     # Generate a random variation to the mean
