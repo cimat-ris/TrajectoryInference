@@ -1,6 +1,8 @@
 """
 Error and likelihood evaluation
 """
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
 import numpy as np
 import math
 from numpy import linalg as la
@@ -18,30 +20,24 @@ def mean_euc_error(true, predicted):
 
 # Mean absolute error (mx,my) between true and predicted data
 def mean_abs_error(trueX, trueY, predX, predY):
-    ex, ey = 0.0, 0.0
-    # TODO: Vectorization
-    for i in range(len(predX)):
-        ex += abs(trueX[-1-i]-predX[-1-i])
-        ey += abs(trueY[-1-i]-predY[-1-i])
-    mx = ex/len(predX)
-    my = ey/len(predY)
+    trueLen, predLen = len(trueX), len(predX)
+    mx = mean_absolute_error(trueX[trueLen -predLen:-1], predX)
+    my = mean_absolute_error(trueY[trueLen -predLen:-1], predY)
+    
     return [mx, my]
 
 #average_displacement_error
 # Average L2 distance between ground truth and our prediction
-def ADE(true_XY, prediction_XY):
-    error = 0.
-    trueX, trueY             = true_XY[0], true_XY[1]
-    predictionX, predictionY = prediction_XY[0], prediction_XY[1]
-    l    = min(len(trueX),len(predictionX))
-    # TODO: Vectorization
-    for i in range(l):
-        error += math.sqrt((trueX[i]-predictionX[i])**2 + (trueY[i]-predictionY[i])**2)
-    if(l>0):
-        error = error/l
-    else:
-        return -1.0
-    return error
+def ADE(true_xy, prediction_xy):
+    minLen = min( len(true_xy[0]),len(prediction_xy[0]) )
+    
+    true_x = np.array(true_xy[0][:minLen])
+    true_y = np.array(true_xy[1][:minLen])
+    pred_x = np.array(prediction_xy[0][:minLen])
+    pred_y = np.array(prediction_xy[1][:minLen])
+    
+    r = np.sqrt( (true_x - pred_x)**2 + (true_y - pred_y)**2 )
+    return np.mean(r)
 
 #The distance between the predicted final destination and the true final destination
 def final_displacement_error(final, predicted_final):
@@ -103,33 +99,15 @@ def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observed
     # Evaluate the error
     # return ADE([realX,realY],[predX,predY])
 
-#Busco un alpha en [0,1] tal que t = alpha*T1 + (1-alpha)*T2
-def search_value(a, b, t, T1, T2):
-    timeRange = 3.
-    alpha = (a+b)/2
-    val = (1-alpha)*T1 + alpha*T2
-    if(abs(t-val) < timeRange):
-        return alpha
-    elif val > t:
-        return search_value(a,alpha,t,T1,T2)
-    elif val < t:
-        return search_value(alpha,b,t,T1,T2)
-
-#Dado un valor en [0,1], regresa un punto (x,y) con x en [path.x_i-1, pathx_i]... usando interpolacion lineal
-def get_approximation(val,path,index):
-    _x = (1-val)*path.x[index-1] + val*path.x[index]
-    _y = (1-val)*path.y[index-1] + val*path.y[index]
-    return _x,_y
-
 # Compute ADE and FDE
 def ADE_FDE(full_path, predicted_xy, observed, future_steps):
-    real_x = full_path.x[observed : observed+future_steps]
-    real_y = full_path.y[observed : observed+future_steps]
+    real_x = full_path[0][observed : observed+future_steps]
+    real_y = full_path[1][observed : observed+future_steps]
     pred_x = predicted_xy[0][:future_steps]
     pred_y = predicted_xy[1][:future_steps]
 
-    real_x_l = full_path.x[observed+future_steps-1:observed+future_steps]
-    real_y_l = full_path.y[observed+future_steps-1:observed+future_steps]
+    real_x_l = full_path[0][observed+future_steps-1:observed+future_steps]
+    real_y_l = full_path[1][observed+future_steps-1:observed+future_steps]
     pred_x_l = predicted_xy[0][:future_steps]
     pred_y_l = predicted_xy[1][:future_steps]
 

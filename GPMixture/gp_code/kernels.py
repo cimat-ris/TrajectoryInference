@@ -13,11 +13,10 @@ import numpy as np
 def create_kernel_matrix(kerType, rows, columns):
     kerMatrix = []
     parameters = []
-    # For goal i
+    # Assigns a kernel to each pair (gi,gj)
     for i in range(rows):
         aux  = []
         auxP = []
-        # For goal j
         for j in range(columns):
             kernel = set_kernel(kerType)
             theta  = kernel.get_parameters()
@@ -27,27 +26,27 @@ def create_kernel_matrix(kerType, rows, columns):
         parameters.append(auxP)
     return kerMatrix, parameters
 
-# Set kernel: a function that creates a kernel with default parameters, given its type name
-def set_kernel(name):
-    if(name == "squaredExponential"):
+# Set kernel: a function that creates a kernel with default parameters, given its type
+def set_kernel(type_):
+    if(type_ == "squaredExponential"):
         parameters = [80., 80.]  #{Covariance magnitude factor, Characteristic length}
         kernel = squaredExponentialKernel(parameters[0],parameters[1])
-    elif(name == "combinedTrautman"):
+    elif(type_ == "combinedTrautman"):
         parameters = [60., 80., 80.]  #{Precision of the line constant, Covariance magnitude factor, Characteristic length}
         kernel = combinedTrautmanKernel(parameters[0],parameters[1],parameters[2])
-    elif(name == "exponential"):
+    elif(type_ == "exponential"):
         parameters = [80., 80.]  #{Covariance magnitude factor, Characteristic length}
         kernel = exponentialKernel(parameters[0],parameters[1])
-    elif(name == "gammaExponential"):
+    elif(type_ == "gammaExponential"):
         parameters = [80., 80., 8.]  #{Covariance magnitude factor, Characteristic length, Gamma exponent}
         kernel = gammaExponentialKernel(parameters[0],parameters[1])
-    elif(name == "rationalQuadratic"):
+    elif(type_ == "rationalQuadratic"):
         parameters = [80.0,10., 5.] #{Covariance magnitude factor, Characteristic length, Alpha parameter}
         kernel = rationalQuadraticKernel(parameters[0],parameters[1])
-    elif(name == "squaredExponentialAndNoise"):
+    elif(type_ == "squaredExponentialAndNoise"):
         parameters = [80., 80.] #{Covariance magnitude factor, Characteristic length}
         kernel = squaredExponentialAndNoiseKernel(parameters[0],parameters[1])
-    elif(name == "linePriorCombined"):
+    elif(type_ == "linePriorCombined"):
         parameters = [1.0,0.0,0.01,1.0, 80., 80.]  #{Mean slope, mean constant, Standard deviation slope, Standard deviation constant, Covariance magnitude factor, Characteristic length}
         kernel = linePriorCombinedKernel(parameters[0],parameters[1],parameters[2],parameters[3],parameters[4],parameters[5])
     return kernel
@@ -100,7 +99,7 @@ class linearKernel(Kernel):
         self.type      = "linear"
 
     # Method to set parameters
-    def setParameters(self,vec):
+    def set_parameters(self,vec):
         # Variance on the slope
         self.sigma_a   = vec[0]
         self.sigmaSq_a = vec[0]**2
@@ -130,7 +129,7 @@ class linearKernelTrautman(Kernel):
         self.type      = "linear"
 
     # Method to set parameters
-    def setParameters(self,vec):
+    def set_parameters(self,vec):
         self.gamma = vec[0]
 
     # Overload the operator ()
@@ -153,7 +152,7 @@ class squaredExponentialKernel(Kernel):
         self.type         = "squaredExponential"
 
     # Method to set parameters
-    def setParameters(self,vec):
+    def set_parameters(self,vec):
         # Covariance magnitude factor
         self.sigmaSq = vec[0]
         # Characteristic length
@@ -180,7 +179,7 @@ class maternKernel(Kernel):
         self.sqrootof5    = m.sqrt(5)
 
     # Method to set parameters
-    def setParameters(self,vec):
+    def set_parameters(self,vec):
         # Covariance magnitude factor
         self.sigmaSq= vec[0]
         # Characteristic length
@@ -216,7 +215,7 @@ class maternRasmussenKernel(Kernel):
         self.type   = "maternRasmussen"
 
     # Method to set parameters
-    def setParameters(self,vec):
+    def set_parameters(self,vec):
         self.sigmaSq      = vec[0]
         # Characteristic length
         self.length       = vec[1]
@@ -243,15 +242,15 @@ class combinedTrautmanKernel(Kernel):
         self.type      = "combinedTrautman"
 
     # Method to set parameters
-    def setParameters(self,vec):
+    def set_parameters(self,vec):
         self.gamma  = vec[0]
         # Covariance magnitude factor
         self.sigmaSq= vec[1]
         # Characteristic length
         self.length = vec[2]
-        self.linear.setParameters(vec)
+        self.linear.set_parameters(vec)
         mV = [vec[1], vec[2]]
-        self.matern.setParameters(mV)
+        self.matern.set_parameters(mV)
 
     # Overload the operator ()
     def __call__(self,x,y):
@@ -278,7 +277,7 @@ class exponentialKernel(Kernel):
         self.type      = "exponential"
 
     # Method to set parameters
-    def setParameters(self,vec):
+    def set_parameters(self,vec):
         # Covariance magnitude factor
         self.sigmaSq = vec[0]
         # Characteristic length
@@ -302,7 +301,7 @@ class gammaExponentialKernel(Kernel):
         self.type      = "gammaExponential"
 
     # Method to set parameters
-    def setParameters(self,vec):
+    def set_parameters(self,vec):
         # Covariance magnitude factor
         self.sigmaSq = vec[0]
         # Characteristic length
@@ -329,7 +328,7 @@ class rationalQuadraticKernel(Kernel):
         self.type    = "rationalQuadratic"
 
     # Method to set parameters
-    def setParameters(self,vec):
+    def set_parameters(self,vec):
         # Covariance magnitude factor
         self.sigmaSq = vec[0]
         # Characteristic length
@@ -355,7 +354,7 @@ class squaredExponentialAndNoiseKernel(Kernel):
         self.type    = "squaredExponentialAndNoise"
 
     # Method to set parameters
-    def setParameters(self,vec):
+    def set_parameters(self,vec):
         # Covariance magnitude factor
         self.sigmaSq = vec[0]
         # Characteristic length
@@ -378,8 +377,8 @@ class exponentialAndNoiseKernel(Kernel):
         self.type    = "exponentialAndNoise"
 
     # Method to set parameters
-    def setParameters(self,vec):
-        self.exponential.setParameters(vec)
+    def set_parameters(self,vec):
+        self.exponential.set_parameters(vec)
 
     # Overload the operator ()
     def __call__(self,x,y):
@@ -415,8 +414,8 @@ class linePriorCombinedKernel(Kernel):
         # Characteristic length
         self.length        = vec[5]
         # Set the parameters of the sub-kernels
-        self.linear.setParameters(vec[2:4])
-        self.matern.setParameters(vec[4:6])
+        self.linear.set_parameters(vec[2:4])
+        self.matern.set_parameters(vec[4:6])
 
     # Method to set the optimizable parameters
     def set_optimizable_parameters(self,vec):
@@ -424,7 +423,7 @@ class linePriorCombinedKernel(Kernel):
         self.sigmaSq       = vec[0]
         # Characteristic length
         self.length        = vec[1]
-        self.matern.setParameters(vec)
+        self.matern.set_parameters(vec)
 
     # Overload the operator ()
     def __call__(self,l1,l2):
