@@ -50,7 +50,7 @@ gp = singleGP(gi,gj,goalsData)
 
 # Divides the trajectory in part_num parts and infer the posterior over the remaining part
 part_num = 10
-for i in range(0):#1,part_num-1):
+for i in range(1,part_num-1):
     p = plotter(imgGCS)
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
@@ -59,6 +59,7 @@ for i in range(0):#1,part_num-1):
     """Single goal prediction test"""
     # Update the GP with (real) observations
     start               = time.process_time()
+    # TODO: Seems to have a bug here, the value is always the same?
     likelihood          = gp.update(trueX,trueY,trueL)
     stop                = time.process_time()
     filteredX,filteredY = gp.filter()
