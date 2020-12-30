@@ -48,15 +48,15 @@ class mixtureOfGPs:
         self.gpTrajectoryRegressor = [None]*n
         for i in range(self.goalsData.nGoals):
             # One regressor per goal
-            self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],self.stepUnit,self.goalsData.areas_coordinates[i],self.goalsData.areas_axis[i])
-            #self.gpTrajectoryRegressor[i] = trajectory_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],stepUnit,self.goalsData.areas_coordinates[i],self.goalsData.areas_axis[i])
+            self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.distUnit,self.stepUnit,self.goalsData.areas_coordinates[i],self.goalsData.areas_axis[i])
+            #self.gpTrajectoryRegressor[i] = trajectory_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.distUnit,stepUnit,self.goalsData.areas_coordinates[i],self.goalsData.areas_axis[i])
 
             ## TODO:
             subareas = get_subgoals_areas(self.nSubgoals, self.goalsData.areas_coordinates[i],self.goalsData.areas_axis[i])
             # For sub-goals
             for j in range(self.nSubgoals):
                 k= i+(j+1)*self.goalsData.nGoals
-                self.gpPathRegressor[k] = path_regression(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.units[self.startG][i],self.stepUnit,subareas[j],self.goalsData.areas_axis[i])
+                self.gpPathRegressor[k] = path_regression(self.goalsData.kernelsX[self.startG][i],self.goalsData.kernelsY[self.startG][i],goalsData.distUnit,self.stepUnit,subareas[j],self.goalsData.areas_axis[i])
 
 
     # Update observations and compute likelihoods based on observations

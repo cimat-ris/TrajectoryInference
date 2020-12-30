@@ -7,14 +7,13 @@ from utils.manip_trajectories import get_data_from_set
 from utils.manip_trajectories import goal_center_and_size
 from utils.stats_trajectories import euclidean_distance
 import numpy as np
-from copy import copy
 
 # This structure keeps all the learned data
 # about the set of goals
 class goal_pairs:
 
     # Constructor
-    def __init__(self, areas_coordinates, areas_axis, trajectories, min_traj_number=15):
+    def __init__(self, areas_coordinates, areas_axis, trajMat, min_traj_number=15):
         self.nGoals                = len(areas_coordinates)
         self.areas_coordinates     = areas_coordinates
         self.areas_axis            = areas_axis
@@ -31,15 +30,15 @@ class goal_pairs:
         self.timeTransitionMeans= np.empty((self.nGoals, self.nGoals),dtype=object)
         self.timeTransitionStd  = np.empty((self.nGoals, self.nGoals),dtype=object)
         # Compute the mean lengths
-        self.compute_mean_lengths(trajectories)
+        self.compute_mean_lengths(trajMat)
         # Compute the distances between pairs of goals (as a nGoalsxnGoals matrix)
         self.compute_euclidean_distances()
         # Compute the ratios between average path lengths and inter-goal distances
         self.compute_distance_unit()
         # Computer prior probabispeedRegressorlities between goals
-        self.compute_prior_transitions(trajectories)
+        self.compute_prior_transitions(trajMat)
         # Compute transition probabilities between goals
-        self.compute_time_transitions(trajectories)
+        self.compute_time_transitions(trajMat)
 
     # Fills in the matrix with the mean length of the trajectories
     #Computes stepUnit - avg ratio between number of steps and path arc-lenght 
@@ -86,17 +85,17 @@ class goal_pairs:
                 distance.append(u)
         self.distUnit = np.mean(distance)
 
-    # Fills in the probability transition matrix
+    # Fills in the probability transition matrix gi -> gj
     def compute_prior_transitions(self,pathMat):
         for i in range(self.nGoals):
-            paths_i = 0.
+            count = 0.
             for j in range(self.nGoals):
-                paths_i += len(pathMat[i][j])
+                count += len(pathMat[i][j])
             for j in range(self.nGoals):
-                if paths_i == 0:
+                if count == 0:
                     self.priorTransitions[i][j] = 0.
                 else:
-                    self.priorTransitions[i][j] = float(len(pathMat[i][j])/paths_i)
+                    self.priorTransitions[i][j] = float(len(pathMat[i][j])/count)
 
     # For each pair of goals, realize the optimization of the kernel parameters
     def optimize_kernel_parameters(self,kernelType,trainingSet):
@@ -140,8 +139,6 @@ class goal_pairs:
                     stop = timeit.default_timer()
                     execution_time = stop - start
                     print("[OPT] Parameter optimization done in %.2f seconds"%execution_time)
-                    # Evaluate steps_unit
-                    # self.stepUnit = get_steps_unit(paths)
                 else:
                     self.kernelsX[i][j] = None
                     self.kernelsY[i][j] = None

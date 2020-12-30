@@ -105,6 +105,7 @@ def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observed
 
 #Busco un alpha en [0,1] tal que t = alpha*T1 + (1-alpha)*T2
 def search_value(a, b, t, T1, T2):
+    timeRange = 3.
     alpha = (a+b)/2
     val = (1-alpha)*T1 + alpha*T2
     if(abs(t-val) < timeRange):

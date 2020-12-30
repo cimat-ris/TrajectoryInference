@@ -6,9 +6,6 @@ from utils.manip_trajectories import euclidean_distance
 import numpy as np
 import math
 
-timeRange = 3.
-
-
 #Dado un valor en [0,1], regresa un punto (x,y) con x en [trajx_i-1, trajx_i]... usando interpolacion lineal
 def get_approximation(val, traj, i):
     x = val*traj[0][i-1] + (1-val)*traj[0][i]

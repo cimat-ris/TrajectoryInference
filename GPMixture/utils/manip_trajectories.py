@@ -6,7 +6,6 @@ import math
 """ Alternative functions, without the class trajectory """
 #trajectory = [x,y,t]
 
-#New define_trajectories_start_and_end_areas
 # Returns a matrix of trajectories:
 # the entry (i,j) has the paths that go from the goal i to the goal j
 def separate_trajectories_between_goals(trajectories, goals):
@@ -24,21 +23,19 @@ def separate_trajectories_between_goals(trajectories, goals):
             # Start and finish points
             startX, startY = x[0], y[0]
             endX, endY     = x[-1], y[-1]
-            startIndex, endIndex = -1, -1
+            startG, endG = None, None
             # Find starting and finishing goal
             for j in range(nGoals):
                 if(is_in_area([startX,startY], goals[j])):
-                    startIndex = j
+                    startG = j
             for k in range(nGoals):
                 if(is_in_area([endX,endY], goals[k])):
-                    endIndex = k
-            if(startIndex > -1 and endIndex > -1):
-                # Keep the trajectory
-                mat[startIndex][endIndex].append(tr)
-
+                    endG = k
+            if(not startG == None and not endG == None):
+                mat[startG][endG].append(tr)
     return mat
 
-#new filter_paths
+
 # Computes the median and SD of a trajectory set
 # Removes trajectories that differ more than 3SD
 def filter_trajectories(trajectories):
@@ -64,7 +61,6 @@ def filter_trajectories(trajectories):
 
     return filtered_set
 
-#new filter_path_matrix
 # Output is:
 # - matrix of filtered lists of trajectories
 # - one big list of all the remaining trajectories
@@ -87,7 +83,7 @@ def filter_traj_matrix(raw_path_set_matrix, nRows, mColumns):
 
     return filtered_matrix, all_trajectories
 
-#Gets a set of trj that start in a given time interval
+#TODO: Gets a set of trj that start in a given time interval
 #The list of trajectories is sorted by their initial time
 def get_trajectories_given_time_interval(trajectories, startT, finishT):
     nTr = len(trajectories)
@@ -193,7 +189,6 @@ def line_parameters(traj, flag):
 
 # Takes as an input a set of trajectories (between goals)
 # and a flag that says whether the orientation is in x or y
-# Returns the mean value of the line parameters (to be used as a prior)
 def get_linear_prior_mean(paths, flag):
     n = len(paths)
     if(n == 0):
@@ -255,8 +250,8 @@ def arclen_to_time(initTime,l,speed):
 """-------- Get Observed Data -------------"""
 #new: get_known_set
 # Function to get the ground truth data: knownN data
-def observed_data(x,y,z, knownN):
-    obsX, obsY, obsZ = x[0:knownN], y[0:knownN], z[0:knownN]
+def observed_data(x,y,z, n):
+    obsX, obsY, obsZ = x[0:n], y[0:n], z[0:n]
     return obsX, obsY, obsZ
 
 def observed_data_given_time(x,y,t,time):
@@ -310,6 +305,7 @@ def goal_center_and_size(R):
     size = [dx, dy]
     return center, size
 
+# TODO: this
 def get_subgoals(n, goal, axis):
     c, size = goal_center_and_size(goal)
     d = 0
