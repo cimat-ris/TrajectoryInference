@@ -12,9 +12,12 @@ from utils.linalg import positive_definite
 class path1D_regression:
     # Constructor
     def __init__(self, kernel, sigmaNoise=7.5):
-        # Observations
+        # Observation vectors
         self.observedX       = None
         self.observedL       = None
+        # Maximal number of observations used to update the GP
+        self.observedNMax    = 15
+        # Prediction vectors
         self.predictedX      = None
         self.predictedL      = None
         self.K               = None
@@ -27,20 +30,47 @@ class path1D_regression:
         self.kernel          = kernel
         self.sigmaNoise      = sigmaNoise
 
+    def selectObservations(self,observedL,observedX):
+        n                    = len(observedX)
+        nm                   = min(n,self.observedNMax)
+        idx                  = np.flip(n-np.logspace(0,np.log10(n), num=nm))
+        idx                  = idx.astype(int)
+        # Search for doubles
+        doubles = True
+        while doubles:
+            doubles = False
+            for i in range(nm-2,0,-1):
+                # Found a double
+                if idx[i]==idx[i+1]:
+                    doubles = True
+                    for j in range(i,-1,-1):
+                        # Could be a place for i
+                        if idx[j]-idx[j+1]<-1:
+                            tmp   = idx[j+1]-1
+                            # Move the data to the right
+                            for k in range(i,j,-1):
+                                idx[k]=idx[k-1]
+                            idx[j+1]= tmp
+                            break
+                    break
+        return observedL[idx],observedX[idx]
+
     # Update observations for the Gaussian process (matrix K)
     def updateObservations(self,observedX,observedL,finalX,finalL,finalVar,predictedL):
         # Number of "real" observations (we add one: the final point)
         n                    = len(observedX)
+        nm                   = min(n,self.observedNMax)
         # Observation vectors: X and L
-        self.observedX       = np.zeros((n+1,1))
-        self.observedL       = np.zeros((n+1,1))
+        self.observedX       = np.zeros((nm+1,1))
+        self.observedL       = np.zeros((nm+1,1))
         # Values of arc length L at which we predict X
         self.predictedL      = predictedL
         # Covariance matrix
-        self.K               = np.zeros((n+1,n+1))
+        self.K               = np.zeros((nm+1,nm+1))
         # Set the observations
-        self.observedL[:-1,0]= observedL
-        self.observedX[:-1,0]= observedX
+        # TODO: implement an alternative with a *fixed* number of
+        # observed arclenths, distributed geometrically on [0,observedL[-1,0]]
+        self.observedL[:-1,0], self.observedX[:-1,0] = self.selectObservations(observedL,observedX)
         self.observedL[-1,0] = finalL
         self.observedX[-1,0] = finalX
         # Center the data in case we use the linear prior
@@ -49,18 +79,18 @@ class path1D_regression:
         # Fill in K, first elements (nxn)
         self.K       = self.kernel(self.observedL[:,0],self.observedL[:,0])
         # Add the variance associated to the last point (varies with the area)
-        self.K[n][n]+= finalVar
+        self.K[nm][nm]+= finalVar
         # Heavy
         self.Kp_1    = inv(self.K+self.sigmaNoise*np.eye(self.K.shape[0]))
         self.Kp_1o   = self.Kp_1.dot(self.observedX)
         # For usage in prediction
         nnew         = len(predictedL)
         self.deltak  = np.zeros((nnew,1))
-        self.deltaK  = np.zeros((n+1,1))
+        self.deltaK  = np.zeros((nm+1,1))
         # Fill in deltakx
-        self.deltak  = self.kernel.dkdy(self.observedL[n],predictedL)
+        self.deltak  = self.kernel.dkdy(self.observedL[nm],predictedL)
         # Fill in deltaKx
-        self.deltaK = self.kernel.dkdy(self.observedL[n],self.observedL)
+        self.deltaK = self.kernel.dkdy(self.observedL[nm],self.observedL)
 
     # Deduce the mean for the filtered distribution for the observations
     # f = K (K + s I)^-1
@@ -76,10 +106,6 @@ class path1D_regression:
         # No prediction to do
         if self.predictedL.shape[0]==0:
             return None, None, None
-        # Number of observed data
-        n    = self.observedX.shape[0]
-        # Number of predicted data
-        nnew = self.predictedL.shape[0]
         # Fill in k
         self.k = self.kernel(self.observedL[:,0],self.predictedL[:,0])
         # Fill in C
