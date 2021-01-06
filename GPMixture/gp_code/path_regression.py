@@ -33,6 +33,24 @@ class path_regression:
             s              = self.finalAreaSize[0]
         elif self.finalAreaAxis==1:
             s              = self.finalAreaSize[1]
+            
+        maxDim = 20
+        
+        n = len(observedX)
+        if n > maxDim:
+            print("[INF] Sampling data")
+            ind = [i for i in range(1,n)]
+            p = 0.5
+            iprob = [ pow((1-p),n-i)*p for i in ind ]
+            iprob[0] = 1- (sum(iprob) -iprob[0])
+            
+            #sampleInd = np.random.choice(ind, maxDim-1, replace=False, p=iprob) #geometric
+            sampleInd = np.random.choice(ind, maxDim-1, replace=False)         #normal
+            
+            observedL = np.append(observedL[0], [observedL[i] for i in np.sort(sampleInd)])
+            observedX = np.append(observedX[0], [observedX[i] for i in np.sort(sampleInd)])
+            observedY = np.append(observedY[0], [observedY[i] for i in np.sort(sampleInd)])
+            
         # Update observations of each process
         self.regression_x.updateObservations(observedX,observedL,self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
         self.regression_y.updateObservations(observedY,observedL,self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
