@@ -50,16 +50,6 @@ def compute_goal_likelihood(observedX,observedY,observedL,startG,finishG,stepsTo
 
     return val
 
-# Evaluate the prediction error
-def compute_prediction_error_1D(trueX, trueY, prediction, flag):
-    error = 0.0
-    for i in range(len(prediction) ):
-        if flag == 0:
-            error += abs(trueX[i] - prediction[i])
-        if flag == 1:
-            error += abs(trueY[i] - prediction[i])
-    return error
-
 # Compute ADE and FDE
 def ADE_FDE(full_path, predicted_xy, observed, future_steps):
     real_x = full_path[0][observed : observed+future_steps]

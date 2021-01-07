@@ -17,14 +17,14 @@ class singleGP:
         self.predictedMeans  = None
         self.predictedVars   = None
         # The basic element here is this object, that will do the regression work
-        self.gpPathRegressor = path_regression(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],self.goalsData.units[self.startG][self.endG],self.goalsData.stepUnit,self.goalsData.areas_coordinates[self.endG],self.goalsData.areas_axis[self.endG])
+        self.gpPathRegressor = path_regression(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],self.goalsData.units[self.startG][self.endG],self.goalsData.stepUnit,self.goalsData.areas_coordinates[self.endG],self.goalsData.areas_axis[self.endG],self.goalsData.priorTransitions[self.startG][self.endG])
 
     # Update observations and compute likelihood based on observations
     def update(self,observedX,observedY,observedL):
         # Update observations and re-compute the kernel matrices
         self.gpPathRegressor.updateObservations(observedX,observedY,observedL)
         # Compute the model likelihood
-        return self.gpPathRegressor.computeLikelihood(observedX,observedY,observedL,self.startG,self.endG,self.nPoints,self.goalsData)
+        return self.gpPathRegressor.computeLikelihood(observedX,observedY,observedL,self.nPoints)
 
     # Performs prediction
     def predict(self,compute_sqRoot=False):

@@ -11,7 +11,7 @@ from scipy.optimize import bisect
 
 class path_regression:
     # Constructor
-    def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis):
+    def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis, prior):
         self.regression_x    = path1D_regression(kernelX)
         self.regression_y    = path1D_regression(kernelY)
         self.predictedL      = None
@@ -20,6 +20,7 @@ class path_regression:
         self.finalArea       = finalArea
         self.finalAreaAxis   = finalAreaAxis
         self.finalAreaCenter, self.finalAreaSize = goal_center_and_size(finalArea)
+        self.prior           = prior
 
     # Update observations for the Gaussian process (matrix K)
     def updateObservations(self,observedX,observedY,observedL):
@@ -34,7 +35,6 @@ class path_regression:
             s              = self.finalAreaSize[1]
 
         maxDim = 20
-
         n = len(observedX)
         if n > maxDim:
             print("[INF] Sampling data")
@@ -62,7 +62,7 @@ class path_regression:
 
     # For a given dataset (knownX,knownY,knownL), takes half of the data as known
     # and predicts the remaining half. Then, evaluate the prediction error.
-    def compute_prediction_error_of_points_along_the_path(self,nPoints,observedX,observedY,observedL,startG,finishG,goalsData):
+    def compute_prediction_error_of_points_along_the_path(self,nPoints,observedX,observedY,observedL):
         # Known data
         observedN = len(observedX)
         halfN     = max(1,int(observedN/2))
@@ -74,7 +74,7 @@ class path_regression:
         finishD= euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],self.finalAreaCenter)
         np.append(trueX,self.finalAreaCenter[0])
         np.append(trueY,self.finalAreaCenter[1])
-        np.append(trueL,finishD*goalsData.units[startG][finishG])
+        np.append(trueL,finishD*self.distUnit)
         d = int(halfN/nPoints)
         if d<1:
             return 1.0
@@ -91,15 +91,15 @@ class path_regression:
 
     # For a given set of observations (observedX,observedY,observedL),
     # takes half of the data to fit a model and predicts the remaining half. Then, evaluate the likelihood.
-    def likelihood_from_partial_path(self,nPoints,observedX,observedY,observedL,startG,finishG,goalsData):
+    def likelihood_from_partial_path(self,nPoints,observedX,observedY,observedL):
         D = 150. #value for compute_goal_likelihood
-        error = self.compute_prediction_error_of_points_along_the_path(nPoints,observedX,observedY,observedL,startG,finishG,goalsData)
+        error = self.compute_prediction_error_of_points_along_the_path(nPoints,observedX,observedY,observedL)
         return (math.exp(-1.*( error**2)/D**2 ))
 
     # Compute the likelihood
-    def computeLikelihood(self,observedX,observedY,observedL,startG,finishG,stepsToCompare,goalsData):
+    def computeLikelihood(self,observedX,observedY,observedL,stepsToCompare):
         # TODO: remove the goalsData structure
-        self.likelihood = goalsData.priorTransitions[startG][finishG]*self.likelihood_from_partial_path(stepsToCompare,observedX,observedY,observedL,startG,finishG,goalsData)
+        self.likelihood = self.prior*self.likelihood_from_partial_path(stepsToCompare,observedX,observedY,observedL)
         return self.likelihood
 
     # The main path regression function: perform regression for a
