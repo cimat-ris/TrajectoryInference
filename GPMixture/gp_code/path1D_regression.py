@@ -30,8 +30,10 @@ class path1D_regression:
         self.kernel          = kernel
         self.sigmaNoise      = sigmaNoise
 
+    # Method to select a maximal number of self.observedNMax filterObservations organized in a logrithmic scale
     def selectObservations(self,observedL,observedX):
         n                    = len(observedX)
+        # Number of data we will use
         nm                   = min(n,self.observedNMax)
         idx                  = np.flip(n-np.logspace(0,np.log10(n), num=nm))
         idx                  = idx.astype(int)
@@ -68,8 +70,6 @@ class path1D_regression:
         # Covariance matrix
         self.K               = np.zeros((nm+1,nm+1))
         # Set the observations
-        # TODO: implement an alternative with a *fixed* number of
-        # observed arclenths, distributed geometrically on [0,observedL[-1,0]]
         self.observedL[:-1,0], self.observedX[:-1,0] = self.selectObservations(observedL,observedX)
         self.observedL[-1,0] = finalL
         self.observedX[-1,0] = finalX

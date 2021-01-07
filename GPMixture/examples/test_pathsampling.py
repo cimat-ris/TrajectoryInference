@@ -6,9 +6,9 @@ from gp_code.single_gp import singleGP
 from utils.manip_trajectories import goal_centroid
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-goalsDescriptions= './parameters/CentralStation_GoalsDescriptions.csv'
-trajFile         = './datasets/GC/Annotation/'
-imgGCS           = './imgs/train_station.jpg'
+goalsDescriptions= 'parameters/CentralStation_GoalsDescriptions.csv'
+trajFile         = 'datasets/GC/Annotation/'
+imgGCS           = 'imgs/train_station.jpg'
 img              = mpimg.imread(imgGCS)
 
 traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
@@ -30,10 +30,10 @@ for i in range(goalsData.nGoals):
             jCenter = goal_centroid(goalsData.areas_coordinates[j])
             # The basic element here is this object, that will do the regression work
             gp = singleGP(i,j,goalsData)
-            likelihood = gp.update([iCenter[0]],[iCenter[1]],[0.0])
-            predictedXY,varXY = gp.predict()
+            likelihood = gp.update(np.array([iCenter[0]]),np.array([iCenter[1]]),np.array([0.0]))
             # Generate samples
-            nvecX,nvecY       = gp.generate_samples(1)
+            predictedXY,varXY = gp.predict(compute_sqRoot=True)
+            nvecX,nvecY       = gp.generate_samples(3)
             vecX = vecX + nvecX
             vecY = vecY + nvecY
 

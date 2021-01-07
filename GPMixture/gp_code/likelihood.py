@@ -9,8 +9,6 @@ from numpy import linalg as la
 from utils.stats_trajectories import euclidean_distance
 from utils.manip_trajectories import goal_center_and_size
 
-D = 150. #value for compute_goal_likelihood
-
 # Mean euclidean distance between true and predicted data
 def mean_euc_error(true, predicted):
     u = np.array(true)
@@ -23,19 +21,19 @@ def mean_abs_error(trueX, trueY, predX, predY):
     trueLen, predLen = len(trueX), len(predX)
     mx = mean_absolute_error(trueX[trueLen -predLen:-1], predX)
     my = mean_absolute_error(trueY[trueLen -predLen:-1], predY)
-    
+
     return [mx, my]
 
 #average_displacement_error
 # Average L2 distance between ground truth and our prediction
 def ADE(true_xy, prediction_xy):
     minLen = min( len(true_xy[0]),len(prediction_xy[0]) )
-    
+
     true_x = np.array(true_xy[0][:minLen])
     true_y = np.array(true_xy[1][:minLen])
     pred_x = np.array(prediction_xy[0][:minLen])
     pred_y = np.array(prediction_xy[1][:minLen])
-    
+
     r = np.sqrt( (true_x - pred_x)**2 + (true_y - pred_y)**2 )
     return np.mean(r)
 
@@ -61,43 +59,6 @@ def compute_prediction_error_1D(trueX, trueY, prediction, flag):
         if flag == 1:
             error += abs(trueY[i] - prediction[i])
     return error
-
-# For a given set of observations (observedX,observedY,observedL),
-# takes half of the data to fit a model and predicts the remaining half. Then, evaluate the likelihood.
-def likelihood_from_partial_path(nPoints,observedX,observedY,observedL,startG,finishG,goalsData):
-    error = compute_prediction_error_of_points_along_the_path(nPoints,observedX,observedY,observedL,startG,finishG,goalsData)
-    return (math.exp(-1.*( error**2)/D**2 ))
-
-# For a given dataset (knownX,knownY,knownL), takes half of the data as known
-# and predicts the remaining half. Then, evaluate the prediction error.
-def compute_prediction_error_of_points_along_the_path(nPoints,observedX,observedY,observedL,startG,finishG,goalsData):
-    # Known data
-    observedN = len(observedX)
-    halfN     = max(1,int(observedN/2))
-
-    # First half of the known data
-    trueX = observedX[0:halfN]
-    trueY = observedY[0:halfN]
-    trueL = observedL[0:halfN]
-    # Get the last point and add it to the observed data
-    finishXY,__ = goal_center_and_size(goalsData.areas_coordinates[finishG])
-    finishD     = euclidean_distance([trueX[len(trueX)-1],trueY[len(trueY)-1]],finishXY)
-    np.append(trueX,finishXY[0])
-    np.append(trueY,finishXY[1])
-    np.append(trueL,finishD*goalsData.units[startG][finishG])
-
-    d = int(halfN/nPoints)
-    if d<1:
-        return 1.0
-    return 1.0
-    # Prepare the ground truths and the list of l to evaluate
-    realX         = observedX[halfN:halfN+nPoints*d:d]
-    realY         = observedY[halfN:halfN+nPoints*d:d]
-    predictionSet = observedL[halfN:halfN+nPoints*d:d]
-    # TODO! redo the prediction based on GP model
-    # Get the prediction based on the GP
-    # Evaluate the error
-    # return ADE([realX,realY],[predX,predY])
 
 # Compute ADE and FDE
 def ADE_FDE(full_path, predicted_xy, observed, future_steps):

@@ -10,6 +10,7 @@ def euclidean_distance(p, q): #p = (x,y)
     return dist
 
 #Trajectory arclen  ---  new path_arcLength from trajectory.py
+# TODO: Vectorization!
 def trajectory_arclength(tr):
     x, y = tr[0], tr[1]
     arclen = [0]
@@ -17,10 +18,11 @@ def trajectory_arclength(tr):
         d = euclidean_distance( [x[i],y[i]], [x[i-1], y[i-1]] )
         arclen.append(d)
         arclen[i] = arclen[i] + arclen[i-1]
-        
+
     return np.array(arclen)
 
-#Average speed of a trajectory --- new path_speed from trajectory.py
+# Average speed of a trajectory --- new path_speed from trajectory.py
+# TODO: Vectorization!
 def avg_speed(tr):
     x, y, t = tr[0], tr[1], tr[2]
     speed = []
@@ -28,9 +30,9 @@ def avg_speed(tr):
         d = euclidean_distance( [x[i],y[i]], [x[i-1], y[i-1]] )
         dt = t[i] - t[i-1]
         speed.append(d/dt)
-    
+
     return np.mean(speed)
-    
+
 def trajectory_duration(tr):
     t = tr[2]
     return t[-1] - t[0]
@@ -42,7 +44,7 @@ def pedestrian_avg_speed(trajectories):
     speed = []
     for tr in trajectories:
         speed.append(avg_speed(tr))
-    
+
     return np.mean(speed)
 
 
@@ -50,15 +52,15 @@ def pedestrian_avg_speed(trajectories):
 def tr_histogram(trajectories):
     duration = []
     arclen = []
-    
+
     for tr in trajectories:
         duration.append(trajectory_duration(tr))
         arclen.append(trajectory_arclength(tr))
-    _ = plt.hist(duration, bins='auto') 
+    _ = plt.hist(duration, bins='auto')
     plt.title("Histogram of trajectory duration")
     plt.show()
-    
-# new get_steps_unit    
+
+# new get_steps_unit
 # Returns the average ratio u = number of steps(points) / arclen
 def steps_unit(trajectories):
     unit = []
@@ -66,7 +68,5 @@ def steps_unit(trajectories):
         arclen = tr[2]
         nSteps = len(tr[2])
         unit.append(nSteps/arclen)
-        
-    return np.mean(unit)
-        
 
+    return np.mean(unit)

@@ -17,7 +17,7 @@ class singleGP:
         self.predictedMeans  = None
         self.predictedVars   = None
         # The basic element here is this object, that will do the regression work
-        self.gpPathRegressor = path_regression(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],self.goalsData.distUnit,self.goalsData.stepUnit,self.goalsData.areas_coordinates[self.endG],self.goalsData.areas_axis[self.endG])
+        self.gpPathRegressor = path_regression(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],self.goalsData.units[self.startG][self.endG],self.goalsData.stepUnit,self.goalsData.areas_coordinates[self.endG],self.goalsData.areas_axis[self.endG])
 
     # Update observations and compute likelihood based on observations
     def update(self,observedX,observedY,observedL):
