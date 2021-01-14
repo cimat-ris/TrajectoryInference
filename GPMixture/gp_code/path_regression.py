@@ -8,6 +8,7 @@ from gp_code.sampling import *
 from gp_code.path1D_regression import path1D_regression
 from utils.manip_trajectories import goal_center_and_size
 from utils.stats_trajectories import euclidean_distance
+from gp_code.likelihood import ADE
 from scipy.optimize import bisect
 
 class path_regression:
@@ -63,43 +64,28 @@ class path_regression:
 
     # For a given set of observations (x,y,l), takes half of the data as known
     # and predicts the remaining half. Then, evaluate the prediction error.
-    def compute_prediction_error_of_points_along_the_path(self,nPoints,observedX,observedY,observedL):
-        # Known data
+    def likelihood_from_partial_path(self,nPoints,observedX,observedY,observedL):
         n = len(observedX)
         half     = max(1,int(n/2))
-        # First half of the known data
-        trueX  = observedX[0:half]
-        trueY  = observedY[0:half]
-        trueL  = observedL[0:half]
-        # Get the last point and add it to the observed data
-        distToGoal = euclidean_distance([trueX[-1],trueY[-1]],self.finalAreaCenter)*self.distUnit
-        np.append(trueX,self.finalAreaCenter[0])
-        np.append(trueY,self.finalAreaCenter[1])
-        np.append(trueL,distToGoal)
+        #Take half of the observations as true
+        self.updateObservations(observedX[:half], observedY[:half], observedL[:half])
         d = int(half/nPoints)
         if d<1:
             return 1.0
-        return 1.0
         # Prepare the ground truths and the list of l to evaluate
-        realX         = observedX[half:half+nPoints*d:d]
-        realY         = observedY[half:half+nPoints*d:d]
-        predictionSet = observedL[half:half+nPoints*d:d]
-        # TODO! redo the prediction based on GP model
-        # Get the prediction based on the GP
-        # Evaluate the error
-        # return ADE([realX,realY],[predX,predY])
-
-
-    # For a given set of observations (observedX,observedY,observedL),
-    # takes half of the data to fit a model and predicts the remaining half. Then, evaluate the likelihood.
-    def likelihood_from_partial_path(self,nPoints,observedX,observedY,observedL):
-        D = 150. #value for compute_goal_likelihood
-        error = self.compute_prediction_error_of_points_along_the_path(nPoints,observedX,observedY,observedL)
+        trueX           = observedX[half:half+nPoints*d:d]
+        trueY           = observedY[half:half+nPoints*d:d]
+        self.predictedL = observedL[half:half+nPoints*d:d]
+        predX, predY, _, _, _ = self.prediction_to_finish_point()
+        #Return to original values
+        self.updateObservations(observedX, observedY, observedL)
+        # Compute Average Displacement Error between prediction and true values
+        D = 150.
+        error = ADE([trueX,trueY],[predX,predY])
         return (math.exp(-1.*( error**2)/D**2 ))
 
     # Compute the likelihood
     def computeLikelihood(self,observedX,observedY,observedL,stepsToCompare):
-        # TODO: remove the goalsData structure
         self.likelihood = self.prior*self.likelihood_from_partial_path(stepsToCompare,observedX,observedY,observedL)
         return self.likelihood
 
