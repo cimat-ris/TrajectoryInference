@@ -125,7 +125,7 @@ class path1D_regression:
         # Cholesky on varX: done only if the compute_sqRoot flag is true
         if compute_sqRoot and positive_definite(self.varX):
             self.sqRootVar     = cholesky(self.varX,lower=True)
-        return self.predictedL, self.predictedX, self.varX
+        return self.predictedX, self.varX
 
     # Prediction as a perturbation of the "normal" prediction done to the center of an area
     def prediction_to_perturbed_finish_point(self,deltal,deltax):

@@ -42,14 +42,6 @@ def final_displacement_error(final, predicted_final):
     error = math.sqrt((final[0]-predicted_final[0])**2 + (final[1]-predicted_final[1])**2)
     return error
 
-# Compute the goal likelihood
-def compute_goal_likelihood(observedX,observedY,observedL,startG,finishG,stepsToCompare,goalsData):
-
-    error = compute_prediction_error_of_points_along_the_path(stepsToCompare,observedX,observedY,observedL,startG,finishG,goalsData)
-    val = goalsData.priorTransitions[startG][finishG]*(math.exp(-1.*( error**2)/D**2 ))#   *(1.-errorG[i])
-
-    return val
-
 # Compute ADE and FDE
 def ADE_FDE(full_path, predicted_xy, observed, future_steps):
     real_x = full_path[0][observed : observed+future_steps]

@@ -46,15 +46,14 @@ class path_regression:
         # Euclidean distance between the last observed point and the finish point
         euclideanDist = euclidean_distance([x,y], finishPoint)
         # Rough estimate of the remaining arc length
-        distToGoal  = euclideanDist*self.distUnit
-        
-        numSteps      = int(distToGoal*self.stepUnit)
-        newset = np.zeros((numSteps,1))
-        if numSteps > 0:
-            step = distToGoal/float(numSteps)
-            for i in range(1,numSteps+1):
-                newset[i-1,0] = l + i*step
-        return newset, l + distToGoal, distToGoal
+        distToGoal    = euclideanDist*self.distUnit
+        size          = int(distToGoal*self.stepUnit)
+        predset = np.zeros((size,1))
+        if size > 0:
+            step = distToGoal/float(size)
+            for i in range(1,size+1):
+                predset[i-1,0] = l + i*step
+        return predset, l + distToGoal, distToGoal
     
     # Filter initial observations
     def filterObservations(self):
@@ -63,25 +62,38 @@ class path_regression:
         return filteredx,filteredy
 
     # For a given set of observations (x,y,l), takes half of the data as known
-    # and predicts the remaining half. Then, evaluate the prediction error.
-    def likelihood_from_partial_path(self,nPoints,observedX,observedY,observedL):
-        n = len(observedX)
-        half     = max(1,int(n/2))
-        #Take half of the observations as true
-        self.updateObservations(observedX[:half], observedY[:half], observedL[:half])
-        d = int(half/nPoints)
+    # and predicts m points from the remaining half. Then, evaluate the prediction error.
+    def likelihood_from_partial_path(self,m,observedX,observedY,observedL):
+        n       = len(observedX)
+        half    = max(1,int(n/2))
+        lastObs = [observedX[half], observedY[half], observedL[half]]
+        _, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
+        # Set of l to predict
+        d = int(half/m)
         if d<1:
             return 1.0
-        # Prepare the ground truths and the list of l to evaluate
-        trueX           = observedX[half:half+nPoints*d:d]
-        trueY           = observedY[half:half+nPoints*d:d]
-        self.predictedL = observedL[half:half+nPoints*d:d]
+        predset = observedL[half:half+m*d:d]
+        self.predictedL = np.zeros((m,1))
+        for i in range(m):
+            self.predictedL[i,0] = predset[i]
+        # Define the variance associated to the last point (varies with the area)
+        if self.finalAreaAxis==0:
+            s              = self.finalAreaSize[0]
+        elif self.finalAreaAxis==1:
+            s              = self.finalAreaSize[1]
+        # Update observations of each process
+        self.regression_x.updateObservations(observedX[:half],observedL[:half],self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
+        self.regression_y.updateObservations(observedY[:half],observedL[:half],self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
+        
         predX, predY, _, _, _ = self.prediction_to_finish_point()
+        # Prepare the ground truths
+        trueX           = observedX[half:half+m*d:d]
+        trueY           = observedY[half:half+m*d:d]
         #Return to original values
         self.updateObservations(observedX, observedY, observedL)
         # Compute Average Displacement Error between prediction and true values
         D = 150.
-        error = ADE([trueX,trueY],[predX,predY])
+        error = ADE([trueX,trueY],[predX.reshape(m),predY.reshape(m)])
         return (math.exp(-1.*( error**2)/D**2 ))
 
     # Compute the likelihood
@@ -92,9 +104,9 @@ class path_regression:
     # The main path regression function: perform regression for a
     # vector of values of future L, that has been computed in update
     def prediction_to_finish_point(self,compute_sqRoot=False):
-        pL,pX,vX = self.regression_x.prediction_to_finish_point(compute_sqRoot=compute_sqRoot)
-        pL,pY,vY = self.regression_y.prediction_to_finish_point(compute_sqRoot=compute_sqRoot)
-        return pX, pY, pL, vX, vY
+        predx, varx = self.regression_x.prediction_to_finish_point(compute_sqRoot=compute_sqRoot)
+        predy, vary = self.regression_y.prediction_to_finish_point(compute_sqRoot=compute_sqRoot)
+        return predx, predy, self.predictedL, varx, vary
 
     # Generate a sample from perturbations
     def sample_with_perturbation(self,deltaX,deltaY):
