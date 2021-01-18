@@ -2,10 +2,10 @@ from gp_code.kernels import set_kernel
 from gp_code.optimize_parameters import *
 from utils.stats_trajectories import trajectory_arclength, trajectory_duration
 from utils.manip_trajectories import get_linear_prior_mean
-#from utils.stats_trajectories import get_data_from_paths
 from utils.manip_trajectories import get_data_from_set
 from utils.manip_trajectories import goal_center_and_size
-from utils.stats_trajectories import euclidean_distance
+from utils.stats_trajectories import euclidean_distance, avg_speed
+from sklearn.linear_model import LinearRegression, HuberRegressor
 import numpy as np
 
 # This structure keeps all the learned data
@@ -38,6 +38,8 @@ class goal_pairs:
         self.compute_prior_transitions(trajMat)
         # Compute transition probabilities between goals
         self.compute_time_transitions(trajMat)
+        # Compute speed models
+        self.optimize_speed_models(trajMat)
 
     # Fills in the matrix with the mean length of the trajectories
     # Computes stepUnit - avg ratio between number of steps and path arc-lenght
@@ -94,6 +96,32 @@ class goal_pairs:
                     self.priorTransitions[i][j] = 0.
                 else:
                     self.priorTransitions[i][j] = float(len(pathMat[i][j])/count)
+
+    # For each pair, optimize speed model
+    def optimize_speed_models(self,trainingSet):
+        # For all the trajectories
+        for i in range(self.nGoals):
+            for j in range(self.nGoals):
+                trajSet        = trainingSet[i][j]
+                # Only if we have enough trajectories
+                if len(trajSet) < self.min_traj_number:
+                    continue
+                relativeSpeeds = []
+                lengths        = []
+                for tr in trajSet:
+                    # Times
+                    t = tr[2]
+                    # Average speed
+                    v = avg_speed(tr)
+                    # Arc lengths
+                    d = trajectory_arclength(tr)
+                    for k in range(1,len(t)):
+                        relativeSpeeds.append(float((d[k]-d[k-1])/(t[k]-t[k-1]))/v)
+                        lengths.append(d[k])
+                lengths        = np.array(lengths).reshape(-1, 1)
+                relativeSpeeds = np.array(relativeSpeeds)
+                reg = LinearRegression().fit(lengths,relativeSpeeds)
+                print(i,j,reg.score(lengths,relativeSpeeds),len(trajSet),np.max(lengths))
 
     # For each pair of goals, realize the optimization of the kernel parameters
     def optimize_kernel_parameters(self,kernelType,trainingSet):
