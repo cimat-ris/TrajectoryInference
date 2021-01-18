@@ -54,7 +54,7 @@ class path_regression:
             for i in range(1,size+1):
                 predset[i-1,0] = l + i*step
         return predset, l + distToGoal, distToGoal
-    
+
     # Filter initial observations
     def filterObservations(self):
         filteredx = self.regression_x.filterObservations()
@@ -84,12 +84,12 @@ class path_regression:
         # Update observations of each process
         self.regression_x.updateObservations(observedX[:half],observedL[:half],self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
         self.regression_y.updateObservations(observedY[:half],observedL[:half],self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
-        
+
         predX, predY, _, _, _ = self.prediction_to_finish_point()
         # Prepare the ground truths
         trueX           = observedX[half:half+m*d:d]
         trueY           = observedY[half:half+m*d:d]
-        #Return to original values
+        # Return to original values
         self.updateObservations(observedX, observedY, observedL)
         # Compute Average Displacement Error between prediction and true values
         D = 150.
@@ -99,6 +99,8 @@ class path_regression:
     # Compute the likelihood
     def computeLikelihood(self,observedX,observedY,observedL,stepsToCompare):
         self.likelihood = self.prior*self.likelihood_from_partial_path(stepsToCompare,observedX,observedY,observedL)
+        # Another option 
+        #self.likelihood = self.prior*self.regression_x.compute_likelihood()*self.regression_y.compute_likelihood()
         return self.likelihood
 
     # The main path regression function: perform regression for a

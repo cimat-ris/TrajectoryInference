@@ -79,6 +79,7 @@ class path1D_regression:
         # Fill in K, first elements (nxn)
         self.K       = self.kernel(self.observedL[:,0],self.observedL[:,0])
         # Add the variance associated to the last point (varies with the area)
+        self.finalVar  = finalVar
         self.K[nm][nm]+= finalVar
         # Heavy
         self.Kp_1    = inv(self.K+self.sigmaNoise*np.eye(self.K.shape[0]))
@@ -99,6 +100,27 @@ class path1D_regression:
         if self.kernel.linearPrior!=False:
             f +=self.observedL*self.kernel.meanSlope+self.kernel.meanConstant
         return f
+
+    # Compute the likelihood for this coordinates
+    def compute_likelihood(self):
+        n       = self.observedL.shape[0]
+        half    = max(1,int(n/2))
+        indices = list(range(0,half))
+        indices.append(n-1)
+        indicesp= list(range(half,n-1))
+        nm      = len(indices)-1
+        npreds  = len(indicesp)
+        # Fill in K, first elements (nxn)
+        K    = self.kernel(self.observedL[indices,0],self.observedL[indices,0])
+        # Add the variance associated to the last point
+        K[nm][nm]+= self.finalVar
+        k    = self.kernel(self.observedL[indices,0],self.observedL[indicesp,0])
+        Kp_1 = inv(K+self.sigmaNoise*np.eye(K.shape[0]))
+        Kp_1o= Kp_1.dot(self.observedX[indices])
+        predictedX = k.transpose().dot(Kp_1o)
+        d          = predictedX.transpose()-self.observedX[indicesp,0]
+        errsq      = d.dot(d.transpose())/npreds
+        return math.exp(-1.*( errsq)/(self.sigmaNoise*self.sigmaNoise) )
 
     # The main regression function: perform regression for a vector of values
     # lnew, that has been computed in update

@@ -21,7 +21,6 @@ def mean_abs_error(trueX, trueY, predX, predY):
     trueLen, predLen = len(trueX), len(predX)
     mx = mean_absolute_error(trueX[trueLen -predLen:-1], predX)
     my = mean_absolute_error(trueY[trueLen -predLen:-1], predY)
-
     return [mx, my]
 
 #average_displacement_error
