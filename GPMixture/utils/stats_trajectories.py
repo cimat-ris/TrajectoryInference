@@ -21,18 +21,19 @@ def trajectory_arclength(tr):
 
     return np.array(arclen)
 
-# Average speed of a trajectory --- new path_speed from trajectory.py
-# TODO: Vectorization!
+# Average speed of a trajectory
 def avg_speed(tr):
-    x, y, t = tr[0], tr[1], tr[2]
-    speed = []
-    for i in range(1,len(x)):
-        d = euclidean_distance( [x[i],y[i]], [x[i-1], y[i-1]] )
-        dt = t[i] - t[i-1]
-        speed.append(d/dt)
-
+    x, y, t = np.array(tr[0]), np.array(tr[1]), np.array(tr[2])
+    speed = np.divide(np.sqrt(np.square(x[1:]-x[:-1])+np.square(y[1:]-y[:-1])),t[1:]-t[:-1])
     return np.mean(speed)
 
+# Median speed of a trajectory
+def median_speed(tr):
+    x, y, t = np.array(tr[0]), np.array(tr[1]), np.array(tr[2])
+    speed = np.divide(np.sqrt(np.square(x[1:]-x[:-1])+np.square(y[1:]-y[:-1])),t[1:]-t[:-1])
+    return np.median(speed)
+
+# Trajectory duration
 def trajectory_duration(tr):
     t = tr[2]
     return t[-1] - t[0]
