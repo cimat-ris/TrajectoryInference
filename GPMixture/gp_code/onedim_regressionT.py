@@ -58,3 +58,29 @@ class onedim_regressionT:
         self.deltak  = self.kernel.dkdy(self.observedX[n],predictedX)
         # Fill in deltaKx
         self.deltaK = self.kernel.dkdy(self.observedX[n],self.observedX)
+
+    # The main regression function: perform regression for a vector of values
+    def prediction_to_finish_point(self,compute_sqRoot=False):
+        # No prediction to do
+        if self.predictedX.shape[0]==0:
+            return None, None, None
+        # Fill in k
+        self.k = self.kernel(self.observedX[:,0],self.predictedX[:,0])
+        # Fill in C
+        # Note here that we **do not add the noise term** here (we want to recover the unperturbed data)
+        # As Eq. 2.22 in Rasmussen
+        self.C = self.kernel(self.predictedX[:,0],self.predictedX[:,0])
+        # Predictive mean
+        self.predictedY = self.k.transpose().dot(self.Kp_1o)
+        # Estimate the variance in x
+        self.ktKp_1= self.k.transpose().dot(self.Kp_1)
+        kK_1kt     = self.ktKp_1.dot(self.k)
+        self.varY  = self.C - kK_1kt
+        # Regularization to avoid singular matrices
+        self.varY += self.epsilon*np.eye(self.varY.shape[0])
+        # Cholesky on varY: done only if the compute_sqRoot flag is true
+        if compute_sqRoot and positive_definite(self.varY):
+            self.sqRootVar     = cholesky(self.varY,lower=True)
+        return self.predictedY, self.varY
+    
+    #TODO: compute likelihood
