@@ -55,6 +55,25 @@ class path_regression:
                 predset[i-1,0] = l + i*step
         return predset, l + distToGoal, distToGoal
 
+    # Prediction set for Trautman's approach
+    def prediction_set_time(lastObs, elapsedTime, timeTransitionData, timeStep):
+        # Time of the last observed point
+        t = lastObs[2]
+        # TODO: I think we should first do here a fully deterministic model (conditioned on the mean transition time)
+        # Sample a duration
+        transitionTime = int(np.random.normal(timeTransitionData[0], timeTransitionData[1]) )
+        # Remaining time
+        remainingTime = transitionTime - elapsedTime
+        size = int(remainingTime/timeStep)
+        predset = np.zeros((size,1))
+        if size > 0:
+            for i in range(1,size+1):
+                predset[i-1,0] = t + i*timeStep
+            if predset[-1,0] < t + remainingTime:
+                predset[-1,0] = t + remainingTime
+        
+        return predset, t + remainingTime, remainingTime
+    
     # Filter initial observations
     def filterObservations(self):
         filteredx = self.regression_x.filterObservations()
