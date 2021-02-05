@@ -21,17 +21,17 @@ $ pip install -r requirements.txt
 You can visualize the effect of different kernels with the kernelVisualization script:
 
 ```
-$ python3 tests/test_kernelVisualization.py
+$ python3 examples/test_kernelVisualization.py
 ```
 
-## Training the GP parameters
+## Training the GP parameters in a given setup
 
 ```
-$ python3 train.py
+$ python3 examples/train.py
 ```
 
 ## Running some prediction examples
 
 ```
-$ python3 main.py
+$ python3 examples/mixtureGP.py
 ```
