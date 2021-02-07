@@ -50,6 +50,7 @@ gp = singleGP(gi,gj,goalsData)
 
 # Divides the trajectory in part_num parts and infer the posterior over the remaining part
 part_num = 10
+part_num = 0
 for i in range(1,part_num-1):
     p = plotter(imgGCS)
     p.plot_scene_structure(goalsData)
@@ -95,7 +96,7 @@ for i in range(1,part_num-1):
     # Generate samples
     predictedXY,varXY = gp.predict(compute_sqRoot=True)
     vecX,vecY         = gp.generate_samples(10)
-    p.plot_path_samples_with_observations(trueX,trueY,vecX,vecY)
+    p.plot_path_samples_with_observations(trueX.reshape((-1,1)),trueY.reshape((-1,1)),vecX,vecY)
     stop       = time.process_time()
     print("[INF] CPU process time (sampling): %.1f [ms]" % (1000.0*(stop-start)))
     print('[INF] Plotting')

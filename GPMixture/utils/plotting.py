@@ -117,7 +117,7 @@ class plotter():
         for i in range(samples):
             randColor = random.choice(color)
             self.ax.plot(x[i],y[i], color=randColor, alpha=0.5)
-            self.ax.plot([obsx[-1],x[i][0]],[obsy[-1],y[i][0]], alpha=0.5)
+            self.ax.plot([obsx[-1][0],x[i][0][0]],[obsy[-1][0],y[i][0][0]], alpha=0.5)
 
     # new plot_paths
     def plot_trajectories(self, trajSet):
