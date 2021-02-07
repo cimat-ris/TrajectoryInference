@@ -4,8 +4,12 @@ from utils.stats_trajectories import trajectory_arclength, trajectory_duration
 from utils.manip_trajectories import get_linear_prior_mean
 from utils.manip_trajectories import get_data_from_set
 from utils.manip_trajectories import goal_center_and_size
-from utils.stats_trajectories import euclidean_distance, avg_speed
+from utils.stats_trajectories import euclidean_distance, avg_speed, median_speed
 from sklearn.linear_model import LinearRegression, HuberRegressor
+from sklearn.linear_model import Ridge
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.pipeline import make_pipeline
+
 import numpy as np
 
 # This structure keeps all the learned data
@@ -24,10 +28,11 @@ class goal_pairs:
         self.units              = np.zeros((self.nGoals,self.nGoals))
         self.stepUnit           = 1.0
         self.priorTransitions   = np.zeros((self.nGoals,self.nGoals))
-        self.kernelsX           = np.empty((self.nGoals, self.nGoals),dtype=object)
-        self.kernelsY           = np.empty((self.nGoals, self.nGoals),dtype=object)
-        self.timeTransitionMeans= np.empty((self.nGoals, self.nGoals),dtype=object)
-        self.timeTransitionStd  = np.empty((self.nGoals, self.nGoals),dtype=object)
+        self.kernelsX           = np.empty((self.nGoals,self.nGoals),dtype=object)
+        self.kernelsY           = np.empty((self.nGoals,self.nGoals),dtype=object)
+        self.speedModels        = np.zeros((self.nGoals,self.nGoals),dtype=object)
+        self.timeTransitionMeans= np.empty((self.nGoals,self.nGoals),dtype=object)
+        self.timeTransitionStd  = np.empty((self.nGoals,self.nGoals),dtype=object)
         # Compute the mean lengths
         self.compute_mean_lengths(trajMat)
         # Compute the distances between pairs of goals (as a nGoalsxnGoals matrix)
@@ -120,8 +125,9 @@ class goal_pairs:
                         lengths.append(d[k])
                 lengths        = np.array(lengths).reshape(-1, 1)
                 relativeSpeeds = np.array(relativeSpeeds)
-                reg = LinearRegression().fit(lengths,relativeSpeeds)
-                print(i,j,reg.score(lengths,relativeSpeeds),len(trajSet),np.max(lengths))
+                self.speedModels[i][j] = make_pipeline(PolynomialFeatures(4), Ridge())
+                self.speedModels[i][j].fit(lengths, relativeSpeeds)
+                
 
     # For each pair of goals, realize the optimization of the kernel parameters
     def optimize_kernel_parameters(self,kernelType,trainingSet):
