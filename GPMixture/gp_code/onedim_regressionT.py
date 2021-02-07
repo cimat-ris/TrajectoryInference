@@ -25,7 +25,6 @@ class onedim_regressionT:
         self.kernel          = kernel
         self.sigmaNoise      = sigmaNoise
         
-    #TODO: adapt function to Trautman's paper
     # Update observations for the Gaussian process (matrix K)
     def updateObservations(self,observedY,observedX,finalY,finalX,finalVar,predictedX):
         # Number of "real" observations (we add one: the final point) --> check!
@@ -83,4 +82,23 @@ class onedim_regressionT:
             self.sqRootVar     = cholesky(self.varY,lower=True)
         return self.predictedY, self.varY
     
-    #TODO: compute likelihood
+    # Compute the likelihood for this coordinates
+    def compute_likelihood(self):
+        n       = self.observedX.shape[0]
+        half    = max(1,int(n/2))
+        indices = list(range(0,half))
+        indices.append(n-1)
+        indicesp= list(range(half,n-1))
+        nm      = len(indices)-1
+        npreds  = len(indicesp)
+        # Fill in K, first elements (nxn)
+        K    = self.kernel(self.observedX[indices,0],self.observedX[indices,0])
+        # Add the variance associated to the last point
+        K[nm][nm]+= self.finalVar
+        k    = self.kernel(self.observedX[indices,0],self.observedX[indicesp,0])
+        Kp_1 = inv(K+self.sigmaNoise*np.eye(K.shape[0]))
+        Kp_1o= Kp_1.dot(self.observedY[indices])
+        predictedX = k.transpose().dot(Kp_1o)
+        d          = predictedX.transpose()-self.observedY[indicesp,0]
+        errsq      = d.dot(d.transpose())/npreds
+        return math.exp(-1.*( errsq)/(self.sigmaNoise*self.sigmaNoise) )

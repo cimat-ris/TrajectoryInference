@@ -64,13 +64,6 @@ class Kernel:
             self.sigmaSlope    = sS
             self.sigmaConstant = sC
 
-# Kronecker delta
-def delta(x,y):
-    if x == y:
-        return 1
-    else:
-        return 0
-
 # Linear kernel
 class linearKernel(Kernel):
     # Constructor
@@ -189,7 +182,7 @@ class combinedTrautmanKernel(Kernel):
 
     # Overload the operator ()
     def __call__(self,x,y):
-        return self.matern(x,y) + self.linear(x,y) + self.noise*delta(x,y)
+        return self.matern(x,y) + self.linear(x,y)
 
     # Method to get parameters
     def get_parameters(self):
