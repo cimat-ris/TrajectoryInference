@@ -125,9 +125,9 @@ class goal_pairs:
                         lengths.append(d[k])
                 lengths        = np.array(lengths).reshape(-1, 1)
                 relativeSpeeds = np.array(relativeSpeeds)
-                self.speedModels[i][j] = make_pipeline(PolynomialFeatures(4), Ridge())
+                self.speedModels[i][j]=make_pipeline(PolynomialFeatures(4),LinearRegression())
                 self.speedModels[i][j].fit(lengths, relativeSpeeds)
-                
+
 
     # For each pair of goals, realize the optimization of the kernel parameters
     def optimize_kernel_parameters(self,kernelType,trainingSet):
