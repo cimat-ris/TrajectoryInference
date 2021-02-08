@@ -179,4 +179,4 @@ class path1D_regression:
         if self.sqRootVar.shape[0]>0:
             return self.sqRootVar.dot(sX)
         else:
-            return np.zeros(nPredictions,1)
+            return np.zeros((nPredictions,1))
