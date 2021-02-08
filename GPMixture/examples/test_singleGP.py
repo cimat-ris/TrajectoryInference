@@ -4,7 +4,6 @@
 import random
 from test_common import *
 from gp_code.single_gp import singleGP
-from utils.stats_trajectories import trajectory_arclength
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
 goalsDescriptions= 'parameters/CentralStation_GoalsDescriptions.csv'
@@ -50,7 +49,6 @@ gp = singleGP(gi,gj,goalsData)
 
 # Divides the trajectory in part_num parts and infer the posterior over the remaining part
 part_num = 10
-part_num = 0
 for i in range(1,part_num-1):
     p = plotter(imgGCS)
     p.plot_scene_structure(goalsData)
@@ -67,7 +65,7 @@ for i in range(1,part_num-1):
     print("[INF] CPU process time (update): %.1f [ms]" % (1000.0*(stop-start)))
     start = stop
     # Perform prediction
-    predictedXY,varXY = gp.predict()
+    predictedXY,varXY = gp.predict_path()
     stop       = time.process_time()
     print("[INF] CPU process time (prediction): %.1f [ms]" % (1000.0*(stop-start)))
     print('[INF] Plotting')
@@ -94,8 +92,8 @@ for i in range(1,part_num-1):
     print("[INF] CPU process time (update): %.1f [ms]" % (1000.0*(stop-start)))
     start = stop
     # Generate samples
-    predictedXY,varXY = gp.predict(compute_sqRoot=True)
-    vecX,vecY         = gp.generate_samples(10)
+    predictedXY,varXY = gp.predict_path(compute_sqRoot=True)
+    vecX,vecY         = gp.sample_paths(10)
     p.plot_path_samples_with_observations(trueX.reshape((-1,1)),trueY.reshape((-1,1)),vecX,vecY)
     stop       = time.process_time()
     print("[INF] CPU process time (sampling): %.1f [ms]" % (1000.0*(stop-start)))

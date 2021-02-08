@@ -15,3 +15,4 @@ import pandas as pd
 import numpy as np
 import time
 import matplotlib.image as mpimg
+from utils.stats_trajectories import trajectory_arclength
