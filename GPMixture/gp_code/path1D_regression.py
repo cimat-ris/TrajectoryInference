@@ -31,8 +31,8 @@ class path1D_regression:
         self.sigmaNoise      = sigmaNoise
 
     # Method to select a maximal number of self.observedNMax filterObservations organized in a logrithmic scale
-    def selectObservations(self,observedL,observedX):
-        n                    = len(observedX)
+    def select_observations(self,observedL,observedX):
+        n                    = observedX.shape[0]
         # Number of data we will use
         nm                   = min(n,self.observedNMax)
         idx                  = np.flip(n-np.logspace(0,np.log10(n), num=nm))
@@ -58,7 +58,7 @@ class path1D_regression:
         return observedL[idx],observedX[idx]
 
     # Update observations for the Gaussian process (matrix K)
-    def updateObservations(self,observedX,observedL,finalX,finalL,finalVar,predictedL):
+    def update_observations(self,observedX,observedL,finalX,finalL,finalVar,predictedL):
         # Number of "real" observations (we add one: the final point)
         n                    = len(observedX)
         nm                   = min(n,self.observedNMax)
@@ -70,7 +70,7 @@ class path1D_regression:
         # Covariance matrix
         self.K               = np.zeros((nm+1,nm+1))
         # Set the observations
-        self.observedL[:-1,0], self.observedX[:-1,0] = self.selectObservations(observedL,observedX)
+        self.observedL[:-1], self.observedX[:-1] = self.select_observations(observedL,observedX)
         self.observedL[-1,0] = finalL
         self.observedX[-1,0] = finalX
         # Center the data in case we use the linear prior
@@ -95,7 +95,7 @@ class path1D_regression:
 
     # Deduce the mean for the filtered distribution for the observations
     # f = K (K + s I)^-1
-    def filterObservations(self):
+    def filter_observations(self):
         f = self.K.dot(self.Kp_1.dot(self.observedX))
         if self.kernel.linearPrior!=False:
             f +=self.observedL*self.kernel.meanSlope+self.kernel.meanConstant

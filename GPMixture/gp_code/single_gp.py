@@ -20,11 +20,11 @@ class singleGP:
         self.gpPathRegressor = trajectory_regression(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],self.goalsData.units[self.startG][self.endG],self.goalsData.stepUnit,self.goalsData.areas_coordinates[self.endG],self.goalsData.areas_axis[self.endG],self.goalsData.speedModels[self.startG][self.endG],self.goalsData.priorTransitions[self.startG][self.endG])
 
     # Update observations and compute likelihood based on observations
-    def update(self,observedX,observedY,observedL):
+    def update(self,observations):
         # Update observations and re-compute the kernel matrices
-        self.gpPathRegressor.updateObservations(observedX,observedY,observedL)
+        self.gpPathRegressor.update_observations(observations)
         # Compute the model likelihood
-        return self.gpPathRegressor.computeLikelihood(observedX,observedY,observedL,self.nPoints)
+        return self.gpPathRegressor.compute_likelihood(observations,self.nPoints)
 
     # Performs prediction
     def predict_path(self,compute_sqRoot=False):
@@ -36,7 +36,7 @@ class singleGP:
 
     # Get a filtered version of the initial observations
     def filter(self):
-        return self.gpPathRegressor.filterObservations()
+        return self.gpPathRegressor.filter_observations()
 
     # Generate a sample from the current Gaussian predictive distribution
     def sample_path(self):

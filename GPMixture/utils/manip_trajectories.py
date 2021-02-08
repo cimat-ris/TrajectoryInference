@@ -199,7 +199,7 @@ def get_linear_prior_mean(paths, flag):
     mean = [np.mean(lineParameters[:,0]), np.mean(lineParameters[:,1]) ]
     var = [np.var(lineParameters[:,0]), np.var(lineParameters[:,1]) ]
     cov = np.cov(lineParameters[:,0],lineParameters[:,1])
-    
+
     return mean, var
 """-----------------------------------------------------"""
 
@@ -252,7 +252,7 @@ def arclen_to_time(initTime,l,speed):
 # Function to get the ground truth data: knownN data
 def observed_data(x,y,z, n):
     obsX, obsY, obsZ = x[0:n], y[0:n], z[0:n]
-    return obsX, obsY, obsZ
+    return np.reshape(obsX,(-1,1)), np.reshape(obsY,(-1,1)), np.reshape(obsZ,(-1,1))
 
 def observed_data_given_time(x,y,t,time):
     i = 0
@@ -274,7 +274,7 @@ def is_in_area(p,R):
             return 0
     else:
         return 0
-    
+
 def get_goal_center_and_boundaries(goal):
     p, __ = goal_centroid(goal)
     lenX = goal[len(goal) -2] - goal[0]

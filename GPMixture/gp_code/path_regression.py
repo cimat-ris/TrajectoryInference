@@ -24,10 +24,10 @@ class path_regression:
         self.finalAreaCenter, self.finalAreaSize = goal_center_and_size(finalArea)
         self.prior           = prior
 
-    # Update observations for the Gaussian process (matrix K)
-    def updateObservations(self,observedX,observedY,observedL):
+    # Update observations x,y,l for the Gaussian process (matrix K)
+    def update_observations(self,observations):
         # Last really observed point
-        lastObs = [observedX[-1], observedY[-1], observedL[-1]]
+        lastObs = observations[-1]
         # Determine the set of arclengths (predictedL) to predict
         self.predictedL, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
         # Define the variance associated to the last point (varies with the area)
@@ -35,10 +35,9 @@ class path_regression:
             s              = self.finalAreaSize[0]
         elif self.finalAreaAxis==1:
             s              = self.finalAreaSize[1]
-
-        # Update observations of each process
-        self.regression_x.updateObservations(observedX,observedL,self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
-        self.regression_y.updateObservations(observedY,observedL,self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
+        # Update observations of each process (x,y)
+        self.regression_x.update_observations(observations[:,0:1],observations[:,2:3],self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
+        self.regression_y.update_observations(observations[:,1:2],observations[:,2:3],self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
 
     def prediction_set_arclength(self, lastObs, finishPoint):
         # Coordinates of the last observed point
@@ -75,23 +74,23 @@ class path_regression:
         return predset, t + remainingTime, remainingTime
 
     # Filter initial observations
-    def filterObservations(self):
-        filteredx = self.regression_x.filterObservations()
-        filteredy = self.regression_y.filterObservations()
+    def filter_observations(self):
+        filteredx = self.regression_x.filter_observations()
+        filteredy = self.regression_y.filter_observations()
         return filteredx,filteredy
 
     # For a given set of observations (x,y,l), takes half of the data as known
     # and predicts m points from the remaining half. Then, evaluate the prediction error.
-    def likelihood_from_partial_path(self,m,observedX,observedY,observedL):
-        n       = len(observedX)
+    def likelihood_from_partial_path(self,observations,m):
+        n       = observations.shape[0]
         half    = max(1,int(n/2))
-        lastObs = [observedX[half], observedY[half], observedL[half]]
+        lastObs = observations[half]
         _, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
         # Set of l to predict
         d = int(half/m)
         if d<1:
             return 1.0
-        predset = observedL[half:half+m*d:d]
+        predset = observations[half:half+m*d:d,2]
         self.predictedL = np.zeros((m,1))
         for i in range(m):
             self.predictedL[i,0] = predset[i]
@@ -101,25 +100,23 @@ class path_regression:
         elif self.finalAreaAxis==1:
             s              = self.finalAreaSize[1]
         # Update observations of each process
-        self.regression_x.updateObservations(observedX[:half],observedL[:half],self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
-        self.regression_y.updateObservations(observedY[:half],observedL[:half],self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
+        self.regression_x.update_observations(observations[:half,0:1],observations[:half,2:3],self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
+        self.regression_y.update_observations(observations[:half,1:2],observations[:half,2:3],self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
 
         predX, predY, _, _, _ = self.predict_path_to_finish_point()
         # Prepare the ground truths
-        trueX           = observedX[half:half+m*d:d]
-        trueY           = observedY[half:half+m*d:d]
+        trueX           = observations[half:half+m*d:d,0:1]
+        trueY           = observations[half:half+m*d:d,1:2]
         # Return to original values
-        self.updateObservations(observedX, observedY, observedL)
+        self.update_observations(observations)
         # Compute Average Displacement Error between prediction and true values
         D = 150.
         error = ADE([trueX,trueY],[predX.reshape(m),predY.reshape(m)])
         return (math.exp(-1.*( error**2)/D**2 ))
 
     # Compute the likelihood
-    def computeLikelihood(self,observedX,observedY,observedL,stepsToCompare):
-        self.likelihood = self.prior*self.likelihood_from_partial_path(stepsToCompare,observedX,observedY,observedL)
-        # Another option
-        #self.likelihood = self.prior*self.regression_x.compute_likelihood()*self.regression_y.compute_likelihood()
+    def compute_likelihood(self,observations,stepsToCompare):
+        self.likelihood = self.prior*self.likelihood_from_partial_path(observations,stepsToCompare)
         return self.likelihood
 
     # The main path regression function: perform regression for a

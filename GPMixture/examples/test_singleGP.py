@@ -58,8 +58,7 @@ for i in range(1,part_num-1):
     """Single goal prediction test"""
     # Update the GP with (real) observations
     start               = time.process_time()
-    # TODO: Seems to have a bug here, the value is always the same?
-    likelihood          = gp.update(trueX,trueY,trueL)
+    likelihood          = gp.update(np.concatenate([trueX,trueY,trueL],axis=1))
     stop                = time.process_time()
     filteredX,filteredY = gp.filter()
     print("[INF] CPU process time (update): %.1f [ms]" % (1000.0*(stop-start)))
@@ -82,12 +81,12 @@ for i in range(1,part_num-1):
     p = plotter(imgGCS)
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
-    knownN = int((i+1)*(pathSize/part_num))
+    knownN            = int((i+1)*(pathSize/part_num))
     trueX,trueY,trueL = observed_data(pathX,pathY,pathL,knownN)
     """Single goal prediction test"""
     # Update the GP with (real) observations
     start      = time.process_time()
-    likelihood = gp.update(trueX,trueY,trueL)
+    likelihood = gp.update(np.concatenate([trueX,trueY,trueL],axis=1))
     stop       = time.process_time()
     print("[INF] CPU process time (update): %.1f [ms]" % (1000.0*(stop-start)))
     start = stop
