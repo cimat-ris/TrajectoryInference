@@ -99,7 +99,7 @@ class mixtureOfGPs:
         return self.goalsLikelihood
 
     # Performs prediction
-    def predict(self):
+    def predict_path(self):
         # For all likely goals
         for i in range(self.goalsData.nGoals):
             print('[INF] Predicting to goal ',i)
@@ -127,7 +127,7 @@ class mixtureOfGPs:
         return self.predictedMeans,self.predictedVars
 
 
-    def sample(self):
+    def sample_path(self):
         p = self.goalsLikelihood[:self.goalsData.nGoals]
         # Sample goal
         goalSample = np.random.choice(self.goalsData.nGoals,1,p=p)
@@ -152,9 +152,9 @@ class mixtureOfGPs:
         # Use a pertubation approach to get the sample
         deltaX = finishX[0]-self.gpPathRegressor[k].finalAreaCenter[0]
         deltaY = finishY[0]-self.gpPathRegressor[k].finalAreaCenter[1]
-        return self.gpPathRegressor[k].sample_with_perturbation(deltaX,deltaY)
+        return self.gpPathRegressor[k].sample_path_with_perturbation(deltaX,deltaY)
 
-    def generate_samples(self,nSamples):
+    def sample_paths(self,nSamples):
         vecX, vecY, vecL = [], [], []
         for k in range(nSamples):
             x, y, l = self.sample()

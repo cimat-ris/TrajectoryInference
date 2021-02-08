@@ -124,7 +124,7 @@ class path1D_regression:
 
     # The main regression function: perform regression for a vector of values
     # lnew, that has been computed in update
-    def prediction_to_finish_point(self,compute_sqRoot=False):
+    def predict_to_finish_point(self,compute_sqRoot=False):
         # No prediction to do
         if self.predictedL.shape[0]==0:
             return None, None, None
@@ -150,7 +150,7 @@ class path1D_regression:
         return self.predictedX, self.varX
 
     # Prediction as a perturbation of the "normal" prediction done to the center of an area
-    def prediction_to_perturbed_finish_point(self,deltal,deltax):
+    def predict_to_perturbed_finish_point(self,deltal,deltax):
         n            = len(self.observedX)
         npredicted   = len(self.predictedL)
         if npredicted == 0:

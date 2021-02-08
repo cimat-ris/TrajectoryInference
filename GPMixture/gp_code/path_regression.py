@@ -71,9 +71,9 @@ class path_regression:
                 predset[i-1,0] = t + i*timeStep
             if predset[-1,0] < t + remainingTime:
                 predset[-1,0] = t + remainingTime
-        
+
         return predset, t + remainingTime, remainingTime
-    
+
     # Filter initial observations
     def filterObservations(self):
         filteredx = self.regression_x.filterObservations()
@@ -104,7 +104,7 @@ class path_regression:
         self.regression_x.updateObservations(observedX[:half],observedL[:half],self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
         self.regression_y.updateObservations(observedY[:half],observedL[:half],self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
 
-        predX, predY, _, _, _ = self.prediction_to_finish_point()
+        predX, predY, _, _, _ = self.predict_path_to_finish_point()
         # Prepare the ground truths
         trueX           = observedX[half:half+m*d:d]
         trueY           = observedY[half:half+m*d:d]
@@ -118,35 +118,36 @@ class path_regression:
     # Compute the likelihood
     def computeLikelihood(self,observedX,observedY,observedL,stepsToCompare):
         self.likelihood = self.prior*self.likelihood_from_partial_path(stepsToCompare,observedX,observedY,observedL)
-        # Another option 
+        # Another option
         #self.likelihood = self.prior*self.regression_x.compute_likelihood()*self.regression_y.compute_likelihood()
         return self.likelihood
 
     # The main path regression function: perform regression for a
     # vector of values of future L, that has been computed in update
-    def prediction_to_finish_point(self,compute_sqRoot=False):
-        predx, varx = self.regression_x.prediction_to_finish_point(compute_sqRoot=compute_sqRoot)
-        predy, vary = self.regression_y.prediction_to_finish_point(compute_sqRoot=compute_sqRoot)
+    def predict_path_to_finish_point(self,compute_sqRoot=False):
+        predx, varx = self.regression_x.predict_to_finish_point(compute_sqRoot=compute_sqRoot)
+        predy, vary = self.regression_y.predict_to_finish_point(compute_sqRoot=compute_sqRoot)
         return predx, predy, self.predictedL, varx, vary
 
     # Generate a sample from perturbations
-    def sample_with_perturbation(self,deltaX,deltaY):
+    def sample_path_with_perturbation(self,deltaX,deltaY):
         # A first order approximation of the new final value of L
         deltaL       = deltaX*(self.finalAreaCenter[0]-self.regression_x.observedX[-2])/self.dist + deltaY*(self.finalAreaCenter[1]-self.regression_y.observedX[-2])/self.dist
         # Given a perturbation of the final point, determine the new characteristics of the GP
-        predictedL,predictedX,__=self.regression_x.prediction_to_perturbed_finish_point(deltaL,deltaX)
-        predictedL,predictedY,__=self.regression_y.prediction_to_perturbed_finish_point(deltaL,deltaY)
+        predictedL,predictedX,__=self.regression_x.predict_to_perturbed_finish_point(deltaL,deltaX)
+        predictedL,predictedY,__=self.regression_y.predict_to_perturbed_finish_point(deltaL,deltaY)
         if predictedX is None or predictedY is None:
             return None,None,None
+        # TODO return into one tensor instead of 3
         # Generate a sample from this Gaussian distribution
         return predictedX+self.regression_x.generate_random_variation(),predictedY+self.regression_y.generate_random_variation(), predictedL
 
     # Generate a sample from the predictive distribution with a perturbed finish point
-    def sample_with_perturbed_finish_point(self):
+    def sample_path_with_perturbed_finish_point(self):
         # Sample end point around the sampled goal
         size = self.finalAreaSize[self.finalAreaAxis]
         finishX, finishY, axis = uniform_sampling_1D_around_point(1, self.finalAreaCenter,size, self.finalAreaAxis)
         # Use a pertubation approach to get the sample
         deltaX = finishX[0]-self.finalAreaCenter[0]
         deltaY = finishY[0]-self.finalAreaCenter[1]
-        return self.sample_with_perturbation(deltaX,deltaY)
+        return self.sample_path_with_perturbation(deltaX,deltaY)

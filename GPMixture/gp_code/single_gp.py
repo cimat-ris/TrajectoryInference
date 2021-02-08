@@ -27,9 +27,9 @@ class singleGP:
         return self.gpPathRegressor.computeLikelihood(observedX,observedY,observedL,self.nPoints)
 
     # Performs prediction
-    def predict(self,compute_sqRoot=False):
+    def predict_path(self,compute_sqRoot=False):
         # Uses the already computed matrices to apply regression over missing data
-        predictedX, predictedY, predictedL, varX, varY = self.gpPathRegressor.prediction_to_finish_point(compute_sqRoot=compute_sqRoot)
+        predictedX, predictedY, predictedL, varX, varY = self.gpPathRegressor.predict_path_to_finish_point(compute_sqRoot=compute_sqRoot)
         self.predictedMeans = np.column_stack((predictedX, predictedY, predictedL))
         self.predictedVars  = np.stack([varX, varY],axis=0)
         return self.predictedMeans,self.predictedVars
@@ -39,14 +39,14 @@ class singleGP:
         return self.gpPathRegressor.filterObservations()
 
     # Generate a sample from the current Gaussian predictive distribution
-    def sample(self):
-        return self.gpPathRegressor.sample_with_perturbed_finish_point()
+    def sample_path(self):
+        return self.gpPathRegressor.sample_path_with_perturbed_finish_point()
 
     # Generate samples from the predictive distribution
-    def generate_samples(self,nSamples):
+    def sample_paths(self,nSamples):
         vecX, vecY = [], []
         for k in range(nSamples):
-            x, y, __ = self.sample()
+            x, y, __ = self.sample_path()
             vecX.append(x)
             vecY.append(y)
         return vecX,vecY
