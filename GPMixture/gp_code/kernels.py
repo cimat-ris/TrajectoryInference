@@ -154,7 +154,7 @@ class maternKernel(Kernel):
         rp  = np.copysign(1,l1[:, None] - l2[None, :])/self.length
         return np.squeeze(-self.sigmaSq*rn*rp*1.67*(1. + self.sqrootof5*rn)*np.exp(-self.sqrootof5*rn),axis=0)
 
-    
+
 class combinedTrautmanKernel(Kernel):
     # Constructor
     def __init__(self, gamma, sigmaSq, length, sigmaNoise):
@@ -194,7 +194,7 @@ class combinedTrautmanKernel(Kernel):
         print("combined kernel parameters\n gamma =",self.gamma,"\n s =",self.s,", l = ",self.length)
 
 
-   
+
 # A combined kernel that considers a prior on the line parameters
 class linePriorCombinedKernel(Kernel):
     # Constructor
@@ -283,8 +283,10 @@ class exponentialKernel(Kernel):
         self.length  = vec[1]
 
     # Overload the operator ()
-    def __call__(self,x,y):
-        return self.sigmaSq*m.exp(-m.fabs(x-y)/self.length)
+    def __call__(self,l1,l2):
+        l = l1[:, None] - l2[None, :]
+        rn  = np.abs(l)/self.length
+        return self.sigmaSq*np.exp(-rn)
 
 # Derived class: the squared exponential kernel
 class squaredExponentialKernel(Kernel):
@@ -305,8 +307,11 @@ class squaredExponentialKernel(Kernel):
         self.length  = vec[1]
 
     # Overload the operator ()
-    def __call__(self,x,y):
-        return (self.sigmaSq**2)*m.exp(-1.*(x-y)**2/(2*self.length**2))
+    def __call__(self,l1,l2):
+        l = l1[:, None] - l2[None, :]
+        rn  = np.abs(l)/self.length
+        rn2 = rn**2
+        return (self.sigmaSq**2)*np.exp(-0.5*rn2)
 
     # Derivative with respect to y
     def dkdy(self,x,y):

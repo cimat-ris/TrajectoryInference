@@ -67,12 +67,6 @@ for tr in trajSet:
     instantSpeeds.append(trajectorySpeeds)
     averageSpeeds.append(median_speed(tr))
 
-
-""" #This trajectory has an abnormal value at the end
-traj = trajSet[130]
-for i in range(len(traj[0])):
-    plt.plot(traj[0][i],traj[1][i], 'b+' )
-
 """
 # Plot a random sample of the trajectory set
 fig,ax = plt.subplots(1)

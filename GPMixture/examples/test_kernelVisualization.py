@@ -9,11 +9,7 @@ from gp_code.kernels import *
 # Evaluate covariance matrices on the interval [0,length]
 def evaluateCovarianceMatrix(kernel,length):
     l = np.arange(0,length)
-    C = np.zeros((l.size,l.size),dtype=float)
-    for i in range(0,length):
-        for j in range(0,length):
-            C[i][j]=kernel(i,j)
-    return C
+    return kernel(np.arange(0,l.size),np.arange(0,l.size))
 
 # Number of points to evaluate
 s = 1000
@@ -30,26 +26,12 @@ CSqe   = evaluateCovarianceMatrix(kernel,s)
 kernel = maternKernel(parameters[2],parameters[3])
 CM     = evaluateCovarianceMatrix(kernel,s)
 
-kernel = linePriorCombinedKernel(parameters[0],parameters[1],parameters[2],parameters[3],parameters[4])
-CCk    = evaluateCovarianceMatrix(kernel,s)
-
-kernel = gammaExponentialKernel(parameters[2],parameters[3],0.8)
-CG     = evaluateCovarianceMatrix(kernel,s)
-
-kernel = squaredExponentialAndNoiseKernel(parameters[2],parameters[3],parameters[4])
-CSqeN  = evaluateCovarianceMatrix(kernel,s)
-
-kernel = exponentialAndNoiseKernel(parameters[2],parameters[3],parameters[4])
+kernel = exponentialKernel(parameters[2],parameters[3])
 Cexp   = evaluateCovarianceMatrix(kernel,s)
 
 # Display the covariance matrices
-fg, axes = plt.subplots(2, 3, sharey=True)
-axes[0][0].matshow(CSqe)
-axes[0][1].matshow(CM)
-axes[0][2].matshow(CG)
-
-axes[1][0].matshow(CCk)
-axes[1][1].matshow(CSqeN)
-axes[1][2].matshow(Cexp)
-
+fg, axes = plt.subplots(1, 3, sharey=True)
+axes[0].matshow(CSqe)
+axes[1].matshow(CM)
+axes[2].matshow(Cexp)
 plt.show()
