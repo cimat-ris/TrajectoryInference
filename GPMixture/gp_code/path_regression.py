@@ -90,10 +90,7 @@ class path_regression:
         d = int(half/m)
         if d<1:
             return 1.0
-        predset = observations[half:half+m*d:d,2]
-        self.predictedL = np.zeros((m,1))
-        for i in range(m):
-            self.predictedL[i,0] = predset[i]
+        self.predictedL = observations[half:half+m*d:d,2:3]
         # Define the variance associated to the last point (varies with the area)
         if self.finalAreaAxis==0:
             s              = self.finalAreaSize[0]
@@ -102,17 +99,16 @@ class path_regression:
         # Update observations of each process
         self.regression_x.update_observations(observations[:half,0:1],observations[:half,2:3],self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
         self.regression_y.update_observations(observations[:half,1:2],observations[:half,2:3],self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
-
+        # Apply path prediction
         predicted_path, _ = self.predict_path_to_finish_point()
-        # Prepare the ground truths
-        trueX           = observations[half:half+m*d:d,0:1]
-        trueY           = observations[half:half+m*d:d,1:2]
+        # Prepare the ground truth
+        true_path         = observations[half:half+m*d:d,0:2]
         # Return to original values
         self.update_observations(observations)
         # Compute Average Displacement Error between prediction and true values
-        D = 150.
-        error = ADE([trueX,trueY],predicted_path)
-        return (math.exp(-1.*( error**2)/D**2 ))
+        D     = 150.
+        error = ADE(true_path,predicted_path)
+        return (np.exp(-1.*( error**2)/D**2 ))
 
     # Compute the likelihood
     def compute_likelihood(self,observations,stepsToCompare):

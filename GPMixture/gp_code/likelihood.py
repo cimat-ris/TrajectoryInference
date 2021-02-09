@@ -23,20 +23,17 @@ def mean_abs_error(trueX, trueY, predX, predY):
     my = mean_absolute_error(trueY[trueLen -predLen:-1], predY)
     return [mx, my]
 
-#average_displacement_error
 # Average L2 distance between ground truth and our prediction
 def ADE(true_xy, prediction_xy):
-    minLen = min( len(true_xy[0]),len(prediction_xy[0]) )
-
-    true_x = np.array(true_xy[0][:minLen])
-    true_y = np.array(true_xy[1][:minLen])
-    pred_x = np.array(prediction_xy[0][:minLen])
-    pred_y = np.array(prediction_xy[1][:minLen])
-
-    r = np.sqrt( (true_x - pred_x)**2 + (true_y - pred_y)**2 )
+    minLen = min(true_xy.shape[0],prediction_xy.shape[0])
+    true_x = np.array(true_xy[:minLen,0])
+    true_y = np.array(true_xy[:minLen,1])
+    pred_x = np.array(prediction_xy[:minLen,0])
+    pred_y = np.array(prediction_xy[:minLen,1])
+    r      = np.sqrt( (true_x - pred_x)**2 + (true_y - pred_y)**2 )
     return np.mean(r)
 
-#The distance between the predicted final destination and the true final destination
+# The distance between the predicted final destination and the true final destination
 def final_displacement_error(final, predicted_final):
     error = math.sqrt((final[0]-predicted_final[0])**2 + (final[1]-predicted_final[1])**2)
     return error
