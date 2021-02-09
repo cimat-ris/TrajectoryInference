@@ -103,7 +103,7 @@ class path_regression:
         self.regression_x.update_observations(observations[:half,0:1],observations[:half,2:3],self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
         self.regression_y.update_observations(observations[:half,1:2],observations[:half,2:3],self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
 
-        predX, predY, _, _, _ = self.predict_path_to_finish_point()
+        predicted_path, _ = self.predict_path_to_finish_point()
         # Prepare the ground truths
         trueX           = observations[half:half+m*d:d,0:1]
         trueY           = observations[half:half+m*d:d,1:2]
@@ -111,7 +111,7 @@ class path_regression:
         self.update_observations(observations)
         # Compute Average Displacement Error between prediction and true values
         D = 150.
-        error = ADE([trueX,trueY],[predX.reshape(m),predY.reshape(m)])
+        error = ADE([trueX,trueY],predicted_path)
         return (math.exp(-1.*( error**2)/D**2 ))
 
     # Compute the likelihood
@@ -124,7 +124,7 @@ class path_regression:
     def predict_path_to_finish_point(self,compute_sqRoot=False):
         predx, varx = self.regression_x.predict_to_finish_point(compute_sqRoot=compute_sqRoot)
         predy, vary = self.regression_y.predict_to_finish_point(compute_sqRoot=compute_sqRoot)
-        return predx, predy, self.predictedL, varx, vary
+        return np.concatenate([predx, predy, self.predictedL],axis=1),np.stack([varx,vary],axis=0)
 
     # Generate a sample from perturbations
     def sample_path_with_perturbation(self,deltaX,deltaY):

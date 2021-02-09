@@ -26,12 +26,17 @@ class singleGP:
         # Compute the model likelihood
         return self.gpPathRegressor.compute_likelihood(observations,self.nPoints)
 
-    # Performs prediction
+    # Performs path prediction
     def predict_path(self,compute_sqRoot=False):
         # Uses the already computed matrices to apply regression over missing data
-        predictedX, predictedY, predictedL, varX, varY = self.gpPathRegressor.predict_path_to_finish_point(compute_sqRoot=compute_sqRoot)
-        self.predictedMeans = np.column_stack((predictedX, predictedY, predictedL))
-        self.predictedVars  = np.stack([varX, varY],axis=0)
+        self.predictedMeans, self.predictedVars = self.gpPathRegressor.predict_path_to_finish_point(compute_sqRoot=compute_sqRoot)
+        return self.predictedMeans,self.predictedVars
+
+    # Performs trajectory prediction
+    def predict_trajectory(self,compute_sqRoot=False):
+        # TODO: add the time
+        # Uses the already computed matrices to apply regression over missing data
+        self.predictedMeans, self.predictedVars = self.gpPathRegressor.predict_trajectory_to_finish_point(compute_sqRoot=compute_sqRoot)
         return self.predictedMeans,self.predictedVars
 
     # Get a filtered version of the initial observations

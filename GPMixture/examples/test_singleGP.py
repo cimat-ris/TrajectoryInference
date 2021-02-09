@@ -64,7 +64,7 @@ for i in range(1,part_num-1):
     print("[INF] CPU process time (update): %.1f [ms]" % (1000.0*(stop-start)))
     start = stop
     # Perform prediction
-    predictedXY,varXY = gp.predict_path()
+    predictedXY,varXY = gp.predict_trajectory()
     stop       = time.process_time()
     print("[INF] CPU process time (prediction): %.1f [ms]" % (1000.0*(stop-start)))
     print('[INF] Plotting')

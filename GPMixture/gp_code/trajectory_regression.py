@@ -13,8 +13,9 @@ class trajectory_regression(path_regression):
         # Init of the base class
         super(trajectory_regression, self).__init__(kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis, prior)
 
-    def prediction_trajectory_to_finish_point(self,compute_sqRoot=False):
-        pass
+    def predict_trajectory_to_finish_point(self,compute_sqRoot=False):
+        path = self.predict_path_to_finish_point(compute_sqRoot)
+        return path
 
     # Generate a sample from perturbations
     def sample_trajectory_with_perturbation(self,deltaX,deltaY):
