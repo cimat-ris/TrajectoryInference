@@ -38,8 +38,8 @@ pathSize = len(pathX)
 gp = singleGP(gi,gj,goalsData,'Trautman')
 
 # Divides the trajectory in part_num parts and infer the posterior over the remaining part
-part_num = 10
-for i in range(0):#1,part_num-1):
+part_num = 3
+for i in range(1,part_num-1):
     p = plotter(imgGCS)
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
@@ -47,9 +47,12 @@ for i in range(0):#1,part_num-1):
     trueX,trueY,trueL = observed_data(pathX,pathY,pathT,knownN)
     """Single goal prediction test"""
     # Update the GP with (real) observations
+    print('---Concatenate data---')
+    obsData = np.concatenate([trueX,trueY,trueL],axis=1)
     start               = time.process_time()
     likelihood          = gp.update(np.concatenate([trueX,trueY,trueL],axis=1))
     stop                = time.process_time()
+    """
     filteredX,filteredY = gp.filter()
     print("[INF] CPU process time (update): %.1f [ms]" % (1000.0*(stop-start)))
     start = stop
@@ -64,3 +67,4 @@ for i in range(0):#1,part_num-1):
     # Plot the prediction
     p.plot_prediction(pathX,pathY,knownN,predictedXY,varXY)
     p.show()
+    """

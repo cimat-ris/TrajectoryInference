@@ -14,7 +14,7 @@ from scipy.optimize import bisect
 
 class path_regression:
     # Constructor
-    def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis, prior, mode = None):
+    def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis, prior, mode=None, timeTransitionData=None):
         self.regression_x    = onedim_regressionT(kernelX) if mode == 'Trautman' else path1D_regression(kernelX)
         self.regression_y    = onedim_regressionT(kernelY) if mode == 'Trautman' else path1D_regression(kernelY)
         self.predictedL      = None
@@ -24,14 +24,24 @@ class path_regression:
         self.finalAreaAxis   = finalAreaAxis
         self.finalAreaCenter, self.finalAreaSize = goal_center_and_size(finalArea)
         self.prior           = prior
-        self.timeTransition  = unit if mode == 'Trautman' else None
+        
+        self.mode            = mode
+        if mode == 'Trautman':
+            self.timeTransitionMean = timeTransitionData[0]
+            self.timeTransitionStd  = timeTransitionData[1]
 
     # Update observations x,y,l for the Gaussian process (matrix K)
     def update_observations(self,observations):
         # Last really observed point
         lastObs = observations[-1]
-        # Determine the set of arclengths (predictedL) to predict
-        self.predictedL, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
+        if self.mode == 'Trautman':
+            elapsedTime = observations[:,2:3][-1][0] - observations[:,2:3][0][0]
+            timeStep    = observations[:,2:3][1][0] - observations[:,2:3][0][0] 
+            self.predictedL, finalL, self.dist = self.prediction_set_time(lastObs, elapsedTime, timeStep)
+        else:
+            # Determine the set of arclengths (predictedL) to predict
+            self.predictedL, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
+        
         # Define the variance associated to the last point (varies with the area)
         if self.finalAreaAxis==0:
             s              = self.finalAreaSize[0]
@@ -57,15 +67,22 @@ class path_regression:
         return predset, l + distToGoal, distToGoal
 
     # Prediction set for Trautman's approach
-    def prediction_set_time(lastObs, elapsedTime, timeTransitionData, timeStep):
+    def prediction_set_time(lastObs, elapsedTime, timeStep):
         # Time of the last observed point
         t = lastObs[2]
+        print('---Last observed time: ',t)
         # TODO: I think we should first do here a fully deterministic model (conditioned on the mean transition time)
         # Sample a duration
-        transitionTime = int(np.random.normal(timeTransitionData[0], timeTransitionData[1]) )
+        transitionTime = int(np.random.normal(self.timeTransitionMean, self.timeTransitionStd) )
+        print('---trandition time: ',transitionTime)
+        
         # Remaining time
         remainingTime = transitionTime - elapsedTime
+        print('---Remaining time: ',remainingTime)
+        
         size = int(remainingTime/timeStep)
+        print('---Pred set size: ',size)
+        
         predset = np.zeros((size,1))
         if size > 0:
             for i in range(1,size+1):
@@ -73,6 +90,7 @@ class path_regression:
             if predset[-1,0] < t + remainingTime:
                 predset[-1,0] = t + remainingTime
 
+        print('---Prediction set: ',predset)
         return predset, t + remainingTime, remainingTime
 
     # Filter initial observations
