@@ -6,6 +6,7 @@ import math
 from gp_code.regression import *
 from gp_code.sampling import *
 from gp_code.path1D_regression import path1D_regression
+from gp_code.onedim_regressionT import onedim_regressionT
 from utils.manip_trajectories import goal_center_and_size
 from utils.stats_trajectories import euclidean_distance
 from gp_code.likelihood import ADE
@@ -13,9 +14,9 @@ from scipy.optimize import bisect
 
 class path_regression:
     # Constructor
-    def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis, prior):
-        self.regression_x    = path1D_regression(kernelX)
-        self.regression_y    = path1D_regression(kernelY)
+    def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis, prior, mode = None):
+        self.regression_x    = onedim_regressionT(kernelX) if mode == 'Trautman' else path1D_regression(kernelX)
+        self.regression_y    = onedim_regressionT(kernelY) if mode == 'Trautman' else path1D_regression(kernelY)
         self.predictedL      = None
         self.distUnit        = unit
         self.stepUnit        = stepUnit
@@ -23,6 +24,7 @@ class path_regression:
         self.finalAreaAxis   = finalAreaAxis
         self.finalAreaCenter, self.finalAreaSize = goal_center_and_size(finalArea)
         self.prior           = prior
+        self.timeTransition  = unit if mode == 'Trautman' else None
 
     # Update observations x,y,l for the Gaussian process (matrix K)
     def update_observations(self,observations):

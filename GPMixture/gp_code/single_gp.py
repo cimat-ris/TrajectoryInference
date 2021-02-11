@@ -9,7 +9,7 @@ from gp_code.trajectory_regression import *
 class singleGP:
 
     # Constructor
-    def __init__(self, startG, endG, goalsData):
+    def __init__(self, startG, endG, goalsData, mode = None):
         self.goalsData       = goalsData
         self.nPoints         = 5
         self.startG          = startG
@@ -17,7 +17,10 @@ class singleGP:
         self.predictedMeans  = None
         self.predictedVars   = None
         # The basic element here is this object, that will do the regression work
-        self.gpPathRegressor = trajectory_regression(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],self.goalsData.units[self.startG][self.endG],self.goalsData.stepUnit,self.goalsData.areas_coordinates[self.endG],self.goalsData.areas_axis[self.endG],self.goalsData.speedModels[self.startG][self.endG],self.goalsData.priorTransitions[self.startG][self.endG])
+        if mode == 'Trautman': #!Using path_regression for now
+            self.gpPathRegressor = path_regression(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],self.goalsData.timeTransitionMeans[self.startG][self.endG],None,self.goalsData.areas_coordinates[self.endG],self.goalsData.areas_axis[self.endG],None,'Trautman')
+        else: 
+            self.gpPathRegressor = trajectory_regression(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],self.goalsData.units[self.startG][self.endG],self.goalsData.stepUnit,self.goalsData.areas_coordinates[self.endG],self.goalsData.areas_axis[self.endG],self.goalsData.speedModels[self.startG][self.endG],self.goalsData.priorTransitions[self.startG][self.endG])
 
     # Update observations and compute likelihood based on observations
     def update(self,observations):

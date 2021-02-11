@@ -157,7 +157,7 @@ class maternKernel(Kernel):
 
 class combinedTrautmanKernel(Kernel):
     # Constructor
-    def __init__(self, gamma, sigmaSq, length, sigmaNoise):
+    def __init__(self, gamma, sigmaSq, length):
         self.gamma = gamma
         # Covariance magnitude factor
         self.sigmaSq= sigmaSq
