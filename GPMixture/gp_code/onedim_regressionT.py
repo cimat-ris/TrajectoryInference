@@ -5,6 +5,10 @@ import numpy as np
 import math
 from gp_code.sampling import *
 from utils.linalg import positive_definite
+from gp_code.regression import *
+from gp_code.likelihood import nearestPD
+from gp_code.sampling import *
+from utils.manip_trajectories import goal_center_and_size
 
 class onedim_regressionT:
     # Constructor
@@ -21,12 +25,12 @@ class onedim_regressionT:
         self.C               = None
         self.sqRootVar       = np.empty((0, 0))
         # Regularization factor
-        self.epsilon         = 0.5
+        self.epsilon         = 1.0#0.5
         self.kernel          = kernel
         self.sigmaNoise      = sigmaNoise
         
     # Update observations for the Gaussian process (matrix K)
-    def updateObservations(self,observedY,observedX,finalY,finalX,finalVar,predictedX):
+    def update_observations(self,observedY,observedX,finalY,finalX,finalVar,predictedX):
         # Number of "real" observations (we add one: the final point) --> check!
         n                    = len(observedY)
         # Observations (x,y)
@@ -37,7 +41,7 @@ class onedim_regressionT:
         # Covariance matrix
         self.K               = np.zeros((n+1,n+1))
         # Set the observations
-        self.observedX[:-1,0], self.observedY[:-1,0] = observedX, observedY
+        self.observedX[:-1], self.observedY[:-1] = observedX, observedY
         self.observedX[-1,0] = finalX
         self.observedY[-1,0] = finalY
         
@@ -59,11 +63,13 @@ class onedim_regressionT:
         self.deltaK = self.kernel.dkdy(self.observedX[n],self.observedX)
 
     # The main regression function: perform regression for a vector of values
-    def prediction_to_finish_point(self,compute_sqRoot=False):
+    def predict_to_finish_point(self,compute_sqRoot=False):
         # No prediction to do
         if self.predictedX.shape[0]==0:
             return None, None, None
         # Fill in k
+        #print('--- obsx:',self.observedX[:,0])
+        #print('--- predx:',self.predictedX[:,0])
         self.k = self.kernel(self.observedX[:,0],self.predictedX[:,0])
         # Fill in C
         # Note here that we **do not add the noise term** here (we want to recover the unperturbed data)

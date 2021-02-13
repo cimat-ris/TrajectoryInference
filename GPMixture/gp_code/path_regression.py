@@ -37,7 +37,7 @@ class path_regression:
         if self.mode == 'Trautman':
             elapsedTime = observations[:,2:3][-1][0] - observations[:,2:3][0][0]
             timeStep    = observations[:,2:3][1][0] - observations[:,2:3][0][0] 
-            self.predictedL, finalL, self.dist = self.prediction_set_time(lastObs, elapsedTime, timeStep)
+            self.predictedL, finalL, self.dist = self.prediction_set_time(lastObs, self.finalAreaCenter, elapsedTime, timeStep)
         else:
             # Determine the set of arclengths (predictedL) to predict
             self.predictedL, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
@@ -67,22 +67,16 @@ class path_regression:
         return predset, l + distToGoal, distToGoal
 
     # Prediction set for Trautman's approach
-    def prediction_set_time(lastObs, elapsedTime, timeStep):
+    def prediction_set_time(self, lastObs, finishPoint, elapsedTime, timeStep):
         # Time of the last observed point
-        t = lastObs[2]
-        print('---Last observed time: ',t)
+        x, y, t = lastObs[0], lastObs[1], lastObs[2]
+        distToGoal = euclidean_distance([x,y], finishPoint)
         # TODO: I think we should first do here a fully deterministic model (conditioned on the mean transition time)
         # Sample a duration
         transitionTime = int(np.random.normal(self.timeTransitionMean, self.timeTransitionStd) )
-        print('---trandition time: ',transitionTime)
-        
         # Remaining time
         remainingTime = transitionTime - elapsedTime
-        print('---Remaining time: ',remainingTime)
-        
         size = int(remainingTime/timeStep)
-        print('---Pred set size: ',size)
-        
         predset = np.zeros((size,1))
         if size > 0:
             for i in range(1,size+1):
@@ -90,8 +84,7 @@ class path_regression:
             if predset[-1,0] < t + remainingTime:
                 predset[-1,0] = t + remainingTime
 
-        print('---Prediction set: ',predset)
-        return predset, t + remainingTime, remainingTime
+        return predset, t + remainingTime, distToGoal
 
     # Filter initial observations
     def filter_observations(self):
@@ -105,7 +98,12 @@ class path_regression:
         n       = observations.shape[0]
         half    = max(1,int(n/2))
         lastObs = observations[half]
-        _, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
+        if self.mode == 'Trautman':
+            elapsedTime = observations[:,2:3][half][0] - observations[:,2:3][0][0]
+            timeStep    = observations[:,2:3][1][0] - observations[:,2:3][0][0] 
+            self.predictedL, finalL, self.dist = self.prediction_set_time(lastObs, self.finalAreaCenter, elapsedTime, timeStep)
+        else:
+            _, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
         # Set of l to predict
         d = int(half/m)
         if d<1:
@@ -132,7 +130,10 @@ class path_regression:
 
     # Compute the likelihood
     def compute_likelihood(self,observations,stepsToCompare):
-        self.likelihood = self.prior*self.likelihood_from_partial_path(observations,stepsToCompare)
+        if self.mode == 'Trautman':
+            self.likelihood = self.likelihood_from_partial_path(observations,stepsToCompare)   
+        else:
+            self.likelihood = self.prior*self.likelihood_from_partial_path(observations,stepsToCompare)
         return self.likelihood
 
     # The main path regression function: perform regression for a

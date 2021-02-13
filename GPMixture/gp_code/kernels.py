@@ -113,7 +113,7 @@ class linearKernelTrautman(Kernel):
 
     # Overload the operator ()
     def __call__(self,x,y):
-        return x*y+(1./(self.gamma**2))
+        return (np.reshape(x,(x.shape[0],1))).dot((np.reshape(y,(y.shape[0],1))).transpose()) +(1./(self.gamma**2))
 
     # Derivative with respect to y
     def dkdy(self,x,y):

@@ -15,12 +15,12 @@ traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,t
 
 #I'm skipping the training for now
 
-goalsData.kernelsX = create_kernel_matrix('combinedTrautman', goalsData.nGoals, goalsData.nGoals)
-goalsData.kernelsY = create_kernel_matrix('combinedTrautman', goalsData.nGoals, goalsData.nGoals)
+goalsData.kernelsX, _ = create_kernel_matrix('combinedTrautman', goalsData.nGoals, goalsData.nGoals)
+goalsData.kernelsY, _ = create_kernel_matrix('combinedTrautman', goalsData.nGoals, goalsData.nGoals)
 
-print('[INF] Kernel parameters')
-print(goalsData.kernelsX)
-print(goalsData.kernelsY)
+#print('[INF] Kernel parameters')
+#print(goalsData.kernelsX)
+#print(goalsData.kernelsY)
 
 """**********          Testing          ***********"""
 gi, gj, pathId = 0, 6, 5
@@ -44,14 +44,29 @@ for i in range(1,part_num-1):
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
     knownN = int((i+1)*(pathSize/part_num))
-    trueX,trueY,trueL = observed_data(pathX,pathY,pathT,knownN)
+    trueX,trueY,trueT = observed_data(pathX,pathY,pathT,knownN)
     """Single goal prediction test"""
     # Update the GP with (real) observations
     print('---Concatenate data---')
-    obsData = np.concatenate([trueX,trueY,trueL],axis=1)
+    obsData = np.concatenate([trueX,trueY,trueT],axis=1)
+    print('---observed Time---')
+    print(trueT)
     start               = time.process_time()
-    likelihood          = gp.update(np.concatenate([trueX,trueY,trueL],axis=1))
+    print('---update observations---')
+    likelihood          = gp.update(obsData)
     stop                = time.process_time()
+    # Perform prediction
+    print('--- prediction---')
+    predictedXY,varXY = gp.predict_path()
+    print('[INF] Plotting')
+    print("[RES] [Likelihood]: ",likelihood)
+    # Plot the filtered version of the observations
+    #p.plot_filtered(filteredX,filteredY)
+    # Plot the prediction
+    p.plot_prediction(pathX,pathY,knownN,predictedXY,varXY)
+    p.show()
+    
+    
     """
     filteredX,filteredY = gp.filter()
     print("[INF] CPU process time (update): %.1f [ms]" % (1000.0*(stop-start)))
