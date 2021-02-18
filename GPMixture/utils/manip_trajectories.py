@@ -250,16 +250,21 @@ def arclen_to_time(initTime,l,speed):
 """-------- Get Observed Data -------------"""
 #new: get_known_set
 # Function to get the ground truth data: knownN data
-def observed_data(x,y,z, n):
+def observed_data_(x,y,z, n):
     obsX, obsY, obsZ = x[0:n], y[0:n], z[0:n]
     return np.reshape(obsX,(-1,1)), np.reshape(obsY,(-1,1)), np.reshape(obsZ,(-1,1))
 
-def observed_data_given_time(x,y,t,time):
+def observed_data(traj, n):
+    x, y, l = traj
+    obsX, obsY, obsL = np.reshape(x[0:n],(-1,1)), np.reshape(y[0:n],(-1,1)), np.reshape(l[0:n],(-1,1))
+    return np.concatenate([obsX, obsY, obsL],axis=1)
+
+def observed_data_given_time(traj, time):
+    _, _, t = traj
     i = 0
     while(t[i] <= time):
         i =+ 1
-    obsX, obsY, obsT = x[0:i], y[0:i], t[0:i]
-    return obsX, obsY, obsT
+    return observed_data(traj, i)
 
 """---------- Goal related functions ----------"""
 

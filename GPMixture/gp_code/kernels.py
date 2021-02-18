@@ -4,22 +4,12 @@ import numpy as np
 
 # Returns two rowsxcolumns matrices:
 # - the matrix of kernels with the default parameters
-# - the matrix of kernel parameters (with default values)
 def create_kernel_matrix(kerType, rows, columns):
-    kerMatrix = []
-    parameters = []
-    # Assigns a kernel to each pair (gi,gj)
+    matrix = np.empty((rows,columns),dtype=object)
     for i in range(rows):
-        aux  = []
-        auxP = []
         for j in range(columns):
-            kernel = set_kernel(kerType)
-            theta  = kernel.get_parameters()
-            aux.append(kernel)
-            auxP.append(theta)
-        kerMatrix.append(aux)
-        parameters.append(auxP)
-    return kerMatrix, parameters
+            matrix[i][j] = set_kernel(kerType)
+    return matrix
 
 # Set kernel: a function that creates a kernel with default parameters, given its type
 def set_kernel(type_):
@@ -191,7 +181,7 @@ class combinedTrautmanKernel(Kernel):
 
     # Method to print parameters
     def print_parameters(self):
-        print("combined kernel parameters\n gamma =",self.gamma,"\n s =",self.s,", l = ",self.length)
+        print("combined kernel parameters\n gamma =",self.gamma,"\n s =",self.sigmaSq,", l = ",self.length)
 
 
 

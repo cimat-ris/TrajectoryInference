@@ -34,9 +34,6 @@ if randomPath:
 else:
     gi, gj, pathId = 0, 6, 5
 
-# Kernels for this pair of goals
-kernelX = goalsData.kernelsX[gi][gj]
-kernelY = goalsData.kernelsY[gi][gj]
 # Get the ground truth path
 path = trajMat[gi][gj][pathId]
 pathX, pathY, pathT = path
@@ -54,11 +51,11 @@ for i in range(1,part_num-1):
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
     knownN = int((i+1)*(pathSize/part_num))
-    trueX,trueY,trueL = observed_data(pathX,pathY,pathL,knownN)
+    observations = observed_data([pathX,pathY,pathL],knownN)
     """Single goal prediction test"""
     # Update the GP with (real) observations
     start               = time.process_time()
-    likelihood          = gp.update(np.concatenate([trueX,trueY,trueL],axis=1))
+    likelihood          = gp.update(observations)
     stop                = time.process_time()
     filteredX,filteredY = gp.filter()
     print("[INF] CPU process time (update): %.1f [ms]" % (1000.0*(stop-start)))
@@ -82,18 +79,18 @@ for i in range(1,part_num-1):
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
     knownN            = int((i+1)*(pathSize/part_num))
-    trueX,trueY,trueL = observed_data(pathX,pathY,pathL,knownN)
+    observations = observed_data([pathX,pathY,pathL],knownN)
     """Single goal prediction test"""
     # Update the GP with (real) observations
     start      = time.process_time()
-    likelihood = gp.update(np.concatenate([trueX,trueY,trueL],axis=1))
+    likelihood = gp.update(observations)
     stop       = time.process_time()
     print("[INF] CPU process time (update): %.1f [ms]" % (1000.0*(stop-start)))
     start = stop
     # Generate samples
     predictedXY,varXY = gp.predict_path(compute_sqRoot=True)
     vecX,vecY         = gp.sample_paths(10)
-    p.plot_path_samples_with_observations(trueX.reshape((-1,1)),trueY.reshape((-1,1)),vecX,vecY)
+    p.plot_path_samples_with_observations(observations[:,0].reshape((-1,1)),observations[:,1].reshape((-1,1)),vecX,vecY)
     stop       = time.process_time()
     print("[INF] CPU process time (sampling): %.1f [ms]" % (1000.0*(stop-start)))
     print('[INF] Plotting')

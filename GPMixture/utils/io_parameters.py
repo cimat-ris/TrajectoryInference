@@ -37,7 +37,7 @@ def read_and_set_parameters(file_name, nParameters):
     columns   = int(header[1])
     kernelType= header[2]
     print("[INF] Opening ",file_name," to read parameters of ",rows,"x",columns," kernels of type: ",kernelType)
-    matrix, parametersMat = create_kernel_matrix(kernelType, rows, columns)
+    matrix = create_kernel_matrix(kernelType, rows, columns)
     # Read the parameters for the matrix entries
     for line in file:
         parameters = []
