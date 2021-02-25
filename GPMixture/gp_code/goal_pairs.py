@@ -89,7 +89,7 @@ class goal_pairs:
                     u = self.meanLengths[i][j]/self.euclideanDistances[i][j]
                 self.units[i][j] = u
                 distance.append(u)
-
+    
     # Fills in the probability transition matrix gi -> gj
     def compute_prior_transitions(self,pathMat):
         for i in range(self.nGoals):
@@ -100,7 +100,12 @@ class goal_pairs:
                 if count == 0:
                     self.priorTransitions[i][j] = 0.
                 else:
-                    self.priorTransitions[i][j] = float(len(pathMat[i][j])/count)
+                    val = float(len(pathMat[i][j])/count)
+                    #TODO: trucate value
+                    #self.priorTransitions[i][j] = truncate(val,8)
+            s = np.sum(self.priorTransitions[i])
+            if s != 1.0:
+                self.priorTransitions[i][i] += float(1) - s
 
     # For each pair, optimize speed model
     def optimize_speed_models(self,trainingSet):
