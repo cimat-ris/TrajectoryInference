@@ -5,6 +5,7 @@ from utils.manip_trajectories import get_linear_prior_mean
 from utils.manip_trajectories import get_data_from_set
 from utils.manip_trajectories import goal_center_and_size
 from utils.stats_trajectories import euclidean_distance, avg_speed, median_speed
+from utils.stats_trajectories import truncate
 from sklearn.linear_model import LinearRegression, HuberRegressor
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import PolynomialFeatures
@@ -102,10 +103,13 @@ class goal_pairs:
                 else:
                     val = float(len(pathMat[i][j])/count)
                     #TODO: trucate value
-                    #self.priorTransitions[i][j] = truncate(val,8)
+                    self.priorTransitions[i][j] = truncate(val,8)
             s = np.sum(self.priorTransitions[i])
-            if s != 1.0:
-                self.priorTransitions[i][i] += float(1) - s
+            if s > 0.0 and s < 1.0:
+                d = truncate(1.0 - s,8)
+                print('--- sum:',s)
+                print('---- diff:',float(d))
+                self.priorTransitions[i][i] += float(d)
 
     # For each pair, optimize speed model
     def optimize_speed_models(self,trainingSet):

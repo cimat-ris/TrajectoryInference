@@ -4,6 +4,7 @@ Test GP misture | Trautman
 import random
 from test_common import *
 from gp_code.single_gp import singleGP
+from utils.stats_trajectories import truncate
 from gp_code.kernels import *
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
@@ -20,6 +21,8 @@ for i in range(goalsData.nGoals):
     s = np.sum(goalsData.priorTransitions[i])
     if s != 1.0:
         print('--- goal ',i,' ---')
-        print(goalsData.priorTransitions[i])
         print('sum = ', s)
+        #for val in goalsData.priorTransitions[i]: 
+        #    print('original value:', val)#, '--- truncate:', truncate(val,16))
+        
     
