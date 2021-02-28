@@ -71,3 +71,13 @@ def steps_unit(trajectories):
         unit.append(nSteps/arclen)
 
     return np.mean(unit)
+
+# Truncates a float f to n decimals
+def truncate(f, n):
+    s = '{}'.format(f)
+    if 'e' in s or 'E' in s:
+        return '{0:.{1}f}'.format(f, n)
+    i, p, d = s.partition('.')
+    
+    return '.'.join([i, (d+'0'*n)[:n]])
+    
