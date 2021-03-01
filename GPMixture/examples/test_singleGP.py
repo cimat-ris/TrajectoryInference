@@ -11,7 +11,6 @@ trajFile         = 'datasets/GC/Annotation/'
 imgGCS           = 'imgs/train_station.jpg'
 
 traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
-
 # Selection of the kernel type
 kernelType = "linePriorCombined"
 nParameters = 4
@@ -35,7 +34,7 @@ else:
     gi, gj, pathId = 0, 6, 5
 
 # Get the ground truth path
-path = trajMat[gi][gj][pathId]
+path  = trajMat[gi][gj][pathId]
 pathX, pathY, pathT = path
 pathL = trajectory_arclength(path)
 # Total path length
@@ -51,7 +50,7 @@ for i in range(1,part_num-1):
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
     knownN = int((i+1)*(pathSize/part_num))
-    observations = observed_data([pathX,pathY,pathL],knownN)
+    observations = observed_data([pathX,pathY,pathL,pathT],knownN)
     """Single goal prediction test"""
     # Update the GP with (real) observations
     start               = time.process_time()
@@ -65,7 +64,7 @@ for i in range(1,part_num-1):
     stop       = time.process_time()
     print("[INF] CPU process time (prediction): %.1f [ms]" % (1000.0*(stop-start)))
     print('[INF] Plotting')
-    print("[RES] [Likelihood]: ",likelihood)
+    print("[RES] Likelihood: ",likelihood)
     # Plot the filtered version of the observations
     p.plot_filtered(filteredX,filteredY)
     # Plot the prediction
@@ -79,7 +78,7 @@ for i in range(1,part_num-1):
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
     knownN            = int((i+1)*(pathSize/part_num))
-    observations = observed_data([pathX,pathY,pathL],knownN)
+    observations = observed_data([pathX,pathY,pathL,pathT],knownN)
     """Single goal prediction test"""
     # Update the GP with (real) observations
     start      = time.process_time()

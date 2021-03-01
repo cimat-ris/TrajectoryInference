@@ -4,8 +4,6 @@ import numpy as np
 import math
 
 """ Alternative functions, without the class trajectory """
-#trajectory = [x,y,t]
-
 # Returns a matrix of trajectories:
 # the entry (i,j) has the paths that go from the goal i to the goal j
 def separate_trajectories_between_goals(trajectories, goals):
@@ -89,7 +87,7 @@ def get_trajectories_given_time_interval(trajectories, startT, finishT):
     nTr = len(trajectories)
 
     if(nTr == 0):
-        print("Empty set")
+        print("[ERR] Empty set")
         return []
 
     trSet = []
@@ -248,16 +246,20 @@ def arclen_to_time(initTime,l,speed):
     return np.array(t)
 
 """-------- Get Observed Data -------------"""
-#new: get_known_set
 # Function to get the ground truth data: knownN data
-def observed_data_(x,y,z, n):
-    obsX, obsY, obsZ = x[0:n], y[0:n], z[0:n]
-    return np.reshape(obsX,(-1,1)), np.reshape(obsY,(-1,1)), np.reshape(obsZ,(-1,1))
-
 def observed_data(traj, n):
-    x, y, l = traj
-    obsX, obsY, obsL = np.reshape(x[0:n],(-1,1)), np.reshape(y[0:n],(-1,1)), np.reshape(l[0:n],(-1,1))
-    return np.concatenate([obsX, obsY, obsL],axis=1)
+    # TODO: 
+    if (len(traj)==4):
+        x, y, l, t = traj
+        obsX, obsY, obsL, obsT = np.reshape(x[0:n],(-1,1)), np.reshape(y[0:n],(-1,1)), np.reshape(l[0:n],(-1,1)),np.reshape(t[0:n],(-1,1))
+        obsS = np.divide(np.sqrt(np.square(obsX[1:]-obsX[:-1])+np.square(obsY[1:]-obsY[:-1])),obsT[1:]-obsT[:-1])
+        return np.concatenate([obsX, obsY, obsL, obsT],axis=1)
+    else:
+        if (len(traj)==3):
+            x, y, t = traj
+            obsX, obsY, obsT = np.reshape(x[0:n],(-1,1)), np.reshape(y[0:n],(-1,1)), np.reshape(t[0:n],(-1,1))
+        return np.concatenate([obsX, obsY, obsT],axis=1)
+
 
 def observed_data_given_time(traj, time):
     _, _, t = traj

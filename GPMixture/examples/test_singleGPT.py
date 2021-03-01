@@ -7,9 +7,9 @@ from gp_code.single_gp import singleGP
 from gp_code.kernels import *
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-goalsDescriptions= '../parameters/CentralStation_GoalsDescriptions.csv'
-trajFile         = '../datasets/GC/Annotation/'
-imgGCS           = '../imgs/train_station.jpg'
+goalsDescriptions= 'parameters/CentralStation_GoalsDescriptions.csv'
+trajFile         = 'datasets/GC/Annotation/'
+imgGCS           = 'imgs/train_station.jpg'
 
 traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
 
@@ -59,4 +59,3 @@ for i in range(1,part_num-1):
     # Plot the prediction
     p.plot_prediction(pathX,pathY,knownN,predictedXY,varXY)
     p.show()
-    

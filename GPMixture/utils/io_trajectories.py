@@ -44,7 +44,7 @@ def get_complete_traj_from_file(dataset_id,dataset_traj,goals,coordinate_system=
     return trajectories
 
 # Main function for reading the data from a dataset
-def read_and_filter(dataset_id, areas_file, trajectories_file, use_pickled_data=False, pickle_dir='../pickle'):
+def read_and_filter(dataset_id, areas_file, trajectories_file, use_pickled_data=False, pickle_dir='pickle'):
     # Read the areas data from the specified file
     data     = pd.read_csv(areas_file)
     areas    = data.values[:,2:]

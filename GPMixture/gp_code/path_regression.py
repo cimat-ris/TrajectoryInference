@@ -24,7 +24,7 @@ class path_regression:
         self.finalAreaAxis   = finalAreaAxis
         self.finalAreaCenter, self.finalAreaSize = goal_center_and_size(finalArea)
         self.prior           = prior
-        
+
         self.mode            = mode
         if mode == 'Trautman':
             self.timeTransitionMean = timeTransitionData[0]
@@ -36,12 +36,12 @@ class path_regression:
         lastObs = observations[-1]
         if self.mode == 'Trautman':
             elapsedTime = observations[:,2:3][-1][0] - observations[:,2:3][0][0]
-            timeStep    = observations[:,2:3][1][0] - observations[:,2:3][0][0] 
+            timeStep    = observations[:,2:3][1][0] - observations[:,2:3][0][0]
             self.predictedL, finalL, self.dist = self.prediction_set_time(lastObs, self.finalAreaCenter, elapsedTime, timeStep)
         else:
             # Determine the set of arclengths (predictedL) to predict
             self.predictedL, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
-        
+
         # Define the variance associated to the last point (varies with the area)
         if self.finalAreaAxis==0:
             s              = self.finalAreaSize[0]
@@ -100,7 +100,7 @@ class path_regression:
         lastObs = observations[half]
         if self.mode == 'Trautman':
             elapsedTime = observations[:,2:3][half][0] - observations[:,2:3][0][0]
-            timeStep    = observations[:,2:3][1][0] - observations[:,2:3][0][0] 
+            timeStep    = observations[:,2:3][1][0] - observations[:,2:3][0][0]
             self.predictedL, finalL, self.dist = self.prediction_set_time(lastObs, self.finalAreaCenter, elapsedTime, timeStep)
         else:
             _, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
@@ -131,7 +131,7 @@ class path_regression:
     # Compute the likelihood
     def compute_likelihood(self,observations,stepsToCompare):
         if self.mode == 'Trautman':
-            self.likelihood = self.likelihood_from_partial_path(observations,stepsToCompare)   
+            self.likelihood = self.likelihood_from_partial_path(observations,stepsToCompare)
         else:
             self.likelihood = self.prior*self.likelihood_from_partial_path(observations,stepsToCompare)
         return self.likelihood
