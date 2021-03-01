@@ -107,8 +107,6 @@ class goal_pairs:
             s = np.sum(self.priorTransitions[i])
             if s > 0.0 and s < 1.0:
                 d = truncate(1.0 - s,8)
-                print('--- sum:',s)
-                print('---- diff:',float(d))
                 self.priorTransitions[i][i] += float(d)
 
     # For each pair, optimize speed model

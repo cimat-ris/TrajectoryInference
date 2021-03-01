@@ -50,19 +50,19 @@ class mixtureOfGPs:
             self.gpPathRegressor[i] = trajectory_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],self.goalsData.units[self.startG][i],self.stepUnit,self.goalsData.areas_coordinates[i],self.goalsData.areas_axis[i],self.goalsData.speedModels[self.startG][i],self.goalsData.priorTransitions[self.startG][i])
 
     # Update observations and compute likelihoods based on observations
-    def update(self,observedX,observedY,observedL):
-        self.observedX       = observedX
-        self.observedY       = observedY
-        self.observedL       = observedL
+    def update(self,observations):
+        self.observedX = observations[:,0]
+        self.observedY = observations[:,1]
+        self.observedT = observations[:,2]
         # Update each regressor with its corresponding observations
         for i in range(self.goalsData.nGoals):
             goalCenter,__= goal_center_and_size(self.goalsData.areas_coordinates[i])
             distToGoal   = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
             dist         = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
             # Update observations and re-compute the kernel matrices
-            self.gpPathRegressor[i].updateObservations(observedX,observedY,observedL)
+            self.gpPathRegressor[i].update_observations(observations)
             # Compute the model likelihood
-            self.goalsLikelihood[i] = self.gpPathRegressor[i].computeLikelihood(observedX,observedY,observedL,self.nPoints)
+            self.goalsLikelihood[i] = self.gpPathRegressor[i].compute_likelihood(observations,self.nPoints)
 
         # Sum of the likelihoods
         s = sum(self.goalsLikelihood)
@@ -93,9 +93,7 @@ class mixtureOfGPs:
 
             # When close to the goal, define sub-goals
             # Uses the already computed matrices to apply regression over missing data
-            predictedX, predictedY, predictedL, varX, varY = self.gpPathRegressor[i].predict_path_to_finish_point()
-            self.predictedMeans[i] = np.column_stack((predictedX, predictedY, predictedL))
-            self.predictedVars[i]  = np.stack([varX, varY],axis=0)
+            self.predictedMeans[i], self.predictedVars[i] = self.gpPathRegressor[i].predict_path_to_finish_point()
 
         return self.predictedMeans,self.predictedVars
 
