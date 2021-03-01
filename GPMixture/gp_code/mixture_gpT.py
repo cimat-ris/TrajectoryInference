@@ -43,7 +43,7 @@ class mixtureGPT:
         self.gpPathRegressor = [None]*n
         self.gpTrajectoryRegressor = [None]*n
         # List of potential future goals
-        self.goalTransitions = np.random.choice(goalsData.nGoals, n, replace=False, p=goalsData.priorTransitions[startG])
+        self.goalTransitions = np.random.choice([i for i in range(goalsData.nGoals)], n, replace=False, p=goalsData.priorTransitions[startG])
         for i in range(n):
             gi = self. goalTransitions[i]
             timeTransitionData = [self.goalsData.timeTransitionMeans[self.startG][gi],self.goalsData.timeTransitionStd[self.startG][gi]]
@@ -67,3 +67,22 @@ class mixtureGPT:
         self.mostLikelyGoal = mostLikely
 
         return self.goalsLikelihood
+
+    # Performs prediction
+    def predict_path(self):
+        n = len(self. goalTransitions)
+        # For all likely goals
+        for i in range(n):#self.goalsData.nGoals):
+            gi = self. goalTransitions[i]
+            print('[INF] Predicting to goal ',gi)
+            goalCenter,__ = goal_center_and_size(self.goalsData.areas_coordinates[gi])
+            #distToGoal    = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
+            #dist          = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
+
+            # When close to the goal, define sub-goals
+            # Uses the already computed matrices to apply regression over missing data
+            predictedX, predictedY, predictedT, varX, varY = self.gpPathRegressor[i].predict_path_to_finish_point()
+            self.predictedMeans[i] = np.column_stack((predictedX, predictedY, predictedT))
+            self.predictedVars[i]  = np.stack([varX, varY],axis=0)
+
+        return self.predictedMeans,self.predictedVars
