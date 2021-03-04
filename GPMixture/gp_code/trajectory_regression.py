@@ -10,7 +10,7 @@ from utils.stats_trajectories import avg_speed
 class trajectory_regression(path_regression):
 
     # Constructor
-    def __init__(self, kernelX, kernelY, speedModel,unit, stepUnit, finalArea, finalAreaAxis, modelSpeed, prior):
+    def __init__(self, kernelX, kernelY, speedModel,unit, stepUnit, finalArea, finalAreaAxis, prior):
         # Init of the base class
         super(trajectory_regression, self).__init__(kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis, prior)
         # Regression model for the relative value of speed

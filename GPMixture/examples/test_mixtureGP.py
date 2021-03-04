@@ -6,9 +6,9 @@ from gp_code.mixture_gp import mixtureOfGPs
 
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-goalsDescriptions= '../parameters/CentralStation_GoalsDescriptions.csv'
-trajFile         = '../datasets/GC/Annotation/'
-imgGCS           = '../imgs/train_station.jpg'
+goalsDescriptions= 'parameters/CentralStation_GoalsDescriptions.csv'
+trajFile         = 'datasets/GC/Annotation/'
+imgGCS           = 'imgs/train_station.jpg'
 
 traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
 
@@ -17,8 +17,8 @@ kernelType = "linePriorCombined"
 nParameters = 4
 
 # Read the kernel parameters from file
-goalsData.kernelsX = read_and_set_parameters('../parameters/linearpriorcombined20x20_x.txt',nParameters)
-goalsData.kernelsY = read_and_set_parameters('../parameters/linearpriorcombined20x20_y.txt',nParameters)
+goalsData.kernelsX = read_and_set_parameters('parameters/linearpriorcombined20x20_x.txt',nParameters)
+goalsData.kernelsY = read_and_set_parameters('parameters/linearpriorcombined20x20_y.txt',nParameters)
 
 """******************************************************************************"""
 """**************    Testing                           **************************"""
@@ -26,10 +26,6 @@ goalsData.kernelsY = read_and_set_parameters('../parameters/linearpriorcombined2
 startG = 0
 nextG  = 6
 pathId = 3
-
-# Kernels for this pair of goals
-kernelX = goalsData.kernelsX[startG][nextG]
-kernelY = goalsData.kernelsY[startG][nextG]
 
 # Get the ground truth path
 _path = trajMat[startG][nextG][pathId]
@@ -49,7 +45,7 @@ part_num = 5
 
 # For different sub-parts of the trajectory
 for i in range(1,part_num-1):
-    p = plotter("../imgs/train_station.jpg")
+    p = plotter("imgs/train_station.jpg")
     p.plot_scene_structure(goalsData)
 
     knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos

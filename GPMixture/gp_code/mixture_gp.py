@@ -47,7 +47,7 @@ class mixtureOfGPs:
         self.gpTrajectoryRegressor = [None]*n
         for i in range(self.goalsData.nGoals):
             # One regressor per goal
-            self.gpPathRegressor[i] = trajectory_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],self.goalsData.units[self.startG][i],self.stepUnit,self.goalsData.areas_coordinates[i],self.goalsData.areas_axis[i],self.goalsData.speedModels[self.startG][i],self.goalsData.priorTransitions[self.startG][i])
+            self.gpPathRegressor[i] = trajectory_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],self.goalsData.speedModels[self.startG][i],self.goalsData.units[self.startG][i],self.stepUnit,self.goalsData.areas_coordinates[i],self.goalsData.areas_axis[i],self.goalsData.priorTransitions[self.startG][i])
 
     # Update observations and compute likelihoods based on observations
     def update(self,observations):

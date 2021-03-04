@@ -37,6 +37,7 @@ class path_regression:
         if self.mode == 'Trautman':
             elapsedTime = observations[:,2:3][-1][0] - observations[:,2:3][0][0]
             timeStep    = observations[:,2:3][1][0] - observations[:,2:3][0][0]
+            print('--- elapsed time:',elapsedTime,'---')
             self.predictedL, finalL, self.dist = self.prediction_set_time(lastObs, self.finalAreaCenter, elapsedTime, timeStep)
         else:
             # Determine the set of arclengths (predictedL) to predict
@@ -74,8 +75,12 @@ class path_regression:
         # TODO: I think we should first do here a fully deterministic model (conditioned on the mean transition time)
         # Sample a duration
         transitionTime = int(np.random.normal(self.timeTransitionMean, self.timeTransitionStd) )
+        
         # Remaining time
         remainingTime = transitionTime - elapsedTime
+        #!Problem: timeTransitionMean <= elapsedTime
+        if remainingTime <= 0:
+            return np.zeros((0,1)), 0, 0
         size = int(remainingTime/timeStep)
         predset = np.zeros((size,1))
         if size > 0:
