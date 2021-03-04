@@ -66,7 +66,7 @@ class onedim_regressionT:
     def predict_to_finish_point(self,compute_sqRoot=False):
         # No prediction to do
         if self.predictedX.shape[0]==0:
-            return None, None, None
+            return None, None
         # Fill in k
         #print('--- obsx:',self.observedX[:,0])
         #print('--- predx:',self.predictedX[:,0])

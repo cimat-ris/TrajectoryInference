@@ -60,8 +60,9 @@ class mixtureGPT:
             # Compute the model likelihood
             self.goalsLikelihood[i] = self.gpPathRegressor[i].compute_likelihood(observations,self.nPoints)
 
+        n = len(self. goalTransitions)
         mostLikely = 0
-        for i in range(self.goalsData.nGoals):
+        for i in range(n):
             if self.goalsLikelihood[i] > self.goalsLikelihood[mostLikely]:
                 mostLikely = i
         self.mostLikelyGoal = mostLikely
@@ -79,10 +80,7 @@ class mixtureGPT:
             #distToGoal    = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
             #dist          = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
 
-            # When close to the goal, define sub-goals
             # Uses the already computed matrices to apply regression over missing data
-            predictedX, predictedY, predictedT, varX, varY = self.gpPathRegressor[i].predict_path_to_finish_point()
-            self.predictedMeans[i] = np.column_stack((predictedX, predictedY, predictedT))
-            self.predictedVars[i]  = np.stack([varX, varY],axis=0)
-
+            self.predictedMeans[i], self.predictedVars[i] = self.gpPathRegressor[i].predict_path_to_finish_point()
+            
         return self.predictedMeans,self.predictedVars
