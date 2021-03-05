@@ -20,13 +20,21 @@ class mixtureGPT:
         self.likelyGoals     = []
         #Index of most likely goal
         self.mostLikelyGoal = None
-        # Number of elements in the mixture (not all are used at the same time)
-        #TODO: set n
-        n                    = 10 #self.goalsData.nGoals
+        # Max number of elements in the mixture (not all are used at the same time)
+        maxn = 10
+        # Array of potential future goals
+        arr = np.random.choice([i for i in range(goalsData.nGoals)], maxn, replace=False, p=goalsData.priorTransitions[startG])
+        # Select elements where timeTransition is not zero
+        deleteid = []
+        for i in range(maxn):
+            if goalsData.timeTransitionMeans[startG][arr[i]] == 0:
+                deleteid.append(i)
+        self.goalTransitions = np.delete(arr, deleteid)
+        n                    = self.goalTransitions.size
         # Points to evaluate the likelihoods
         self.nPoints         = 5
         # Step unit
-        self.stepUnit        = goalsData.stepUnit # ---> time unit
+        self.stepUnit        = goalsData.stepUnit # ---> time unit?
         # Starting goal
         self.startG          = startG
         # Likelihoods
@@ -42,8 +50,7 @@ class mixtureGPT:
         # The basic element here is this object, that will do the regression work
         self.gpPathRegressor = [None]*n
         self.gpTrajectoryRegressor = [None]*n
-        # List of potential future goals
-        self.goalTransitions = np.random.choice([i for i in range(goalsData.nGoals)], n, replace=False, p=goalsData.priorTransitions[startG])
+        
         for i in range(n):
             gi = self. goalTransitions[i]
             timeTransitionData = [self.goalsData.timeTransitionMeans[self.startG][gi],self.goalsData.timeTransitionStd[self.startG][gi]]
