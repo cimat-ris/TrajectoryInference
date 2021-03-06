@@ -42,17 +42,17 @@ for i in range(1,part_num-1):
     print('[INF] Performing prediction')
     predictedXYVec,varXYVec = mgps.predict_path()
     
-    """
+    
     print('[INF] Plotting')
-    p.plot_multiple_predictions_and_goal_likelihood(pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
+    p.plot_multiple_predictions_and_goal_likelihood(path[0],path[1],knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
     print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
     print("[RES] Mean likelihood:", mgps.meanLikelihood)
     print('[INF] Generating samples')
-    vecX,vecY,__ = mgps.sample_paths(nSamples)
+    #vecX,vecY,__ = mgps.sample_paths(nSamples)
     trueX = observations[:,0]
     trueY = observations[:,1]
-    p.plot_path_samples_with_observations(trueX.reshape((-1,1)),trueY.reshape((-1,1)),vecX,vecY)
-    p.show() """
+    #p.plot_path_samples_with_observations(trueX.reshape((-1,1)),trueY.reshape((-1,1)),vecX,vecY)
+    p.show() 
 
 #print('--- goal transition ---')
 #print(goalsData.priorTransitions)

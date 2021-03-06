@@ -144,6 +144,9 @@ class path_regression:
     # The main path regression function: perform regression for a
     # vector of values of future L, that has been computed in update
     def predict_path_to_finish_point(self,compute_sqRoot=False):
+        if self.predictedL.shape[0] == 0:
+            return np.zeros((0,1)), np.zeros((0,1))
+        
         predx, varx = self.regression_x.predict_to_finish_point(compute_sqRoot=compute_sqRoot)
         predy, vary = self.regression_y.predict_to_finish_point(compute_sqRoot=compute_sqRoot)
         return np.concatenate([predx, predy, self.predictedL],axis=1),np.stack([varx,vary],axis=0)
