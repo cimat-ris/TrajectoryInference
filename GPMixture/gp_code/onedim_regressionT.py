@@ -61,32 +61,6 @@ class onedim_regressionT:
         self.deltak  = self.kernel.dkdy(self.observedX[n],predictedX)
         # Fill in deltaKx
         self.deltaK = self.kernel.dkdy(self.observedX[n],self.observedX)
-
-    # The main regression function: perform regression for a vector of values
-    def predict_to_finish_point(self,compute_sqRoot=False):
-        # No prediction to do
-        if self.predictedX.shape[0]==0:
-            return None, None
-        # Fill in k
-        #print('--- obsx:',self.observedX[:,0])
-        #print('--- predx:',self.predictedX[:,0])
-        self.k = self.kernel(self.observedX[:,0],self.predictedX[:,0])
-        # Fill in C
-        # Note here that we **do not add the noise term** here (we want to recover the unperturbed data)
-        # As Eq. 2.22 in Rasmussen
-        self.C = self.kernel(self.predictedX[:,0],self.predictedX[:,0])
-        # Predictive mean
-        self.predictedY = self.k.transpose().dot(self.Kp_1o)
-        # Estimate the variance in x
-        self.ktKp_1= self.k.transpose().dot(self.Kp_1)
-        kK_1kt     = self.ktKp_1.dot(self.k)
-        self.varY  = self.C - kK_1kt
-        # Regularization to avoid singular matrices
-        self.varY += self.epsilon*np.eye(self.varY.shape[0])
-        # Cholesky on varY: done only if the compute_sqRoot flag is true
-        if compute_sqRoot and positive_definite(self.varY):
-            self.sqRootVar     = cholesky(self.varY,lower=True)
-        return self.predictedY, self.varY
     
     # Compute the likelihood for this coordinates
     def compute_likelihood(self):
@@ -108,3 +82,54 @@ class onedim_regressionT:
         d          = predictedX.transpose()-self.observedY[indicesp,0]
         errsq      = d.dot(d.transpose())/npreds
         return math.exp(-1.*( errsq)/(self.sigmaNoise*self.sigmaNoise) )
+
+    # The main regression function: perform regression for a vector of values
+    def predict_to_finish_point(self,compute_sqRoot=False):
+        # No prediction to do
+        if self.predictedX.shape[0]==0:
+            return None, None
+        # Fill in k
+        self.k = self.kernel(self.observedX[:,0],self.predictedX[:,0])
+        # Fill in C
+        # Note here that we **do not add the noise term** here (we want to recover the unperturbed data)
+        # As Eq. 2.22 in Rasmussen
+        self.C = self.kernel(self.predictedX[:,0],self.predictedX[:,0])
+        # Predictive mean
+        self.predictedY = self.k.transpose().dot(self.Kp_1o)
+        # Estimate the variance in x
+        self.ktKp_1= self.k.transpose().dot(self.Kp_1)
+        kK_1kt     = self.ktKp_1.dot(self.k)
+        self.varY  = self.C - kK_1kt
+        # Regularization to avoid singular matrices
+        self.varY += self.epsilon*np.eye(self.varY.shape[0])
+        # Cholesky on varY: done only if the compute_sqRoot flag is true
+        if compute_sqRoot and positive_definite(self.varY):
+            self.sqRootVar     = cholesky(self.varY,lower=True)
+        return self.predictedY, self.varY
+
+    # Prediction as a perturbation of the "normal" prediction done to the center of an area
+    def predict_to_perturbed_finish_point(self,deltax,deltay):
+        n          = len(self.observedY)
+        npredicted = len(self.predictedX)
+        if npredicted == 0:
+            return None, None, None
+        
+        deltaY        = np.zeros((n,1))
+        deltaY[n-1,0] = deltay
+        
+        newy = self.predictedY + self.ktKp_1.dot(deltaY)
+        newy+= self.Kp_1o[-1][0]*deltax*self.deltak
+        newy-= deltax*self.Kp_1o[-1][0]*self.ktKp_1.dot(self.deltaK)
+        newy-= deltax*self.ktKp_1[0][-1]*self.deltaK.transpose().dot(self.Kp_1o)
+        
+        return self.predictedX, newy, self.varY
+        
+    # Generate a random variation to the mean
+    def generate_random_variation(self):
+        npredicted = len(self.predictedX)
+        sY           = np.random.normal(size=(npredicted,1))
+        if self.sqRootVar.shape[0]>0:
+            return self.sqRootVar.dot(sY)
+        else:
+            return np.zeros((npredicted,1))
+        
