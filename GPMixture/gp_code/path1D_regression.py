@@ -174,9 +174,9 @@ class path1D_regression:
 
     # Generate a random variation to the mean
     def generate_random_variation(self):
-        nPredictions = len(self.predictedL)
-        sX           = np.random.normal(size=(nPredictions,1))
+        npredicted = len(self.predictedL)
+        sX           = np.random.normal(size=(npredicted,1))
         if self.sqRootVar.shape[0]>0:
             return self.sqRootVar.dot(sX)
         else:
-            return np.zeros((nPredictions,1))
+            return np.zeros((npredicted,1))
