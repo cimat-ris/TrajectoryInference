@@ -24,6 +24,7 @@ gi, gj, k = 0, 6, 5
 path = trajMat[gi][gj][k]
 
 mgps     = mixtureGPT(gi,goalsData)
+nSamples = 5
 
 # Divides the trajectory in part_num parts and consider
 part_num = 5
@@ -48,21 +49,8 @@ for i in range(1,part_num-1):
     print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
     print("[RES] Mean likelihood:", mgps.meanLikelihood)
     print('[INF] Generating samples')
-    #vecX,vecY,__ = mgps.sample_paths(nSamples)
+    vecX,vecY,__ = mgps.sample_paths(nSamples)
     trueX = observations[:,0]
     trueY = observations[:,1]
-    #p.plot_path_samples_with_observations(trueX.reshape((-1,1)),trueY.reshape((-1,1)),vecX,vecY)
+    p.plot_path_samples_with_observations(trueX.reshape((-1,1)),trueY.reshape((-1,1)),vecX,vecY)
     p.show() 
-
-#print('--- goal transition ---')
-#print(goalsData.priorTransitions)
-"""
-for i in range(goalsData.nGoals):
-    s = np.sum(goalsData.priorTransitions[i])
-    if s != 1.0:
-        print('--- goal ',i,' ---')
-        print('sum = ', s)
-        #for val in goalsData.priorTransitions[i]: 
-        #    print('original value:', val)#, '--- truncate:', truncate(val,16))
-        
-    """
