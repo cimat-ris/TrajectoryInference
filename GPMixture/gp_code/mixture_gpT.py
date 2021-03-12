@@ -67,7 +67,10 @@ class mixtureGPT:
             # Compute the model likelihood
             self.goalsLikelihood[i] = self.gpPathRegressor[i].compute_likelihood(observations,self.nPoints)
 
-        n = len(self. goalTransitions)
+        # Compute the mean likelihood
+        self.meanLikelihood = mean(self.goalsLikelihood)
+        
+        n = len(self.goalTransitions)
         mostLikely = 0
         for i in range(n):
             if self.goalsLikelihood[i] > self.goalsLikelihood[mostLikely]:
@@ -78,10 +81,10 @@ class mixtureGPT:
 
     # Performs prediction
     def predict_path(self):
-        n = len(self. goalTransitions)
+        n = len(self.goalTransitions)
         # For all likely goals
         for i in range(n):#self.goalsData.nGoals):
-            gi = self. goalTransitions[i]
+            gi = self.goalTransitions[i]
             print('[INF] Predicting to goal ',gi)
             goalCenter,__ = goal_center_and_size(self.goalsData.areas_coordinates[gi])
             #distToGoal    = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
@@ -91,3 +94,31 @@ class mixtureGPT:
             self.predictedMeans[i], self.predictedVars[i] = self.gpPathRegressor[i].predict_path_to_finish_point()
             
         return self.predictedMeans,self.predictedVars
+    
+    def sample_path(self):
+        n = len(self.goalTransitions)
+        p = self.goalsLikelihood[:n]
+        #TODO: check probabilities
+        
+        # Sample goal
+        sampleId = np.random.choice(n,1,p=p)
+        end        = sampleId[0]
+        k          = end
+        
+        endGoal = self.goalTransitions[end]
+        finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.areas_coordinates[endGoal], self.goalsData.areas_axis[endGoal])
+        
+        # Use a pertubation approach to get the sample
+        deltaX = finishX[0]-self.gpPathRegressor[k].finalAreaCenter[0]
+        deltaY = finishY[0]-self.gpPathRegressor[k].finalAreaCenter[1]
+        return self.gpPathRegressor[k].sample_path_with_perturbation(deltaX,deltaY)
+
+    def sample_paths(self,nSamples):
+        vecX, vecY, vecT = [], [], []
+        for k in range(nSamples):
+            x, y, t = self.sample_path()
+            vecX.append(x)
+            vecY.append(y)
+            vecL.append(t)
+        return vecX,vecY,vecT
+        
