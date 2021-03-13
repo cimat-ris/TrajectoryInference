@@ -3,6 +3,7 @@ Handling mixtures of GPs in trajectory prediction | Trautman
 """
 import numpy as np
 from statistics import mean
+from sklearn.preprocessing import normalize
 from gp_code.sampling import *
 from gp_code.path_regression import path_regression
 from gp_code.trajectory_regression import trajectory_regression
@@ -98,10 +99,10 @@ class mixtureGPT:
     def sample_path(self):
         n = len(self.goalTransitions)
         p = self.goalsLikelihood[:n]
-        #TODO: check probabilities
+        normp = p/np.linalg.norm(p,ord=1)
         
         # Sample goal
-        sampleId = np.random.choice(n,1,p=p)
+        sampleId = np.random.choice(n,1,p=normp)
         end        = sampleId[0]
         k          = end
         
@@ -119,6 +120,6 @@ class mixtureGPT:
             x, y, t = self.sample_path()
             vecX.append(x)
             vecY.append(y)
-            vecL.append(t)
+            vecT.append(t)
         return vecX,vecY,vecT
         

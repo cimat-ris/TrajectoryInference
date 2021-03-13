@@ -40,12 +40,12 @@ for i in range(1,part_num-1):
     """Multigoal prediction test"""
     print('[INF] Updating likelihoods')
     likelihoods = mgps.update(observations)
+
     print('[INF] Performing prediction')
     predictedXYVec,varXYVec = mgps.predict_path()
-    
-    
-    print('[INF] Plotting')
-    p.plot_multiple_predictions_and_goal_likelihood(path[0],path[1],knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
+    #print('[INF] Plotting')
+    #p.plot_multiple_predictions_and_goal_likelihood(path[0],path[1],knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
+
     print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
     print("[RES] Mean likelihood:", mgps.meanLikelihood)
     print('[INF] Generating samples')

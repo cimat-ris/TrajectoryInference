@@ -37,7 +37,6 @@ class path_regression:
         if self.mode == 'Trautman':
             elapsedTime = observations[:,2:3][-1][0] - observations[:,2:3][0][0]
             timeStep    = observations[:,2:3][1][0] - observations[:,2:3][0][0]
-            print('--- elapsed time:',elapsedTime,'---')
             self.predictedL, finalL, self.dist = self.prediction_set_time(lastObs, self.finalAreaCenter, elapsedTime, timeStep)
         else:
             # Determine the set of arclengths (predictedL) to predict

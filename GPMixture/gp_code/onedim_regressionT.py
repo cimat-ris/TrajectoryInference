@@ -116,6 +116,9 @@ class onedim_regressionT:
         
         deltaY        = np.zeros((n,1))
         deltaY[n-1,0] = deltay
+        print('-----------------------')
+        #TODO! Check why deltak = None
+        print('deltak:',self.deltaK)
         
         newy = self.predictedY + self.ktKp_1.dot(deltaY)
         newy+= self.Kp_1o[-1][0]*deltax*self.deltak
