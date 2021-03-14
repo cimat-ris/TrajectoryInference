@@ -159,9 +159,8 @@ class path_regression:
         predictedL,predictedY,__=self.regression_y.predict_to_perturbed_finish_point(deltaL,deltaY)
         if predictedX is None or predictedY is None:
             return None,None,None
-        # TODO return into one tensor instead of 3
         # Generate a sample from this Gaussian distribution
-        return predictedX+self.regression_x.generate_random_variation(),predictedY+self.regression_y.generate_random_variation(), predictedL
+        return np.concatenate([predictedX+self.regression_x.generate_random_variation(),predictedY+self.regression_y.generate_random_variation(), predictedL],axis=1)
 
     # Generate a sample from the predictive distribution with a perturbed finish point
     def sample_path_with_perturbed_finish_point(self):

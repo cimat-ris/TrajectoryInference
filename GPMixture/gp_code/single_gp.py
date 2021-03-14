@@ -52,9 +52,8 @@ class singleGP:
 
     # Generate samples from the predictive distribution
     def sample_paths(self,nSamples):
-        vecX, vecY = [], []
+        vec = []
         for k in range(nSamples):
-            x, y, __ = self.sample_path()
-            vecX.append(x)
-            vecY.append(y)
-        return vecX,vecY
+            path = self.sample_path()
+            vec.append(path)
+        return vec
