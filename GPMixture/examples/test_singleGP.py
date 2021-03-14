@@ -45,12 +45,13 @@ gp = singleGP(gi,gj,goalsData)
 
 # Divides the trajectory in part_num parts and infer the posterior over the remaining part
 part_num = 10
+p = plotter()
 for i in range(1,part_num-1):
-    p = plotter(imgGCS)
+    p.set_background(imgGCS)
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
     knownN = int((i+1)*(pathSize/part_num))
-    observations = observed_data([pathX,pathY,pathL,pathT],knownN)
+    observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
     """Single goal prediction test"""
     print('[INF] Updating likelihoods')
     # Update the GP with (real) observations
@@ -67,19 +68,23 @@ for i in range(1,part_num-1):
     print("[RES] Likelihood: ",likelihood)
     print('[INF] Plotting')
     # Plot the filtered version of the observations
-    p.plot_filtered(filteredPath[0,:],filteredPath[1,:])
+    p.plot_filtered(filteredPath)
     # Plot the prediction
-    p.plot_prediction(pathX,pathY,knownN,predictedXY,varXY)
-    p.show()
+    p.plot_prediction(observations,predictedXY,varXY)
+    # Plot the ground truth
+    p.plot_ground_truth(ground_truth)
+    p.pause(0.05)
+p.show()
 
 # Same as above, with samples instead
 part_num = 10
+p = plotter(imgGCS)
 for i in range(1,part_num-1):
-    p = plotter(imgGCS)
+    p.set_background()
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
     knownN            = int((i+1)*(pathSize/part_num))
-    observations = observed_data([pathX,pathY,pathL,pathT],knownN)
+    observations, __ = observed_data([pathX,pathY,pathL,pathT],knownN)
     """Single goal prediction test"""
     # Update the GP with (real) observations
     start      = time.process_time()

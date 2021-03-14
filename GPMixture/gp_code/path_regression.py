@@ -94,7 +94,7 @@ class path_regression:
     def filter_observations(self):
         filteredx = self.regression_x.filter_observations()
         filteredy = self.regression_y.filter_observations()
-        return np.stack([filteredx,filteredy],axis=0)
+        return np.concatenate([filteredx,filteredy],axis=1)
 
     # For a given set of observations (x,y,l), takes half of the data as known
     # and predicts m points from the remaining half. Then, evaluate the prediction error.

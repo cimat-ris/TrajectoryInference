@@ -20,7 +20,7 @@ color = ['lightgreen','springgreen','g','b','steelblue','y','tomato','orange','r
 
 
 class plotter():
-    def __init__(self,img_background_path,title=None):
+    def __init__(self,title=None):
         self.fig,self.ax = plt.subplots(1)
         plt.margins(0, 0)
         plt.gca().set_axis_off()
@@ -29,6 +29,8 @@ class plotter():
         self.ax.set_aspect('equal')
         if title!=None:
             self.ax.set_title(title)
+
+    def set_background(self,img_background_path):
         # Use the image as a background
         img = mpimg.imread(img_background_path)
         self.ax.imshow(img)
@@ -53,26 +55,28 @@ class plotter():
                 self.ax.plot([xy[0],xy[0]],[xy[1]-size[1]/2.0,xy[1]+size[1]/2.0],color[i],linewidth=7.0)
 
     # Plot the true data, the predicted ones and their variance
-    def plot_prediction(self,trueX,trueY,knownN,predictedXY,varXY):
-        observedX = trueX[0:knownN]
-        observedY = trueY[0:knownN]
-        self.ax.plot(observedX,observedY,'c',predictedXY[:,0],predictedXY[:,1],'b')
-        self.ax.plot([observedX[-1],predictedXY[0,0]],[observedY[-1],predictedXY[0,1]],'b')
-
-        predictedN = predictedXY.shape[0]
+    def plot_prediction(self,observations,predicted,variances):
+        observedX = observations[:,0]
+        observedY = observations[:,1]
+        self.ax.plot(observedX,observedY,'c',predicted[:,0],predicted[:,1],'b')
+        self.ax.plot([observedX[-1],predicted[0,0]],[observedY[-1],predicted[0,1]],'b')
+        predictedN = predicted.shape[0]
         for i in range(predictedN):
-            xy = [predictedXY[i,0],predictedXY[i,1]]
-            ell = Ellipse(xy,6.0*math.sqrt(math.fabs(varXY[0][i,i])),6.0*math.sqrt(math.fabs(varXY[1][i,i])))
+            xy = [predicted[i,0],predicted[i,1]]
+            ell = Ellipse(xy,6.0*math.sqrt(math.fabs(variances[0][i,i])),6.0*math.sqrt(math.fabs(variances[1][i,i])))
             ell.set_lw(1.)
             ell.set_fill(0)
             ell.set_edgecolor('m')
             self.ax.add_patch(ell)
 
-        self.ax.plot(trueX[knownN-1:-1],trueY[knownN-1:-1],'c--')
+    # Plot the filtered data
+    def plot_ground_truth(self,gtPath):
+        self.ax.plot(gtPath[:-1,0],gtPath[:-1,1],'c--')
 
-    # Plot the true data, the predicted ones and their variance
-    def plot_filtered(self,filteredX,filteredY):
-        self.ax.plot(filteredX[:-1],filteredY[:-1],'b--')
+
+    # Plot the filtered data
+    def plot_filtered(self,filteredPath):
+        self.ax.plot(filteredPath[:-1,0],filteredPath[:-1,1],'b--')
 
     # Plot multiple predictions
     def plot_multiple_predictions_and_goal_likelihood(self,x,y,nUsedData,nGoals,goalsLikelihood,predictedXYVec,varXYVec):
@@ -109,20 +113,23 @@ class plotter():
             self.ax.plot(x[nUsedData-1:-1],y[nUsedData-1:-1],'c--')
 
     # Plot a set of sample trajectories and an observed partial trajectory
-    def plot_path_samples_with_observations(self,obsx,obsy,x,y):
-        samples = len(x)
+    def plot_path_samples_with_observations(self,obsx,obsy,paths):
+        samples = len(paths)
         if (samples == 0):
             return
         self.ax.plot(obsx,obsy,'c',lw=2.0)
         for i in range(samples):
             randColor = random.choice(color)
-            self.ax.plot(x[i],y[i], color=randColor, alpha=0.5)
-            self.ax.plot([obsx[-1][0],x[i][0][0]],[obsy[-1][0],y[i][0][0]], alpha=0.5)
+            self.ax.plot(paths[i][:,0],paths[i][:,1], color=randColor, alpha=0.5)
 
     # new plot_paths
     def plot_trajectories(self, trajSet):
         for tr in trajSet:
             self.ax.plot(tr[0],tr[1])
+
+    def pause(self,d):
+        plt.pause(d)
+        plt.cla()
 
     # Show the plots
     def show(self):
