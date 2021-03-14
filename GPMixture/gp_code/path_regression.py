@@ -74,7 +74,7 @@ class path_regression:
         # TODO: I think we should first do here a fully deterministic model (conditioned on the mean transition time)
         # Sample a duration
         transitionTime = int(np.random.normal(self.timeTransitionMean, self.timeTransitionStd) )
-        
+
         # Remaining time
         remainingTime = transitionTime - elapsedTime
         #!Problem: timeTransitionMean <= elapsedTime
@@ -94,7 +94,7 @@ class path_regression:
     def filter_observations(self):
         filteredx = self.regression_x.filter_observations()
         filteredy = self.regression_y.filter_observations()
-        return filteredx,filteredy
+        return np.stack([filteredx,filteredy],axis=0)
 
     # For a given set of observations (x,y,l), takes half of the data as known
     # and predicts m points from the remaining half. Then, evaluate the prediction error.
@@ -145,7 +145,7 @@ class path_regression:
     def predict_path_to_finish_point(self,compute_sqRoot=False):
         if self.predictedL.shape[0] == 0:
             return np.zeros((0,1)), np.zeros((0,1))
-        
+
         predx, varx = self.regression_x.predict_to_finish_point(compute_sqRoot=compute_sqRoot)
         predy, vary = self.regression_y.predict_to_finish_point(compute_sqRoot=compute_sqRoot)
         return np.concatenate([predx, predy, self.predictedL],axis=1),np.stack([varx,vary],axis=0)

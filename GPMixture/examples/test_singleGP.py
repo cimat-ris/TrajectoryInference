@@ -52,21 +52,22 @@ for i in range(1,part_num-1):
     knownN = int((i+1)*(pathSize/part_num))
     observations = observed_data([pathX,pathY,pathL,pathT],knownN)
     """Single goal prediction test"""
+    print('[INF] Updating likelihoods')
     # Update the GP with (real) observations
-    start               = time.process_time()
-    likelihood          = gp.update(observations)
-    stop                = time.process_time()
-    filteredX,filteredY = gp.filter()
+    start        = time.process_time()
+    likelihood   = gp.update(observations)
+    stop         = time.process_time()
+    filteredPath = gp.filter()
     print("[INF] CPU process time (update): %.1f [ms]" % (1000.0*(stop-start)))
     start = stop
     # Perform prediction
     predictedXY,varXY = gp.predict_trajectory()
     stop       = time.process_time()
     print("[INF] CPU process time (prediction): %.1f [ms]" % (1000.0*(stop-start)))
-    print('[INF] Plotting')
     print("[RES] Likelihood: ",likelihood)
+    print('[INF] Plotting')
     # Plot the filtered version of the observations
-    p.plot_filtered(filteredX,filteredY)
+    p.plot_filtered(filteredPath[0,:],filteredPath[1,:])
     # Plot the prediction
     p.plot_prediction(pathX,pathY,knownN,predictedXY,varXY)
     p.show()

@@ -38,7 +38,6 @@ class singleGP:
 
     # Performs trajectory prediction
     def predict_trajectory(self,compute_sqRoot=False):
-        # TODO: add the time
         # Uses the already computed matrices to apply regression over missing data
         self.predictedMeans, self.predictedVars = self.gpPathRegressor.predict_trajectory_to_finish_point(compute_sqRoot=compute_sqRoot)
         return self.predictedMeans,self.predictedVars
