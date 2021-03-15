@@ -15,8 +15,6 @@ class path1D_regression:
         # Observation vectors
         self.observedX       = None
         self.observedL       = None
-        # Maximal number of observations used to update the GP
-        self.observedNMax    = 15
         # Prediction vectors
         self.predictedX      = None
         self.predictedL      = None
@@ -25,52 +23,41 @@ class path1D_regression:
         self.k               = None
         self.C               = None
         self.sqRootVar       = np.empty((0, 0))
+        # Selection factor
+        self.epsilonSel      = 0.33
         # Regularization factor
-        self.epsilon         = 0.5
+        self.epsilonReg      = 0.5
+        # Kernel
         self.kernel          = kernel
         self.sigmaNoise      = sigmaNoise
 
-    # Method to select a maximal number of self.observedNMax filterObservations organized in a logrithmic scale
+    # Method to select observations
     def select_observations(self,observedL,observedX):
+        # Observations
         n                    = observedX.shape[0]
         # Number of data we will use
-        nm                   = min(n,self.observedNMax)
-        idx                  = np.flip(n-np.logspace(0,np.log10(n), num=nm))
-        idx                  = idx.astype(int)
-        # Search for doubles
-        doubles = True
-        while doubles:
-            doubles = False
-            for i in range(nm-2,0,-1):
-                # Found a double
-                if idx[i]==idx[i+1]:
-                    doubles = True
-                    for j in range(i,-1,-1):
-                        # Could be a place for i
-                        if idx[j]-idx[j+1]<-1:
-                            tmp   = idx[j+1]-1
-                            # Move the data to the right
-                            for k in range(i,j,-1):
-                                idx[k]=idx[k-1]
-                            idx[j+1]= tmp
-                            break
-                    break
+        k       = int(np.log(n)/np.log(1+self.epsilonSel))
+        l2      = np.array(range(2,k+1))
+        idx     = n-(np.power(1+self.epsilonSel,l2)).astype(int)
         return observedL[idx],observedX[idx]
 
     # Update observations for the Gaussian process (matrix K)
     def update_observations(self,observedX,observedL,finalX,finalL,finalVar,predictedL):
         # Number of "real" observations (we add one: the final point)
         n                    = len(observedX)
-        nm                   = min(n,self.observedNMax)
-        # Observation vectors: X and L
-        self.observedX       = np.zeros((nm+1,1))
-        self.observedL       = np.zeros((nm+1,1))
         # Values of arc length L at which we predict X
         self.predictedL      = predictedL
+        # Set the observations
+        selectedL, selectedX = self.select_observations(observedL,observedX)
+        nm                   = selectedL.shape[0]
+        print("[INF] Selected:",nm," observations out of",n)
         # Covariance matrix
         self.K               = np.zeros((nm+1,nm+1))
-        # Set the observations
-        self.observedL[:-1], self.observedX[:-1] = self.select_observations(observedL,observedX)
+        # Observation vectors: X and L
+        self.observedL       = np.zeros((nm+1,1))
+        self.observedX       = np.zeros((nm+1,1))
+        self.observedL[:-1]  = selectedL
+        self.observedX[:-1]  = selectedX
         self.observedL[-1,0] = finalL
         self.observedX[-1,0] = finalX
         # Center the data in case we use the linear prior
@@ -143,7 +130,7 @@ class path1D_regression:
         kK_1kt     = self.ktKp_1.dot(self.k)
         self.varX  = self.C - kK_1kt
         # Regularization to avoid singular matrices
-        self.varX += self.epsilon*np.eye(self.varX.shape[0])
+        self.varX += self.epsilonReg*np.eye(self.varX.shape[0])
         # Cholesky on varX: done only if the compute_sqRoot flag is true
         if compute_sqRoot and positive_definite(self.varX):
             self.sqRootVar     = cholesky(self.varX,lower=True)

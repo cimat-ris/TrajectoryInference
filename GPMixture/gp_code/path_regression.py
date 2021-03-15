@@ -99,6 +99,7 @@ class path_regression:
     # For a given set of observations (x,y,l), takes half of the data as known
     # and predicts m points from the remaining half. Then, evaluate the prediction error.
     def likelihood_from_partial_path(self,observations,m):
+        # TODO: redo as said in the paper :)
         n       = observations.shape[0]
         half    = max(1,int(n/2))
         lastObs = observations[half]
@@ -145,7 +146,6 @@ class path_regression:
     def predict_path_to_finish_point(self,compute_sqRoot=False):
         if self.predictedL.shape[0] == 0:
             return np.zeros((0,1)), np.zeros((0,1))
-
         predx, varx = self.regression_x.predict_to_finish_point(compute_sqRoot=compute_sqRoot)
         predy, vary = self.regression_y.predict_to_finish_point(compute_sqRoot=compute_sqRoot)
         return np.concatenate([predx, predy, self.predictedL],axis=1),np.stack([varx,vary],axis=0)

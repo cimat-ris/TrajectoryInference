@@ -19,7 +19,7 @@ class trajectory_regression(path_regression):
 
     def predict_trajectory_to_finish_point(self,compute_sqRoot=False):
         # Predict path
-        path, var = self.predict_path_to_finish_point(compute_sqRoot)
+        path, var   = self.predict_path_to_finish_point(compute_sqRoot)
         arc_lengths = path[:,2]
         # Use the speed model to predict relative speed with respect to the average
         if isinstance(self.speedModel, int):
