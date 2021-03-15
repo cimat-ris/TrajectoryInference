@@ -78,9 +78,9 @@ p.show()
 
 # Same as above, with samples instead
 part_num = 10
-p = plotter(imgGCS)
 for i in range(1,part_num-1):
-    p.set_background()
+    p = plotter()
+    p.set_background(imgGCS)
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
     knownN            = int((i+1)*(pathSize/part_num))

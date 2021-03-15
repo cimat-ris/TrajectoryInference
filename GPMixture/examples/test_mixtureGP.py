@@ -45,23 +45,43 @@ part_num = 5
 
 # For different sub-parts of the trajectory
 for i in range(1,part_num-1):
-    p = plotter("imgs/train_station.jpg")
+    p = plotter()
+    p.set_background(imgGCS)
     p.plot_scene_structure(goalsData)
 
     knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
-    observations = observed_data([pathX,pathY,pathL],knownN)
+    observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
     """Multigoal prediction test"""
     print('[INF] Updating likelihoods')
     likelihoods = mgps.update(observations)
     print('[INF] Performing prediction')
-    predictedXYVec,varXYVec = mgps.predict_path()
+    filteredPaths           = mgps.filter()
+    print(filteredPaths[0].shape)
+    predictedXYVec,varXYVec = mgps.predict_trajectory()
     print('[INF] Plotting')
     p.plot_multiple_predictions_and_goal_likelihood(pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
     print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
     print("[RES] Mean likelihood:", mgps.meanLikelihood)
+    p.show()
+
+
+# Again, with Monte Carlo
+for i in range(1,part_num-1):
+    p = plotter()
+    p.set_background(imgGCS)   
+    p.plot_scene_structure(goalsData)
+
+    knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
+    observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
+    """Multigoal prediction test"""
+    print('[INF] Updating likelihoods')
+    likelihoods = mgps.update(observations)
+    print('[INF] Performing prediction')
+    predictedXYVec,varXYVec = mgps.predict_path(compute_sqRoot=True)
+    print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
+    print("[RES] Mean likelihood:", mgps.meanLikelihood)
     print('[INF] Generating samples')
-    vecX,vecY,__ = mgps.sample_paths(nSamples)
-    trueX = observations[:,0]
-    trueY = observations[:,1]
-    p.plot_path_samples_with_observations(trueX.reshape((-1,1)),trueY.reshape((-1,1)),vecX,vecY)
+    paths = mgps.sample_paths(nSamples)
+    print('[INF] Plotting')
+    p.plot_path_samples_with_observations(observations[:,0].reshape((-1,1)),observations[:,1].reshape((-1,1)),paths)
     p.show()

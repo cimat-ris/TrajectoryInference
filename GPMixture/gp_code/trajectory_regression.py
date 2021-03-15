@@ -22,7 +22,10 @@ class trajectory_regression(path_regression):
         path, var = self.predict_path_to_finish_point(compute_sqRoot)
         arc_lengths = path[:,2]
         # Use the speed model to predict relative speed with respect to the average
-        predicted_relative_speeds = self.speedModel.predict(arc_lengths.reshape(-1, 1))
+        if isinstance(self.speedModel, int):
+            predicted_relative_speeds = 1.0
+        else:
+            predicted_relative_speeds = self.speedModel.predict(arc_lengths.reshape(-1, 1))
         predicted_speeds          = self.speedAverage*predicted_relative_speeds
         return path, var
 
