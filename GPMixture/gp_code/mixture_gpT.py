@@ -86,7 +86,6 @@ class mixtureGPT:
         # For all likely goals
         for i in range(n):#self.goalsData.nGoals):
             gi = self.goalTransitions[i]
-            print('[INF] Predicting to goal ',gi)
             goalCenter,__ = goal_center_and_size(self.goalsData.areas_coordinates[gi])
             #distToGoal    = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
             #dist          = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
@@ -100,7 +99,6 @@ class mixtureGPT:
         n = len(self.goalTransitions)
         p = self.goalsLikelihood[:n]
         normp = p/np.linalg.norm(p,ord=1)
-        
         # Sample goal
         sampleId = np.random.choice(n,1,p=normp)
         end        = sampleId[0]
@@ -115,11 +113,9 @@ class mixtureGPT:
         return self.gpPathRegressor[k].sample_path_with_perturbation(deltaX,deltaY)
 
     def sample_paths(self,nSamples):
-        vecX, vecY, vecT = [], [], []
+        samples = []
         for k in range(nSamples):
-            x, y, t = self.sample_path()
-            vecX.append(x)
-            vecY.append(y)
-            vecT.append(t)
-        return vecX,vecY,vecT
+            s = self.sample_path()
+            samples.append(s)
+        return samples
         

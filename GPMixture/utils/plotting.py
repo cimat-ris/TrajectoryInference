@@ -113,14 +113,25 @@ class plotter():
             self.ax.plot(x[nUsedData-1:-1],y[nUsedData-1:-1],'c--')
 
     # Plot a set of sample trajectories and an observed partial trajectory
-    def plot_path_samples_with_observations(self,obsx,obsy,paths):
+    def plot_path_samples_with_observations(self,observations,paths):
         samples = len(paths)
         if (samples == 0):
             return
-        self.ax.plot(obsx,obsy,'c',lw=2.0)
+        
+        x = observations[:,0]
+        y = observations[:,1]
+        x.reshape((-1,1))
+        y.reshape((-1,1))
+        self.ax.plot(x,y,'c',lw=2.0)
+        
         for i in range(samples):
             randColor = random.choice(color)
-            self.ax.plot(paths[i][:,0],paths[i][:,1], color=randColor, alpha=0.5)
+            samplex = paths[i][:,0]
+            sampley = paths[i][:,1]
+            samplex.reshape((-1,1))
+            sampley.reshape((-1,1))
+            
+            self.ax.plot(samplex,sampley, color=randColor, alpha=0.5)
 
     # new plot_paths
     def plot_trajectories(self, trajSet):

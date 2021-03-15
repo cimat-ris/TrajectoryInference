@@ -27,7 +27,7 @@ mgps     = mixtureGPT(gi,goalsData)
 nSamples = 5
 
 # Divides the trajectory in part_num parts and consider
-part_num = 5
+part_num = 3
 pathSize = len(path[0])
 
 # For different sub-parts of the trajectory
@@ -49,8 +49,6 @@ for i in range(1,part_num-1):
     print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
     print("[RES] Mean likelihood:", mgps.meanLikelihood)
     print('[INF] Generating samples')
-    vecX,vecY,__ = mgps.sample_paths(nSamples)
-    trueX = observations[:,0]
-    trueY = observations[:,1]
-    p.plot_path_samples_with_observations(trueX.reshape((-1,1)),trueY.reshape((-1,1)),vecX,vecY)
+    samplePaths = mgps.sample_paths(nSamples)
+    p.plot_path_samples_with_observations(observations,samplePaths)
     p.show() 
