@@ -174,6 +174,10 @@ class combinedTrautmanKernel(Kernel):
     def __call__(self,x,y):
         return self.matern(x,y) + self.linear(x,y)
 
+    # Derivative with respect to y
+    def dkdy(self,l1,l2):
+        dkdy = self.matern.dkdy(l1,l2)
+        return dkdy
     # Method to get parameters
     def get_parameters(self):
         parameters = [self.gamma, self.sigmaSq, self.length]
