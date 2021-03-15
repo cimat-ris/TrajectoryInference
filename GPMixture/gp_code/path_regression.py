@@ -38,6 +38,8 @@ class path_regression:
             elapsedTime = observations[:,2:3][-1][0] - observations[:,2:3][0][0]
             timeStep    = observations[:,2:3][1][0] - observations[:,2:3][0][0]
             self.predictedL, finalL, self.dist = self.prediction_set_time(lastObs, self.finalAreaCenter, elapsedTime, timeStep)
+            if self.dist < 1.0:
+                self.dist = 1.0
         else:
             # Determine the set of arclengths (predictedL) to predict
             self.predictedL, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
