@@ -212,7 +212,6 @@ def equal(vx,vy,x,y):
     else:
         return 0
 
-
 def copy_unitMat(unitMat, nGoals, nSubgoals):
     mat = []
     m = int(nSubgoals/nGoals)
@@ -248,12 +247,13 @@ def arclen_to_time(initTime,l,speed):
 """-------- Get Observed Data -------------"""
 # Function to get the ground truth data: knownN data
 def observed_data(traj, n):
-    # TODO: 
+    # TODO:
     if (len(traj)==4):
         x, y, l, t = traj
         obsX, obsY, obsL, obsT = np.reshape(x[0:n],(-1,1)), np.reshape(y[0:n],(-1,1)), np.reshape(l[0:n],(-1,1)),np.reshape(t[0:n],(-1,1))
         obsS = np.divide(np.sqrt(np.square(obsX[1:]-obsX[:-1])+np.square(obsY[1:]-obsY[:-1])),obsT[1:]-obsT[:-1])
-        return np.concatenate([obsX, obsY, obsL, obsT],axis=1)
+        gtX, gtY, gtT = np.reshape(x[n:],(-1,1)), np.reshape(y[n:],(-1,1)),np.reshape(t[n:],(-1,1))
+        return np.concatenate([obsX, obsY, obsL, obsT],axis=1),np.concatenate([gtX, gtY, gtT],axis=1)
     else:
         if (len(traj)==3):
             x, y, t = traj
