@@ -138,8 +138,9 @@ class goal_pairs:
     # For each pair of goals, realize the optimization of the kernel parameters
     def optimize_kernel_parameters(self,kernelType,trainingSet):
         # Build the kernel matrices with the default values
-        self.kernelsX, parametersX = create_kernel_matrix(kernelType, self.nGoals, self.nGoals)
-        self.kernelsY, parametersY = create_kernel_matrix(kernelType, self.nGoals, self.nGoals)
+        self.kernelsX = create_kernel_matrix(kernelType, self.nGoals, self.nGoals)
+        self.kernelsY = create_kernel_matrix(kernelType, self.nGoals, self.nGoals)
+        print("[INF] Optimizing kernel parameters")
         # For every pair of goals (gi, gj)
         for i in range(self.nGoals):
             for j in range(self.nGoals):

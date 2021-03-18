@@ -191,9 +191,7 @@ def get_linear_prior_mean(paths, flag):
     n = len(paths)
     if(n == 0):
         return [0.,0.,0.]
-
     lineParameters = np.array([ line_parameters(paths[i], flag) for i in range(n)])
-    print(lineParameters)
     mean = [np.mean(lineParameters[:,0]), np.mean(lineParameters[:,1]) ]
     var = [np.var(lineParameters[:,0]), np.var(lineParameters[:,1]) ]
     cov = np.cov(lineParameters[:,0],lineParameters[:,1])
