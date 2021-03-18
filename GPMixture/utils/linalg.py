@@ -3,13 +3,13 @@ import math
 from termcolor import colored
 
 # Check a matrix for: negative eigenvalues, asymmetry and negative diagonal values
-def positive_definite(M,verbose=False):
+def positive_definite(M,epsilon = 0.0001,verbose=False):
     # Symmetrization
     Mt = np.transpose(M)
     M = (M + Mt)/2
     eigenvalues = np.linalg.eigvals(M)
     for i in range(len(eigenvalues)):
-        if eigenvalues[i] <= 0:
+        if eigenvalues[i] <= epsilon:
             if verbose:
                 print(colored("[ERR] Negative eigenvalues ",'red'))
             return 0
