@@ -81,6 +81,9 @@ def filter_traj_matrix(raw_path_set_matrix, nRows, mColumns):
 
     return filtered_matrix, all_trajectories
 
+def start_time(traj):
+    return traj[2][0]
+
 #TODO: Gets a set of trj that start in a given time interval
 #The list of trajectories is sorted by their initial time
 def get_trajectories_given_time_interval(trajectories, startT, finishT):
