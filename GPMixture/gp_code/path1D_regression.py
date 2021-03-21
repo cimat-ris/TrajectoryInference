@@ -11,7 +11,7 @@ from utils.linalg import positive_definite
 
 class path1D_regression:
     # Constructor
-    def __init__(self, kernel, sigmaNoise=7.5):
+    def __init__(self, kernel, sigmaNoise):
         # Observation vectors
         self.observedX       = None
         self.observedL       = None
@@ -29,6 +29,7 @@ class path1D_regression:
         self.epsilonReg      = 0.5
         # Kernel
         self.kernel          = kernel
+        # Noise
         self.sigmaNoise      = sigmaNoise
 
     # Method to select observations

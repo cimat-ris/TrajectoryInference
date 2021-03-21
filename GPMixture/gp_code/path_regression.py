@@ -14,9 +14,9 @@ from scipy.optimize import bisect
 
 class path_regression:
     # Constructor
-    def __init__(self, kernelX, kernelY, unit, stepUnit, finalArea, finalAreaAxis, prior, mode=None, timeTransitionData=None):
-        self.regression_x    = onedim_regressionT(kernelX) if mode == 'Trautman' else path1D_regression(kernelX)
-        self.regression_y    = onedim_regressionT(kernelY) if mode == 'Trautman' else path1D_regression(kernelY)
+    def __init__(self, kernelX, kernelY, sigmaNoise, unit, stepUnit, finalArea, finalAreaAxis, prior,  mode=None, timeTransitionData=None):
+        self.regression_x    = onedim_regressionT(kernelX) if mode == 'Trautman' else path1D_regression(kernelX,sigmaNoise)
+        self.regression_y    = onedim_regressionT(kernelY) if mode == 'Trautman' else path1D_regression(kernelY,sigmaNoise)
         self.predictedL      = None
         self.distUnit        = unit
         self.stepUnit        = stepUnit
