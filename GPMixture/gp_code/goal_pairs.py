@@ -18,11 +18,13 @@ import numpy as np
 class goal_pairs:
 
     # Constructor
-    def __init__(self, areas_coordinates, areas_axis, trajMat, min_traj_number=15):
-        self.nGoals                = len(areas_coordinates)
-        self.areas_coordinates     = areas_coordinates
-        self.areas_axis            = areas_axis
-        self.min_traj_number       = min_traj_number
+    def __init__(self, areas_coordinates, areas_axis, trajMat, sigmaNoise=15.0, min_traj_number=15):
+        self.nGoals             = len(areas_coordinates)
+        self.areas_coordinates  = areas_coordinates
+        self.areas_axis         = areas_axis
+        self.min_traj_number    = min_traj_number
+        # Observation Noise
+        self.sigmaNoise         = sigmaNoise
         # Mean length for all pairs of goals
         self.meanLengths        = np.zeros((self.nGoals,self.nGoals))
         self.euclideanDistances = np.zeros((self.nGoals,self.nGoals))
@@ -48,22 +50,26 @@ class goal_pairs:
         self.optimize_speed_models(trajMat)
 
     # Fills in the matrix with the mean length of the trajectories
-    # Computes stepUnit - avg ratio between number of steps and path arc-lenght
-    def compute_mean_lengths(self, Mat):
+    # Computes stepUnit - avg ratio between number of steps and path arc-length
+    def compute_mean_lengths(self, trajectories):
         stepsRatio = []
+        # For each pair of goals
         for i in range(self.nGoals):
             for j in range(self.nGoals):
-                if len(Mat[i][j]) > 0:
-                    arclen = []
-                    for tr in Mat[i][j]:
-                        tr_arclen = trajectory_arclength(tr)
-                        arclen.append(tr_arclen[-1])
+                # If we have trajectories
+                if len(trajectories[i][j]) > 0:
+                    # Array of the trajectories lengths
+                    arclengths = []
+                    for trajectory in trajectories[i][j]:
+                        tr_arclen = trajectory_arclength(trajectory)
+                        arclengths.append(tr_arclen[-1])
                         stepsRatio.append(len(tr_arclen)/tr_arclen[-1])
-                    m = np.mean(arclen)
+                    m = np.mean(arclengths)
                 else:
                     m = 0
                     stepsRatio.append(1.0)
                 self.meanLengths[i][j] = m
+        # TODO: do it per pair of goals
         self.stepUnit = np.mean(stepsRatio)
 
     # Fills in the Euclidean distances between goals
@@ -162,17 +168,19 @@ class goal_pairs:
                     print("[OPT] #trajectories: ",len(l))
                     print("[OPT] Initial values for the optimizable parameters: ",theta)
                     # Fit parameters in X
-                    thetaX  = fit_parameters(l,x,ker,theta)
+                    thetaX  = fit_parameters(l,x,ker,theta,self.sigmaNoise)
                     print("[OPT] Optimized parameters for x: ",thetaX)
                     self.kernelsX[i][j].set_parameters(ker.get_parameters())
+                    print("[OPT] Full parameters for x: ",self.kernelsX[i][j].get_parameters())
                     # Fit parameters in Y
                     ker   = set_kernel(kernelType)
                     if self.kernelsY[i][j].linearPrior:
                         meanY, varY  = get_linear_prior_mean(trainingSet[i][j], 'y')
                         ker.set_linear_prior(meanY[0],meanY[1],varY[0],varY[1])
-                    thetaY  = fit_parameters(l,y,ker,theta)
+                    thetaY  = fit_parameters(l,y,ker,theta,self.sigmaNoise)
                     print("[OPT] Optimized parameters for y: ",thetaY)
                     self.kernelsY[i][j].set_parameters(ker.get_parameters())
+                    print("[OPT] Full parameters for y: ",self.kernelsY[i][j].get_parameters())
                     stop = timeit.default_timer()
                     execution_time = stop - start
                     print("[OPT] Parameter optimization done in %.2f seconds"%execution_time)
