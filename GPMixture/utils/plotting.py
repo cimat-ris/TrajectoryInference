@@ -117,20 +117,20 @@ class plotter():
         samples = len(paths)
         if (samples == 0):
             return
-        
+
         x = observations[:,0]
         y = observations[:,1]
         x.reshape((-1,1))
         y.reshape((-1,1))
         self.ax.plot(x,y,'c',lw=2.0)
-        
+
         for i in range(samples):
             randColor = random.choice(color)
             samplex = paths[i][:,0]
             sampley = paths[i][:,1]
             samplex.reshape((-1,1))
             sampley.reshape((-1,1))
-            
+
             self.ax.plot(samplex,sampley, color=randColor, alpha=0.5)
 
     # new plot_paths

@@ -3,7 +3,7 @@ import math
 from termcolor import colored
 
 # Check a matrix for: negative eigenvalues, asymmetry and negative diagonal values
-def positive_definite(M,epsilon = 0.0001,verbose=False):
+def positive_definite(M,epsilon = 0.000001,verbose=False):
     # Symmetrization
     Mt = np.transpose(M)
     M = (M + Mt)/2
