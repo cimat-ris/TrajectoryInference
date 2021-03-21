@@ -157,7 +157,6 @@ class goal_pairs:
                     if self.kernelsX[i][j].linearPrior:
                         meanX, varX  = get_linear_prior_mean(trainingSet[i][j], 'x')
                         ker.set_linear_prior(meanX[0],meanX[1],varX[0],varX[1])
-                    params = ker.get_parameters()
                     theta  = ker.get_optimizable_parameters()
                     print("[OPT] [",i,"][",j,"]")
                     print("[OPT] #trajectories: ",len(l))
@@ -165,7 +164,6 @@ class goal_pairs:
                     # Fit parameters in X
                     thetaX  = fit_parameters(l,x,ker,theta)
                     print("[OPT] Optimized parameters for x: ",thetaX)
-                    print("[OPT] Final parameters for x: ",ker.get_parameters())
                     self.kernelsX[i][j].set_parameters(ker.get_parameters())
                     # Fit parameters in Y
                     ker   = set_kernel(kernelType)

@@ -18,15 +18,12 @@ def mlog_p(x,y,kernel):
     # Evaluate the Gram matrix
     K = kernel(x,x)
     # Use Cholesky to solve x = K^{-1} y
-    if positive_definite(K):
-        c_and_lower = cho_factor(K, overwrite_a=True)
-    else:
-        if not positive_definite(K+np.identity(K.shape[0])):
-            return 0.0
-        # In case, add a regularization term.
-        c_and_lower = cho_factor(K+np.identity(K.shape[0]), overwrite_a=True)
-    invKy       = cho_solve(c_and_lower, y)
-    yKy         = np.inner(y,invKy)
+    if not positive_definite(K+np.identity(K.shape[0])):
+        return 0.0
+    # In case, add a regularization term.
+    c_and_lower = cho_factor(K+np.identity(K.shape[0]), overwrite_a=True)
+    invKy   = cho_solve(c_and_lower, y)
+    yKy     = np.inner(y,invKy)
     # Get the log-determinant as the sum of the log of the diagonal elements in C
     logDetK = 0.0
     for i in range(len(x)):
@@ -35,17 +32,16 @@ def mlog_p(x,y,kernel):
     return max(0,0.5*yKy+logDetK)
 
 # Evaluate minus sum of the log-likelihoods for all the data
-def neg_sum_log_p(theta,t,x,kernel):
+def neg_sum_log_p(theta,t,x,kernel,traj_min_length=10):
     kernel.set_optimizable_parameters(theta)
     s = 0.0
     for i in range(len(t)):
-        s += mlog_p(t[i],x[i],kernel)
+        if (t[i].shape[0]>=traj_min_length):
+            s += mlog_p(t[i],x[i],kernel)
     return s
 
 # Opimization of the parameters, in x then in y
-def optimize_kernel_parameters(t,x,theta,kernel):
-    # TODO: set these bounds elsewhere
-    bnds = ((100.0, 5000.0), (10.0, 200.0))
+def fit_parameters(t,x,kernel,theta):
     try:
         parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel),method='Nelder-Mead',options={'maxiter':25,'disp': False})
         px          = parametersX.x
@@ -54,8 +50,3 @@ def optimize_kernel_parameters(t,x,theta,kernel):
         px = theta
     kernel.set_optimizable_parameters(px)
     return px
-
-# Optimize parameters of the kernel, given l,x as data (will maximize likelihood), kernel as the kernel
-# and parameters as the current values of the parameters
-def fit_parameters(l,x,kernel,parameters):
-    return optimize_kernel_parameters(l,x,parameters,kernel)

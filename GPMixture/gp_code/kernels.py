@@ -119,20 +119,22 @@ class maternKernel(Kernel):
         # Characteristic length
         self.length       = length
         # Type of kernel
-        self.type         = "matobservedern"
+        self.type         = "matern"
         self.sqrootof5    = m.sqrt(5)
 
     # Method to set parameters
     def set_parameters(self,vec):
         # Covariance magnitude factor
-        self.sigmaSq= vec[0]
+        self.sigmaSq= np.exp(vec[0])
         # Characteristic length
-        self.length = vec[1]
+        self.length = np.exp(vec[1])
 
     # Overload of operator ()
     def __call__(self,l1,l2):
         l = l1[:, None] - l2[None, :]
         rn  = np.abs(l)/self.length
+        if rn.min()<0:
+            print("MEGA UY",rn.min(),self.length)
         rn2 = rn**2
         return self.sigmaSq*(1. + self.sqrootof5*rn + 1.67*rn2)*np.exp(-self.sqrootof5*rn)
 
@@ -215,9 +217,9 @@ class linePriorCombinedKernel(Kernel):
         self.sigmaSlope    = vec[2]
         self.sigmaConstant = vec[3]
         # Covariance magnitude factor
-        self.sigmaSq       = vec[4]
+        self.sigmaSq       = np.exp(vec[4])
         # Characteristic length
-        self.length        = vec[5]
+        self.length        = np.exp(vec[5])
         # Set the parameters of the sub-kernels
         self.linear.set_parameters(vec[2:4])
         self.matern.set_parameters(vec[4:6])
@@ -225,9 +227,9 @@ class linePriorCombinedKernel(Kernel):
     # Method to set the optimizable parameters
     def set_optimizable_parameters(self,vec):
         # Covariance magnitude factor
-        self.sigmaSq       = vec[0]
+        self.sigmaSq       = np.exp(vec[0])
         # Characteristic length
-        self.length        = vec[1]
+        self.length        = np.exp(vec[1])
         self.matern.set_parameters(vec)
 
     # Overload the operator ()
@@ -246,12 +248,12 @@ class linePriorCombinedKernel(Kernel):
 
     # Method to get parameters
     def get_parameters(self):
-        parameters = [self.meanSlope, self.meanConstant, self.sigmaSlope, self.sigmaConstant, self.sigmaSq, self.length]
+        parameters = [self.meanSlope, self.meanConstant, self.sigmaSlope, self.sigmaConstant, np.log(self.sigmaSq), np.log(self.length)]
         return parameters
 
     # Method to get the optimizable parameters
     def get_optimizable_parameters(self):
-        parameters = [self.sigmaSq, self.length]
+        parameters = [np.log(self.sigmaSq), np.log(self.length)]
         return parameters
 
     # Method to print parameters
