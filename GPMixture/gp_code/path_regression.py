@@ -131,6 +131,7 @@ class path_regression:
         # Return to original values
         self.update_observations(observations)
         # Compute Average Displacement Error between prediction and true values
+        # Todo: this value elsewhere
         D     = 150.
         error = ADE(true_path,predicted_path)
         return (np.exp(-1.*( error**2)/D**2 ))
