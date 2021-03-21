@@ -17,7 +17,7 @@ def set_kernel(type_):
         parameters = [60., 80., 80.]  #{Precision of the line constant, Covariance magnitude factor, Characteristic length}
         kernel = combinedTrautmanKernel(parameters[0],parameters[1],parameters[2])
     elif(type_ == "linePriorCombined"):
-        parameters = [1.0,0.0,0.01,1.0, 80., 80.]  #{Mean slope, mean constant, Standard deviation slope, Standard deviation constant, Covariance magnitude factor, Characteristic length}
+        parameters = [1.0,0.0,0.01,1.0, 100., 50.]  #{Mean slope, mean constant, Standard deviation slope, Standard deviation constant, Covariance magnitude factor, Characteristic length}
         kernel = linePriorCombinedKernel(parameters[0],parameters[1],parameters[2],parameters[3],parameters[4],parameters[5])
     elif(type_ == "squaredExponential"):
         parameters = [80., 80.]  #{Covariance magnitude factor, Characteristic length}
@@ -125,9 +125,16 @@ class maternKernel(Kernel):
     # Method to set parameters
     def set_parameters(self,vec):
         # Covariance magnitude factor
-        self.sigmaSq= np.exp(vec[0])
+        self.sigmaSq= vec[0]
         # Characteristic length
-        self.length = np.exp(vec[1])
+        self.length = vec[1]
+
+    # Method to set parameters
+    def set_optimizable_parameters(self,vec):
+        # Covariance magnitude factor
+        self.sigmaSq= vec[0]
+        # Characteristic length
+        self.length = vec[1]
 
     # Overload of operator ()
     def __call__(self,l1,l2):
@@ -217,9 +224,9 @@ class linePriorCombinedKernel(Kernel):
         self.sigmaSlope    = vec[2]
         self.sigmaConstant = vec[3]
         # Covariance magnitude factor
-        self.sigmaSq       = np.exp(vec[4])
+        self.sigmaSq       = vec[4]
         # Characteristic length
-        self.length        = np.exp(vec[5])
+        self.length        = vec[5]
         # Set the parameters of the sub-kernels
         self.linear.set_parameters(vec[2:4])
         self.matern.set_parameters(vec[4:6])
@@ -227,34 +234,31 @@ class linePriorCombinedKernel(Kernel):
     # Method to set the optimizable parameters
     def set_optimizable_parameters(self,vec):
         # Covariance magnitude factor
-        self.sigmaSq       = np.exp(vec[0])
+        self.sigmaSq       = vec[0]
         # Characteristic length
-        self.length        = np.exp(vec[1])
-        self.matern.set_parameters(vec)
+        self.length        = vec[1]
+        self.matern.set_optimizable_parameters(vec)
 
     # Overload the operator ()
     def __call__(self,l1,l2):
         K = self.matern(l1,l2)
-        if self.linearPrior:
-            K += self.linear(l1,l2)
+        K+= self.linear(l1,l2)
         return K
 
     # Derivative with respect to y
     def dkdy(self,l1,l2):
         dkdy = self.matern.dkdy(l1,l2)
-        if self.linearPrior:
-            dkdy += self.linear.dkdy(l1,l2)
+        dkdy+= self.linear.dkdy(l1,l2)
         return dkdy
 
     # Method to get parameters
     def get_parameters(self):
-        parameters = [self.meanSlope, self.meanConstant, self.sigmaSlope, self.sigmaConstant, np.log(self.sigmaSq), np.log(self.length)]
+        parameters = [self.meanSlope, self.meanConstant, self.sigmaSlope, self.sigmaConstant, self.sigmaSq, self.length]
         return parameters
 
     # Method to get the optimizable parameters
     def get_optimizable_parameters(self):
-        parameters = [np.log(self.sigmaSq), np.log(self.length)]
-        return parameters
+        return [self.sigmaSq, self.length]
 
     # Method to print parameters
     def print_parameters(self):
