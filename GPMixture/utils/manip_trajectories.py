@@ -298,7 +298,7 @@ def get_goal_of_point(p, goals):
     for i in range(len(goals)):
         if(is_in_area(p,goals[i])):
             return i
-    return -1
+    return None
 
 # Middle of a goal area
 def goal_centroid(R):
