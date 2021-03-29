@@ -92,10 +92,12 @@ for i in range(1,part_num-1):
     stop       = time.process_time()
     print("[INF] CPU process time (update): %.1f [ms]" % (1000.0*(stop-start)))
     start = stop
-    # Generate samples
+    # Form the predictive distribution
     predictedXY,varXY = gp.predict_path(compute_sqRoot=True)
+    # Generate samples
     paths             = gp.sample_paths(10)
-    p.plot_path_samples_with_observations(observations[:,0].reshape((-1,1)),observations[:,1].reshape((-1,1)),paths)
+    # Plot samples and observations
+    p.plot_path_samples_with_observations(observations,paths)
     stop       = time.process_time()
     print("[INF] CPU process time (sampling): %.1f [ms]" % (1000.0*(stop-start)))
     print('[INF] Plotting')
