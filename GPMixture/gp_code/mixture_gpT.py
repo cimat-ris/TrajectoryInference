@@ -55,7 +55,7 @@ class mixtureGPT:
         for i in range(n):
             gi = self. goalTransitions[i]
             timeTransitionData = [self.goalsData.timeTransitionMeans[self.startG][gi],self.goalsData.timeTransitionStd[self.startG][gi]]
-            self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][gi], self.goalsData.kernelsY[self.startG][gi],None,None,self.goalsData.areas_coordinates[gi],self.goalsData.areas_axis[gi],None,'Trautman',timeTransitionData)
+            self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][gi], self.goalsData.kernelsY[self.startG][gi],goalsData.sigmaNoise,None,None,self.goalsData.areas_coordinates[gi],self.goalsData.areas_axis[gi],None,'Trautman',timeTransitionData)
     
     def update(self, observations):
         self.observedX = observations[:,0]

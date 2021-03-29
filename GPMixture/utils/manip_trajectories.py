@@ -265,8 +265,8 @@ def observed_data(traj, n):
 def observed_data_given_time(traj, time):
     _, _, t = traj
     i = 0
-    while(t[i] <= time):
-        i =+ 1
+    while(t[i] <= time and i < len(t)-1 ):
+        i += 1
     return observed_data(traj, i)
 
 """---------- Goal related functions ----------"""
