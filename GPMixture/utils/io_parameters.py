@@ -48,5 +48,6 @@ def read_and_set_parameters(file_name, nParameters):
             parameters.append(float(parameters_str[k]))
         print("[INF] From goal ",i," to ", j, " parameters: ",parameters)
         kernels[i][j].set_parameters(parameters)
+        kernels[i][j].optimized = True
     file.close()
     return kernels
