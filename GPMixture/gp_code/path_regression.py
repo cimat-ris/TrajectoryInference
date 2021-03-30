@@ -24,7 +24,6 @@ class path_regression:
         self.finalAreaAxis   = finalAreaAxis
         self.finalAreaCenter, self.finalAreaSize = goal_center_and_size(finalArea)
         self.prior           = prior
-
         self.mode            = mode
         if mode == 'Trautman':
             self.timeTransitionMean = timeTransitionData[0]
@@ -50,12 +49,16 @@ class path_regression:
         elif self.finalAreaAxis==1:
             s              = self.finalAreaSize[1]
         # Update observations of each process (x,y)
+        print('[INF] Updating observations in x')
         self.regression_x.update_observations(observations[:,0:1],observations[:,2:3],self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
+        print('[INF] Updating observations in y')
         self.regression_y.update_observations(observations[:,1:2],observations[:,2:3],self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
 
     def prediction_set_arclength(self, lastObs, finishPoint):
         # Coordinates of the last observed point
         x, y, l = lastObs[0], lastObs[1], lastObs[2]
+        print("[INF] Current point ",x,y)
+        print("[INF] Last point ",finishPoint)
         # Euclidean distance between the last observed point and the finish point
         euclideanDist = euclidean_distance([x,y], finishPoint)
         # Rough estimate of the remaining arc length
@@ -121,9 +124,11 @@ class path_regression:
             s              = self.finalAreaSize[0]
         elif self.finalAreaAxis==1:
             s              = self.finalAreaSize[1]
+        print('[INF] Updating observations for likelihood computation')
         # Update observations of each process
         self.regression_x.update_observations(observations[:half,0:1],observations[:half,2:3],self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
         self.regression_y.update_observations(observations[:half,1:2],observations[:half,2:3],self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
+        print('[INF] Final prediction')
         # Apply path prediction
         predicted_path, _ = self.predict_path_to_finish_point()
         # Prepare the ground truth
