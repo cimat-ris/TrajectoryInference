@@ -23,7 +23,7 @@ goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined20x2
 
 """**********          Testing          ***********"""
 # We give the start and ending goals
-startG, endG = 0,6
+startG, endG = 0,7
 pathId       = np.random.randint(0,len(trajMat[startG][endG]))
 # Kernels for this pair of goals
 kernelX = goalsData.kernelsX[startG][endG]
@@ -34,6 +34,7 @@ path = trajMat[startG][endG][pathId]
 # Get the path data
 pathX, pathY, pathT = path
 pathL = trajectory_arclength(path)
+
 # Total path length
 pathSize = len(pathX)
 
@@ -43,22 +44,17 @@ gp = singleGP(startG,endG,goalsData)
 p = plotter()
 # For different sub-parts of the trajectory
 for knownN in range(10,pathSize):
+    print('--------------------------')
     p.set_background(imgGCS)
     p.plot_scene_structure(goalsData)
     observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
     """Single goal prediction test"""
-    print('[INF] Updating likelihoods')
+    print('[INF] Updating observations')
     # Update the GP with (real) observations
-    start        = time.process_time()
     likelihood   = gp.update(observations)
-    stop         = time.process_time()
     filteredPath = gp.filter()
-    print("[INF] CPU process time (update): %.1f [ms]" % (1000.0*(stop-start)))
-    start = stop
     # Perform prediction
     predictedXY,varXY = gp.predict_trajectory()
-    stop       = time.process_time()
-    print("[INF] CPU process time (prediction): %.1f [ms]" % (1000.0*(stop-start)))
     print("[RES] Likelihood: ",likelihood)
     print('[INF] Plotting')
     # Plot the filtered version of the observations
