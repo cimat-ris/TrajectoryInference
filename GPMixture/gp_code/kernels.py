@@ -16,16 +16,19 @@ def set_kernel(type_):
     if(type_ == "combinedTrautman"):
         parameters = [60., 80., 80.]  #{Precision of the line constant, Covariance magnitude factor, Characteristic length}
         kernel = combinedTrautmanKernel(parameters[0],parameters[1],parameters[2])
+        kernel.optimized = False
     elif(type_ == "linePriorCombined"):
         parameters = [1.0,0.0,0.01,1.0, 100., 50.]  #{Mean slope, mean constant, Standard deviation slope, Standard deviation constant, Covariance magnitude factor, Characteristic length}
         kernel = linePriorCombinedKernel(parameters[0],parameters[1],parameters[2],parameters[3],parameters[4],parameters[5])
+        kernel.optimized = False
     elif(type_ == "squaredExponential"):
         parameters = [80., 80.]  #{Covariance magnitude factor, Characteristic length}
         kernel = squaredExponentialKernel(parameters[0],parameters[1])
+        kernel.optimized = False
     elif(type_ == "exponential"):
         parameters = [80., 80.]  #{Covariance magnitude factor, Characteristic length}
         kernel = exponentialKernel(parameters[0],parameters[1])
-
+        kernel.optimized = False
     return kernel
 
 # Abstract class for handling kernels
@@ -37,7 +40,8 @@ class Kernel:
         # Type of kernel
         self.type        = "generic"
         self.linearPrior = False
-
+        self.optimized   = False
+        
     # Overload the operator ()
     @abstractmethod
     def __call__(self,x,y): pass

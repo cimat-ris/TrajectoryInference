@@ -25,6 +25,9 @@ class goal_pairs:
         self.min_traj_number    = min_traj_number
         # Observation Noise
         self.sigmaNoise         = sigmaNoise
+        # Flag to know if the pairs of goals have parameters
+        # that have been learned
+        self.learned        = np.zeros((self.nGoals,self.nGoals),dtype=int)
         # Mean length for all pairs of goals
         self.meanLengths        = np.zeros((self.nGoals,self.nGoals))
         self.euclideanDistances = np.zeros((self.nGoals,self.nGoals))
@@ -86,7 +89,6 @@ class goal_pairs:
     # Computes the ratio between path length and linear path length
     # (distance between goals)
     def compute_distance_unit(self):
-        distance = []
         for i in range(self.nGoals):
             for j in range(self.nGoals):
                 if(self.euclideanDistances[i][j] == 0 or self.meanLengths[i][j] == 0):
@@ -95,7 +97,6 @@ class goal_pairs:
                     # Ratio between mean length and goal-to-goal distance
                     u = self.meanLengths[i][j]/self.euclideanDistances[i][j]
                 self.units[i][j] = u
-                distance.append(u)
 
     # Fills in the probability transition matrix gi -> gj
     def compute_prior_transitions(self,pathMat):

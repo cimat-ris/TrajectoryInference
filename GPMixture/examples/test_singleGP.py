@@ -4,6 +4,7 @@
 import random
 from test_common import *
 from gp_code.single_gp import singleGP
+import matplotlib.pyplot as plt
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
 goalsDescriptions= 'parameters/CentralStation_GoalsDescriptions.csv'
@@ -31,9 +32,14 @@ if randomPath:
             flag = False
     print("[INF] Selected goals:",(gi,gj),"| path index:", pathId)
 else:
-    gi, gj, pathId = 0, 6, 5
+    gi, gj = 0, 7
+    pathId       = np.random.randint(0,len(trajMat[gi][gj]))
 
 # Get the ground truth path
+if goalsData.kernelsX[gi][gj].optimized is not True:
+    print("[INF] This pair of goals have not optimized parameters. Aborting.")
+    sys.exit()
+
 path  = trajMat[gi][gj][pathId]
 pathX, pathY, pathT = path
 pathL = trajectory_arclength(path)
@@ -45,8 +51,10 @@ gp = singleGP(gi,gj,goalsData)
 
 # Divides the trajectory in part_num parts and infer the posterior over the remaining part
 part_num = 10
-p = plotter()
 for i in range(1,part_num-1):
+    p = plotter()
+    print('--------------------------')
+    print(pathL[-1])
     p.set_background(imgGCS)
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
@@ -73,8 +81,17 @@ for i in range(1,part_num-1):
     p.plot_prediction(observations,predictedXY,varXY)
     # Plot the ground truth
     p.plot_ground_truth(ground_truth)
-    p.pause(0.05)
-p.show()
+    print(gp.gpTrajectoryRegressor.regression_x.kernel.meanSlope)
+    print(gp.gpTrajectoryRegressor.regression_x.kernel.meanConstant)
+    fig, ax = plt.subplots(2,1)
+    ax[0].plot(predictedXY[:,2],predictedXY[:,0])
+    ax[0].set_ylabel('x')
+    ax[0].set_xlabel('l')
+    ax[1].plot(predictedXY[:,2],predictedXY[:,1])
+    ax[1].set_ylabel('y')
+    ax[1].set_xlabel('l')
+    p.show()
+
 
 # Same as above, with samples instead
 part_num = 10
