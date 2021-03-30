@@ -18,7 +18,7 @@ import numpy as np
 class goal_pairs:
 
     # Constructor
-    def __init__(self, areas_coordinates, areas_axis, trajMat, sigmaNoise=15.0, min_traj_number=15):
+    def __init__(self, areas_coordinates, areas_axis, trajMat, sigmaNoise=15.0, min_traj_number=5):
         self.nGoals             = len(areas_coordinates)
         self.areas_coordinates  = areas_coordinates
         self.areas_axis         = areas_axis
