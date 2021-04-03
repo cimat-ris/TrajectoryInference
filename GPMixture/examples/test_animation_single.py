@@ -28,7 +28,7 @@ if randomPath:
     flag = True
     while flag:
         startG, endG = random.randrange(goalsData.goals_n), random.randrange(goalsData.goals_n)
-        if goalsData.kernelsX[startG][endG].optimized is True:
+        if len(trajMat[startG][endG])>0 and goalsData.kernelsX[startG][endG].optimized is True:
             pathId = random.randrange( len(trajMat[startG][endG]) )
             flag = False
     print("[INF] Selected goals:",(startG,endG),"| path index:", pathId)
