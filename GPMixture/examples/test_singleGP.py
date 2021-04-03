@@ -54,7 +54,6 @@ part_num = 10
 for i in range(1,part_num-1):
     p = plotter()
     print('--------------------------')
-    print(pathL[-1])
     p.set_background(imgGCS)
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
@@ -81,8 +80,6 @@ for i in range(1,part_num-1):
     p.plot_prediction(observations,predictedXY,varXY)
     # Plot the ground truth
     p.plot_ground_truth(ground_truth)
-    print(gp.gpTrajectoryRegressor.regression_x.kernel.meanSlope)
-    print(gp.gpTrajectoryRegressor.regression_x.kernel.meanConstant)
     fig, ax = plt.subplots(2,1)
     ax[0].plot(predictedXY[:,2],predictedXY[:,0])
     ax[0].set_ylabel('x')
