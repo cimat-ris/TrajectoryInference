@@ -11,14 +11,14 @@ from utils.manip_trajectories import start_time, get_trajectories_given_time_int
 from utils.manip_trajectories import observed_data_given_time
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-goalsDescriptions= '../parameters/CentralStation_GoalsDescriptions.csv'
-trajFile         = '../datasets/GC/Annotation/'
-imgGCS           = '../imgs/train_station.jpg'
+goalsDescriptions= 'parameters/CentralStation_GoalsDescriptions.csv'
+trajFile         = 'datasets/GC/Annotation/'
+imgGCS           = 'imgs/train_station.jpg'
 
 traj_dataset, goalsData, trajMat, filtered = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
 
-goalsData.kernelsX = create_kernel_matrix('combinedTrautman', goalsData.nGoals, goalsData.nGoals)
-goalsData.kernelsY = create_kernel_matrix('combinedTrautman', goalsData.nGoals, goalsData.nGoals)
+goalsData.kernelsX = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
+goalsData.kernelsY = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
 
 """**********          Testing          ***********"""
 
@@ -32,8 +32,8 @@ print('Number of trajs: ', len(trajs))
 startGoals = []
 for traj in trajs:
     p = [traj[0][0], traj[1][0] ]
-    startGoals.append( get_goal_of_point(p, goalsData.areas_coordinates) )
-    
+    startGoals.append( get_goal_of_point(p, goalsData.goals_areas[:,1:]) )
+
 print('Goals of trajectories:')
 print( np.unique(startGoals) )
 goalIndex = np.unique(startGoals)
@@ -55,7 +55,7 @@ for i in range(1,part_num-1):
     p.plot_scene_structure(goalsData)
 
     time = int((i+1)*(observedTime/part_num)) #numero de datos conocidos
-    
+
     #get observations of each trajectory
     for j in range(1):#n):
         print('------------ Trajectory ',j,'---------------')
@@ -66,9 +66,9 @@ for i in range(1,part_num-1):
         predictedXYVec,varXYVec = mgps[j].predict_path()
         #samples[j] = mgps[j].sample_paths(nSamples)
         #print('[INF] samples', len(samples[j]))
-        
+
     #Evaluate likelihood of samples
-   
+
     #observations = observed_data(path,knownN)
     """Multigoal prediction test"""
     #print('[INF] Updating likelihoods')
@@ -84,6 +84,4 @@ for i in range(1,part_num-1):
     #print('[INF] Generating samples')
     #samplePaths = mgps.sample_paths(nSamples)
     #p.plot_path_samples_with_observations(observations,samplePaths)
-    #p.show() 
-
-
+    #p.show()

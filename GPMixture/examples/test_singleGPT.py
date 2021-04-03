@@ -15,8 +15,8 @@ traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,t
 
 #I'm skipping the training for now
 
-goalsData.kernelsX = create_kernel_matrix('combinedTrautman', goalsData.nGoals, goalsData.nGoals)
-goalsData.kernelsY = create_kernel_matrix('combinedTrautman', goalsData.nGoals, goalsData.nGoals)
+goalsData.kernelsX = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
+goalsData.kernelsY = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
 
 """
 print('[INF] Kernel parameters')
@@ -57,5 +57,5 @@ for i in range(1,part_num-1):
     # Plot the filtered version of the observations
     #p.plot_filtered(filteredX,filteredY)
     # Plot the prediction
-    p.plot_prediction(pathX,pathY,knownN,predictedXY,varXY)
+    p.plot_prediction(observations,predictedXY,varXY)
     p.show()
