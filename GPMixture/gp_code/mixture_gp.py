@@ -22,10 +22,9 @@ class mixtureOfGPs:
         self.likelyGoals     = []
         #Index of most likely goal
         self.mostLikelyGoal = None
-        # Number of sub-goals
-        self.nSubgoals       = 2
-        # Number of elements in the mixture (not all are used at the same time)
-        n                    = (self.nSubgoals+1)*self.goalsData.nGoals
+        # Number of elements in the mixture
+        n                    = self.goalsData.goals_n
+        # TODO: update?
         # Points to evaluate the likelihoods
         self.nPoints         = 5
         # Step unit
@@ -43,11 +42,11 @@ class mixtureOfGPs:
         self.observedX       = None
         self.observedY       = None
         self.observedL       = None
-        # The basic element here is this object, that will do the regression work
+        # The basic elements here is this array of objects, that will do the regression work
         self.gpTrajectoryRegressor = [None]*n
-        for i in range(self.goalsData.nGoals):
+        for i in range(self.goalsData.goals_n):
             # One regressor per goal
-            self.gpTrajectoryRegressor[i]=trajectory_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],self.goalsData.speedModels[self.startG][i],self.goalsData.units[self.startG][i],self.goalsData.stepUnit,self.goalsData.areas_coordinates[i],self.goalsData.areas_axis[i],self.goalsData.priorTransitions[self.startG][i])
+            self.gpTrajectoryRegressor[i]=trajectory_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.sigmaNoise,self.goalsData.speedModels[self.startG][i],self.goalsData.units[self.startG][i],self.goalsData.stepUnit,self.goalsData.goals_areas[i],prior=self.goalsData.priorTransitions[self.startG][i])
 
     # Update observations and compute likelihoods based on observations
     def update(self,observations):
@@ -55,8 +54,8 @@ class mixtureOfGPs:
         self.observedY = observations[:,1]
         self.observedT = observations[:,2]
         # Update each regressor with its corresponding observations
-        for i in range(self.goalsData.nGoals):
-            goalCenter,__= goal_center_and_size(self.goalsData.areas_coordinates[i])
+        for i in range(self.goalsData.goals_n):
+            goalCenter,__= goal_center_and_size(self.goalsData.goals_areas[i][1:])
             distToGoal   = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
             dist         = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
             # Update observations and re-compute the kernel matrices
@@ -69,13 +68,13 @@ class mixtureOfGPs:
         # Compute the mean likelihood
         self.meanLikelihood = mean(self.goalsLikelihood)
         # Maintain a list of likely goals
-        for i in range(self.goalsData.nGoals):
+        for i in range(self.goalsData.goals_n):
             self.goalsLikelihood[i] /= s
             if(self.goalsLikelihood[i] > 0.85*self.meanLikelihood):
                 self.likelyGoals.append(i)
         # Save most likely goal
         mostLikely = 0
-        for i in range(self.goalsData.nGoals):
+        for i in range(self.goalsData.goals_n):
             if self.goalsLikelihood[i] > self.goalsLikelihood[mostLikely]:
                 mostLikely = i
         self.mostLikelyGoal = mostLikely
@@ -85,14 +84,14 @@ class mixtureOfGPs:
     # Get a filtered version of the initial observations
     def filter(self):
         # For all likely goals
-        for i in range(self.goalsData.nGoals):
+        for i in range(self.goalsData.goals_n):
             self.filteredPaths[i]=self.gpTrajectoryRegressor[i].filter_observations()
         return self.filteredPaths
 
     # Performs path prediction
     def predict_path(self,compute_sqRoot=False):
         # For all likely goals
-        for i in range(self.goalsData.nGoals):
+        for i in range(self.goalsData.goals_n):
             print('[INF] Predicting path to goal ',i)
             # Uses the already computed matrices to apply regression over missing data
             self.predictedMeans[i], self.predictedVars[i] = self.gpTrajectoryRegressor[i].predict_path_to_finish_point(compute_sqRoot=compute_sqRoot)
@@ -102,34 +101,19 @@ class mixtureOfGPs:
     # Performs trajectory prediction
     def predict_trajectory(self,compute_sqRoot=False):
         # For all likely goals
-        for i in range(self.goalsData.nGoals):
+        for i in range(self.goalsData.goals_n):
             print('[INF] Predicting trajectory to goal ',i)
             # Uses the already computed matrices to apply regression over missing data
             self.predictedMeans[i], self.predictedVars[i] = self.gpTrajectoryRegressor[i].predict_trajectory_to_finish_point(compute_sqRoot=compute_sqRoot)
         return self.predictedMeans,self.predictedVars
 
     def sample_path(self):
-        p = self.goalsLikelihood[:self.goalsData.nGoals]
+        p = self.goalsLikelihood[:self.goalsData.goals_n]
         # Sample goal
-        goalSample = np.random.choice(self.goalsData.nGoals,1,p=p)
+        goalSample = np.random.choice(self.goalsData.goals_n,1,p=p)
         end        = goalSample[0]
         k          = end
-        # Sample end point around the sampled goal
-        if self.predictedMeans[end].shape[0]>0:
-            finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.areas_coordinates[end], self.goalsData.areas_axis[end])
-        else:
-            # Use subgoals: choose one randomly and sample
-            subgoalsCenter, size = get_subgoals_center_and_size(self.nSubgoals, self.goalsData.areas_coordinates[end], self.goalsData.areas_axis[end])
-            if self.goalsData.areas_axis[end]==0:
-                s = size[0]
-            else:
-                s = size[1]
-            # Choose a subgoal randomly
-            j = np.random.choice(self.nSubgoals)
-            k = end+(1+j)*self.goalsData.nGoals
-            # We call this in case the subgoals haven't been updated
-            finishX, finishY, axis = uniform_sampling_1D_around_point(1, subgoalsCenter[j], s, self.goalsData.areas_axis[end])
-
+        finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.goals_areas[end][1:], self.goalsData.goals_areas[end][0])
         # Use a pertubation approach to get the sample
         deltaX = finishX[0]-self.gpTrajectoryRegressor[k].finalAreaCenter[0]
         deltaY = finishY[0]-self.gpTrajectoryRegressor[k].finalAreaCenter[1]

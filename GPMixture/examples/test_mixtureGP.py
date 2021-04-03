@@ -13,7 +13,7 @@ imgGCS           = 'imgs/train_station.jpg'
 traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
 
 # Selection of the kernel type
-kernelType = "linePriorCombined"
+kernelType  = "linePriorCombined"
 nParameters = 4
 
 # Read the kernel parameters from file
@@ -59,7 +59,7 @@ for i in range(1,part_num-1):
     print(filteredPaths[0].shape)
     predictedXYVec,varXYVec = mgps.predict_trajectory()
     print('[INF] Plotting')
-    p.plot_multiple_predictions_and_goal_likelihood(pathX,pathY,knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
+    p.plot_multiple_predictions_and_goal_likelihood(pathX,pathY,knownN,goalsData.goals_n,likelihoods,predictedXYVec,varXYVec)
     print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
     print("[RES] Mean likelihood:", mgps.meanLikelihood)
     p.show()
@@ -68,7 +68,7 @@ for i in range(1,part_num-1):
 # Again, with Monte Carlo
 for i in range(1,part_num-1):
     p = plotter()
-    p.set_background(imgGCS)   
+    p.set_background(imgGCS)
     p.plot_scene_structure(goalsData)
 
     knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
@@ -83,5 +83,5 @@ for i in range(1,part_num-1):
     print('[INF] Generating samples')
     paths = mgps.sample_paths(nSamples)
     print('[INF] Plotting')
-    p.plot_path_samples_with_observations(observations[:,0].reshape((-1,1)),observations[:,1].reshape((-1,1)),paths)
+    p.plot_path_samples_with_observations(observations,paths)
     p.show()
