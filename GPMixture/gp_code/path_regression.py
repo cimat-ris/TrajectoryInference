@@ -14,15 +14,15 @@ from scipy.optimize import bisect
 
 class path_regression:
     # Constructor
-    def __init__(self, kernelX, kernelY, sigmaNoise, unit, stepUnit, finalArea, finalAreaAxis, prior,  mode=None, timeTransitionData=None):
+    def __init__(self, kernelX, kernelY, sigmaNoise, unit, stepUnit, finalArea, prior=0.0,  mode=None, timeTransitionData=None):
         self.regression_x    = onedim_regressionT(kernelX) if mode == 'Trautman' else path1D_regression(kernelX,sigmaNoise)
         self.regression_y    = onedim_regressionT(kernelY) if mode == 'Trautman' else path1D_regression(kernelY,sigmaNoise)
         self.predictedL      = None
         self.distUnit        = unit
         self.stepUnit        = stepUnit
         self.finalArea       = finalArea
-        self.finalAreaAxis   = finalAreaAxis
-        self.finalAreaCenter, self.finalAreaSize = goal_center_and_size(finalArea)
+        self.finalAreaCenter, self.finalAreaSize = goal_center_and_size(finalArea[1:])
+        self.finalAreaAxis   = finalArea[0]
         self.prior           = prior
         self.mode            = mode
         if mode == 'Trautman':
@@ -46,7 +46,7 @@ class path_regression:
         # Define the variance associated to the last point (varies with the area)
         if self.finalAreaAxis==0:
             s              = self.finalAreaSize[0]
-        elif self.finalAreaAxis==1:
+        else:
             s              = self.finalAreaSize[1]
         # Update observations of each process (x,y)
         #print('[INF] Updating observations in x')
@@ -111,7 +111,7 @@ class path_regression:
         d = int(half/m)
         if d<1:
             return 1.0
-        
+
         lastObs = observations[half]
         if self.mode == 'Trautman':
             elapsedTime = observations[:,2:3][half][0] - observations[:,2:3][0][0]
@@ -119,12 +119,12 @@ class path_regression:
             self.predictedL, finalL, self.dist = self.prediction_set_time(lastObs, self.finalAreaCenter, elapsedTime, timeStep)
         else:
             _, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
-        
+
         self.predictedL = observations[half:half+m*d:d,2:3]
         # Define the variance associated to the last point (varies with the area)
         if self.finalAreaAxis==0:
             s              = self.finalAreaSize[0]
-        elif self.finalAreaAxis==1:
+        else:
             s              = self.finalAreaSize[1]
         print('[INF] Updating observations for likelihood computation')
         # Update observations of each process
@@ -175,7 +175,8 @@ class path_regression:
     # Generate a sample from the predictive distribution with a perturbed finish point
     def sample_path_with_perturbed_finish_point(self):
         # Sample end point around the sampled goal
-        size = self.finalAreaSize[self.finalAreaAxis]
+
+        size = self.finalAreaSize[self.finalArea[0]]
         finishX, finishY, axis = uniform_sampling_1D_around_point(1, self.finalAreaCenter,size, self.finalAreaAxis)
         # Use a pertubation approach to get the sample
         deltaX = finishX[0]-self.finalAreaCenter[0]
