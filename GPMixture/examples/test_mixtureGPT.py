@@ -8,16 +8,16 @@ from gp_code.mixture_gpT import mixtureGPT
 from utils.stats_trajectories import truncate
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-goalsDescriptions= '../parameters/CentralStation_GoalsDescriptions.csv'
-trajFile         = '../datasets/GC/Annotation/'
-imgGCS           = '../imgs/train_station.jpg'
+goalsDescriptions= 'parameters/CentralStation_GoalsDescriptions.csv'
+trajFile         = 'datasets/GC/Annotation/'
+imgGCS           = 'imgs/train_station.jpg'
 
 traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
 
 #I'm skipping the training for now
 
-goalsData.kernelsX = create_kernel_matrix('combinedTrautman', goalsData.nGoals, goalsData.nGoals)
-goalsData.kernelsY = create_kernel_matrix('combinedTrautman', goalsData.nGoals, goalsData.nGoals)
+goalsData.kernelsX = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
+goalsData.kernelsY = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
 
 """**********          Testing          ***********"""
 gi, gj, k = 0, 6, 5
@@ -32,7 +32,8 @@ pathSize = len(path[0])
 
 # For different sub-parts of the trajectory
 for i in range(1,part_num-1):
-    p = plotter("../imgs/train_station.jpg")
+    p = plotter()
+    p.set_background("imgs/train_station.jpg")
     p.plot_scene_structure(goalsData)
 
     knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
@@ -51,4 +52,4 @@ for i in range(1,part_num-1):
     print('[INF] Generating samples')
     samplePaths = mgps.sample_paths(nSamples)
     p.plot_path_samples_with_observations(observations,samplePaths)
-    p.show() 
+    p.show()

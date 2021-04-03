@@ -105,7 +105,7 @@ class mixtureGPT:
         k          = end
 
         endGoal = self.goalTransitions[end]
-        finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.areas_coordinates[endGoal], self.goalsData.areas_axis[endGoal])
+        finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.goals_areas[endGoal,1:], self.goalsData.goals_areas[endGoal,0])
 
         # Use a pertubation approach to get the sample
         deltaX = finishX[0]-self.gpPathRegressor[k].finalAreaCenter[0]
