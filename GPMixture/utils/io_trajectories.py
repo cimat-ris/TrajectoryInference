@@ -46,14 +46,13 @@ def get_complete_traj_from_file(dataset_id,dataset_traj,goals,coordinate_system=
 # Main function for reading the data from a dataset
 def read_and_filter(dataset_id, areas_file, trajectories_file, use_pickled_data=False, pickle_dir='pickle'):
     # Read the areas data from the specified file
-    data     = pd.read_csv(areas_file)
-    areas    = data.values[:,2:]
-    areasAxis= data.values[:,1]
-    nGoals   = len(areas)
+    data       = pd.read_csv(areas_file)
+    goals_areas= data.values[:,1:]
+    goals_n    = len(goals_areas)
 
     if not use_pickled_data:
         # We process here multi-objective trajectories into sub-trajectories
-        traj_dataset = get_traj_from_file(dataset_id,trajectories_file, areas)
+        traj_dataset = get_traj_from_file(dataset_id,trajectories_file, goals_areas)
         # Dump trajectory dataset
         print("[INF] Pickling data...")
         pickle_out = open(pickle_dir+'/trajectories.pickle',"wb")
@@ -67,9 +66,9 @@ def read_and_filter(dataset_id, areas_file, trajectories_file, use_pickled_data=
 
     print("[INF] Assignment to goals")
     # Get useful paths and split the trajectories into pairs of goals
-    trajMat = separate_trajectories_between_goals(traj_dataset, areas)
+    trajMat = separate_trajectories_between_goals(traj_dataset,goals_areas)
     # Remove the trajectories that are either too short or too long
-    avgTrMat, avgTrajectories = filter_traj_matrix(trajMat, nGoals, nGoals)
+    avgTrMat, avgTrajectories = filter_traj_matrix(trajMat,goals_n,goals_n)
     # Form the object goalsLearnedStructure
-    goals_data = goal_pairs(areas, areasAxis, avgTrMat)
+    goals_data = goal_pairs(goals_areas, avgTrMat)
     return traj_dataset, goals_data, avgTrMat, avgTrajectories

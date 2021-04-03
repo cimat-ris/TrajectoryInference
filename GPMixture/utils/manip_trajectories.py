@@ -8,6 +8,7 @@ import math
 # the entry (i,j) has the paths that go from the goal i to the goal j
 def separate_trajectories_between_goals(trajectories, goals):
     nGoals = len(goals)
+    goals  = goals[:,1:]
     mat    = np.empty((nGoals,nGoals),dtype=object)
     # Initialize the matrix elements to empty lists
     for i in range(nGoals):
