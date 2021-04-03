@@ -11,12 +11,13 @@ from sklearn.linear_model import Ridge
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 
+imgGCS           = 'imgs/train_station.jpg'
 # Read the areas file, dataset, and form the goalsLearnedStructure object
 traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS','parameters/CentralStation_GoalsDescriptions.csv','datasets/GC/Annotation/',use_pickled_data=True)
 
 
-for i in range(goalsData.nGoals):
-    for j in range(goalsData.nGoals):
+for i in range(goalsData.goals_n):
+    for j in range(goalsData.goals_n):
         trajSet        = trajMat[i][j]
         # Only if we have enough trajectories
         if len(trajSet) < goalsData.min_traj_number:
@@ -40,7 +41,8 @@ for i in range(goalsData.nGoals):
         polyreg.fit(lengths, relativeSpeeds)
         slenghts = np.sort(lengths, axis=0)
         relativeSpeedsPredicted = polyreg.predict(slenghts)
-        p = plotter("imgs/train_station.jpg",title=f"Trajectories from {i} to {j}")
+        p = plotter(title=f"Trajectories from {i} to {j}")
+        p.set_background(imgGCS)
         p.plot_scene_structure(goalsData)
         p.plot_trajectories(trajMat[i][j])
         #p.show()
@@ -67,7 +69,6 @@ for tr in trajSet:
     instantSpeeds.append(trajectorySpeeds)
     averageSpeeds.append(median_speed(tr))
 
-"""
 # Plot a random sample of the trajectory set
 fig,ax = plt.subplots(1)
 sample = random.choices(range(len(trajSet)), k=30)
