@@ -22,7 +22,7 @@ class mixtureGPT:
         #Index of most likely goal
         self.mostLikelyGoal = None
         # Max number of elements in the mixture (not all are used at the same time)
-        maxn = 10
+        maxn = 5#10
         # Array of potential future goals
         arr = np.random.choice([i for i in range(goalsData.nGoals)], maxn, replace=False, p=goalsData.priorTransitions[startG])
         # Select elements where timeTransition is not zero

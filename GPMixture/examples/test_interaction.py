@@ -8,6 +8,7 @@ from test_common import *
 from gp_code.kernels import *
 from gp_code.mixture_gpT import mixtureGPT
 from utils.manip_trajectories import start_time, get_trajectories_given_time_interval, get_goal_of_point
+from utils.manip_trajectories import observed_data_given_time
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
 goalsDescriptions= '../parameters/CentralStation_GoalsDescriptions.csv'
@@ -25,6 +26,7 @@ goalsData.kernelsY = create_kernel_matrix('combinedTrautman', goalsData.nGoals, 
 filtered.sort(key=start_time)
 # Find trajectories within an interval
 trajs = get_trajectories_given_time_interval(filtered, 0, 100)
+n =  len(trajs)
 print('Number of trajs: ', len(trajs))
 
 startGoals = []
@@ -36,10 +38,14 @@ print('Goals of trajectories:')
 print( np.unique(startGoals) )
 goalIndex = np.unique(startGoals)
 
-mgps = [mixtureGPT(i,goalsData) for i in goalIndex ]
-observations = np.empty(goalIndex.size )
-nSamples = 5
+mgps         = np.empty(n,dtype=object)
+observations = np.empty(n,dtype=object)
+samples      = np.empty(n)
 
+for i in range(n):
+    mgps[i] = mixtureGPT(startGoals[i] ,goalsData)
+
+nSamples = 5
 part_num = 3
 observedTime = 100
 
@@ -48,10 +54,19 @@ for i in range(1,part_num-1):
     p = plotter("../imgs/train_station.jpg")
     p.plot_scene_structure(goalsData)
 
-    knownN = int((i+1)*(observedTime/part_num)) #numero de datos conocidos
+    time = int((i+1)*(observedTime/part_num)) #numero de datos conocidos
     
     #get observations of each trajectory
-    #compute samples
+    for j in range(1):#n):
+        print('------------ Trajectory ',j,'---------------')
+        observations[j] = observed_data_given_time(trajs[j],time)
+        print('[INF] Updating likelihoods')
+        likelihoods = mgps[j].update(observations[j])
+        print('[INF] Performing prediction')
+        predictedXYVec,varXYVec = mgps[j].predict_path()
+        #samples[j] = mgps[j].sample_paths(nSamples)
+        #print('[INF] samples', len(samples[j]))
+        
     #Evaluate likelihood of samples
    
     #observations = observed_data(path,knownN)
