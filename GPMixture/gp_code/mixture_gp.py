@@ -24,9 +24,6 @@ class mixtureOfGPs:
         self.mostLikelyGoal = None
         # Number of elements in the mixture
         n                    = self.goalsData.goals_n
-        # TODO: update?
-        # Points to evaluate the likelihoods
-        self.nPoints         = 5
         # Step unit
         self.stepUnit        = goalsData.stepUnit
         # Starting goal
@@ -45,8 +42,9 @@ class mixtureOfGPs:
         # The basic elements here is this array of objects, that will do the regression work
         self.gpTrajectoryRegressor = [None]*n
         for i in range(self.goalsData.goals_n):
-            # One regressor per goal
-            self.gpTrajectoryRegressor[i]=trajectory_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.sigmaNoise,self.goalsData.speedModels[self.startG][i],self.goalsData.units[self.startG][i],self.goalsData.stepUnit,self.goalsData.goals_areas[i],prior=self.goalsData.priorTransitions[self.startG][i])
+            if self.goalsData.priorTransitions[self.startG][i]>0:
+                # One regressor per goal
+                self.gpTrajectoryRegressor[i]=trajectory_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.sigmaNoise,self.goalsData.speedModels[self.startG][i],self.goalsData.units[self.startG][i],self.goalsData.stepUnit,self.goalsData.goals_areas[i],prior=self.goalsData.priorTransitions[self.startG][i])
 
     # Update observations and compute likelihoods based on observations
     def update(self,observations):
@@ -55,13 +53,14 @@ class mixtureOfGPs:
         self.observedT = observations[:,2]
         # Update each regressor with its corresponding observations
         for i in range(self.goalsData.goals_n):
-            goalCenter,__= goal_center_and_size(self.goalsData.goals_areas[i][1:])
-            distToGoal   = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
-            dist         = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
-            # Update observations and re-compute the kernel matrices
-            self.gpTrajectoryRegressor[i].update_observations(observations)
-            # Compute the model likelihood
-            self.goalsLikelihood[i] = self.gpTrajectoryRegressor[i].compute_likelihood(observations,self.nPoints)
+            if self.gpTrajectoryRegressor[i] is not None:
+                goalCenter,__= goal_center_and_size(self.goalsData.goals_areas[i][1:])
+                distToGoal   = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
+                dist         = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
+                # Update observations and re-compute the kernel matrices
+                self.gpTrajectoryRegressor[i].update_observations(observations)
+                # Compute the model likelihood
+                self.goalsLikelihood[i] = self.gpTrajectoryRegressor[i].compute_likelihood()
 
         # Sum of the likelihoods
         s = sum(self.goalsLikelihood)
@@ -78,33 +77,34 @@ class mixtureOfGPs:
             if self.goalsLikelihood[i] > self.goalsLikelihood[mostLikely]:
                 mostLikely = i
         self.mostLikelyGoal = mostLikely
-
         return self.goalsLikelihood
 
     # Get a filtered version of the initial observations
     def filter(self):
         # For all likely goals
         for i in range(self.goalsData.goals_n):
-            self.filteredPaths[i]=self.gpTrajectoryRegressor[i].filter_observations()
+            if self.gpTrajectoryRegressor[i] is not None:
+                self.filteredPaths[i]=self.gpTrajectoryRegressor[i].filter_observations()
         return self.filteredPaths
 
     # Performs path prediction
     def predict_path(self,compute_sqRoot=False):
         # For all likely goals
         for i in range(self.goalsData.goals_n):
-            print('[INF] Predicting path to goal ',i)
-            # Uses the already computed matrices to apply regression over missing data
-            self.predictedMeans[i], self.predictedVars[i] = self.gpTrajectoryRegressor[i].predict_path_to_finish_point(compute_sqRoot=compute_sqRoot)
-
+            if self.gpTrajectoryRegressor[i] is not None:
+                print('[INF] Predicting path to goal ',i)
+                # Uses the already computed matrices to apply regression over missing data
+                self.predictedMeans[i], self.predictedVars[i] = self.gpTrajectoryRegressor[i].predict_path_to_finish_point(compute_sqRoot=compute_sqRoot)
         return self.predictedMeans,self.predictedVars
 
     # Performs trajectory prediction
     def predict_trajectory(self,compute_sqRoot=False):
         # For all likely goals
         for i in range(self.goalsData.goals_n):
-            print('[INF] Predicting trajectory to goal ',i)
-            # Uses the already computed matrices to apply regression over missing data
-            self.predictedMeans[i], self.predictedVars[i] = self.gpTrajectoryRegressor[i].predict_trajectory_to_finish_point(compute_sqRoot=compute_sqRoot)
+            if self.gpTrajectoryRegressor[i] is not None:
+                print('[INF] Predicting trajectory to goal ',i)
+                # Uses the already computed matrices to apply regression over missing data
+                self.predictedMeans[i], self.predictedVars[i] = self.gpTrajectoryRegressor[i].predict_trajectory_to_finish_point(compute_sqRoot=compute_sqRoot)
         return self.predictedMeans,self.predictedVars
 
     def sample_path(self):

@@ -79,38 +79,34 @@ class plotter():
         self.ax.plot(filteredPath[:-1,0],filteredPath[:-1,1],'b--')
 
     # Plot multiple predictions
-    def plot_multiple_predictions_and_goal_likelihood(self,x,y,nUsedData,nGoals,goalsLikelihood,predictedXYVec,varXYVec):
-        observedX = x[0:nUsedData]
-        observedY = y[0:nUsedData]
-
+    def plot_multiple_predictions_and_goal_likelihood(self,observations,paths,var_paths,goalsLikelihood):
         # Plot the observed data
-        self.ax.plot(observedX,observedY,'c')
+        self.ax.plot(observations[:,0],observations[:,1],'c')
 
         maxLikelihood = max(goalsLikelihood)
         maxLW = 2
-        for i in range(len(predictedXYVec)):
-            if (predictedXYVec[i].shape[0]==0):
+        for i in range(len(goalsLikelihood)):
+            if (paths[i].shape[0]==0) or goalsLikelihood[i]<0.01 :
                 continue
-            print('[RES] Plotting GP ',i)
-            # For each goal/subgoal, draws the prediction
-            self.ax.plot(predictedXYVec[i][:,0],predictedXYVec[i][:,1],'b--')
-            self.ax.plot([observedX[-1],predictedXYVec[i][0,0]],[observedY[-1],predictedXYVec[i][0,1]],'b--')
-            predictedN = predictedXYVec[i].shape[0]
+            print('[RES] Plotting GP component ',i)
+            # Line width function of the likelihood
+            lw = (goalsLikelihood[i]/maxLikelihood)*maxLW
+            # For each goal, draws the prediction
+            self.ax.plot(paths[i][:,0],paths[i][:,1],'b--')
+            self.ax.plot([observations[-1,0],paths[i][0,0]],[observations[-1,1],paths[i][0,1]],'b--')
+            predictedN = paths[i].shape[0]
             # For the jth predicted element
             for j in range(predictedN):
-                xy = [predictedXYVec[i][j,0],predictedXYVec[i][j,1]]
-                # 6.0 = 2.0 x 3.0
-                # It is: to have 3.0 sigmas. Then, the Ellipse constructor asks for the diameter, hence the 2.0
-                vx  = varXYVec[i][0,j,j]
-                vy  = varXYVec[i][1,j,j]
-                ell = Ellipse(xy,6.0*math.sqrt(math.fabs(vx)),6.0*math.sqrt(math.fabs(vy)))
-                lw = (goalsLikelihood[i%nGoals]/maxLikelihood)*maxLW
-                ell.set_lw(lw)
-                ell.set_fill(0)
-                ell.set_edgecolor(color[i%nGoals])
-                self.ax.add_patch(ell)
-
-            self.ax.plot(x[nUsedData-1:-1],y[nUsedData-1:-1],'c--')
+                if j%2==0:
+                    xy = [paths[i][j,0],paths[i][j,1]]
+                    # It is: to have 3.0 sigmas. Then, the Ellipse constructor asks for the diameter, hence the 2.0
+                    vx  = var_paths[i][0,j,j]
+                    vy  = var_paths[i][1,j,j]
+                    ell = Ellipse(xy,6.0*math.sqrt(math.fabs(vx)),6.0*math.sqrt(math.fabs(vy)))
+                    ell.set_lw(lw)
+                    ell.set_fill(0)
+                    ell.set_edgecolor('m')
+                    self.ax.add_patch(ell)
 
     # Plot a set of sample trajectories and an observed partial trajectory
     def plot_path_samples_with_observations(self,observations,paths):
