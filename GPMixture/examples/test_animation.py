@@ -23,12 +23,21 @@ goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined20x2
 
 """**********          Testing          ***********"""
 # We give the start and ending goals
-startG, endG = 0,7
-pathId       = np.random.randint(0,len(trajMat[startG][endG]))
+randomPath = True
+if randomPath:
+    flag = True
+    while flag:
+        startG, endG = random.randrange(goalsData.nGoals), random.randrange(goalsData.nGoals)
+        if goalsData.kernelsX[startG][endG].optimized is True:
+            pathId = random.randrange( len(trajMat[startG][endG]) )
+            flag = False
+    print("[INF] Selected goals:",(startG,endG),"| path index:", pathId)
+else:
+    startG,endG = 0, 7
+    pathId       = np.random.randint(0,len(trajMat[startG][endG]))
 # Kernels for this pair of goals
 kernelX = goalsData.kernelsX[startG][endG]
 kernelY = goalsData.kernelsY[startG][endG]
-
 # Get the ground truth path
 path = trajMat[startG][endG][pathId]
 # Get the path data
