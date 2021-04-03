@@ -15,11 +15,20 @@ class path1D_regression:
         # Observation vectors
         self.observedX       = None
         self.observedL       = None
+        self.observedL_2m    = None
+        self.observedL_3m    = None
         # Prediction vectors
         self.predictedX      = None
         self.predictedL      = None
+        # Covariance matrix
         self.K               = None
+        # Inverse of the previous
         self.Kp_1            = None
+        self.Kp_1_2m         = None
+        self.Kp_1_3m         = None
+        self.Kp_1o           = None
+        self.Kp_1o_2m        = None
+        self.Kp_1o_3m        = None
         self.k               = None
         self.C               = None
         self.sqRootVar       = np.empty((0, 0))
@@ -33,27 +42,35 @@ class path1D_regression:
         self.sigmaNoise      = sigmaNoise
         #
         self.m               = 5
+        self.n               = 0
 
     # Method to select observations
     def select_observations(self,observedL,observedX):
-        # Observations
-        n                    = observedX.shape[0]
         # Number of data we will use
-        k       = int(np.log(n)/np.log(1+self.epsilonSel))
+        k       = int(np.log(self.n)/np.log(1+self.epsilonSel))
         l2      = np.array(range(2,k+1))
-        idx     = n-(np.power(1+self.epsilonSel,l2)).astype(int)
+        idx     = self.n-(np.power(1+self.epsilonSel,l2)).astype(int)
         return observedL[idx],observedX[idx]
 
     # Update observations for the Gaussian process
     def update_observations(self,observedX,observedL,finalX,finalL,finalVar,predictedL):
         # Number of "real" observations (we add one: the final point)
-        n                    = len(observedX)
-        # Values of arc length L at which we predict X
+        self.n               = len(observedX)
+        # Keep the solution for future likelihood evaluations
+        if self.n%self.m==0:
+            print("[INF] Keeping current prediction for future likelihood evaluations")
+            self.Kp_1_3m = self.Kp_1_2m
+            self.Kp_1_2m = self.Kp_1
+            self.Kp_1o_3m= self.Kp_1o_2m
+            self.Kp_1o_2m= self.Kp_1o
+            self.observedL_3m = self.observedL_2m
+            self.observedL_2m = self.observedL
+        # Values of arc length L at which we will predict X
         self.predictedL      = predictedL
         # Set the observations
         selectedL, selectedX = self.select_observations(observedL,observedX)
         n_obs                = selectedL.shape[0]
-        print("[INF] Selected:",n_obs," observations out of",n)
+        print("[INF] Selected:",n_obs," observations out of",self.n)
         # Covariance matrix
         self.K               = np.zeros((n_obs+1,n_obs+1))
         # Observation vectors: X and L
@@ -71,7 +88,6 @@ class path1D_regression:
         # Add the variance associated to the last point (varies with the area)
         self.finalVar        = finalVar
         self.K[n_obs][n_obs]+= finalVar
-        # Heavy
         self.Kp_1    = inv(self.K+self.sigmaNoise*np.eye(self.K.shape[0]))
         self.Kp_1o   = self.Kp_1.dot(self.observedX)
         # For usage in prediction
@@ -92,26 +108,27 @@ class path1D_regression:
             f +=self.observedL*self.kernel.meanSlope+self.kernel.meanConstant
         return f
 
-    # Compute the likelihood for this coordinates
-    def compute_likelihood(self):
-        n       = self.observedL.shape[0]
-        half    = max(1,int(n/2))
-        indices = list(range(0,half))
-        indices.append(n-1)
-        indicesp= list(range(half,n-1))
-        nm      = len(indices)-1
-        npreds  = len(indicesp)
-        # Fill in K, first elements (nxn)
-        K    = self.kernel(self.observedL[indices,0],self.observedL[indices,0])
-        # Add the variance associated to the last point
-        K[nm][nm]+= self.finalVar
-        k    = self.kernel(self.observedL[indices,0],self.observedL[indicesp,0])
-        Kp_1 = inv(K+self.sigmaNoise*np.eye(K.shape[0]))
-        Kp_1o= Kp_1.dot(self.observedX[indices])
-        predictedX = k.transpose().dot(Kp_1o)
-        d          = predictedX.transpose()-self.observedX[indicesp,0]
-        errsq      = d.dot(d.transpose())/npreds
-        return math.exp(-1.*( errsq)/(self.sigmaNoise*self.sigmaNoise) )
+    # Compute the log-likelihood for this coordinates
+    def loglikelihood_from_partial_path(self):
+        if self.Kp_1_3m is None:
+            return 1.0
+        # We remove the last element (corresponds to goal)
+        mL        = np.max(self.observedL_3m[:-1,0])
+        idx       = self.observedL>mL
+        predictedL= self.observedL[idx].reshape((-1,1))
+        trueX     = self.observedX[idx].reshape((-1,1))
+        k_3m      = self.kernel(self.observedL_3m[:,0],predictedL[:,0])
+        C_3m      = self.kernel(predictedL[:,0],predictedL[:,0])
+        # Predictive mean
+        predictedX_3m = k_3m.transpose().dot(self.Kp_1o_3m)
+        error         = predictedX_3m-trueX
+        # Estimate the variance in the predicted x
+        ktKp_1_3m = k_3m.transpose().dot(self.Kp_1_3m)
+        varX_3m   = C_3m - ktKp_1_3m.dot(k_3m)
+        # Regularization to avoid singular matrices
+        varX_3m  += (self.epsilonReg+self.sigmaNoise)*np.eye(varX_3m.shape[0])
+        errorSq   = np.divide(np.square(error),np.diagonal(varX_3m).reshape((-1,1)))
+        return -errorSq.sum()
 
     # The main regression function: perform regression for a vector of values
     # lnew, that has been computed in update

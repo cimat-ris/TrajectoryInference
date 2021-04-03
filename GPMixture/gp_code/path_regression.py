@@ -49,9 +49,7 @@ class path_regression:
         else:
             s              = self.finalAreaSize[1]
         # Update observations of each process (x,y)
-        #print('[INF] Updating observations in x')
         self.regression_x.update_observations(observations[:,0:1],observations[:,2:3],self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
-        #print('[INF] Updating observations in y')
         self.regression_y.update_observations(observations[:,1:2],observations[:,2:3],self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
 
 
@@ -101,54 +99,18 @@ class path_regression:
         filteredy = self.regression_y.filter_observations()
         return np.concatenate([filteredx,filteredy],axis=1)
 
-    # For a given set of observations (x,y,l), takes half of the data as known
-    # and predicts m points from the remaining half. Then, evaluate the prediction error.
-    def likelihood_from_partial_path(self,observations,m):
-        # TODO: redo as said in the paper :)
-        n       = observations.shape[0]
-        half    = max(1,int(n/2))
-        # Set of l to predict
-        d = int(half/m)
-        if d<1:
-            return 1.0
-
-        lastObs = observations[half]
-        if self.mode == 'Trautman':
-            elapsedTime = observations[:,2:3][half][0] - observations[:,2:3][0][0]
-            timeStep    = observations[:,2:3][1][0] - observations[:,2:3][0][0]
-            self.predictedL, finalL, self.dist = self.prediction_set_time(lastObs, self.finalAreaCenter, elapsedTime, timeStep)
-        else:
-            _, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
-
-        self.predictedL = observations[half:half+m*d:d,2:3]
-        # Define the variance associated to the last point (varies with the area)
-        if self.finalAreaAxis==0:
-            s              = self.finalAreaSize[0]
-        else:
-            s              = self.finalAreaSize[1]
-        print('[INF] Updating observations for likelihood computation')
-        # Update observations of each process
-        self.regression_x.update_observations(observations[:half,0:1],observations[:half,2:3],self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
-        self.regression_y.update_observations(observations[:half,1:2],observations[:half,2:3],self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
-        print('[INF] Final prediction')
-        # Apply path prediction
-        predicted_path, _ = self.predict_path_to_finish_point()
-        # Prepare the ground truth
-        true_path         = observations[half:half+m*d:d,0:2]
-        # Return to original values
-        self.update_observations(observations)
-        # Compute Average Displacement Error between prediction and true values
-        # Todo: this value elsewhere
-        D     = 150.
-        error = ADE(true_path,predicted_path)
-        return (np.exp(-1.*( error**2)/D**2 ))
+    def loglikelihood_from_partial_path(self):
+        px = self.regression_x.loglikelihood_from_partial_path()
+        py = self.regression_y.loglikelihood_from_partial_path()
+        return px+py
 
     # Compute the likelihood
-    def compute_likelihood(self,observations,stepsToCompare):
+    def compute_likelihood(self):
         if self.mode == 'Trautman':
-            self.likelihood = self.likelihood_from_partial_path(observations,stepsToCompare)
+            self.likelihood = self.loglikelihood_from_partial_path()
         else:
-            self.likelihood = self.prior*self.likelihood_from_partial_path(observations,stepsToCompare)
+            # TODO:
+            self.likelihood = self.prior*np.exp(self.loglikelihood_from_partial_path())
         return self.likelihood
 
     # The main path regression function: perform regression for a

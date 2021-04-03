@@ -28,7 +28,7 @@ class singleGP:
         # Update observations and re-compute the kernel matrices
         self.gpTrajectoryRegressor.update_observations(observations)
         # Compute the model likelihood
-        return self.gpTrajectoryRegressor.compute_likelihood(observations,self.nPoints)
+        return self.gpTrajectoryRegressor.compute_likelihood()
 
     # Performs path prediction
     def predict_path(self,compute_sqRoot=False):
