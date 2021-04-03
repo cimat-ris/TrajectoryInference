@@ -241,16 +241,16 @@ def animate_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,go
     return
 
 # Plot a set of sample trajectories
-def plot_path_samples(img,x,y):
-    n = len(x)
+def plot_path_samples(img,paths):
+    n = len(paths)
     if(n == 0):
         return
     fig,ax = plt.subplots(1)
     ax.set_aspect('equal')
     # Show the image
     ax.imshow(img)
-    for i in range(n):
-        plt.plot(x[i],y[i])
+    for p in paths:
+        plt.plot(p[:,0],p[:,1])
     s = img.shape
     v = [0,s[1],s[0],0]
     plt.axis(v)
