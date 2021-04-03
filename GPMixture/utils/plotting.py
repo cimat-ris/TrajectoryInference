@@ -40,8 +40,8 @@ class plotter():
 
     # Plot the scene structure: goals and sub-goals
     def plot_scene_structure(self,goalsData):
-        for i in range(goalsData.nGoals):
-            self.plot_subgoals(goalsData.areas_coordinates[i], 2, goalsData.areas_axis[i])
+        for i in range(goalsData.goals_n):
+            self.plot_subgoals(goalsData.goals_areas[i][1:], 2, goalsData.goals_areas[i][0])
 
     # Plot the sub goals
     def plot_subgoals(self, goal, numSubgoals, axis):
@@ -148,34 +148,6 @@ class plotter():
 
 #******************************************************************************#
 """ PLOT FUNCTIONS """
-
-#Pinta las predicciones de los subgoals
-def plot_subgoal_prediction(img,trueX,trueY,knownN,nSubgoals,predictedXYVec,varXYVec):
-    observedX = trueX[0:knownN]
-    observedY = trueY[0:knownN]
-
-    fig,ax = plt.subplots(1)
-    ax.set_aspect('equal')
-    ax.imshow(img)
-
-    plt.plot(observedX,observedY,'c')
-
-    for i in range(nSubgoals): #pinta la prediccion para cada subgoal
-        plt.plot(predictedXYVec[i][0],predictedXYVec[i][1],'b--')
-        predictedN = len(predictedXYVec[i][0])
-        for j in range(predictedN):
-            xy = [predictedXYVec[i][0][j],predictedXYVec[i][1][j]]
-            ell = Ellipse(xy,varXYVec[i][0][j], varXYVec[i][1][j])
-            ell.set_lw(1.)
-            ell.set_fill(0)
-            ell.set_edgecolor(color[i])
-            ax.add_patch(ell)
-
-    plt.plot(trueX[knownN:-1],trueY[knownN:-1],'c--')
-    v = [0,img.shape[1],img.shape[0],0]
-    plt.axis(v)
-    plt.show()
-
 #Imagen en seccion 2: partial path + euclidian distance
 def plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,finalXY):
     observedX = trueX[0:knownN]
