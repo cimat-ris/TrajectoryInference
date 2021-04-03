@@ -49,10 +49,11 @@ class path_regression:
         elif self.finalAreaAxis==1:
             s              = self.finalAreaSize[1]
         # Update observations of each process (x,y)
-        print('[INF] Updating observations in x')
+        #print('[INF] Updating observations in x')
         self.regression_x.update_observations(observations[:,0:1],observations[:,2:3],self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
-        print('[INF] Updating observations in y')
+        #print('[INF] Updating observations in y')
         self.regression_y.update_observations(observations[:,1:2],observations[:,2:3],self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
+
 
     def prediction_set_arclength(self, lastObs, finishPoint):
         # Coordinates of the last observed point
@@ -92,7 +93,6 @@ class path_regression:
                 predset[i-1,0] = t + i*timeStep
             if predset[-1,0] < t + remainingTime:
                 predset[-1,0] = t + remainingTime
-
         return predset, t + remainingTime, distToGoal
 
     # Filter initial observations
@@ -107,6 +107,11 @@ class path_regression:
         # TODO: redo as said in the paper :)
         n       = observations.shape[0]
         half    = max(1,int(n/2))
+        # Set of l to predict
+        d = int(half/m)
+        if d<1:
+            return 1.0
+        
         lastObs = observations[half]
         if self.mode == 'Trautman':
             elapsedTime = observations[:,2:3][half][0] - observations[:,2:3][0][0]
@@ -114,10 +119,7 @@ class path_regression:
             self.predictedL, finalL, self.dist = self.prediction_set_time(lastObs, self.finalAreaCenter, elapsedTime, timeStep)
         else:
             _, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
-        # Set of l to predict
-        d = int(half/m)
-        if d<1:
-            return 1.0
+        
         self.predictedL = observations[half:half+m*d:d,2:3]
         # Define the variance associated to the last point (varies with the area)
         if self.finalAreaAxis==0:
