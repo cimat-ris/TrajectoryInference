@@ -44,12 +44,13 @@ traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,t
 # Plot trajectories and structure
 showDataset = True
 if showDataset:
-    s = goalsData.areas_coordinates.shape
-    for i in range(s[0]):
-        for j in range(s[0]):
+    n = goalsData.goals_n
+    for i in range(n):
+        for j in range(n):
             if len(trajMat[i][j])>0:
                 #p = plotter("imgs/train_station.jpg",title=f"Trajectories from {i} to {j}")
-                p = plotter(imgGCS,title=f"Trajectories from {i} to {j}")
+                p = plotter()
+                p.set_background(imgGCS)
                 p.plot_scene_structure(goalsData)
                 p.plot_trajectories(trajMat[i][j])
                 p.show()
