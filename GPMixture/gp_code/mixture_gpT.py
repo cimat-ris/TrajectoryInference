@@ -24,7 +24,7 @@ class mixtureGPT:
         # Max number of elements in the mixture (not all are used at the same time)
         maxn = 5#10
         # Array of potential future goals
-        arr = np.random.choice([i for i in range(goalsData.nGoals)], maxn, replace=False, p=goalsData.priorTransitions[startG])
+        arr = np.random.choice([i for i in range(goalsData.goals_n)], maxn, replace=False, p=goalsData.priorTransitions[startG])
         # Select elements where timeTransition is not zero
         deleteid = []
         for i in range(maxn):
@@ -51,12 +51,12 @@ class mixtureGPT:
         # The basic element here is this object, that will do the regression work
         self.gpPathRegressor = [None]*n
         self.gpTrajectoryRegressor = [None]*n
-        
+
         for i in range(n):
             gi = self. goalTransitions[i]
             timeTransitionData = [self.goalsData.timeTransitionMeans[self.startG][gi],self.goalsData.timeTransitionStd[self.startG][gi]]
-            self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][gi], self.goalsData.kernelsY[self.startG][gi],goalsData.sigmaNoise,None,None,self.goalsData.areas_coordinates[gi],self.goalsData.areas_axis[gi],None,'Trautman',timeTransitionData)
-    
+            self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][gi], self.goalsData.kernelsY[self.startG][gi],goalsData.sigmaNoise,None,None,self.goalsData.goals_areas[gi],mode='Trautman',timeTransitionData=timeTransitionData)
+
     def update(self, observations):
         self.observedX = observations[:,0]
         self.observedY = observations[:,1]
@@ -70,7 +70,7 @@ class mixtureGPT:
 
         # Compute the mean likelihood
         self.meanLikelihood = mean(self.goalsLikelihood)
-        
+
         n = len(self.goalTransitions)
         mostLikely = 0
         for i in range(n):
@@ -84,17 +84,17 @@ class mixtureGPT:
     def predict_path(self):
         n = len(self.goalTransitions)
         # For all likely goals
-        for i in range(n):#self.goalsData.nGoals):
+        for i in range(n):
             gi = self.goalTransitions[i]
-            goalCenter,__ = goal_center_and_size(self.goalsData.areas_coordinates[gi])
+            goalCenter,__ = goal_center_and_size(self.goalsData.goals_areas[gi,1:])
             #distToGoal    = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
             #dist          = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
 
             # Uses the already computed matrices to apply regression over missing data
             self.predictedMeans[i], self.predictedVars[i] = self.gpPathRegressor[i].predict_path_to_finish_point()
-            
+
         return self.predictedMeans,self.predictedVars
-    
+
     def sample_path(self):
         n = len(self.goalTransitions)
         p = self.goalsLikelihood[:n]
@@ -103,10 +103,10 @@ class mixtureGPT:
         sampleId = np.random.choice(n,1,p=normp)
         end        = sampleId[0]
         k          = end
-        
+
         endGoal = self.goalTransitions[end]
         finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.areas_coordinates[endGoal], self.goalsData.areas_axis[endGoal])
-        
+
         # Use a pertubation approach to get the sample
         deltaX = finishX[0]-self.gpPathRegressor[k].finalAreaCenter[0]
         deltaY = finishY[0]-self.gpPathRegressor[k].finalAreaCenter[1]
@@ -118,4 +118,3 @@ class mixtureGPT:
             s = self.sample_path()
             samples.append(s)
         return samples
-        
