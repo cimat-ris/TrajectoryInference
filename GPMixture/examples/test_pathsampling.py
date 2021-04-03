@@ -12,7 +12,6 @@ imgGCS           = 'imgs/train_station.jpg'
 img              = mpimg.imread(imgGCS)
 
 traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
-
 # Selection of the kernel type
 kernelType = "linePriorCombined"
 nParameters = 4
@@ -22,19 +21,20 @@ goalsData.kernelsX = read_and_set_parameters("parameters/linearpriorcombined20x2
 goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined20x20_y.txt",nParameters)
 
 # Sampling 3 trajectories between all the pairs of goals
-vecX, vecY = [], []
-for i in range(goalsData.nGoals):
-    for j in range(i,goalsData.nGoals):
-        if(i != j):
-            iCenter = goal_centroid(goalsData.areas_coordinates[i])
-            jCenter = goal_centroid(goalsData.areas_coordinates[j])
+allPaths = []
+for i in range(goalsData.goals_n):
+    for j in range(i,goalsData.goals_n):
+        if(i != j) and goalsData.kernelsX[i][j].optimized is True:
+            path  = trajMat[i][j][0]
+            pathX, pathY, pathT = path
+            pathL = trajectory_arclength(path)
+            observations, __ = observed_data([pathX,pathY,pathL,pathT],2)
             # The basic element here is this object, that will do the regression work
             gp = singleGP(i,j,goalsData)
-            likelihood = gp.update(np.array([iCenter[0]]),np.array([iCenter[1]]),np.array([0.0]))
+            likelihood = gp.update(observations)
             # Generate samples
-            predictedXY,varXY = gp.predict(compute_sqRoot=True)
-            nvecX,nvecY       = gp.generate_samples(3)
-            vecX = vecX + nvecX
-            vecY = vecY + nvecY
+            predictedXY,varXY = gp.predict_path(compute_sqRoot=True)
+            paths             = gp.sample_paths(3)
+            allPaths          = allPaths + paths
 
-plot_path_samples(img, vecX,vecY)
+plot_path_samples(img,allPaths)
