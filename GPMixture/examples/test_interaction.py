@@ -40,18 +40,18 @@ goalIndex = np.unique(startGoals)
 
 mgps         = np.empty(n,dtype=object)
 observations = np.empty(n,dtype=object)
-samples      = np.empty(n)
+samples      = np.empty(n,dtype=object)
 
 for i in range(n):
     mgps[i] = mixtureGPT(startGoals[i] ,goalsData)
 
-nSamples = 5
+samples_n = 5
 part_num = 3
 observedTime = 100
 
 # For different sub-parts of the trajectory
 for i in range(1,part_num-1):
-    p = plotter("../imgs/train_station.jpg")
+    p = plotter("imgs/train_station.jpg")
     p.plot_scene_structure(goalsData)
 
     time = int((i+1)*(observedTime/part_num)) #numero de datos conocidos
@@ -64,10 +64,15 @@ for i in range(1,part_num-1):
         likelihoods = mgps[j].update(observations[j])
         print('[INF] Performing prediction')
         predictedXYVec,varXYVec = mgps[j].predict_path()
-        #samples[j] = mgps[j].sample_paths(nSamples)
-        #print('[INF] samples', len(samples[j]))
+        samples[j] = mgps[j].sample_paths(samples_n)
+        print('[INF] samples', len(samples[j]))
 
     #Evaluate likelihood of samples
+    for j in range(samples_n):
+        for k in range(n):
+             val = interaction_potential_using_approximation()
+            
+            
 
     #observations = observed_data(path,knownN)
     """Multigoal prediction test"""
