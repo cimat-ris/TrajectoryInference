@@ -66,7 +66,7 @@ class mixtureGPT:
             # Update observations and re-compute the kernel matrices
             self.gpPathRegressor[i].update_observations(observations)
             # Compute the model likelihood
-            self.goalsLikelihood[i] = self.gpPathRegressor[i].compute_likelihood(observations,self.nPoints)
+            self.goalsLikelihood[i] = self.gpPathRegressor[i].compute_likelihood()
 
         # Compute the mean likelihood
         self.meanLikelihood = mean(self.goalsLikelihood)

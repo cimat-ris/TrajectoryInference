@@ -63,7 +63,7 @@ class onedim_regressionT:
         self.deltaK = self.kernel.dkdy(self.observedX[n],self.observedX)
     
     # Compute the likelihood for this coordinates
-    def compute_likelihood(self):
+    def loglikelihood_from_partial_path(self):
         n       = self.observedX.shape[0]
         half    = max(1,int(n/2))
         indices = list(range(0,half))
@@ -81,7 +81,10 @@ class onedim_regressionT:
         predictedX = k.transpose().dot(Kp_1o)
         d          = predictedX.transpose()-self.observedY[indicesp,0]
         errsq      = d.dot(d.transpose())/npreds
-        return math.exp(-1.*( errsq)/(self.sigmaNoise*self.sigmaNoise) )
+        val = -1.*( errsq)/(self.sigmaNoise*self.sigmaNoise)
+        likelihood = math.exp(val)
+        
+        return likelihood
 
     # The main regression function: perform regression for a vector of values
     def predict_to_finish_point(self,compute_sqRoot=False):
