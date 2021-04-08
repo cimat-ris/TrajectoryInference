@@ -17,6 +17,7 @@ class trajectory_regression(path_regression):
         self.speedModel  = speedModel
         self.speedAverage= 1.0
 
+    # Prediction of the trajectory
     def predict_trajectory_to_finish_point(self,compute_sqRoot=False):
         # Predict path
         path, var   = self.predict_path_to_finish_point(compute_sqRoot)
@@ -27,7 +28,9 @@ class trajectory_regression(path_regression):
         else:
             predicted_relative_speeds = self.speedModel.predict(arc_lengths.reshape(-1, 1))
         predicted_speeds          = self.speedAverage*predicted_relative_speeds
-        return path, var
+        times = np.divide(arc_lengths[1:]-arc_lengths[:-1],predicted_speeds[1:]-predicted_speeds[:-1])
+        trajectory = np.concatenate([path,predicted_speeds.reshape(-1, 1)],axis=1)
+        return trajectory, var
 
     # Update observations
     def update_observations(self,observations):
@@ -35,6 +38,7 @@ class trajectory_regression(path_regression):
         super(trajectory_regression, self).update_observations(observations)
         # Average speed
         self.speedAverage = np.mean(observations[:,3],axis=0)
+        print('[INF] Speed average ',self.speedAverage)
 
     # Generate a sample from perturbations
     def sample_trajectory_with_perturbation(self,deltaX,deltaY):
