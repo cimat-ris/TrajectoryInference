@@ -214,7 +214,6 @@ def observed_data(traj, n):
         gtX, gtY, gtT = np.reshape(x[n:],(-1,1)), np.reshape(y[n:],(-1,1)),np.reshape(t[n:],(-1,1))
         gtS =  np.reshape(np.concatenate([np.divide(np.sqrt(np.square(x[n+1:]-x[n:-1])+np.square(y[n+1:]-y[n:-1])),t[n+1:]-t[n:-1]),[0.0]]),(-1,1))
         gtS[-1,0] = gtS[-2,0]
-        print(gtS)
         return np.concatenate([obsX, obsY, obsL, obsT,obsS],axis=1),np.concatenate([gtX, gtY, gtT,gtS],axis=1)
     else:
         if (len(traj)==3):

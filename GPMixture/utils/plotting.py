@@ -11,7 +11,6 @@ import matplotlib.image as mpimg
 from matplotlib.patches import Ellipse
 from matplotlib.animation import FuncAnimation
 from utils.manip_trajectories import goal_center_and_size
-from utils.manip_trajectories import get_subgoals_center_and_size
 
 
 color = ['lightgreen','springgreen','g','b','steelblue','y','tomato','orange','r','gold','yellow','lime',
@@ -41,18 +40,14 @@ class plotter():
     # Plot the scene structure: goals and sub-goals
     def plot_scene_structure(self,goalsData):
         for i in range(goalsData.goals_n):
-            self.plot_subgoals(goalsData.goals_areas[i][1:], 2, goalsData.goals_areas[i][0])
+            self.plot_goals(goalsData.goals_areas[i][1:],goalsData.goals_areas[i][0])
 
-    # Plot the sub goals
-    def plot_subgoals(self, goal, numSubgoals, axis):
-        subgoalsCenter, size = get_subgoals_center_and_size(numSubgoals, goal, axis)
-
-        for i in range(numSubgoals):
-            xy  = [subgoalsCenter[i][0],subgoalsCenter[i][1]]
-            if axis==0:
-                self.ax.plot([xy[0]-size[0]/2.0,xy[0]+size[0]/2.0],[xy[1],xy[1]],color[i],linewidth=7.0)
-            else:
-                self.ax.plot([xy[0],xy[0]],[xy[1]-size[1]/2.0,xy[1]+size[1]/2.0],color[i],linewidth=7.0)
+    # Plot the goal
+    def plot_goals(self, goal, axis):
+        center, size = goal_center_and_size(goal)
+        # Create rectangle patch
+        rect = plt.Rectangle((center[0]-size[0]/2,center[1]-size[1]/2), size[0], size[1],facecolor="green", alpha=0.35)
+        self.ax.add_patch(rect)
 
     # Plot the true data, the predicted ones and their variance
     def plot_prediction(self,observations,predicted,variances):
