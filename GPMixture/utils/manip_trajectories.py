@@ -146,7 +146,7 @@ def break_multigoal_traj(tr, goals):
                     last_goal = j
                 # Split the trajectory
                 elif last_goal != j:
-                    traj_set.append([new_x,new_y,new_t] )
+                    traj_set.append([np.array(new_x),np.array(new_y),np.array(new_t)] )
                     new_x, new_y, new_t = [], [], [] #start a new trajectory
 
     return traj_set
@@ -214,7 +214,7 @@ def observed_data(traj, n):
         gtX, gtY, gtT = np.reshape(x[n:],(-1,1)), np.reshape(y[n:],(-1,1)),np.reshape(t[n:],(-1,1))
         gtS =  np.reshape(np.concatenate([np.divide(np.sqrt(np.square(x[n+1:]-x[n:-1])+np.square(y[n+1:]-y[n:-1])),t[n+1:]-t[n:-1]),[0.0]]),(-1,1))
         gtS[-1,0] = gtS[-2,0]
-        return np.concatenate([obsX, obsY, obsL, obsT,obsS],axis=1),np.concatenate([gtX, gtY, gtT,gtS],axis=1)
+        return np.concatenate([obsX, obsY, obsL, obsT, obsS],axis=1),np.concatenate([gtX, gtY, gtT,gtS],axis=1)
     else:
         if (len(traj)==3):
             x, y, t = traj

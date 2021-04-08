@@ -7,7 +7,6 @@ from utils.manip_trajectories import multigoal_trajectories
 from utils.manip_trajectories import break_multigoal_traj
 from utils.manip_trajectories import separate_trajectories_between_goals
 from utils.manip_trajectories import filter_traj_matrix
-from utils.manip_trajectories import *
 import pandas as pd
 import pickle
 
