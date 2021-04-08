@@ -2,14 +2,14 @@
 @author: karenlc
 """
 from test_common import *
-from gp_code.mixture_gp import mixtureOfGPs
 from gp_code.single_gp import singleGP
+import matplotlib.pyplot as plt
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
 goalsDescriptions= './parameters/CentralStation_GoalsDescriptions.csv'
 trajFile         = './datasets/GC/Annotation/'
 imgGCS           = './imgs/train_station.jpg'
-img = mpimg.imread('imgs/train_station.jpg')
+img              = mpimg.imread('imgs/train_station.jpg')
 
 traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
 
@@ -43,19 +43,26 @@ path = trajMat[startG][endG][pathId]
 # Get the path data
 pathX, pathY, pathT = path
 pathL = trajectory_arclength(path)
-
+pathS = trajectory_speeds(path)
 # Total path length
 pathSize = len(pathX)
 
-# Test function: prediction of single paths with multiple goals
+# Test function: prediction of single trajectories with a single goal
 gp = singleGP(startG,endG,goalsData)
 
-p = plotter()
+fig, ax = plt.subplots(3,1)
+ax[0].set_ylabel('x')
+ax[0].set_xlabel('l')
+ax[1].set_ylabel('y')
+ax[1].set_xlabel('l')
+ax[2].set_ylabel('v')
+ax[2].set_xlabel('l')
+
 # For different sub-parts of the trajectory
 for knownN in range(10,pathSize-1):
     print('--------------------------')
-    p.set_background(imgGCS)
-    p.plot_scene_structure(goalsData)
+    # Observations: x,y,l,t
+    # Ground truth: x,y,t
     observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
     """Single goal prediction test"""
     print('[INF] Updating observations')
@@ -63,13 +70,18 @@ for knownN in range(10,pathSize-1):
     likelihood   = gp.update(observations)
     filteredPath = gp.filter()
     # Perform prediction
-    predictedXY,varXY = gp.predict_trajectory()
-    print("[RES] Likelihood: ",likelihood)
+    predictedXYLT,varXY = gp.predict_trajectory()
     print('[INF] Plotting')
-    # Plot the filtered version of the observations
-    p.plot_filtered(filteredPath)
-    # Plot the prediction
-    p.plot_prediction(observations,predictedXY,varXY)
-    # Plot the ground truth
-    p.plot_ground_truth(ground_truth)
-    p.pause(0.05)
+    ax[0].axis([0,np.max(pathL),0,np.max(pathX)])
+    ax[0].plot(predictedXYLT[:,2],predictedXYLT[:,0],'b')
+    ax[0].plot(observations[:,2],observations[:,0],'r')
+    ax[1].axis([0,np.max(pathL),0,np.max(pathY)])
+    ax[1].plot(predictedXYLT[:,2],predictedXYLT[:,1],'b')
+    ax[1].plot(observations[:,2],observations[:,1],'r')
+    ax[2].axis([0,np.max(pathL),0,np.max(pathS)])
+    ax[2].plot(predictedXYLT[:,2],predictedXYLT[:,3],'b')
+    ax[2].plot(observations[:,2],pathS[:knownN],'r')
+    plt.pause(0.15)
+    ax[0].cla()
+    ax[1].cla()
+    ax[2].cla()

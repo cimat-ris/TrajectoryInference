@@ -52,7 +52,7 @@ mgps     = mixtureOfGPs(startG,goalsData)
 
 p = plotter()
 # For different sub-parts of the trajectory
-for knownN in range(5,pathSize):
+for knownN in range(5,pathSize-1):
     print('--------------------------')
     p.set_background(imgGCS)
     p.plot_scene_structure(goalsData)
