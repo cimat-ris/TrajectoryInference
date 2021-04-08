@@ -33,7 +33,7 @@ def separate_trajectories_between_goals(trajectories, goals):
                 mat[start_goal][end_goal].append(tr)
     return mat
 
-# Removes atypical trajectories 
+# Removes atypical trajectories
 def filter_trajectories(trajectories):
     if len(trajectories) == 0:
         return []
@@ -247,9 +247,12 @@ def observed_data(traj, n):
     if (len(traj)==4):
         x, y, l, t = traj
         obsX, obsY, obsL, obsT = np.reshape(x[0:n],(-1,1)), np.reshape(y[0:n],(-1,1)), np.reshape(l[0:n],(-1,1)),np.reshape(t[0:n],(-1,1))
-        obsS = np.divide(np.sqrt(np.square(obsX[1:]-obsX[:-1])+np.square(obsY[1:]-obsY[:-1])),obsT[1:]-obsT[:-1])
+        obsS = np.reshape(np.divide(np.sqrt(np.square(x[1:n+1]-x[:n])+np.square(y[1:n+1]-y[:n])),t[1:n+1]-t[:n]),(-1,1))
         gtX, gtY, gtT = np.reshape(x[n:],(-1,1)), np.reshape(y[n:],(-1,1)),np.reshape(t[n:],(-1,1))
-        return np.concatenate([obsX, obsY, obsL, obsT],axis=1),np.concatenate([gtX, gtY, gtT],axis=1)
+        gtS =  np.reshape(np.concatenate([np.divide(np.sqrt(np.square(x[n+1:]-x[n:-1])+np.square(y[n+1:]-y[n:-1])),t[n+1:]-t[n:-1]),[0.0]]),(-1,1))
+        gtS[-1,0] = gtS[-2,0]
+        print(gtS)
+        return np.concatenate([obsX, obsY, obsL, obsT,obsS],axis=1),np.concatenate([gtX, gtY, gtT,gtS],axis=1)
     else:
         if (len(traj)==3):
             x, y, t = traj

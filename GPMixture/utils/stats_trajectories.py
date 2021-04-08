@@ -21,6 +21,10 @@ def trajectory_arclength(tr):
 
     return np.array(arclen)
 
+def trajectory_speeds(tr):
+    x, y, t = np.array(tr[0]), np.array(tr[1]), np.array(tr[2])
+    return np.divide(np.sqrt(np.square(x[1:]-x[:-1])+np.square(y[1:]-y[:-1])),t[1:]-t[:-1])
+
 # Average speed of a trajectory
 def avg_speed(tr):
     x, y, t = np.array(tr[0]), np.array(tr[1]), np.array(tr[2])
@@ -37,17 +41,6 @@ def median_speed(tr):
 def trajectory_duration(tr):
     t = tr[2]
     return t[-1] - t[0]
-
-
-# Compute the average speed in a set of trajectories
-#new get_pedestrian_average_speed
-def pedestrian_avg_speed(trajectories):
-    speed = []
-    for tr in trajectories:
-        speed.append(avg_speed(tr))
-
-    return np.mean(speed)
-
 
 #TODO: re-do histogram function for duration and arclength
 def tr_histogram(trajectories):
@@ -78,6 +71,5 @@ def truncate(f, n):
     if 'e' in s or 'E' in s:
         return '{0:.{1}f}'.format(f, n)
     i, p, d = s.partition('.')
-    
+
     return '.'.join([i, (d+'0'*n)[:n]])
-    
