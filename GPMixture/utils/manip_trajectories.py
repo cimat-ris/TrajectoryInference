@@ -1,7 +1,6 @@
 from utils.stats_trajectories import trajectory_arclength
 import statistics as stats
 import numpy as np
-import math
 
 # Returns a matrix of trajectories:
 # the entry (i,j) has the paths that go from the goal i to the goal j
@@ -60,16 +59,16 @@ def filter_trajectories(trajectories):
     return filtered_set
 
 # Removes atypical trajectories from a multidimensional array
-def filter_traj_matrix(raw_path_set_matrix, nRows, mColumns):
+def filter_traj_matrix(raw_path_set_matrix, rows, columns):
     all_trajectories = []
     # Initialize a nRowsxnCols matrix with empty lists
-    filtered_matrix = np.empty((nRows, mColumns),dtype=object)
-    for i in range(nRows):
-        for j in range(mColumns):
+    filtered_matrix = np.empty((rows, columns),dtype=object)
+    for i in range(rows):
+        for j in range(columns):
             filtered_matrix[i][j] = []
 
-    for i in range(nRows):
-        for j in range(mColumns):
+    for i in range(rows):
+        for j in range(columns):
             # If the list of trajectories is non-empty, filter it
             if(len(raw_path_set_matrix[i][j]) > 0):
                 filtered = filter_trajectories(raw_path_set_matrix[i][j])
@@ -82,53 +81,50 @@ def filter_traj_matrix(raw_path_set_matrix, nRows, mColumns):
 def start_time(traj):
     return traj[2][0]
 
-def get_trajectories_given_time_interval(trajectories, startT, finishT):
+def get_trajectories_given_time_interval(trajectories, start_time, finish_time):
     # Note: the list of trajectories is sorted by initial time
-    nTr = len(trajectories)
-    if(nTr == 0):
+    n = len(trajectories)
+    if n == 0:
         print("[ERR] Empty set")
         return []
 
-    trSet = []
+    traj_set = []
     i = 0
-    t = startT
-    while(t <= finishT):
+    t = start_time
+    while(t <= finish_time):
         tr = trajectories[i]
         t = tr[2][0]
-        if(startT <= t and t <= finishT):
-            trSet.append(tr)
-        i+=1
+        if(start_time <= t and t <= finish_time):
+            traj_set.append(tr)
+        i += 1
 
-    for j in range(0):#len(trSet)):
-        print("[pathTime]:", trSet[j][2])
-
-    return trSet
+    return traj_set
 
 # Determines the sequence of goals that a trajectory goes through
 def traj_goal_sequence(tr, goals):
-    goalSeq = []
+    goal_seq = []
     x, y = tr[0], tr[1]
 
     for i in range(len(x)):
         for j in range(len(goals)):
             xy = [x[i], y[i]]
             if is_in_area(xy, goals[j]):
-                if len(goalSeq) == 0:
-                    goalSeq.append(j)
+                if len(goal_seq) == 0:
+                    goal_seq.append(j)
                 else:
-                    if j != goalSeq[-1]:
-                        goalSeq.append(j)
-    return goalSeq
+                    if j != goal_seq[-1]:
+                        goal_seq.append(j)
+    return goal_seq
 
 # Select those trajectories that go through more than 2 goals
 def multigoal_trajectories(trajectories, goals):
-    multigoal_tr = []
+    multigoal_trajs = []
     for tr in trajectories:
         # Determines the list of goals that a trajectory goes through
-        goalSeq = traj_goal_sequence(tr, goals)
-        if len(goalSeq) > 2:
-            multigoal_tr.append(tr)
-    return multigoal_tr
+        goal_seq = traj_goal_sequence(tr, goals)
+        if len(goal_seq) > 2:
+            multigoal_trajs.append(tr)
+    return multigoal_trajs
 
 # Split a trajectory into sub-trajectories between pairs of goals
 def break_multigoal_traj(tr, goals):
@@ -165,9 +161,8 @@ def get_data_from_set(trajectories):
     return list_x, list_y, list_arclen
 
 
-'''------------ Linear Prior Mean --------------'''
-# Linear regression: for data l,f(l), the function returns a, b for the line between the
-# starting and ending points
+# Linear regression: f(l) = a + b*l
+# Returns the slope of the line and the intercept
 def line_parameters(traj, flag):
     traj_arclen = trajectory_arclength(traj)
     arclen = traj_arclen[-1]
@@ -175,75 +170,43 @@ def line_parameters(traj, flag):
         return 0.,0.
 
     x, y = traj[0], traj[1]
-    if(flag == 'x'):
+    if flag == 'x':
         b = x[0]
         a = (x[-1]-b)/arclen
-    if(flag == 'y'):
+    if flag == 'y':
         b = y[0]
         a = (y[-1]-b)/arclen
     return a, b
 
 # Takes as an input a set of trajectories (between goals)
 # and a flag that says whether the orientation is in x or y
-def get_linear_prior_mean(paths, flag):
-    n = len(paths)
-    if(n == 0):
+def get_linear_prior_mean(trajectories, flag):
+    n = len(trajectories)
+    if n == 0:
         return [0.,0.,0.]
-    lineParameters = np.array([ line_parameters(paths[i], flag) for i in range(n)])
+    lineParameters = np.array([ line_parameters(trajectories[i], flag) for i in range(n)])
     mean = [np.mean(lineParameters[:,0]), np.mean(lineParameters[:,1]) ]
     var = [np.var(lineParameters[:,0]), np.var(lineParameters[:,1]) ]
     cov = np.cov(lineParameters[:,0],lineParameters[:,1])
 
     return mean, var
-"""-----------------------------------------------------"""
 
-"""********** HELPFUL FUNCTIONS **********"""
-def equal(vx,vy,x,y):
-    N = len(vx)
-    if N == 0:
-        return 0
-
-    if vx[N-1] == x and vy[N-1] == y:
-        return 1
-    else:
-        return 0
-
-def copy_unitMat(unitMat, nGoals, nSubgoals):
-    mat = []
-    m = int(nSubgoals/nGoals)
-    for i in range(nGoals):
-        r = []
-        for j in range(nSubgoals):
-            k = int(j/m)
-            r.append(unitMat[i][k])
-        mat.append(r)
-    return mat
 
 def column(matrix, i):
     return [row[i] for row in matrix]
 
-#predictedMeans es una lista que en i contiene array([X Y L]), esta funcion regresa una lista con [X, Y] en i
-def get_prediction_arrays(predictedMeans):
-    n = len(predictedMeans)
-    XYvec = []
-    for i in range(n):
-        x = predictedMeans[i][:,0]
-        y = predictedMeans[i][:,1]
-        XYvec.append([x,y])
-    return XYvec
+def arclen_to_time(init_time, arclen, speed):
+    n = len(arclen)
+    time = np.zeros(n, dtype=int)
+    time[0] = init_time
+    for i in range(1,len(arclen)):
+        time[i] = int(time[i-1] + (arclen[i]-arclen[i-1])/speed)
 
-"""---------- Arclenght to time ----------"""
-def arclen_to_time(initTime,l,speed):
-    t = [initTime]
-    for i in range(1,len(l)):
-        time_i = int(t[i-1] +(l[i]-l[i-1])/speed)
-        t.append(time_i)
-    return np.array(t)
+    return time
 
-"""-------- Get Observed Data -------------"""
-# Function to get the ground truth data: knownN data
+
+# Function to get the ground truth data: n data
 def observed_data(traj, n):
-    # TODO:
     if (len(traj)==4):
         x, y, l, t = traj
         obsX, obsY, obsL, obsT = np.reshape(x[0:n],(-1,1)), np.reshape(y[0:n],(-1,1)), np.reshape(l[0:n],(-1,1)),np.reshape(t[0:n],(-1,1))
@@ -256,28 +219,46 @@ def observed_data(traj, n):
             obsX, obsY, obsT = np.reshape(x[0:n],(-1,1)), np.reshape(y[0:n],(-1,1)), np.reshape(t[0:n],(-1,1))
         return np.concatenate([obsX, obsY, obsT],axis=1)
 
-
 def observed_data_given_time(traj, time):
     _, _, t = traj
     i = 0
-    while(t[i] <= time and i < len(t)-1 ):
+    while(t[i] <= time and i < len(t)-1):
         i += 1
     return observed_data(traj, i)
 
-"""---------- Goal related functions ----------"""
 
 # Checks if a point (x,y) belongs to an area R
-def is_in_area(p,R):
+def is_in_area(p, area):
     x = p[0]
     y = p[1]
-    if(x >= R[0] and x <= R[-2]):
-        if(y >= R[1] and y <= R[-1]):
-            return 1
+    if(x >= area[0] and x <= area[-2]):
+        if(y >= area[1] and y <= area[-1]):
+            return True
         else:
-            return 0
+            return False
     else:
-        return 0
+        return False
 
+def get_goal_of_point(p, goals):
+    for i in range(len(goals)):
+        if is_in_area(p,goals[i]):
+            return i
+    return None
+
+# Returns the center of a rectangular area
+def goal_centroid(area):
+    dx, dy = area[-2] - area[0], area[-1] - area[1]
+    centroid = [area[0] + dx/2., area[1] + dy/2.]
+    return centroid
+
+def goal_center_and_size(area):
+    dx, dy = area[-2] - area[0], area[-1] - area[1]
+    center = [area[0] + dx/2., area[1] + dy/2.]
+    size = [dx, dy]
+    return center, size
+
+#TODO: check if these functions are useful
+"""
 def get_goal_center_and_boundaries(goal):
     p, __ = goal_centroid(goal)
     lenX = goal[len(goal) -2] - goal[0]
@@ -289,86 +270,13 @@ def get_goal_center_and_boundaries(goal):
     return [p,q1,q2,q3,q4]
 
 
-def get_goal_of_point(p, goals):
-    for i in range(len(goals)):
-        if(is_in_area(p,goals[i])):
-            return i
-    return None
-
-# Middle of a goal area
-def goal_centroid(R):
-    dx, dy = R[-2]-R[0], R[-1]-R[1]
-    center = [R[0] + dx/2., R[1] + dy/2.]
-    return center
-
-# Centroid and size of an area
-def goal_center_and_size(R):
-    dx, dy = R[-2]-R[0], R[-1]-R[1]
-    center = [R[0] + dx/2., R[1] + dy/2.]
-    size = [dx, dy]
-    return center, size
-
-# TODO: this
-def get_subgoals(n, goal, axis):
-    c, size = goal_center_and_size(goal)
-    d = 0
-    if axis == 'x':
-        d = size[0]
-    else:
-        d = size[1]
-    sgSize = d/n
-    #sg = [ for i in range(n)]
-
-# TODO: REDO IN A BETTER WAY
-def get_subgoals_areas(nSubgoals, goal, axis):
-    goalDX = goal[len(goal) -2] - goal[0]
-    goalDY = goal[len(goal) -1] - goal[1]
-    goalCenterX = goal[0]+ goalDX/2.0
-    goalCenterY = goal[1]+ goalDY/2.0
-    goalMinX    = goal[0]
-    goalMinY    = goal[1]
-    goalMaxX    = goal[-2]
-    goalMaxY    = goal[-1]
-    subGoalsAreas = []
-    if axis == 0:
-        subgoalDX = goalDX/nSubgoals
-        subgoalDY = goalDY
-        for i in range(nSubgoals):
-            subGoalsAreas.append( [goalMinX+i*subgoalDX,goalMinY,goalMinX+(i+1)*subgoalDX,goalMinY,goalMinX+i*subgoalDX,goalMaxY,goalMinX+(i+1)*subgoalDX,goalMaxY] )
-    else:
-        subgoalDX = goalDX
-        subgoalDY = goalDY/nSubgoals
-        _x = goalCenterX
-        _y = goal[1]
-        for i in range(nSubgoals):
-            subGoalsAreas.append([goalMinX,goalMinY+i*subgoalDY,goalMaxX,goalMinY+i*subgoalDY,goalMinX,goalMinY+(i+1)*subgoalDY,goalMaxX,goalMinY+(i+1)*subgoalDY])
-
-    return subGoalsAreas
-
-
-def get_subgoals_center_and_size(nSubgoals, goal, axis):
-    goalX = goal[len(goal) -2] - goal[0]
-    goalY = goal[len(goal) -1] - goal[1]
-    goalCenterX = goal[0]+ goalX/2
-    goalCenterY = goal[1]+ goalY/2
-
-    subgoalsCenter = []
-    subgoalX, subgoalY = 0,0
-    if axis == 0:
-        subgoalX = goalX/nSubgoals
-        subgoalY = goalY
-        _x = goal[0]
-        _y = goalCenterY
-        for i in range(nSubgoals):
-            subgoalsCenter.append( [_x+subgoalX/2.0, _y] )
-            _x += subgoalX
-    else:
-        subgoalX = goalX
-        subgoalY = goalY/nSubgoals
-        _x = goalCenterX
-        _y = goal[1]
-        for i in range(nSubgoals):
-            subgoalsCenter.append( [_x, _y+subgoalY/2.0] )
-            _y += subgoalY
-
-    return subgoalsCenter, [subgoalX, subgoalY]
+#predictedMeans es una lista que en i contiene array([X Y L]), esta funcion regresa una lista con [X, Y] en i
+def get_prediction_arrays(predictedMeans):
+    n = len(predictedMeans)
+    XYvec = []
+    for i in range(n):
+        x = predictedMeans[i][:,0]
+        y = predictedMeans[i][:,1]
+        XYvec.append([x,y])
+    return XYvec
+"""
