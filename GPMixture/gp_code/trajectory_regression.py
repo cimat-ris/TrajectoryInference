@@ -24,11 +24,11 @@ class trajectory_regression(path_regression):
         arc_lengths = path[:,2]
         # Use the speed model to predict relative speed with respect to the average
         if isinstance(self.speedModel, int):
-            predicted_relative_speeds = 1.0
+            predicted_relative_speeds = np.ones(arc_lengths.shape)
         else:
             predicted_relative_speeds = self.speedModel.predict(arc_lengths.reshape(-1, 1))
         predicted_speeds          = self.speedAverage*predicted_relative_speeds
-        times = np.divide(arc_lengths[1:]-arc_lengths[:-1],predicted_speeds[1:]-predicted_speeds[:-1])
+        times = np.divide(arc_lengths[1:]-arc_lengths[:-1],predicted_speeds[:-1])
         trajectory = np.concatenate([path,predicted_speeds.reshape(-1, 1)],axis=1)
         return trajectory, var
 
@@ -37,7 +37,10 @@ class trajectory_regression(path_regression):
         # Call the method for the path regression
         super(trajectory_regression, self).update_observations(observations)
         # Average speed
-        self.speedAverage = np.mean(observations[:,3],axis=0)
+        nobs    = observations.shape[0]
+        weights = np.linspace(0.0,1.0,num=nobs)
+        weights = weights/np.sum(weights)
+        self.speedAverage = np.average(observations[:,4],axis=0,weights=weights)
         print('[INF] Speed average ',self.speedAverage)
 
     # Generate a sample from perturbations
