@@ -30,9 +30,9 @@ class trajectory_regression(path_regression):
             predicted_relative_speeds = np.ones(arc_lengths.shape)
         else:
             predicted_relative_speeds = self.speedModel.predict(arc_lengths.reshape(-1, 1))
-        predicted_speeds          = self.speedAverage*predicted_relative_speeds
-        times = self.currentTime + np.divide(arc_lengths_ext[1:]-arc_lengths_ext[:-1],predicted_speeds).reshape(-1,1)
-        trajectory = np.concatenate([path,times,predicted_speeds.reshape(-1, 1)],axis=1)
+        predicted_speeds          = self.speedAverage*predicted_relative_speeds.reshape(-1, 1)
+        times = self.currentTime + np.cumsum(np.divide((arc_lengths_ext[1:]-arc_lengths_ext[:-1]).reshape(-1,1),predicted_speeds)).reshape(-1,1)
+        trajectory = np.concatenate([path,times,predicted_speeds],axis=1)
         return trajectory, var
 
     # Update observations
