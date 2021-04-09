@@ -79,7 +79,7 @@ for knownN in range(10,pathSize-1):
     ax[1].plot(predictedXYLT[:,2],predictedXYLT[:,1],'b')
     ax[1].plot(observations[:,2],observations[:,1],'r')
     ax[2].axis([0,np.max(pathL),0,np.max(pathS)])
-    ax[2].plot(predictedXYLT[:,2],predictedXYLT[:,3],'b')
+    ax[2].plot(predictedXYLT[:,2],predictedXYLT[:,4],'b')
     ax[2].plot(observations[:,2],pathS[:knownN],'r')
     plt.pause(0.15)
     ax[0].cla()
