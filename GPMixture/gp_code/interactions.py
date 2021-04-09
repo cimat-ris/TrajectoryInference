@@ -2,7 +2,7 @@
 Functions to handle interaction of multiple agents
 @author: karenlc
 """
-from utils.manip_trajectories import euclidean_distance
+from utils.stats_trajectories import euclidean_distance
 import numpy as np
 import math
 
