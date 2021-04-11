@@ -3,17 +3,14 @@ Handling mixtures of GPs in trajectory prediction | Trautman
 """
 import numpy as np
 from statistics import mean
-from sklearn.preprocessing import normalize
 from gp_code.sampling import *
 from gp_code.path_regression import path_regression
-from gp_code.trajectory_regression import trajectory_regression
 from gp_code.likelihood import nearestPD
 from utils.stats_trajectories import euclidean_distance
 from utils.manip_trajectories import goal_center_and_size
 
 # Class for performing path regression with a mixture of Gaussian processes | Trautman's approach
 class mixtureGPT:
-    #TODO: add flag to path regressor for Trautman's mode
     def __init__(self, startG, goalsData):
         # The goals structure
         self.goalsData       = goalsData
@@ -87,9 +84,6 @@ class mixtureGPT:
         for i in range(n):
             gi = self.goalTransitions[i]
             goalCenter,__ = goal_center_and_size(self.goalsData.goals_areas[gi,1:])
-            #distToGoal    = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
-            #dist          = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
-
             # Uses the already computed matrices to apply regression over missing data
             self.predictedMeans[i], self.predictedVars[i] = self.gpPathRegressor[i].predict_path_to_finish_point()
 
@@ -103,7 +97,6 @@ class mixtureGPT:
         sampleId = np.random.choice(n,1,p=normp)
         end        = sampleId[0]
         k          = end
-
         endGoal = self.goalTransitions[end]
         finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.goals_areas[endGoal,1:], self.goalsData.goals_areas[endGoal,0])
 
