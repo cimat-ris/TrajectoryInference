@@ -228,6 +228,13 @@ def observed_data_given_time(traj, time):
         i += 1
     return observed_data(traj, i)
 
+def reshape_trajectory(traj):
+    x, y, t = traj[:,0], traj[:,1], traj[:,2]
+    x.reshape((-1,1))
+    y.reshape((-1,1))
+    t.reshape((-1,1))
+    return [x,y,t]
+
 
 # Checks if a point (x,y) belongs to an area R
 def is_in_area(p, area):
