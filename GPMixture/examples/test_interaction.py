@@ -1,14 +1,15 @@
 """
-Created on Fri Mar 19 19:46:05 2021
-
-@author: karen
+Interaction potential test | Trautman
 """
 import random
+import numpy as np
 from test_common import *
 from gp_code.kernels import *
 from gp_code.mixture_gpT import mixtureGPT
+from gp_code.interactions import interaction_potential_for_a_set_of_trajectories
 from utils.manip_trajectories import start_time, get_trajectories_given_time_interval, get_goal_of_point
-from utils.manip_trajectories import observed_data_given_time
+from utils.manip_trajectories import observed_data_given_time, reshape_trajectory
+
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
 goalsDescriptions= 'parameters/CentralStation_GoalsDescriptions.csv'
@@ -26,7 +27,7 @@ goalsData.kernelsY = create_kernel_matrix('combinedTrautman', goalsData.goals_n,
 filtered.sort(key=start_time)
 # Find trajectories within an interval
 trajs = get_trajectories_given_time_interval(filtered, 0, 100)
-n =  len(trajs)
+n =  10#len(trajs)
 print('Number of trajs: ', len(trajs))
 
 startGoals = []
@@ -36,7 +37,6 @@ for traj in trajs:
 
 print('Goals of trajectories:')
 print( np.unique(startGoals) )
-goalIndex = np.unique(startGoals)
 
 mgps         = np.empty(n,dtype=object)
 observations = np.empty(n,dtype=object)
@@ -51,42 +51,30 @@ observedTime = 100
 
 # For different sub-parts of the trajectory
 for i in range(1,part_num-1):
-    p = plotter("imgs/train_station.jpg")
+    p = plotter(imgGCS)
     p.plot_scene_structure(goalsData)
 
     time = int((i+1)*(observedTime/part_num)) #numero de datos conocidos
 
     #get observations of each trajectory
-    for j in range(1):#n):
+    for j in range(n):
         print('------------ Trajectory ',j,'---------------')
         observations[j] = observed_data_given_time(trajs[j],time)
         print('[INF] Updating likelihoods')
         likelihoods = mgps[j].update(observations[j])
         print('[INF] Performing prediction')
         predictedXYVec,varXYVec = mgps[j].predict_path()
+        print('[INF] Generating samples')
         samples[j] = mgps[j].sample_paths(samples_n)
-        print('[INF] samples', len(samples[j]))
-
+        p.plot_path_samples_with_observations(observations[j],samples[j])
+        p.show()
+    
     #Evaluate likelihood of samples
     for j in range(samples_n):
+        sample_set = []
         for k in range(n):
-             val = interaction_potential_using_approximation()
+            sample_set.append(samples[k][j])
+        print('[INF] Computing interaction potential')
+        val = interaction_potential_for_a_set_of_trajectories(sample_set)#interaction_potential_using_approximation()
+        print('interaction potential =',val)
             
-            
-
-    #observations = observed_data(path,knownN)
-    """Multigoal prediction test"""
-    #print('[INF] Updating likelihoods')
-    #likelihoods = mgps.update(observations)
-
-    #print('[INF] Performing prediction')
-    #predictedXYVec,varXYVec = mgps.predict_path()
-    #print('[INF] Plotting')
-    #p.plot_multiple_predictions_and_goal_likelihood(path[0],path[1],knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
-
-    #print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
-    #print("[RES] Mean likelihood:", mgps.meanLikelihood)
-    #print('[INF] Generating samples')
-    #samplePaths = mgps.sample_paths(nSamples)
-    #p.plot_path_samples_with_observations(observations,samplePaths)
-    #p.show()
