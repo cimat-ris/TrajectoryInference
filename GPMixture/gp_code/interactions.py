@@ -2,9 +2,10 @@
 Functions to handle interaction of multiple agents
 @author: karenlc
 """
-from utils.stats_trajectories import euclidean_distance
-import numpy as np
 import math
+import numpy as np
+from utils.stats_trajectories import euclidean_distance
+from utils.manip_trajectories import reshape_trajectory
 
 #Dado un valor en [0,1], regresa un punto (x,y) con x en [trajx_i-1, trajx_i]... usando interpolacion lineal
 def get_approximation(val, traj, i):
@@ -140,17 +141,25 @@ def interaction_potential(fi, fj):
         potentialProduct *= potentialVal
     return potentialProduct
 
-def interaction_potential_for_a_set_of_trajectories(trajSet):
+def interaction_potential_for_a_set_of_trajectories(traj_set):
     # Number of pedestrians in the set
-    n = len(trajSet)
-    potentialProduct = 1.
+    n = len(traj_set)
+    potential_product = 1.
     for i in range(n):
         for j in range(i+1,n):
-            #Simple Interaction Potential
-            #val = interaction_potential(trajSet[i],trajSet[j])
-            #Interaction potential using approximation
-            val = interaction_potential_using_approximation(trajSet[i],trajSet[j])
-            #interaction potental using Distance of Closest Approach
-            #val = interaction_potential_DCA(trajSet[i],trajSet[j])
-            potentialProduct *= val
-    return potentialProduct
+            if traj_set[i][0] is None or traj_set[j][0] is None:
+                val = 1.0
+            else:
+                #print('***trajectories***')
+                #print(traj_set[i])
+                #print(traj_set[j])
+                traj_i = reshape_trajectory(traj_set[i])
+                traj_j = reshape_trajectory(traj_set[j])
+                # Simple Interaction Potential
+                #val = interaction_potential(trajSet[i],trajSet[j])
+                # Interaction potential using approximation
+                val = interaction_potential_using_approximation(traj_i, traj_j)
+                # Interaction potental using Distance of Closest Approach
+                #val = interaction_potential_DCA(trajSet[i],trajSet[j])
+            potential_product *= val
+    return potential_product
