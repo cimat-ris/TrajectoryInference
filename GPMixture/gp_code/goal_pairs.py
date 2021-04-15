@@ -3,7 +3,7 @@ from gp_code.optimize_parameters import *
 from utils.stats_trajectories import trajectory_arclength, trajectory_duration
 from utils.manip_trajectories import get_linear_prior_mean
 from utils.manip_trajectories import get_data_from_set
-from utils.manip_trajectories import goal_center_and_size
+from utils.manip_trajectories import goal_centroid
 from utils.stats_trajectories import euclidean_distance, avg_speed, median_speed
 from utils.stats_trajectories import truncate
 from sklearn.linear_model import LinearRegression, HuberRegressor
@@ -31,7 +31,6 @@ class goal_pairs:
         self.meanLengths        = np.zeros((self.goals_n,self.goals_n))
         self.euclideanDistances = np.zeros((self.goals_n,self.goals_n))
         self.units              = np.zeros((self.goals_n,self.goals_n))
-        self.stepUnit           = 1.0
         self.priorTransitions   = np.zeros((self.goals_n,self.goals_n))
         self.kernelsX           = np.empty((self.goals_n,self.goals_n),dtype=object)
         self.kernelsY           = np.empty((self.goals_n,self.goals_n),dtype=object)
@@ -52,36 +51,28 @@ class goal_pairs:
         self.optimize_speed_models(trajMat)
 
     # Fills in the matrix with the mean length of the trajectories
-    # Computes stepUnit - avg ratio between number of steps and path arc-length
     def compute_mean_lengths(self, trajectories):
-        stepsRatio = []
-        # For each pair of goals
+        # For each pair of goals (gi,gj), compute the mean arc-length
         for i in range(self.goals_n):
             for j in range(self.goals_n):
-                # If we have trajectories
                 if len(trajectories[i][j]) > 0:
-                    # Array of the trajectories lengths
                     arclengths = []
                     for trajectory in trajectories[i][j]:
                         tr_arclen = trajectory_arclength(trajectory)
                         arclengths.append(tr_arclen[-1])
-                        stepsRatio.append(len(tr_arclen)/tr_arclen[-1])
                     m = np.mean(arclengths)
                 else:
                     m = 0
-                    stepsRatio.append(1.0)
                 self.meanLengths[i][j] = m
-        # TODO: do it per pair of goals
-        self.stepUnit = np.mean(stepsRatio)
 
     # Fills in the Euclidean distances between goals
     def compute_euclidean_distances(self):
         for i in range(self.goals_n):
             # Take the centroid of the ROI i
-            p,__ = goal_center_and_size(self.goals_areas[i][1:])
+            p = goal_centroid(self.goals_areas[i][1:])
             for j in range(self.goals_n):
                 # Take the centroid of the ROI j
-                q,__ = goal_center_and_size(self.goals_areas[j][1:])
+                q = goal_centroid(self.goals_areas[j][1:])
                 d = euclidean_distance(p,q)
                 self.euclideanDistances[i][j] = d
 

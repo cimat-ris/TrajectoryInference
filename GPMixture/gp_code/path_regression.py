@@ -62,6 +62,9 @@ class path_regression:
         euclideanDist = euclidean_distance([x,y], finishPoint)
         # Rough estimate of the remaining arc length
         distToGoal    = euclideanDist*self.distUnit
+        #TODO! compute stepunit
+        # Computes stepUnit - avg ratio between number of steps and path arc-length
+        #stepsRatio.append(len(tr_arclen)/tr_arclen[-1])
         size          = int(distToGoal*self.stepUnit)
         predset = np.zeros((size,1))
         if size > 0:
