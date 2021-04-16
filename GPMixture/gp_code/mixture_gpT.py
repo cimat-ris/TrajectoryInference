@@ -31,8 +31,6 @@ class mixtureGPT:
         n                    = self.goalTransitions.size
         # Points to evaluate the likelihoods
         self.nPoints         = 5
-        # Step unit
-        self.stepUnit        = goalsData.stepUnit # ---> time unit?
         # Starting goal
         self.startG          = startG
         # Likelihoods

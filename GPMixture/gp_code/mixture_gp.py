@@ -24,8 +24,6 @@ class mixtureOfGPs:
         self.mostLikelyGoal = None
         # Number of elements in the mixture
         n                    = self.goalsData.goals_n
-        # Step unit
-        self.stepUnit        = goalsData.stepUnit
         # Starting goal
         self.startG          = startG
         # Likelihoods
@@ -44,7 +42,7 @@ class mixtureOfGPs:
         for i in range(self.goalsData.goals_n):
             if self.goalsData.priorTransitions[self.startG][i]>0:
                 # One regressor per goal
-                self.gpTrajectoryRegressor[i]=trajectory_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.sigmaNoise,self.goalsData.speedModels[self.startG][i],self.goalsData.units[self.startG][i],self.goalsData.stepUnit,self.goalsData.goals_areas[i],prior=self.goalsData.priorTransitions[self.startG][i])
+                self.gpTrajectoryRegressor[i]=trajectory_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.sigmaNoise,self.goalsData.speedModels[self.startG][i],self.goalsData.units[self.startG][i],self.goalsData.goals_areas[i],prior=self.goalsData.priorTransitions[self.startG][i])
 
     # Update observations and compute likelihoods based on observations
     def update(self,observations):
