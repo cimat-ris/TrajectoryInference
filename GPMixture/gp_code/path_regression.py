@@ -14,12 +14,12 @@ from scipy.optimize import bisect
 
 class path_regression:
     # Constructor
-    def __init__(self, kernelX, kernelY, sigmaNoise, unit, stepUnit, finalArea, prior=0.0,  mode=None, timeTransitionData=None):
+    def __init__(self, kernelX, kernelY, sigmaNoise, unit, finalArea, prior=0.0,  mode=None, timeTransitionData=None):
         self.regression_x    = onedim_regressionT(kernelX) if mode == 'Trautman' else path1D_regression(kernelX,sigmaNoise)
         self.regression_y    = onedim_regressionT(kernelY) if mode == 'Trautman' else path1D_regression(kernelY,sigmaNoise)
         self.predictedL      = None
         self.distUnit        = unit
-        self.stepUnit        = stepUnit
+        self.stepUnit        = 1.0
         self.finalArea       = finalArea
         self.finalAreaCenter, self.finalAreaSize = goal_center_and_size(finalArea[1:])
         self.finalAreaAxis   = finalArea[0]
@@ -40,6 +40,7 @@ class path_regression:
             if self.dist < 1.0:
                 self.dist = 1.0
         else:
+            self.stepUnit = float(len(observations[:,2:3])/lastObs[2])
             # Determine the set of arclengths (predictedL) to predict
             self.predictedL, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
 
@@ -62,9 +63,6 @@ class path_regression:
         euclideanDist = euclidean_distance([x,y], finishPoint)
         # Rough estimate of the remaining arc length
         distToGoal    = euclideanDist*self.distUnit
-        #TODO! compute stepunit
-        # Computes stepUnit - avg ratio between number of steps and path arc-length
-        #stepsRatio.append(len(tr_arclen)/tr_arclen[-1])
         size          = int(distToGoal*self.stepUnit)
         predset = np.zeros((size,1))
         if size > 0:
