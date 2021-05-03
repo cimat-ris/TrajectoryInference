@@ -4,7 +4,7 @@
 from test_common import *
 from utils.loaders.loader_ind import load_ind
 from utils.loaders.loader_gcs import load_gcs
-#from utils.loaders.loader_edinburgh import load_edinburgh
+from utils.loaders.loader_edinburgh import load_edinburgh
 from utils.io_trajectories import read_and_filter
 import matplotlib.pyplot as plt
 
@@ -25,7 +25,7 @@ if test_gcs:
     dataset_dir = "./datasets/GC/Annotation/"
     traj_dataset= load_gcs(dataset_dir)
     traj_set    = traj_dataset.get_trajectories()
-    print("[INF] Loaded GCS set, length: {:03d} ".format(len(traj_set)))
+    print("[INF] Loaded gcs set, length: {:03d} ".format(len(traj_set)))
 
 # Edinburgh dataset
 test_edi = False
@@ -36,10 +36,13 @@ if test_edi:
     print("[INF] Loaded Edinburgh set, length: {:03d} ".format(len(traj_set)))
 
 goalsDescriptions= './parameters/CentralStation_GoalsDescriptions.csv'
+goalsDescriptions= './parameters/Edinburgh_GoalsDescriptions.csv'
 trajFile         = './datasets/GC/Annotation/'
-imgGCS           = './imgs/train_station.jpg'
+trajFile         = "./datasets/Edinburgh/annotations"
+img_bckgd        = './imgs/train_station.jpg'
+img_bckgd        = './datasets/Edinburgh/edinburgh.jpg'
 
-traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
+traj_dataset, goalsData, trajMat, __ = read_and_filter('edinburgh',goalsDescriptions,trajFile,use_pickled_data=False)
 
 # Plot trajectories and structure
 showDataset = True
@@ -47,10 +50,10 @@ if showDataset:
     n = goalsData.goals_n
     for i in range(n):
         for j in range(n):
+            print(len(trajMat[i][j]))
             if len(trajMat[i][j])>0:
-                #p = plotter("imgs/train_station.jpg",title=f"Trajectories from {i} to {j}")
                 p = plotter()
-                p.set_background(imgGCS)
+                p.set_background(img_bckgd)
                 p.plot_scene_structure(goalsData)
                 p.plot_trajectories(trajMat[i][j])
                 p.show()
