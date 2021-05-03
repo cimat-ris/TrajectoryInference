@@ -2,7 +2,7 @@ import numpy as np
 from gp_code.goal_pairs import goal_pairs
 from utils.loaders.loader_ind import load_ind
 from utils.loaders.loader_gcs import load_gcs
-#from utils.loaders.loader_edinburgh import load_edinburgh
+from utils.loaders.loader_edinburgh import load_edinburgh
 from utils.manip_trajectories import multigoal_trajectories
 from utils.manip_trajectories import break_multigoal_traj
 from utils.manip_trajectories import separate_trajectories_between_goals
@@ -13,7 +13,14 @@ import pickle
 # Get trajectories from files, and group them by pairs of goals
 def get_traj_from_file(dataset_id, dataset_traj, goals, coordinate_system='img'):
     # TODO: generalize to several datasets?
-    traj_dataset= load_gcs(dataset_traj, coordinate_system=coordinate_system)
+    if dataset_id=='GCS':
+        traj_dataset= load_gcs(dataset_traj, coordinate_system=coordinate_system)
+    else:
+        if dataset_id=='edinburgh':
+            traj_dataset= load_edinburgh(dataset_traj, coordinate_system=coordinate_system)
+        else:
+            print('[ERR] Cannot open this dataset')
+
     traj_set    = traj_dataset.get_trajectories()
     print("[INF] Loaded {:s} set, length: {:03d} ".format(dataset_id,len(traj_set)))
     # Output will be a list of trajectories
