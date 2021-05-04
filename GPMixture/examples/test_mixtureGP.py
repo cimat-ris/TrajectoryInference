@@ -6,11 +6,10 @@ from gp_code.mixture_gp import mixtureOfGPs
 
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-goalsDescriptions= 'parameters/CentralStation_GoalsDescriptions.csv'
-trajFile         = 'datasets/GC/Annotation/'
+trajFile         = 'datasets/GC/'
 imgGCS           = 'imgs/train_station.jpg'
 
-traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
+traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',trajFile,use_pickled_data=True)
 
 # Selection of the kernel type
 kernelType  = "linePriorCombined"
@@ -59,7 +58,7 @@ for i in range(1,part_num-1):
     print(filteredPaths[0].shape)
     predictedXYVec,varXYVec = mgps.predict_trajectory()
     print('[INF] Plotting')
-    p.plot_multiple_predictions_and_goal_likelihood(pathX,pathY,knownN,goalsData.goals_n,likelihoods,predictedXYVec,varXYVec)
+    p.plot_multiple_predictions_and_goal_likelihood(observations,predictedXYVec,varXYVec,likelihoods)
     print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
     print("[RES] Mean likelihood:", mgps.meanLikelihood)
     p.show()
