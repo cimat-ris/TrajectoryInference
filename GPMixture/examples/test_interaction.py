@@ -12,11 +12,10 @@ from utils.manip_trajectories import observed_data_given_time, reshape_trajector
 
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-goalsDescriptions= 'parameters/CentralStation_GoalsDescriptions.csv'
-trajFile         = 'datasets/GC/Annotation/'
+trajFile         = 'datasets/GC/'
 imgGCS           = 'imgs/train_station.jpg'
 
-traj_dataset, goalsData, trajMat, filtered = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
+traj_dataset, goalsData, trajMat, filtered = read_and_filter('GCS',trajFile,use_pickled_data=True)
 
 goalsData.kernelsX = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
 goalsData.kernelsY = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
@@ -68,7 +67,7 @@ for i in range(1,part_num-1):
         samples[j] = mgps[j].sample_paths(samples_n)
         p.plot_path_samples_with_observations(observations[j],samples[j])
         p.show()
-    
+
     #Evaluate likelihood of samples
     for j in range(samples_n):
         sample_set = []
@@ -77,4 +76,3 @@ for i in range(1,part_num-1):
         print('[INF] Computing interaction potential')
         val = interaction_potential_for_a_set_of_trajectories(sample_set)#interaction_potential_using_approximation()
         print('interaction potential =',val)
-            
