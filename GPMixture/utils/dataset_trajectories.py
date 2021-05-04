@@ -17,24 +17,12 @@ class TrajDataset:
         """
         self.critical_columns = ["frame_id", "agent_id", "pos_x", "pos_y"]
         self.data = pd.DataFrame(columns=self.critical_columns)
-
         # a map from agent_id to a list of [agent_ids] that are annotated as her groupmate
         # if such informatoin is not available the map should be filled with an empty list
         # for each agent_id
         self.groupmates = {}
-
-        # fps is necessary to calc any data related to time (e.g. velocity, acceleration)
-
         self.title = ''
-
-        # bounding box of trajectories
-        #  FixME: bbox should be a function of scene_id
-        # self.bbox = pd.DataFrame({'x': [np.nan, np.nan],
-        #                           'y': [np.nan, np.nan]},
-        #                          index=['min', 'max'])
-
-        # FixMe ?
-        #  self.trajectories_lazy = []
+        self.goals_areas = None
 
     def postprocess(self, fps, sampling_rate=1, use_kalman=False):
         """
