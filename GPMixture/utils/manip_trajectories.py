@@ -4,10 +4,10 @@ import numpy as np
 
 # Returns a matrix of trajectories:
 # the entry (i,j) has the paths that go from the goal i to the goal j
-def separate_trajectories_between_goals(trajectories, goals):
-    goals_n = len(goals)
-    goals  = goals[:,1:]
-    mat    = np.empty((goals_n,goals_n),dtype=object)
+def separate_trajectories_between_goals(trajectories,goals_areas):
+    goals_n = len(goals_areas)
+    goals   = goals_areas[:,1:]
+    mat     = np.empty((goals_n,goals_n),dtype=object)
     # Initialize the matrix elements to empty lists
     for i in range(goals_n):
         for j in range(goals_n):
@@ -59,20 +59,19 @@ def filter_trajectories(trajectories):
     return filtered_set
 
 # Removes atypical trajectories from a multidimensional array
-def filter_traj_matrix(raw_path_set_matrix, rows, columns):
+def filter_traj_matrix(raw_path_set_matrix):
     all_trajectories = []
     # Initialize a nRowsxnCols matrix with empty lists
-    filtered_matrix = np.empty((rows, columns),dtype=object)
-    for i in range(rows):
-        for j in range(columns):
+    filtered_matrix = np.empty(raw_path_set_matrix.shape,dtype=object)
+    for i in range(raw_path_set_matrix.shape[0]):
+        for j in range(raw_path_set_matrix.shape[1]):
             filtered_matrix[i][j] = []
 
-    for i in range(rows):
-        for j in range(columns):
+    for i in range(raw_path_set_matrix.shape[0]):
+        for j in range(raw_path_set_matrix.shape[1]):
             # If the list of trajectories is non-empty, filter it
             if(len(raw_path_set_matrix[i][j]) > 0):
                 filtered = filter_trajectories(raw_path_set_matrix[i][j])
-
                 filtered_matrix[i][j].extend(filtered)
                 all_trajectories.extend(filtered)
 

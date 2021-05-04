@@ -21,15 +21,16 @@ def image_to_world(p, Homog):
 def load_gcs(path, **kwargs):
     traj_dataset = TrajDataset()
     raw_dataset = pd.DataFrame()
-
-    file_list = sorted(os.listdir(path))
+    annotation_path = os.path.join(path,"Annotations")
+    file_list = sorted(os.listdir(annotation_path))
     raw_data_list = []  # the data to be converted into Pandas DataFrame
     coordinate_system = kwargs.get("coordinate_system", "img")
     selected_frames   = kwargs.get("frames", range(0, 120001))
     agent_id_incremental = 0
 
+    # Read annotation files
     for annot_file in file_list:
-        annot_file_full_path = os.path.join(path, annot_file)
+        annot_file_full_path = os.path.join(annotation_path, annot_file)
         with open(annot_file_full_path, 'r') as f:
             annot_contents = f.read().split()
 
@@ -81,16 +82,24 @@ def load_gcs(path, **kwargs):
         world_coords = image_to_world(raw_dataset[["pos_x", "pos_y"]].to_numpy(), homog)
         raw_dataset[["pos_x", "pos_y"]] = pd.DataFrame(world_coords * 0.8)
 
-    # copy columns
+    # Copy columns
     traj_dataset.data[["frame_id", "agent_id", "pos_x", "pos_y"]] = \
         raw_dataset[["frame_id", "agent_id", "pos_x", "pos_y"]]
     traj_dataset.title = kwargs.get('title', "Grand Central")
     traj_dataset.data["scene_id"] = kwargs.get('scene_id', 0)
     traj_dataset.data["label"] = "pedestrian"
     fps = kwargs.get('fps', 25)
-
+    # Read the areas data from the specified file
+    goals_file                = os.path.join(path, "goals.csv")
+    goals_data                = pd.read_csv(goals_file)
+    traj_dataset.goals_areas  = goals_data.values[:,1:]
+    # May have to transform goal areas coordinates
+    if coordinate_system!="img":
+        n_goals    = traj_dataset.goals_areas.shape[0]
+        tmp = image_to_world(np.flip(np.reshape(traj_dataset.goals_areas[:,1:],(-1,2)),axis=1), homog)
+        traj_dataset.goals_areas[:,1:] = np.reshape(np.flip(tmp,axis=1),(n_goals,-1))*0.8
+        print(traj_dataset.goals_areas)
     # post-process
-    # fps = 30
     print("[INF] Post-process")
     sampling_rate = kwargs.get('sampling_rate', 1)
     use_kalman = kwargs.get('use_kalman', False)
