@@ -36,24 +36,29 @@ if test_edi:
     print("[INF] Loaded Edinburgh set, length: {:03d} ".format(len(traj_set)))
 
 goalsDescriptions= './parameters/CentralStation_GoalsDescriptions.csv'
-goalsDescriptions= './parameters/Edinburgh_GoalsDescriptions.csv'
-trajFile         = './datasets/GC/Annotation/'
-trajFile         = "./datasets/Edinburgh/annotations"
+#goalsDescriptions= './parameters/Edinburgh_GoalsDescriptions.csv'
+trajFile         = './datasets/GC/'
+#trajFile         = "./datasets/Edinburgh/annotations"
 img_bckgd        = './imgs/train_station.jpg'
-img_bckgd        = './datasets/Edinburgh/edinburgh.jpg'
-
-traj_dataset, goalsData, trajMat, __ = read_and_filter('edinburgh',goalsDescriptions,trajFile,use_pickled_data=False)
+#img_bckgd        = './datasets/Edinburgh/edinburgh.jpg'
+coordinates      ='img'
+traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',trajFile,coordinate_system=coordinates,use_pickled_data=False)
 
 # Plot trajectories and structure
 showDataset = True
+p = plotter()
+p.set_background(img_bckgd)
+p.plot_scene_structure(goalsData)
+p.plot_trajectories(traj_dataset[:200])
+p.show()
+
 if showDataset:
     n = goalsData.goals_n
     for i in range(n):
         for j in range(n):
             print(len(trajMat[i][j]))
             if len(trajMat[i][j])>0:
-                p = plotter()
-                p.set_background(img_bckgd)
+                #p.set_background(img_bckgd)
                 p.plot_scene_structure(goalsData)
                 p.plot_trajectories(trajMat[i][j])
                 p.show()
