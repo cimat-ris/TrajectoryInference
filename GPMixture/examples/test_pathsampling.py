@@ -6,12 +6,11 @@ from gp_code.single_gp import singleGP
 from utils.manip_trajectories import goal_centroid
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-goalsDescriptions= 'parameters/CentralStation_GoalsDescriptions.csv'
-trajFile         = 'datasets/GC/Annotation/'
+trajFile         = 'datasets/GC/'
 imgGCS           = 'imgs/train_station.jpg'
 img              = mpimg.imread(imgGCS)
 
-traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
+traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',trajFile,use_pickled_data=True)
 # Selection of the kernel type
 kernelType = "linePriorCombined"
 nParameters = 4
@@ -24,7 +23,7 @@ goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined20x2
 allPaths = []
 for i in range(goalsData.goals_n):
     for j in range(i,goalsData.goals_n):
-        if(i != j) and goalsData.kernelsX[i][j].optimized is True:
+        if(i != j) and len(trajMat[i][j])>0 and goalsData.kernelsX[i][j].optimized is True:
             path  = trajMat[i][j][0]
             pathX, pathY, pathT = path
             pathL = trajectory_arclength(path)
