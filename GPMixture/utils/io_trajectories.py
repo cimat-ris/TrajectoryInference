@@ -72,9 +72,9 @@ def read_and_filter(dataset_id, trajectories_file, use_pickled_data=False, pickl
     print("[INF] Assignment to goals")
     print(goals_areas)
     # Get useful paths and split the trajectories into pairs of goals
-    trajMat = separate_trajectories_between_goals(traj_dataset, goals_areas)
+    trajMat, idx_out = separate_trajectories_between_goals(traj_dataset, goals_areas)
     # Remove the trajectories that are either too short or too long
     avgTrMat, avgTrajectories = filter_traj_matrix(trajMat)
     # Form the object goalsLearnedStructure
     goals_data = goal_pairs(goals_areas, avgTrMat)
-    return traj_dataset, goals_data, avgTrMat, avgTrajectories
+    return traj_dataset, goals_data, avgTrMat, avgTrajectories, idx_out

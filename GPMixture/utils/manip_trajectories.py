@@ -13,7 +13,8 @@ def separate_trajectories_between_goals(trajectories,goals_areas):
         for j in range(goals_n):
             mat[i][j]       = []
     # For all trajectories
-    for tr in trajectories:
+    idx_out = []
+    for idx,tr in enumerate(trajectories):
         x, y = tr[0], tr[1]
         traj_len = len(x)
         if traj_len > 2:
@@ -30,7 +31,9 @@ def separate_trajectories_between_goals(trajectories,goals_areas):
                     end_goal = k
             if start_goal is not None and end_goal is not None:
                 mat[start_goal][end_goal].append(tr)
-    return mat
+            else:
+                idx_out.append(idx)
+    return mat,np.array(idx_out)
 
 # Removes atypical trajectories
 def filter_trajectories(trajectories):
@@ -239,8 +242,8 @@ def reshape_trajectory(traj):
 def is_in_area(p, area):
     x = p[0]
     y = p[1]
-    if(x >= area[0] and x <= area[-2]):
-        if(y >= area[1] and y <= area[-1]):
+    if(x >= min(area[0::2]) and x <= max(area[0::2])):
+        if(y >= min(area[1::2]) and y <= max(area[1::2])):
             return True
         else:
             return False
