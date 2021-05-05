@@ -5,7 +5,7 @@ from test_common import *
 from utils.io_parameters import *
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS','datasets/GC/',use_pickled_data=True)
+traj_dataset, goalsData, trajMat, __, __ = read_and_filter('GCS','datasets/GC/',use_pickled_data=True)
 imgGCS           = 'imgs/train_station.jpg'
 
 # Plot trajectories and structure

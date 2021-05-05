@@ -15,7 +15,7 @@ from utils.manip_trajectories import observed_data_given_time, reshape_trajector
 trajFile         = 'datasets/GC/'
 imgGCS           = 'imgs/train_station.jpg'
 
-traj_dataset, goalsData, trajMat, filtered = read_and_filter('GCS',trajFile,use_pickled_data=True)
+traj_dataset, goalsData, trajMat, filtered, __ = read_and_filter('GCS',trajFile,use_pickled_data=True)
 
 goalsData.kernelsX = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
 goalsData.kernelsY = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)

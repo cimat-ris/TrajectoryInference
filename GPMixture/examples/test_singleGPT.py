@@ -11,7 +11,7 @@ goalsDescriptions= 'parameters/CentralStation_GoalsDescriptions.csv'
 trajFile         = 'datasets/GC/Annotation/'
 imgGCS           = 'imgs/train_station.jpg'
 
-traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
+traj_dataset, goalsData, trajMat, __, __ = read_and_filter('GCS',goalsDescriptions,trajFile,use_pickled_data=True)
 
 #I'm skipping the training for now
 

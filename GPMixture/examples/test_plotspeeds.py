@@ -13,7 +13,7 @@ from sklearn.pipeline import make_pipeline
 
 imgGCS           = 'imgs/train_station.jpg'
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS','datasets/GC/',use_pickled_data=True)
+traj_dataset, goalsData, trajMat, __, __ = read_and_filter('GCS','datasets/GC/',use_pickled_data=True)
 
 
 for i in range(goalsData.goals_n):

@@ -10,7 +10,7 @@ trajFile         = './datasets/GC/'
 imgGCS           = './imgs/train_station.jpg'
 img = mpimg.imread('imgs/train_station.jpg')
 
-traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',trajFile,use_pickled_data=True)
+traj_dataset, goalsData, trajMat, __, __ = read_and_filter('GCS',trajFile,use_pickled_data=True)
 
 # Selection of the kernel type
 kernelType  = "linePriorCombined"
