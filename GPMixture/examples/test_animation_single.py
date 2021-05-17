@@ -8,9 +8,9 @@ from gp_code.single_gp import singleGP
 # Read the areas file, dataset, and form the goalsLearnedStructure object
 trajFile         = './datasets/GC/'
 imgGCS           = './imgs/train_station.jpg'
-img = mpimg.imread('imgs/train_station.jpg')
+coordinates      = "img"
 
-traj_dataset, goalsData, trajMat, __, __ = read_and_filter('GCS',trajFile,use_pickled_data=True)
+traj_dataset, goalsData, trajMat, __, __ = read_and_filter('GCS',trajFile,coordinate_system=coordinates,use_pickled_data=True)
 
 # Selection of the kernel type
 kernelType  = "linePriorCombined"
