@@ -19,7 +19,7 @@ class singleGP:
         # The basic element here is this object, that will do the regression work
         if mode == 'Trautman': #!Using path_regression for now
             timeTransitionData = [self.goalsData.timeTransitionMeans[self.startG][self.endG],self.goalsData.timeTransitionStd[self.startG][self.endG]]
-            self.gpTrajectoryRegressor = path_regression(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],goalsData.sigmaNoise,self.goalsData.units[self.startG][self.endG],self.goalsData.stepUnit,self.goalsData.goals_areas[self.endG],mode='Trautman',timeTransitionData=timeTransitionData)
+            self.gpTrajectoryRegressor = path_regression(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],goalsData.sigmaNoise,self.goalsData.units[self.startG][self.endG],self.goalsData.goals_areas[self.endG],mode='Trautman',timeTransitionData=timeTransitionData)
         else:
             self.gpTrajectoryRegressor = trajectory_regression(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],goalsData.sigmaNoise,self.goalsData.speedModels[self.startG][self.endG],self.goalsData.units[self.startG][self.endG],self.goalsData.goals_areas[self.endG],self.goalsData.priorTransitions[self.startG][self.endG])
 
