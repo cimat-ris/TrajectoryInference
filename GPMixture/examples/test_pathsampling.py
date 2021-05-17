@@ -9,8 +9,8 @@ from utils.manip_trajectories import goal_centroid
 trajFile         = 'datasets/GC/'
 imgGCS           = 'imgs/train_station.jpg'
 img              = mpimg.imread(imgGCS)
-
-traj_dataset, goalsData, trajMat, __, __ = read_and_filter('GCS',trajFile,use_pickled_data=True)
+coordinates      = "img"
+traj_dataset, goalsData, trajMat, __, __ = read_and_filter('GCS','datasets/GC/',use_pickled_data=True,coordinate_system=coordinates)
 # Selection of the kernel type
 kernelType = "linePriorCombined"
 nParameters = 4
@@ -28,6 +28,8 @@ for i in range(goalsData.goals_n):
             pathX, pathY, pathT = path
             pathL = trajectory_arclength(path)
             observations, __ = observed_data([pathX,pathY,pathL,pathT],2)
+            if observations is None:
+                continue
             # The basic element here is this object, that will do the regression work
             gp = singleGP(i,j,goalsData)
             likelihood = gp.update(observations)

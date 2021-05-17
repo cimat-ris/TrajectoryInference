@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 # Read the areas file, dataset, and form the goalsLearnedStructure object
 trajFile         = 'datasets/GC/'
 imgGCS           = 'imgs/train_station.jpg'
-coordinates      = "world"
-#coordinates      = "img"
+#coordinates      = "world"
+coordinates      = "img"
 
 traj_dataset, goalsData, trajMat, __, __ = read_and_filter('GCS',trajFile,coordinate_system=coordinates,use_pickled_data=True)
 # Selection of the kernel type
