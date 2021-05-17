@@ -14,8 +14,9 @@ from utils.manip_trajectories import observed_data_given_time, reshape_trajector
 # Read the areas file, dataset, and form the goalsLearnedStructure object
 trajFile         = 'datasets/GC/'
 imgGCS           = 'imgs/train_station.jpg'
+coordinates      = "img"
 
-traj_dataset, goalsData, trajMat, filtered, __ = read_and_filter('GCS',trajFile,use_pickled_data=True)
+traj_dataset, goalsData, trajMat, filtered, __ = read_and_filter('GCS',trajFile,coordinate_system=coordinates,use_pickled_data=True)
 
 goalsData.kernelsX = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
 goalsData.kernelsY = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
@@ -50,9 +51,10 @@ observedTime = 100
 
 # For different sub-parts of the trajectory
 for i in range(1,part_num-1):
-    p = plotter(imgGCS)
+    p = plotter()
+    if coordinates=='img':
+        p.set_background(imgGCS)
     p.plot_scene_structure(goalsData)
-
     time = int((i+1)*(observedTime/part_num)) #numero de datos conocidos
 
     #get observations of each trajectory
