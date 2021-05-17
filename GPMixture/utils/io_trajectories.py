@@ -55,22 +55,21 @@ def read_and_filter(dataset_id, trajectories_file, use_pickled_data=False, pickl
         traj_dataset, goals_areas = get_traj_from_file(dataset_id,trajectories_file,coordinate_system=coordinate_system)
         # Dump trajectory dataset
         print("[INF] Pickling data...")
-        pickle_out = open(pickle_dir+'/trajectories.pickle',"wb")
+        pickle_out = open(pickle_dir+'/trajectories-'+dataset_id+'-'+coordinate_system+'.pickle',"wb")
         pickle.dump(traj_dataset, pickle_out, protocol=2)
         pickle_out.close()
-        pickle_out = open(pickle_dir+'/goals.pickle',"wb")
+        pickle_out = open(pickle_dir+'/goals-'+dataset_id+'-'+coordinate_system+'.pickle',"wb")
         pickle.dump(goals_areas, pickle_out, protocol=2)
         pickle_out.close()
     else:
         # Get trajectory dataset from pickle file
         print("[INF] Unpickling...")
-        pickle_in = open(pickle_dir+'/trajectories.pickle',"rb")
+        pickle_in = open(pickle_dir+'/trajectories-'+dataset_id+'-'+coordinate_system+'.pickle',"rb")
         traj_dataset = pickle.load(pickle_in)
-        pickle_in = open(pickle_dir+'/goals.pickle',"rb")
+        pickle_in = open(pickle_dir+'/goals-'+dataset_id+'-'+coordinate_system+'.pickle',"rb")
         goals_areas = pickle.load(pickle_in)
 
-    print("[INF] Assignment to goals")
-    print(goals_areas)
+    print("[INF] Assignment to goals.")
     # Get useful paths and split the trajectories into pairs of goals
     trajMat, idx_out = separate_trajectories_between_goals(traj_dataset, goals_areas)
     # Remove the trajectories that are either too short or too long
