@@ -9,8 +9,10 @@ import matplotlib.pyplot as plt
 # Read the areas file, dataset, and form the goalsLearnedStructure object
 trajFile         = 'datasets/GC/'
 imgGCS           = 'imgs/train_station.jpg'
+coordinates      = "world"
+#coordinates      = "img"
 
-traj_dataset, goalsData, trajMat, __, __ = read_and_filter('GCS',trajFile,use_pickled_data=True)
+traj_dataset, goalsData, trajMat, __, __ = read_and_filter('GCS',trajFile,coordinate_system=coordinates,use_pickled_data=True)
 # Selection of the kernel type
 kernelType = "linePriorCombined"
 nParameters = 4
@@ -53,7 +55,8 @@ part_num = 10
 for i in range(1,part_num-1):
     p = plotter()
     print('--------------------------')
-    p.set_background(imgGCS)
+    if coordinates=='img':
+        p.set_background(imgGCS)
     p.plot_scene_structure(goalsData)
     # Data we will suppose known
     knownN = int((i+1)*(pathSize/part_num))

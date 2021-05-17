@@ -41,7 +41,7 @@ trajFile         = './datasets/GC/'
 #trajFile         = "./datasets/Edinburgh/annotations"
 img_bckgd        = './imgs/train_station.jpg'
 #img_bckgd        = './datasets/Edinburgh/edinburgh.jpg'
-coordinates      ='img'
+coordinates      ='world'
 traj_dataset, goalsData, trajMat, __, idx_out = read_and_filter('GCS',trajFile,coordinate_system=coordinates,use_pickled_data=False)
 
 # Plot trajectories and structure
