@@ -43,6 +43,7 @@ img_bckgd        = './imgs/train_station.jpg'
 #img_bckgd        = './datasets/Edinburgh/edinburgh.jpg'
 coordinates      ='world'
 traj_dataset, goalsData, trajMat, __, idx_out = read_and_filter('GCS',trajFile,coordinate_system=coordinates,use_pickled_data=False)
+print("[INF] Number of trajectories: ",len(traj_dataset))
 
 # Plot trajectories and structure
 showDataset = True
@@ -51,7 +52,7 @@ if coordinates=='img':
     p.set_background(img_bckgd)
 p.plot_scene_structure(goalsData)
 traj_dataset_out = []
-for idx in idx_out[3000:3200]:
+for idx in idx_out[1000:1200]:
     traj_dataset_out.append(traj_dataset[idx])
 p.plot_trajectories(traj_dataset_out)
 p.show()
