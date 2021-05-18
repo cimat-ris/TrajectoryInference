@@ -8,6 +8,7 @@ def separate_trajectories_between_goals(trajectories,goals_areas):
     goals_n = len(goals_areas)
     goals   = goals_areas[:,1:]
     mat     = np.empty((goals_n,goals_n),dtype=object)
+    # TODO: Possible bug?
     # Initialize the matrix elements to empty lists
     for i in range(goals_n):
         for j in range(goals_n):
