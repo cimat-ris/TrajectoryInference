@@ -118,39 +118,35 @@ def traj_goal_sequence(tr, goals):
                         goal_seq.append(j)
     return goal_seq
 
-# Select those trajectories that go through more than 2 goals
-def multigoal_trajectories(trajectories, goals):
-    multigoal_trajs = []
-    for tr in trajectories:
-        # Determines the list of goals that a trajectory goes through
-        goal_seq = traj_goal_sequence(tr, goals)
-        if len(goal_seq) > 2:
-            multigoal_trajs.append(tr)
-    return multigoal_trajs
-
 # Split a trajectory into sub-trajectories between pairs of goals
 def break_multigoal_traj(tr, goals):
     x, y, t = tr[0], tr[1], tr[2]
     traj_set = []
-
-    new_x, new_y, new_t = [], [], []    #new trajectory
-    last_goal = None                    #last goal
+    new_x, new_y, new_t = [], [], []    # New trajectory
+    last_goal = -1                      # Last goal
+    started   = False                   # Flag to indicate that we have started with one goal
     for i in range(len(x)):
+        xy = [x[i], y[i]]       # Current position
+        # Am I in a goal
+        current_goal = -1
+        for j in range(len(goals)):
+            # If the position lies in the goal zone
+            if is_in_area(xy, goals[j,1:]):
+                current_goal=j
+                break
+        if current_goal==-1 and last_goal!=-1 and started:
+            # Split the trajectory just before
+            traj_set.append([np.array(new_x),np.array(new_y),np.array(new_t)] )
+            new_x, new_y, new_t = [], [], [] #start a new trajectory
+        if current_goal==-1 and last_goal!=-1:
+            started = True
+        last_goal=current_goal
         new_x.append(x[i])
         new_y.append(y[i])
         new_t.append(t[i])
-
-        xy = [x[i], y[i]]       #current position
-        for j in range(len(goals)):
-            # If the position lies in the goal zone
-            if is_in_area(xy, goals[j]):
-                if last_goal is None:
-                    last_goal = j
-                # Split the trajectory
-                elif last_goal != j:
-                    traj_set.append([np.array(new_x),np.array(new_y),np.array(new_t)] )
-                    new_x, new_y, new_t = [], [], [] #start a new trajectory
-
+        # Coming at the end
+        if current_goal>0 and i==len(x)-1 and started:
+            traj_set.append([np.array(new_x),np.array(new_y),np.array(new_t)] )
     return traj_set
 
 # Returns 3 lists with the x, y and arc-len values of a trajectory set, respectively

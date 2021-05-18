@@ -3,7 +3,6 @@ from gp_code.goal_pairs import goal_pairs
 from utils.loaders.loader_ind import load_ind
 from utils.loaders.loader_gcs import load_gcs
 from utils.loaders.loader_edinburgh import load_edinburgh
-from utils.manip_trajectories import multigoal_trajectories
 from utils.manip_trajectories import break_multigoal_traj
 from utils.manip_trajectories import separate_trajectories_between_goals
 from utils.manip_trajectories import filter_traj_matrix
@@ -26,14 +25,14 @@ def get_traj_from_file(dataset_id, dataset_traj, coordinate_system='img'):
     trajectories = []
     for tr in traj_set:
         x, y, t = np.array(tr[:,0]), np.array(tr[:,1]), np.array(tr[:,4])
-        # TODO: Should we check if there are repeat positions in the traj?
+        # TODO: Should we check if there are repeated positions in the traj?
         trajectories.append([x,y,t])
     # Detect the trajectories that go between more than a pair of goals
-    multigoal_traj = multigoal_trajectories(trajectories, traj_dataset.goals_areas)
-    for tr in multigoal_traj:
-        # Split these multiple-goal trajectories
-        trajectories.extend(break_multigoal_traj(tr, traj_dataset.goals_areas) )
-    return trajectories, traj_dataset.goals_areas
+    final_trajectories = []
+    for tr in trajectories:
+        # Split the trajectories
+        final_trajectories.extend(break_multigoal_traj(tr, traj_dataset.goals_areas) )
+    return final_trajectories, traj_dataset.goals_areas
 
 # new get_uncut_paths_from_file
 # gets trajectories from the file without modifications
