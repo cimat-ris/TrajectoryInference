@@ -38,9 +38,12 @@ class plotter():
         plt.axis(v)
 
     # Plot the scene structure: goals and sub-goals
-    def plot_scene_structure(self,goalsData):
+    def plot_scene_structure(self,goalsData,draw_ids=False):
         for i in range(goalsData.goals_n):
             self.plot_goals(goalsData.goals_areas[i][1:],goalsData.goals_areas[i][0])
+            if draw_ids:
+                center, size = goal_center_and_size(goalsData.goals_areas[i][1:])
+                self.ax.text(center[0], center[1],str(i),color='white')
 
     # Plot the goal
     def plot_goals(self, goal, axis):
@@ -122,7 +125,7 @@ class plotter():
                 sampley = paths[i][:,1]
                 samplex.reshape((-1,1))
                 sampley.reshape((-1,1))
-    
+
                 self.ax.plot(samplex,sampley, color=randColor, alpha=0.5)
 
     # new plot_paths
@@ -133,6 +136,10 @@ class plotter():
     def pause(self,d):
         plt.pause(d)
         plt.cla()
+
+    # Save the plots
+    def save(self,fileName):
+        plt.savefig(fileName,transparent=True,bbox_inches='tight')
 
     # Show the plots
     def show(self):
