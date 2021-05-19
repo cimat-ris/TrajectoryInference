@@ -91,3 +91,28 @@ def read_and_filter(dataset_id, trajectories_file, use_pickled_data=False, pickl
     # Form the object goalsLearnedStructure
     goals_data = goal_pairs(goals_areas, filtered_trajectories_matrix)
     return raw_trajectories, goals_data, filtered_trajectories_matrix, filtered_trajectories
+
+# Partition the dataset between training and testing
+def partition_train_test(trajectories_matrix,training_ratio=0.6):
+    # Initialize a nRowsxnCols matrix with empty lists
+    train_trajectories_matrix= np.empty(trajectories_matrix.shape,dtype=object)
+    test_trajectories_matrix = np.empty(trajectories_matrix.shape,dtype=object)
+    for i in range(trajectories_matrix.shape[0]):
+        for j in range(trajectories_matrix.shape[1]):
+            train_trajectories_matrix[i][j] = []
+            test_trajectories_matrix[i][j] = []
+
+    for i in range(trajectories_matrix.shape[0]):
+        for j in range(trajectories_matrix.shape[1]):
+            # Shuffle the list
+            tr = trajectories_matrix[i][j]
+            if len(tr)>0:
+                idx      = np.arange(len(tr))
+                np.random.shuffle(idx)
+                train_idx= idx[0:int(training_ratio*len(tr))]
+                test_idx = idx[int(training_ratio*len(tr)):]
+                for k in train_idx:
+                    train_trajectories_matrix[i][j].extend(tr[k])
+                for k in test_idx:
+                    test_trajectories_matrix[i][j].extend(tr[k])
+    return train_trajectories_matrix, test_trajectories_matrix
