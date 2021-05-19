@@ -10,7 +10,7 @@ trajFile         = 'datasets/GC/'
 imgGCS           = 'imgs/train_station.jpg'
 img              = mpimg.imread(imgGCS)
 coordinates      = "img"
-traj_dataset, goalsData, trajMat, __, __ = read_and_filter('GCS','datasets/GC/',use_pickled_data=True,coordinate_system=coordinates)
+traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS','datasets/GC/',use_pickled_data=True,coordinate_system=coordinates)
 # Selection of the kernel type
 kernelType = "linePriorCombined"
 nParameters = 4
