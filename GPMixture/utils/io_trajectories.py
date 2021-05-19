@@ -31,7 +31,8 @@ def get_traj_from_file(dataset_id, dataset_traj, coordinate_system='img'):
     final_trajectories = []
     for tr in trajectories:
         # Split the trajectories
-        final_trajectories.extend(break_multigoal_traj(tr, traj_dataset.goals_areas) )
+        final_trajectories.extend(break_multigoal_traj(tr, traj_dataset.goals_areas))
+    print("[INF] After handling goals, length: {:03d} ".format(len(final_trajectories)))        
     return final_trajectories, traj_dataset.goals_areas
 
 # new get_uncut_paths_from_file
@@ -79,7 +80,7 @@ def read_and_filter(dataset_id, trajectories_file, use_pickled_data=False, pickl
     print("[INF] Trajectories within goals ",s)
     # Remove the trajectories that are either too short or too long
     avgTrMat, avgTrajectories = filter_traj_matrix(trajMat)
-    s = 0    
+    s = 0
     for i in range(n):
         for j in range(n):
             s = s + len(avgTrMat[i][j])

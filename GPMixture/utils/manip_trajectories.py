@@ -8,7 +8,6 @@ def separate_trajectories_between_goals(trajectories,goals_areas):
     goals_n = len(goals_areas)
     goals   = goals_areas[:,1:]
     mat     = np.empty((goals_n,goals_n),dtype=object)
-    # TODO: Possible bug?
     # Initialize the matrix elements to empty lists
     for i in range(goals_n):
         for j in range(goals_n):
@@ -20,8 +19,8 @@ def separate_trajectories_between_goals(trajectories,goals_areas):
         traj_len = len(x)
         if traj_len > 2:
             # Start and finish points
-            start_x, start_y = x[0], y[0]
-            end_x, end_y     = x[-1], y[-1]
+            start_x, start_y     = x[0], y[0]
+            end_x, end_y         = x[-1],y[-1]
             start_goal, end_goal = None, None
             # Find starting and finishing goal
             for j in range(goals_n):
@@ -32,8 +31,6 @@ def separate_trajectories_between_goals(trajectories,goals_areas):
                     end_goal = k
             if start_goal is not None and end_goal is not None:
                 mat[start_goal][end_goal].append(tr)
-            else:
-                idx_out.append(idx)
     return mat,np.array(idx_out)
 
 # Removes atypical trajectories
@@ -134,13 +131,14 @@ def break_multigoal_traj(tr, goals):
             # If the position lies in the goal zone
             if is_in_area(xy, goals[j,1:]):
                 current_goal=j
-                break
         if current_goal==-1 and last_goal!=-1 and started:
             # Split the trajectory just before
             traj_set.append([np.array(new_x),np.array(new_y),np.array(new_t)] )
-            new_x, new_y, new_t = [], [], [] #start a new trajectory
         if current_goal==-1 and last_goal!=-1:
+            # At that point we start the trajectory
+            # with a point that should be in last_goal
             started = True
+            new_x, new_y, new_t = [x[i-1]], [y[i-1]], [t[i-1]]
         last_goal=current_goal
         new_x.append(x[i])
         new_y.append(y[i])
