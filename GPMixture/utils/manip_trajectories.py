@@ -99,22 +99,6 @@ def get_trajectories_given_time_interval(trajectories, start_time, finish_time):
 
     return traj_set
 
-# Determines the sequence of goals that a trajectory goes through
-def traj_goal_sequence(tr, goals):
-    goal_seq = []
-    x, y = tr[0], tr[1]
-
-    for i in range(len(x)):
-        for j in range(len(goals)):
-            xy = [x[i], y[i]]
-            if is_in_area(xy, goals[j]):
-                if len(goal_seq) == 0:
-                    goal_seq.append(j)
-                else:
-                    if j != goal_seq[-1]:
-                        goal_seq.append(j)
-    return goal_seq
-
 # Split a trajectory into sub-trajectories between pairs of goals
 def break_multigoal_traj(tr, goals):
     x, y, t = tr[0], tr[1], tr[2]
@@ -186,10 +170,6 @@ def get_linear_prior_mean(trajectories, flag):
     cov = np.cov(lineParameters[:,0],lineParameters[:,1])
 
     return mean, var
-
-
-def column(matrix, i):
-    return [row[i] for row in matrix]
 
 def arclen_to_time(init_time, arclen, speed):
     n = len(arclen)

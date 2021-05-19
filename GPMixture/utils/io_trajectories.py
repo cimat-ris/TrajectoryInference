@@ -49,10 +49,10 @@ def get_complete_traj_from_file(dataset_id,dataset_traj,coordinate_system='img')
     return trajectories
 
 # Main function for reading the data from a dataset
-def read_and_filter(dataset_id, trajectories_file, use_pickled_data=False, pickle_dir='pickle', coordinate_system='img'):
+def read_and_filter(dataset_id, trajectories_file, use_pickled_data=False, pickle_dir='pickle', coordinate_system='img',filter=False):
     if not use_pickled_data:
         # We process here multi-objective trajectories into sub-trajectories
-        traj_dataset, goals_areas = get_traj_from_file(dataset_id,trajectories_file,coordinate_system=coordinate_system)
+        raw_trajectories, goals_areas = get_traj_from_file(dataset_id,trajectories_file,coordinate_system=coordinate_system)
         # Dump trajectory dataset
         print("[INF] Pickling data...")
         pickle_out = open(pickle_dir+'/trajectories-'+dataset_id+'-'+coordinate_system+'.pickle',"wb")
@@ -65,26 +65,29 @@ def read_and_filter(dataset_id, trajectories_file, use_pickled_data=False, pickl
         # Get trajectory dataset from pickle file
         print("[INF] Unpickling...")
         pickle_in = open(pickle_dir+'/trajectories-'+dataset_id+'-'+coordinate_system+'.pickle',"rb")
-        traj_dataset = pickle.load(pickle_in)
+        raw_trajectories = pickle.load(pickle_in)
         pickle_in = open(pickle_dir+'/goals-'+dataset_id+'-'+coordinate_system+'.pickle',"rb")
         goals_areas = pickle.load(pickle_in)
 
     print("[INF] Assignment to goals.")
     # Get useful paths and split the trajectories into pairs of goals
-    trajMat = separate_trajectories_between_goals(traj_dataset, goals_areas)
+    trajectories_matrix = separate_trajectories_between_goals(raw_trajectories, goals_areas)
     n = goals_areas.shape[0]
     s = 0
     for i in range(n):
         for j in range(n):
-            s = s + len(trajMat[i][j])
+            s = s + len(trajectories_matrix[i][j])
     print("[INF] Trajectories within goals ",s)
     # Remove the trajectories that are either too short or too long
-    avgTrMat, avgTrajectories = filter_traj_matrix(trajMat)
+    if filter:
+        filtered_trajectories_matrix, filtered_trajectories = filter_traj_matrix(trajectories_matrix)
+    else:
+        filtered_trajectories_matrix, filtered_trajectories =  trajectories_matrix, raw_trajectories
     s = 0
     for i in range(n):
         for j in range(n):
-            s = s + len(avgTrMat[i][j])
+            s = s + len(filtered_trajectories_matrix[i][j])
     print("[INF] Trajectories within goals (after filtering)",s)
     # Form the object goalsLearnedStructure
-    goals_data = goal_pairs(goals_areas, avgTrMat)
-    return traj_dataset, goals_data, avgTrMat, avgTrajectories
+    goals_data = goal_pairs(goals_areas, filtered_trajectories_matrix)
+    return raw_trajectories, goals_data, filtered_trajectories_matrix, filtered_trajectories

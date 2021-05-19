@@ -128,8 +128,19 @@ class plotter():
 
                 self.ax.plot(samplex,sampley, color=randColor, alpha=0.5)
 
+
+    # Plot a set of sample trajectories
+    def plot_paths_samples_gt(self,paths_per_goals,n_samples=2):
+        ngoals = len(paths_per_goals)
+        for i in range(ngoals):
+            for j in range(i):
+                tr = paths_per_goals[i][j]
+                n_samples_eff = min(n_samples,len(tr))
+                idx= np.random.choice(len(tr), n_samples_eff, replace=False)
+                for k in idx:
+                    self.ax.plot(tr[k][0],tr[k][1],color="white",alpha=0.3)
     # new plot_paths
-    def plot_trajectories(self, trajSet):
+    def plot_paths(self, trajSet):
         for tr in trajSet:
             self.ax.plot(tr[0],tr[1])
 
@@ -254,6 +265,7 @@ def plot_path_samples(img,paths):
     v = [0,s[1],s[0],0]
     plt.axis(v)
     plt.show()
+
 
 def plot_observations_predictive_mean_and_sample(img,traj,knownN,predXY,sampleXY):
     x, y = traj[0], traj[1]
