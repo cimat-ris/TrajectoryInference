@@ -142,6 +142,7 @@ class plotter():
     # new plot_paths
     def plot_paths(self, trajSet):
         for tr in trajSet:
+            print(tr)
             self.ax.plot(tr[0],tr[1])
 
     def pause(self,d):

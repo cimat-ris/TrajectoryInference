@@ -14,7 +14,7 @@ def get_traj_from_file(dataset_id, dataset_traj, coordinate_system='img'):
     if dataset_id=='GCS':
         traj_dataset= load_gcs(dataset_traj, coordinate_system=coordinate_system)
     else:
-        if dataset_id=='edinburgh':
+        if dataset_id=='EIF':
             traj_dataset= load_edinburgh(dataset_traj, coordinate_system=coordinate_system)
         else:
             print('[ERR] Cannot open this dataset')
@@ -112,7 +112,7 @@ def partition_train_test(trajectories_matrix,training_ratio=0.6):
                 train_idx= idx[0:int(training_ratio*len(tr))]
                 test_idx = idx[int(training_ratio*len(tr)):]
                 for k in train_idx:
-                    train_trajectories_matrix[i][j].extend(tr[k])
+                    train_trajectories_matrix[i][j].append(tr[k])
                 for k in test_idx:
-                    test_trajectories_matrix[i][j].extend(tr[k])
+                    test_trajectories_matrix[i][j].append(tr[k])
     return train_trajectories_matrix, test_trajectories_matrix
