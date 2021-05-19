@@ -13,7 +13,6 @@ def separate_trajectories_between_goals(trajectories,goals_areas):
         for j in range(goals_n):
             mat[i][j]       = []
     # For all trajectories
-    idx_out = []
     for idx,tr in enumerate(trajectories):
         x, y = tr[0], tr[1]
         traj_len = len(x)
@@ -31,7 +30,7 @@ def separate_trajectories_between_goals(trajectories,goals_areas):
                     end_goal = k
             if start_goal is not None and end_goal is not None:
                 mat[start_goal][end_goal].append(tr)
-    return mat,np.array(idx_out)
+    return mat
 
 # Removes atypical trajectories
 def filter_trajectories(trajectories):
