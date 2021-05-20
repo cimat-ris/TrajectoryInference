@@ -38,7 +38,7 @@ def load_edinburgh(path, **kwargs):
     coordinate_system = kwargs.get("coordinate_system", "img")
 
     if os.path.isdir(path):
-        files_list = sorted(glob.glob(path + "/*.01Aug.txt"))
+        files_list = sorted(glob.glob(path + "/*.txt"))
     elif os.path.exists(path):
         files_list = [path]
     else:
@@ -117,8 +117,8 @@ def load_edinburgh(path, **kwargs):
             world_data.append(np.matmul(H,augImg_data.reshape(3,1)).tolist()[:2])
     else:
         world_data = img_data
-    raw_dataset["centre_x"] = np.array(world_data)[:,0]
-    raw_dataset["centre_y"] = np.array(world_data)[:,1]
+    raw_dataset["centre_x"] = np.array(world_data)[:,1]
+    raw_dataset["centre_y"] = np.array(world_data)[:,0]
 
     traj_dataset.data[["frame_id", "agent_id","pos_x", "pos_y"]] = raw_dataset[["frame", "agent_id","centre_x","centre_y"]]
     traj_dataset.data["scene_id"] = kwargs.get("scene_id", scene)
