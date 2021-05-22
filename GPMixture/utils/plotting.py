@@ -140,10 +140,11 @@ class plotter():
                 for k in idx:
                     self.ax.plot(tr[k][0],tr[k][1],color="white",alpha=0.3)
     # new plot_paths
-    def plot_paths(self, trajSet):
-        for tr in trajSet:
-            print(tr)
+    def plot_paths(self, trajSet, n_max=500):
+        for i,tr in enumerate(trajSet):
             self.ax.plot(tr[0],tr[1])
+            if i==n_max:
+                break
 
     def pause(self,d):
         plt.pause(d)
