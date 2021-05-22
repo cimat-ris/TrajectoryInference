@@ -71,7 +71,7 @@ def read_and_filter(dataset_id, trajectories_file, use_pickled_data=False, pickl
 
     print("[INF] Assignment to goals.")
     # Get useful paths and split the trajectories into pairs of goals
-    trajectories_matrix = separate_trajectories_between_goals(raw_trajectories, goals_areas)
+    trajectories_matrix, __ = separate_trajectories_between_goals(raw_trajectories, goals_areas)
     n = goals_areas.shape[0]
     s = 0
     for i in range(n):

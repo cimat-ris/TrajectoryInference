@@ -12,10 +12,12 @@ def separate_trajectories_between_goals(trajectories,goals_areas):
     for i in range(goals_n):
         for j in range(goals_n):
             mat[i][j]       = []
+    not_associated = []
     # For all trajectories
     for idx,tr in enumerate(trajectories):
         x, y = tr[0], tr[1]
         traj_len = len(x)
+        associated_to_goals = False
         if traj_len > 2:
             # Start and finish points
             start_x, start_y     = x[0], y[0]
@@ -30,7 +32,10 @@ def separate_trajectories_between_goals(trajectories,goals_areas):
                     end_goal = k
             if start_goal is not None and end_goal is not None:
                 mat[start_goal][end_goal].append(tr)
-    return mat
+                associated_to_goals = True
+        if (not associated_to_goals):
+            not_associated.append(tr)
+    return mat,not_associated
 
 # Removes atypical trajectories
 def filter_trajectories(trajectories):
@@ -239,9 +244,8 @@ def goal_centroid(area):
     return centroid
 
 def goal_center_and_size(area):
-    dx, dy = area[-2] - area[0], area[-1] - area[1]
-    center = [area[0] + dx/2., area[1] + dy/2.]
-    size = [dx, dy]
+    center = np.array([0.25*float(np.sum(area[::2])),0.25*float(np.sum(area[1::2]))])
+    size = np.array([float(np.max(area[::2]))-float(np.min(area[::2])),float(np.max(area[1::2]))-float(np.min(area[1::2]))])
     return center, size
 
 #TODO: check if these functions are useful

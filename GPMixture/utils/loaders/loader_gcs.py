@@ -98,7 +98,6 @@ def load_gcs(path, **kwargs):
         n_goals    = traj_dataset.goals_areas.shape[0]
         tmp = image_to_world(np.flip(np.reshape(traj_dataset.goals_areas[:,1:],(-1,2)),axis=1), homog)
         traj_dataset.goals_areas[:,1:] = np.reshape(np.flip(tmp,axis=1),(n_goals,-1))*0.8
-        print(traj_dataset.goals_areas)
     # post-process
     print("[INF] Post-process")
     sampling_rate = kwargs.get('sampling_rate', 1)

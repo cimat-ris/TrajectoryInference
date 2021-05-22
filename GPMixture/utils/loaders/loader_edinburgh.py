@@ -36,11 +36,11 @@ def load_edinburgh(path, **kwargs):
     traj_dataset = TrajDataset()
     traj_dataset.title = "Edinburgh"
     coordinate_system = kwargs.get("coordinate_system", "img")
-
+    annotation_path = os.path.join(path,"Annotations")
     if os.path.isdir(path):
-        files_list = sorted(glob.glob(path + "/*.txt"))
-    elif os.path.exists(path):
-        files_list = [path]
+        files_list = sorted(glob.glob(annotation_path + "/*.txt"))
+    elif os.path.exists(annotation_path):
+        files_list = [annotation_path]
     else:
         raise ValueError("loadEdinburgh: input file is invalid")
 
