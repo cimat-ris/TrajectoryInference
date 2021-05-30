@@ -36,11 +36,11 @@ if test_edi:
     print("[INF] Loaded Edinburgh set, length: {:03d} ".format(len(traj_set)))
 
 trajFile         = './datasets/GC/'
-#trajFile         = "./datasets/Edinburgh/annotations"
+trajFile         = "./datasets/Edinburgh/"
 img_bckgd        = './imgs/train_station.jpg'
-#img_bckgd        = './datasets/Edinburgh/edinburgh.jpg'
+img_bckgd        = './datasets/Edinburgh/edinburgh.jpg'
 coordinates      ='img'
-traj_dataset, goalsData, trajMat, __, idx_out = read_and_filter('GCS',trajFile,coordinate_system=coordinates,use_pickled_data=False)
+traj_dataset, goalsData, trajMat, __ = read_and_filter('EIF',trajFile,coordinate_system=coordinates,use_pickled_data=True)
 print("[INF] Number of trajectories: ",len(traj_dataset))
 # Plot trajectories and structure
 showDataset = True
@@ -48,5 +48,7 @@ p = plotter()
 if coordinates=='img':
     p.set_background(img_bckgd)
 p.plot_scene_structure(goalsData,draw_ids=True)
+p.plot_paths_samples_gt(trajMat,n_samples=1)
+
 p.save("structure.pdf")
 p.show()
