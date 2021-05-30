@@ -56,7 +56,7 @@ def read_and_filter(dataset_id, trajectories_file, use_pickled_data=False, pickl
         # Dump trajectory dataset
         print("[INF] Pickling data...")
         pickle_out = open(pickle_dir+'/trajectories-'+dataset_id+'-'+coordinate_system+'.pickle',"wb")
-        pickle.dump(traj_dataset, pickle_out, protocol=2)
+        pickle.dump(raw_trajectories, pickle_out, protocol=2)
         pickle_out.close()
         pickle_out = open(pickle_dir+'/goals-'+dataset_id+'-'+coordinate_system+'.pickle',"wb")
         pickle.dump(goals_areas, pickle_out, protocol=2)
