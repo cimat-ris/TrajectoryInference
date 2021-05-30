@@ -31,7 +31,7 @@ showDataset = True
 p = plotter()
 if coordinates=='img':
     p.set_background(img_bckgd)
-print(len(not_associated))
+print("[INF] Unassociated trajectories: {:03d} ".format(len(not_associated)))
 p.plot_paths(not_associated)
 p.plot_scene_structure(goals_data,draw_ids=True)
 p.show()
