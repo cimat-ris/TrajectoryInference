@@ -1,25 +1,25 @@
+"""
+For these functions, a trajectory has the shape [x,y,t]
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 import math
 
-#This functions assume that trajectory = [x,y,t]
-
 # Euclidean distance
-def euclidean_distance(p, q): #p = (x,y)
+def euclidean_distance(p, q):
     dist = math.sqrt( (p[0]-q[0])**2 + (p[1]-q[1])**2 )
     return dist
 
-#Trajectory arclen  ---  new path_arcLength from trajectory.py
-# TODO: Vectorization!
 def trajectory_arclength(tr):
     x, y = tr[0], tr[1]
-    arclen = [0]
-    for i in range(1,len(x)):
+    n    = len(x)
+    arclen = np.empty(n)
+    arclen[0] = 0
+    for i in range(1,n):
         d = euclidean_distance( [x[i],y[i]], [x[i-1], y[i-1]] )
-        arclen.append(d)
-        arclen[i] = arclen[i] + arclen[i-1]
+        arclen[i] = arclen[i-1] + d
 
-    return np.array(arclen)
+    return arclen
 
 def trajectory_speeds(tr):
     x, y, t = np.array(tr[0]), np.array(tr[1]), np.array(tr[2])
@@ -53,17 +53,6 @@ def tr_histogram(trajectories):
     _ = plt.hist(duration, bins='auto')
     plt.title("Histogram of trajectory duration")
     plt.show()
-
-# new get_steps_unit
-# Returns the average ratio u = number of steps(points) / arclen
-def steps_unit(trajectories):
-    unit = []
-    for tr in trajectories:
-        arclen = tr[2]
-        nSteps = len(tr[2])
-        unit.append(nSteps/arclen)
-
-    return np.mean(unit)
 
 # Truncates a float f to n decimals
 def truncate(f, n):
