@@ -124,7 +124,15 @@ def load_edinburgh(path, **kwargs):
     traj_dataset.data["scene_id"] = kwargs.get("scene_id", scene)
     traj_dataset.data["label"] = "pedestrian"
     traj_dataset.title = kwargs.get('title', "Edinburgh")
-
+    # Read the areas data from the specified file
+    goals_file                = os.path.join(path, "goals.csv")
+    goals_data                = pd.read_csv(goals_file)
+    traj_dataset.goals_areas  = goals_data.values[:,1:]
+    # May have to transform goal areas coordinates
+    if coordinate_system!="img":
+        n_goals    = traj_dataset.goals_areas.shape[0]
+        tmp = image_to_world(np.flip(np.reshape(traj_dataset.goals_areas[:,1:],(-1,2)),axis=1), homog)
+        traj_dataset.goals_areas[:,1:] = np.reshape(np.flip(tmp,axis=1),(n_goals,-1))*0.8
     # post-process. For Edinburgh, raw data do not include velocity, velocity info is postprocessed
     fps = kwargs.get('fps', 9)
     sampling_rate = kwargs.get('sampling_rate', 1)
