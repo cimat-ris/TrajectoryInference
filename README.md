@@ -33,7 +33,10 @@ $ python3 examples/train.py
 ## Running some prediction examples
 To display the mixture predictive distribution at a certain point, from past observations  
 ```
-$ python3 examples/test_animation_multi.py
+$ python3 examples/test_mixtureGP.py
 ```
 
 To get an animation of the updates of the trajectories
+```
+$ python3 examples/test_animation_multi.py
+```
