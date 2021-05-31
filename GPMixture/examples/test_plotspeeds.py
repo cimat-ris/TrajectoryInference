@@ -14,7 +14,7 @@ from sklearn.pipeline import make_pipeline
 imgGCS           = 'imgs/train_station.jpg'
 # Read the areas file, dataset, and form the goalsLearnedStructure object
 coordinates      = "img"
-traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS','datasets/GC/',use_pickled_data=True,coordinate_system=coordinates)
+traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',use_pickled_data=True,coordinate_system=coordinates)
 
 
 for i in range(goalsData.goals_n):
@@ -45,7 +45,7 @@ for i in range(goalsData.goals_n):
         p = plotter(title=f"Trajectories from {i} to {j}")
         p.set_background(imgGCS)
         p.plot_scene_structure(goalsData)
-        p.plot_trajectories(trajMat[i][j])
+        p.plot_paths(trajMat[i][j])
         #p.show()
         fig,ax = plt.subplots(1)
         plt.plot(lengths,relativeSpeeds,'+')

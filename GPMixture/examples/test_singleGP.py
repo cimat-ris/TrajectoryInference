@@ -7,19 +7,18 @@ from gp_code.single_gp import singleGP
 import matplotlib.pyplot as plt
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-trajFile         = 'datasets/GC/'
 imgGCS           = 'imgs/train_station.jpg'
 #coordinates      = "world"
 coordinates      = "img"
 
-traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',trajFile,coordinate_system=coordinates,use_pickled_data=True)
+traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',coordinate_system=coordinates,use_pickled_data=True)
 # Selection of the kernel type
 kernelType = "linePriorCombined"
 nParameters = 4
 
 # Read the kernel parameters from file
-goalsData.kernelsX = read_and_set_parameters('parameters/linearpriorcombined20x20_x.txt',nParameters)
-goalsData.kernelsY = read_and_set_parameters('parameters/linearpriorcombined20x20_y.txt',nParameters)
+goalsData.kernelsX = read_and_set_parameters('parameters/linearpriorcombined20x20_GCS_img_x.txt',nParameters)
+goalsData.kernelsY = read_and_set_parameters('parameters/linearpriorcombined20x20_GCS_img_y.txt',nParameters)
 
 """**********          Testing          ***********"""
 # We select a pair of starting and ending goals, and a trajectory id

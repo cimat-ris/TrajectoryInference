@@ -35,12 +35,10 @@ if test_edi:
     traj_set    = traj_dataset.get_trajectories()
     print("[INF] Loaded Edinburgh set, length: {:03d} ".format(len(traj_set)))
 
-trajFile         = './datasets/GC/'
-trajFile         = "./datasets/Edinburgh/"
 img_bckgd        = './imgs/train_station.jpg'
 img_bckgd        = './datasets/Edinburgh/edinburgh.jpg'
 coordinates      ='img'
-traj_dataset, goalsData, trajMat, __ = read_and_filter('EIF',trajFile,coordinate_system=coordinates,use_pickled_data=True)
+traj_dataset, goalsData, trajMat, __ = read_and_filter('EIF',coordinate_system=coordinates,use_pickled_data=True)
 print("[INF] Number of trajectories: ",len(traj_dataset))
 # Plot trajectories and structure
 showDataset = True
