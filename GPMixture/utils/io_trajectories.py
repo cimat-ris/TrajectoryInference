@@ -9,6 +9,8 @@ from utils.manip_trajectories import filter_traj_matrix
 import pandas as pd
 import pickle
 
+dataset_dirs = { 'GCS':'./datasets/GC/','EIF':'./datasets/Edinburgh/'}
+
 # Get trajectories from files, and group them by pairs of goals
 def get_traj_from_file(dataset_id, dataset_traj, coordinate_system='img'):
     if dataset_id=='GCS':
@@ -49,7 +51,8 @@ def get_complete_traj_from_file(dataset_id,dataset_traj,coordinate_system='img')
     return trajectories
 
 # Main function for reading the data from a dataset
-def read_and_filter(dataset_id, trajectories_file, use_pickled_data=False, pickle_dir='pickle', coordinate_system='img',filter=False):
+def read_and_filter(dataset_id,use_pickled_data=False, pickle_dir='pickle', coordinate_system='img',filter=False):
+    dataset_dir = dataset_dirs[dataset_id]
     if not use_pickled_data:
         # We process here multi-objective trajectories into sub-trajectories
         raw_trajectories, goals_areas = get_traj_from_file(dataset_id,trajectories_file,coordinate_system=coordinate_system)
@@ -93,7 +96,7 @@ def read_and_filter(dataset_id, trajectories_file, use_pickled_data=False, pickl
     return raw_trajectories, goals_data, filtered_trajectories_matrix, filtered_trajectories
 
 # Partition the dataset between training and testing
-def partition_train_test(trajectories_matrix,training_ratio=0.6):
+def partition_train_test(trajectories_matrix,training_ratio=1.0):
     # Initialize a nRowsxnCols matrix with empty lists
     train_trajectories_matrix= np.empty(trajectories_matrix.shape,dtype=object)
     test_trajectories_matrix = np.empty(trajectories_matrix.shape,dtype=object)
