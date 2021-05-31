@@ -24,6 +24,8 @@ class goal_pairs:
         self.min_traj_number    = min_traj_number
         # Observation Noise
         self.sigmaNoise         = sigmaNoise
+        # Minimum value for speed to avoid numerical problems
+        self.epsilon            = 0.1
         # Flag to know if the pairs of goals have parameters
         # that have been learned
         self.learned        = np.zeros((self.goals_n,self.goals_n),dtype=int)
@@ -120,7 +122,7 @@ class goal_pairs:
                     # Times
                     t = tr[2]
                     # Average speed
-                    v = avg_speed(tr)
+                    v = avg_speed(tr)+self.epsilon
                     # Arc lengths
                     d = trajectory_arclength(tr)
                     for k in range(1,len(t)):
