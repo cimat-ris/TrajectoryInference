@@ -5,7 +5,7 @@ from test_common import *
 from utils.io_parameters import *
 from utils.io_trajectories import read_and_filter,partition_train_test
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-img_bckgd        = './imgs/train_station.jpg'
+img_bckgd        = './datasets/GC/reference.jpg'
 img_bckgd        = './datasets/Edinburgh/edinburgh.jpg'
 dataset_name     = 'EIF'
 coordinates      = 'img'

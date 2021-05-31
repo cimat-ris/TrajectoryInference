@@ -11,7 +11,7 @@ from sklearn.linear_model import Ridge
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 
-imgGCS           = 'imgs/train_station.jpg'
+imgGCS           = './datasets/GC/reference.jpg'
 # Read the areas file, dataset, and form the goalsLearnedStructure object
 coordinates      = "img"
 traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',use_pickled_data=True,coordinate_system=coordinates)

@@ -7,7 +7,7 @@ from gp_code.single_gp import singleGP
 import matplotlib.pyplot as plt
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-imgGCS           = 'imgs/train_station.jpg'
+imgGCS           = './datasets/GC/reference.jpg'
 #coordinates      = "world"
 coordinates      = "img"
 

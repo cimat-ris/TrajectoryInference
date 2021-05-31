@@ -31,7 +31,7 @@ pathSize = len(path[0])
 # For different sub-parts of the trajectory
 for i in range(1,part_num-1):
     p = plotter()
-    p.set_background("imgs/train_station.jpg")
+    p.set_background("/datasets/GC/reference.jpg")
     p.plot_scene_structure(goalsData)
 
     knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos

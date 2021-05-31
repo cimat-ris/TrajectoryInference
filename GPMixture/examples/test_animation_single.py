@@ -6,7 +6,7 @@ from gp_code.mixture_gp import mixtureOfGPs
 from gp_code.single_gp import singleGP
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-imgGCS           = './imgs/train_station.jpg'
+imgGCS           = './datasets/GC/reference.jpg'
 coordinates      = "img"
 
 traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',coordinate_system=coordinates,use_pickled_data=True)

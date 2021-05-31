@@ -37,12 +37,10 @@ if test_edi:
 
 goalsDescriptions= './parameters/CentralStation_GoalsDescriptions.csv'
 #goalsDescriptions= './parameters/Edinburgh_GoalsDescriptions.csv'
-trajFile         = './datasets/GC/'
-#trajFile         = "./datasets/Edinburgh/annotations"
 img_bckgd        = './imgs/train_station.jpg'
 #img_bckgd        = './datasets/Edinburgh/edinburgh.jpg'
 coordinates      ='world'
-traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',trajFile,coordinate_system=coordinates,use_pickled_data=True)
+traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',coordinate_system=coordinates,use_pickled_data=True)
 
 # Plot trajectories and structure
 showDataset = True

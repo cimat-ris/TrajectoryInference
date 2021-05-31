@@ -6,7 +6,7 @@ from gp_code.single_gp import singleGP
 from utils.manip_trajectories import goal_centroid
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-imgGCS           = 'imgs/train_station.jpg'
+imgGCS           = './datasets/GC/reference.jpg'
 img              = mpimg.imread(imgGCS)
 coordinates      = "img"
 traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',use_pickled_data=True,coordinate_system=coordinates)

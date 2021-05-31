@@ -6,7 +6,7 @@ from gp_code.mixture_gp import mixtureOfGPs
 
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-imgGCS           = 'imgs/train_station.jpg'
+imgGCS           = './datasets/GC/reference.jpg'
 #coordinates      = "world"
 coordinates      = "img"
 
