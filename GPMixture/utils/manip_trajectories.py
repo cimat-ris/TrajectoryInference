@@ -4,7 +4,7 @@ import numpy as np
 
 # Returns a matrix of trajectories:
 # the entry (i,j) has the paths that go from the goal i to the goal j
-def separate_trajectories_between_goals(trajectories,goals_areas):
+def separate_trajectories_between_goals(trajectories, goals_areas):
     goals_n = len(goals_areas)
     goals   = goals_areas[:,1:]
     mat     = np.empty((goals_n,goals_n),dtype=object)
@@ -39,7 +39,8 @@ def separate_trajectories_between_goals(trajectories,goals_areas):
 
 # Removes atypical trajectories
 def filter_trajectories(trajectories):
-    if len(trajectories) == 0:
+    n_trajs = len(trajectories)
+    if n_trajs == 0:
         return []
 
     arclen = []
@@ -57,7 +58,7 @@ def filter_trajectories(trajectories):
 
     # remove trajectories that differ more than 3SD
     filtered_set = []
-    for i in range(len(trajectories)):
+    for i in range(n_trajs):
         if arclen[i] > 0 and abs(arclen[i] - M) <= 3.0*SD:
             filtered_set.append(trajectories[i])
 
@@ -218,11 +219,10 @@ def reshape_trajectory(traj):
     t.reshape((-1,1))
     return [x,y,t]
 
-
 # Checks if a point (x,y) belongs to an area R
 def is_in_area(p, area):
-    x = p[0]
-    y = p[1]
+    x, y = p[0], p[1]
+    
     if(x >= min(area[0::2]) and x <= max(area[0::2])):
         if(y >= min(area[1::2]) and y <= max(area[1::2])):
             return True
@@ -238,7 +238,7 @@ def get_goal_of_point(p, goals):
     return None
 
 # Returns the center of a rectangular area
-def goal_centroid(area):
+def goal_center(area):
     dx, dy = area[-2] - area[0], area[-1] - area[1]
     centroid = [area[0] + dx/2., area[1] + dy/2.]
     return centroid
@@ -247,27 +247,3 @@ def goal_center_and_size(area):
     center = np.array([0.25*float(np.sum(area[::2])),0.25*float(np.sum(area[1::2]))])
     size = np.array([float(np.max(area[::2]))-float(np.min(area[::2])),float(np.max(area[1::2]))-float(np.min(area[1::2]))])
     return center, size
-
-#TODO: check if these functions are useful
-"""
-def get_goal_center_and_boundaries(goal):
-    p, __ = goal_centroid(goal)
-    lenX = goal[len(goal) -2] - goal[0]
-    lenY = goal[len(goal) -1] - goal[1]
-    q1 = [p[0]-lenX/2, p[1]]
-    q2 = [p[0], p[1]+lenY/2]
-    q3 = [p[0]+lenX/2, p[1]]
-    q4 = [p[0], p[1]-lenY/2]
-    return [p,q1,q2,q3,q4]
-
-
-#predictedMeans es una lista que en i contiene array([X Y L]), esta funcion regresa una lista con [X, Y] en i
-def get_prediction_arrays(predictedMeans):
-    n = len(predictedMeans)
-    XYvec = []
-    for i in range(n):
-        x = predictedMeans[i][:,0]
-        y = predictedMeans[i][:,1]
-        XYvec.append([x,y])
-    return XYvec
-"""

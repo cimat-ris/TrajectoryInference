@@ -10,8 +10,8 @@ def euclidean_distance(p, q):
     dist = math.sqrt( (p[0]-q[0])**2 + (p[1]-q[1])**2 )
     return dist
 
-def trajectory_arclength(tr):
-    x, y = tr[0], tr[1]
+def trajectory_arclength(traj):
+    x, y = traj[0], traj[1]
     n    = len(x)
     arclen = np.empty(n)
     arclen[0] = 0
@@ -21,25 +21,25 @@ def trajectory_arclength(tr):
 
     return arclen
 
-def trajectory_speeds(tr):
-    x, y, t = np.array(tr[0]), np.array(tr[1]), np.array(tr[2])
+def trajectory_speeds(traj):
+    x, y, t = np.array(traj[0]), np.array(traj[1]), np.array(traj[2])
     return np.divide(np.sqrt(np.square(x[1:]-x[:-1])+np.square(y[1:]-y[:-1])),t[1:]-t[:-1])
 
 # Average speed of a trajectory
-def avg_speed(tr):
-    x, y, t = np.array(tr[0]), np.array(tr[1]), np.array(tr[2])
+def avg_speed(traj):
+    x, y, t = np.array(traj[0]), np.array(traj[1]), np.array(traj[2])
     speed = np.divide(np.sqrt(np.square(x[1:]-x[:-1])+np.square(y[1:]-y[:-1])),t[1:]-t[:-1])
     return np.mean(speed)
 
 # Median speed of a trajectory
-def median_speed(tr):
-    x, y, t = np.array(tr[0]), np.array(tr[1]), np.array(tr[2])
+def median_speed(traj):
+    x, y, t = np.array(traj[0]), np.array(traj[1]), np.array(traj[2])
     speed = np.divide(np.sqrt(np.square(x[1:]-x[:-1])+np.square(y[1:]-y[:-1])),t[1:]-t[:-1])
     return np.median(speed)
 
 # Trajectory duration
-def trajectory_duration(tr):
-    t = tr[2]
+def trajectory_duration(traj):
+    t = traj[2]
     return t[-1] - t[0]
 
 #TODO: re-do histogram function for duration and arclength

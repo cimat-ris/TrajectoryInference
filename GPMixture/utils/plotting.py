@@ -1,7 +1,6 @@
 """
 Plotting functions
 """
-
 import numpy as np
 import pandas as pd
 import random
@@ -12,11 +11,9 @@ from matplotlib.patches import Ellipse
 from matplotlib.animation import FuncAnimation
 from utils.manip_trajectories import goal_center_and_size
 
-
 color = ['lightgreen','springgreen','g','b','steelblue','y','tomato','orange','r','gold','yellow','lime',
          'cyan','teal','deepskyblue','dodgerblue','royalblue','blueviolet','indigo',
          'purple','magenta','deeppink','hotpink','sandybrown','darkorange','coral']
-
 
 class plotter():
     def __init__(self,title=None):
@@ -38,22 +35,22 @@ class plotter():
         plt.axis(v)
 
     # Plot the scene structure: goals and sub-goals
-    def plot_scene_structure(self,goalsData,draw_ids=False):
-        for i in range(goalsData.goals_n):
-            self.plot_goals(goalsData.goals_areas[i][1:],goalsData.goals_areas[i][0])
+    def plot_scene_structure(self,goals_data, draw_ids=False):
+        for i in range(goals_data.goals_n):
+            self.plot_goals(goals_data.goals_areas[i][1:],goals_data.goals_areas[i][0])
             if draw_ids:
-                center, size = goal_center_and_size(goalsData.goals_areas[i][1:])
+                center, size = goal_center_and_size(goals_data.goals_areas[i][1:])
                 self.ax.text(center[0], center[1],str(i),color='white')
 
     # Plot the goal
-    def plot_goals(self, goal, axis):
+    def plot_goals(self,goal, axis):
         center, size = goal_center_and_size(goal)
         # Create rectangle patch
         rect = plt.Rectangle((center[0]-size[0]/2,center[1]-size[1]/2), size[0], size[1],facecolor="green", alpha=0.35)
         self.ax.add_patch(rect)
 
     # Plot the true data, the predicted ones and their variance
-    def plot_prediction(self,observations,predicted,variances):
+    def plot_prediction(self,observations, predicted, variances):
         observedX = observations[:,0]
         observedY = observations[:,1]
         self.ax.plot(observedX,observedY,'c',predicted[:,0],predicted[:,1],'b')
@@ -73,22 +70,22 @@ class plotter():
 
 
     # Plot the filtered data
-    def plot_filtered(self,filteredPath):
-        self.ax.plot(filteredPath[:-1,0],filteredPath[:-1,1],'b--')
+    def plot_filtered(self,filtered_path):
+        self.ax.plot(filtered_path[:-1,0],filtered_path[:-1,1],'b--')
 
     # Plot multiple predictions
-    def plot_multiple_predictions_and_goal_likelihood(self,observations,paths,var_paths,goalsLikelihood):
+    def plot_multiple_predictions_and_goal_likelihood(self,observations, paths, var_paths, goals_likelihood):
         # Plot the observed data
         self.ax.plot(observations[:,0],observations[:,1],'c')
 
-        maxLikelihood = max(goalsLikelihood)
+        maxLikelihood = max(goals_likelihood)
         maxLW = 2
-        for i in range(len(goalsLikelihood)):
-            if (paths[i].shape[0]==0) or goalsLikelihood[i]<0.01 :
+        for i in range(len(goals_likelihood)):
+            if (paths[i].shape[0]==0) or goals_likelihood[i]<0.01 :
                 continue
             print('[RES] Plotting GP component ',i)
             # Line width function of the likelihood
-            lw = (goalsLikelihood[i]/maxLikelihood)*maxLW
+            lw = (goals_likelihood[i]/maxLikelihood)*maxLW
             # For each goal, draws the prediction
             self.ax.plot(paths[i][:,0],paths[i][:,1],'b--')
             self.ax.plot([observations[-1,0],paths[i][0,0]],[observations[-1,1],paths[i][0,1]],'b--')
@@ -107,7 +104,7 @@ class plotter():
                     self.ax.add_patch(ell)
 
     # Plot a set of sample trajectories and an observed partial trajectory
-    def plot_path_samples_with_observations(self,observations,paths):
+    def plot_path_samples_with_observations(self,observations, paths):
         samples = len(paths)
         if (samples == 0):
             return
@@ -126,11 +123,10 @@ class plotter():
                 samplex.reshape((-1,1))
                 sampley.reshape((-1,1))
 
-                self.ax.plot(samplex,sampley, color=randColor, alpha=0.5)
-
+                self.ax.plot(samplex,sampley,color=randColor,alpha=0.5)
 
     # Plot a set of sample trajectories
-    def plot_paths_samples_gt(self,paths_per_goals,n_samples=2):
+    def plot_paths_samples_gt(self,paths_per_goals, n_samples=2):
         ngoals = len(paths_per_goals)
         for i in range(ngoals):
             for j in range(i):
@@ -139,11 +135,11 @@ class plotter():
                 idx= np.random.choice(len(tr), n_samples_eff, replace=False)
                 for k in idx:
                     self.ax.plot(tr[k][0],tr[k][1],color="white",alpha=0.3)
-    # new plot_paths
-    def plot_paths(self, trajSet, n_max=500):
-        for i,tr in enumerate(trajSet):
+    
+    def plot_paths(self,traj_set, n_max=500):
+        for i,tr in enumerate(traj_set):
             self.ax.plot(tr[0],tr[1])
-            if i==n_max:
+            if i == n_max:
                 break
 
     def pause(self,d):
@@ -151,16 +147,16 @@ class plotter():
         plt.cla()
 
     # Save the plots
-    def save(self,fileName):
-        plt.savefig(fileName,transparent=True,bbox_inches='tight')
+    def save(self,file_name):
+        plt.savefig(file_name,transparent=True,bbox_inches='tight')
 
     # Show the plots
     def show(self):
         plt.show()
 
 #******************************************************************************#
-""" PLOT FUNCTIONS """
-#Imagen en seccion 2: partial path + euclidian distance
+
+# partial path and euclidian distance to goal
 def plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,finalXY):
     observedX = trueX[0:knownN]
     observedY = trueY[0:knownN]
@@ -183,7 +179,7 @@ def plot_euclidean_distance_to_finish_point(img,trueX,trueY,knownN,finalXY):
     plt.show()
 
 
-def animate_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goalsLikelihood,predictedXYVec,varXYVec,toFile):
+def animate_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,goals_likelihood,predictedXYVec,varXYVec,toFile):
     observedX = x[0:nUsedData]
     observedY = y[0:nUsedData]
 
@@ -198,7 +194,7 @@ def animate_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,go
     ax.imshow(img)
     plt.tight_layout()
     # Likelihoods
-    maxLikelihood = max(goalsLikelihood)
+    maxLikelihood = max(goals_likelihood)
     maxLW = 3.0
 
     # For all potential goals
@@ -206,7 +202,7 @@ def animate_multiple_predictions_and_goal_likelihood(img,x,y,nUsedData,nGoals,go
     pls       = []
     #ax.set_aspect('equal')
     for i in range(nGoals):
-            lw = max((goalsLikelihood[i]/maxLikelihood)*maxLW,1)
+            lw = max((goals_likelihood[i]/maxLikelihood)*maxLW,1)
             e = Ellipse([0,0],0,0)
             e.set_fill(0)
             if (predictedXYVec[i].shape[0]==0):

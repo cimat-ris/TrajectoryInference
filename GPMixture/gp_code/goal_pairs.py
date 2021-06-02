@@ -3,7 +3,7 @@ from gp_code.optimize_parameters import *
 from utils.stats_trajectories import trajectory_arclength, trajectory_duration
 from utils.manip_trajectories import get_linear_prior_mean
 from utils.manip_trajectories import get_data_from_set
-from utils.manip_trajectories import goal_centroid
+from utils.manip_trajectories import goal_center
 from utils.stats_trajectories import euclidean_distance, avg_speed, median_speed
 from utils.stats_trajectories import truncate
 from sklearn.linear_model import LinearRegression, HuberRegressor
@@ -71,10 +71,10 @@ class goal_pairs:
     def compute_euclidean_distances(self):
         for i in range(self.goals_n):
             # Take the centroid of the ROI i
-            p = goal_centroid(self.goals_areas[i][1:])
+            p = goal_center(self.goals_areas[i][1:])
             for j in range(self.goals_n):
                 # Take the centroid of the ROI j
-                q = goal_centroid(self.goals_areas[j][1:])
+                q = goal_center(self.goals_areas[j][1:])
                 d = euclidean_distance(p,q)
                 self.euclideanDistances[i][j] = d
 
