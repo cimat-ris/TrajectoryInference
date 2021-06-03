@@ -74,18 +74,17 @@ class plotter():
         self.ax.plot(filtered_path[:-1,0],filtered_path[:-1,1],'b--')
 
     # Plot multiple predictions
-    def plot_multiple_predictions_and_goal_likelihood(self,observations, paths, var_paths, goals_likelihood):
+    def plot_multiple_predictions_and_goal_likelihood(self,observations, paths, var_paths, goals_likelihood,min_likelihood=0.01):
         # Plot the observed data
         self.ax.plot(observations[:,0],observations[:,1],'c')
 
-        maxLikelihood = max(goals_likelihood)
-        maxLW = 2
+        maxLikelihood     = max(goals_likelihood)
+        maxLikelihoodWidth= 2
         for i in range(len(goals_likelihood)):
-            if (paths[i].shape[0]==0) or goals_likelihood[i]<0.01 :
+            if (paths[i] is None) or goals_likelihood[i]<min_likelihood:
                 continue
-            print('[RES] Plotting GP component ',i)
             # Line width function of the likelihood
-            lw = (goals_likelihood[i]/maxLikelihood)*maxLW
+            lw = (goals_likelihood[i]/maxLikelihood)*maxLikelihoodWidth
             # For each goal, draws the prediction
             self.ax.plot(paths[i][:,0],paths[i][:,1],'b--')
             self.ax.plot([observations[-1,0],paths[i][0,0]],[observations[-1,1],paths[i][0,1]],'b--')
@@ -135,7 +134,7 @@ class plotter():
                 idx= np.random.choice(len(tr), n_samples_eff, replace=False)
                 for k in idx:
                     self.ax.plot(tr[k][0],tr[k][1],color="white",alpha=0.3)
-    
+
     def plot_paths(self,traj_set, n_max=500):
         for i,tr in enumerate(traj_set):
             self.ax.plot(tr[0],tr[1])

@@ -58,7 +58,6 @@ class path1D_regression:
         self.n               = len(observedX)
         # Keep the solution for future likelihood evaluations
         if self.n%self.m==0:
-            print("[INF] Keeping current prediction for future likelihood evaluations")
             self.Kp_1_3m = self.Kp_1_2m
             self.Kp_1_2m = self.Kp_1
             self.Kp_1o_3m= self.Kp_1o_2m
@@ -70,7 +69,6 @@ class path1D_regression:
         # Set the observations
         selectedL, selectedX = self.select_observations(observedL,observedX)
         n_obs                = selectedL.shape[0]
-        print("[INF] Selected:",n_obs," observations out of",self.n)
         # Covariance matrix
         self.K               = np.zeros((n_obs+1,n_obs+1))
         # Observation vectors: X and L

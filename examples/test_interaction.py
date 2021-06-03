@@ -12,11 +12,10 @@ from utils.manip_trajectories import observed_data_given_time, reshape_trajector
 
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-trajFile         = 'datasets/GC/'
-imgGCS           = 'imgs/train_station.jpg'
+imgGCS           = './datasets/GC/reference.jpg'
 coordinates      = "img"
 
-traj_dataset, goalsData, trajMat, filtered = read_and_filter('GCS',trajFile,coordinate_system=coordinates,use_pickled_data=True)
+traj_dataset, goalsData, trajMat, filtered = read_and_filter('GCS',coordinate_system=coordinates,use_pickled_data=True)
 
 goalsData.kernelsX = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
 goalsData.kernelsY = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
@@ -24,6 +23,7 @@ goalsData.kernelsY = create_kernel_matrix('combinedTrautman', goalsData.goals_n,
 """**********          Testing          ***********"""
 
 # Sort by start time
+print(filtered)
 filtered.sort(key=start_time)
 # Find trajectories within an interval
 trajs = get_trajectories_given_time_interval(filtered, 0, 100)

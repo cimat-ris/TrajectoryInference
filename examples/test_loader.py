@@ -35,8 +35,6 @@ if test_edi:
     traj_set    = traj_dataset.get_trajectories()
     print("[INF] Loaded Edinburgh set, length: {:03d} ".format(len(traj_set)))
 
-goalsDescriptions= './parameters/CentralStation_GoalsDescriptions.csv'
-#goalsDescriptions= './parameters/Edinburgh_GoalsDescriptions.csv'
 img_bckgd        = './imgs/train_station.jpg'
 #img_bckgd        = './datasets/Edinburgh/edinburgh.jpg'
 coordinates      ='world'

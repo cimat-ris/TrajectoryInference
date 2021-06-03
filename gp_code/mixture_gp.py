@@ -90,7 +90,6 @@ class mixtureOfGPs:
         # For all likely goals
         for i in range(self.goalsData.goals_n):
             if self.gpTrajectoryRegressor[i] is not None:
-                print('[INF] Predicting path to goal ',i)
                 # Uses the already computed matrices to apply regression over missing data
                 self.predictedMeans[i], self.predictedVars[i] = self.gpTrajectoryRegressor[i].predict_path_to_finish_point(compute_sqRoot=compute_sqRoot)
         return self.predictedMeans,self.predictedVars
@@ -100,7 +99,6 @@ class mixtureOfGPs:
         # For all likely goals
         for i in range(self.goalsData.goals_n):
             if self.gpTrajectoryRegressor[i] is not None:
-                print('[INF] Predicting trajectory to goal ',i)
                 # Uses the already computed matrices to apply regression over missing data
                 self.predictedMeans[i], self.predictedVars[i] = self.gpTrajectoryRegressor[i].predict_trajectory_to_finish_point(compute_sqRoot=compute_sqRoot)
         return self.predictedMeans,self.predictedVars
