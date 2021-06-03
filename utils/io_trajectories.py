@@ -8,6 +8,7 @@ from utils.manip_trajectories import separate_trajectories_between_goals
 from utils.manip_trajectories import filter_traj_matrix
 import pandas as pd
 import pickle
+import logging
 
 dataset_dirs = { 'GCS':'./datasets/GC/','EIF':'./datasets/Edinburgh/'}
 
@@ -19,10 +20,10 @@ def get_traj_from_file(dataset_id, dataset_traj, coordinate_system='img'):
         if dataset_id=='EIF':
             traj_dataset= load_edinburgh(dataset_traj, coordinate_system=coordinate_system)
         else:
-            print('[ERR] Cannot open this dataset')
+            logging.error('Cannot open this dataset')
 
     traj_set    = traj_dataset.get_trajectories()
-    print("[INF] Loaded {:s} set, length: {:03d} ".format(dataset_id,len(traj_set)))
+    logging.info("Loaded {:s} set, length: {:03d} ".format(dataset_id,len(traj_set)))
     # Output will be a list of trajectories
     trajectories = []
     for tr in traj_set:
@@ -34,7 +35,7 @@ def get_traj_from_file(dataset_id, dataset_traj, coordinate_system='img'):
     for tr in trajectories:
         # Split the trajectories
         final_trajectories.extend(break_multigoal_traj(tr, traj_dataset.goals_areas))
-    print("[INF] After handling goals, length: {:03d} ".format(len(final_trajectories)))
+    logging.info("After handling goals, length: {:03d} ".format(len(final_trajectories)))
     return final_trajectories, traj_dataset.goals_areas
 
 # new get_uncut_paths_from_file
@@ -42,7 +43,7 @@ def get_traj_from_file(dataset_id, dataset_traj, coordinate_system='img'):
 def get_complete_traj_from_file(dataset_id,dataset_traj,coordinate_system='img'):
     traj_dataset= load_gcs(dataset_traj, coordinate_system=coordinate_system)
     traj_set    = traj_dataset.get_trajectories()
-    print("[INF] Loaded {:s} set, length: {:03d} ".format(dataset_id,len(traj_set)))
+    logging.info("Loaded {:s} set, length: {:03d} ".format(dataset_id,len(traj_set)))
     trajectories = []
     # Get trajectories x,y,t
     for tr in traj_set:
@@ -57,7 +58,7 @@ def read_and_filter(dataset_id,use_pickled_data=False, pickle_dir='pickle', coor
         # We process here multi-objective trajectories into sub-trajectories
         raw_trajectories, goals_areas = get_traj_from_file(dataset_id,trajectories_file,coordinate_system=coordinate_system)
         # Dump trajectory dataset
-        print("[INF] Pickling data...")
+        logging.info("Pickling data...")
         pickle_out = open(pickle_dir+'/trajectories-'+dataset_id+'-'+coordinate_system+'.pickle',"wb")
         pickle.dump(raw_trajectories, pickle_out, protocol=2)
         pickle_out.close()
@@ -66,13 +67,13 @@ def read_and_filter(dataset_id,use_pickled_data=False, pickle_dir='pickle', coor
         pickle_out.close()
     else:
         # Get trajectory dataset from pickle file
-        print("[INF] Unpickling...")
+        logging.info("Unpickling...")
         pickle_in = open(pickle_dir+'/trajectories-'+dataset_id+'-'+coordinate_system+'.pickle',"rb")
         raw_trajectories = pickle.load(pickle_in)
         pickle_in = open(pickle_dir+'/goals-'+dataset_id+'-'+coordinate_system+'.pickle',"rb")
         goals_areas = pickle.load(pickle_in)
 
-    print("[INF] Assignment to goals.")
+    logging.info("Assignment to goals.")
     # Get useful paths and split the trajectories into pairs of goals
     trajectories_matrix, __ = separate_trajectories_between_goals(raw_trajectories, goals_areas)
     n = goals_areas.shape[0]
@@ -80,7 +81,7 @@ def read_and_filter(dataset_id,use_pickled_data=False, pickle_dir='pickle', coor
     for i in range(n):
         for j in range(n):
             s = s + len(trajectories_matrix[i][j])
-    print("[INF] Trajectories within goals ",s)
+    logging.info("Trajectories within goals {:d}".format(s))
     # Remove the trajectories that are either too short or too long
     if filter:
         filtered_trajectories_matrix, filtered_trajectories = filter_traj_matrix(trajectories_matrix)
@@ -90,7 +91,7 @@ def read_and_filter(dataset_id,use_pickled_data=False, pickle_dir='pickle', coor
     for i in range(n):
         for j in range(n):
             s = s + len(filtered_trajectories_matrix[i][j])
-    print("[INF] Trajectories within goals (after filtering)",s)
+    logging.info("Trajectories within goals (after filtering) {:d}".format(s))
     # Form the object goalsLearnedStructure
     goals_data = goal_pairs(goals_areas, filtered_trajectories_matrix)
     return raw_trajectories, goals_data, filtered_trajectories_matrix, filtered_trajectories

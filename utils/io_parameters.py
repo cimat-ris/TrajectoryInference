@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 import sys
 from gp_code.kernels import create_kernel_matrix
 
@@ -24,19 +25,19 @@ def read_and_set_parameters(file_name, nParameters):
     try:
         file = open(file_name,'r')
     except OSError:
-        print("[ERR] Could not open/read file: ",file_name)
+        logging.error("Could not open/read file: ",file_name)
         sys.exit()
 
     firstline = file.readline()
     header    = firstline.split()
     if len(header)<3:
-        print("[ERR] Problem with the header of file: ",file_name)
+        logging.error("Problem with the header of file: ",file_name)
         sys.exit()
     # Get rows, columns, kernelType from the header
     rows      = int(header[0])
     columns   = int(header[1])
     kernelType= header[2]
-    print("[INF] Opening ",file_name," to read parameters of ",rows,"x",columns," kernels of type: ",kernelType)
+    logging.info("Opening {:s} to read parameters of {:d}x{:d} kernels of type {}".format(file_name,rows,columns,kernelType))
     kernels = create_kernel_matrix(kernelType, rows, columns)
     # Read the parameters for the matrix entries
     for line in file:
@@ -46,7 +47,7 @@ def read_and_set_parameters(file_name, nParameters):
         j = int(parameters_str[1])
         for k in range(2,len(parameters_str)):
             parameters.append(float(parameters_str[k]))
-        print("[INF] From goal ",i," to ", j, " parameters: ",parameters)
+        logging.info("From goal {:d} to {:d} parameters {}".format(i,j,parameters))
         kernels[i][j].set_parameters(parameters)
         kernels[i][j].optimized = True
     file.close()

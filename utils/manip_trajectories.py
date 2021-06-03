@@ -1,7 +1,7 @@
 from utils.stats_trajectories import trajectory_arclength
 import statistics as stats
 import numpy as np
-
+import logging
 # Returns a matrix of trajectories:
 # the entry (i,j) has the paths that go from the goal i to the goal j
 def separate_trajectories_between_goals(trajectories, goals_areas):
@@ -90,7 +90,7 @@ def get_trajectories_given_time_interval(trajectories, start_time, finish_time):
     # Note: the list of trajectories is sorted by initial time
     n = len(trajectories)
     if n == 0:
-        print("[ERR] Empty set")
+        logging.error("Empty set")
         return []
 
     traj_set = []
@@ -222,7 +222,7 @@ def reshape_trajectory(traj):
 # Checks if a point (x,y) belongs to an area R
 def is_in_area(p, area):
     x, y = p[0], p[1]
-    
+
     if(x >= min(area[0::2]) and x <= max(area[0::2])):
         if(y >= min(area[1::2]) and y <= max(area[1::2])):
             return True

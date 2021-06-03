@@ -10,7 +10,7 @@ from sklearn.linear_model import LinearRegression, HuberRegressor
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
-
+import logging
 import numpy as np
 
 # This structure keeps all the learned data
@@ -139,7 +139,7 @@ class goal_pairs:
         # Build the kernel matrices with the default values
         self.kernelsX = create_kernel_matrix(kernelType, self.goals_n, self.goals_n)
         self.kernelsY = create_kernel_matrix(kernelType, self.goals_n, self.goals_n)
-        print("[INF] Optimizing kernel parameters")
+        logging.info("Optimizing kernel parameters")
         # For every pair of goals (gi, gj)
         for i in range(self.goals_n):
             for j in range(self.goals_n):
@@ -157,26 +157,26 @@ class goal_pairs:
                         meanX, varX  = get_linear_prior_mean(trainingSet[i][j], 'x')
                         ker.set_linear_prior(meanX[0],meanX[1],varX[0],varX[1])
                     theta  = ker.get_optimizable_parameters()
-                    print("[OPT] [",i,"][",j,"]")
-                    print("[OPT] #trajectories: ",len(l))
-                    print("[OPT] Initial values for the optimizable parameters: ",theta)
+                    logging.info("[{:d}][{:d}]".format(i,j))
+                    logging.info("#trajectories: {:d}".format(len(l)))
+                    logging.info("Initial values for the optimizable parameters: {}".format(theta))
                     # Fit parameters in X
                     thetaX  = fit_parameters(l,x,ker,theta,self.sigmaNoise)
-                    print("[OPT] Optimized parameters for x: ",thetaX)
+                    logging.info("Optimized parameters for x: {}".format(thetaX))
                     self.kernelsX[i][j].set_parameters(ker.get_parameters())
-                    print("[OPT] Full parameters for x: ",self.kernelsX[i][j].get_parameters())
+                    logging.info("Full parameters for x: {}".format(self.kernelsX[i][j].get_parameters()))
                     # Fit parameters in Y
                     ker   = set_kernel(kernelType)
                     if self.kernelsY[i][j].linearPrior:
                         meanY, varY  = get_linear_prior_mean(trainingSet[i][j], 'y')
                         ker.set_linear_prior(meanY[0],meanY[1],varY[0],varY[1])
                     thetaY  = fit_parameters(l,y,ker,theta,self.sigmaNoise)
-                    print("[OPT] Optimized parameters for y: ",thetaY)
+                    logging.info("Optimized parameters for y: {}",thetaY)
                     self.kernelsY[i][j].set_parameters(ker.get_parameters())
-                    print("[OPT] Full parameters for y: ",self.kernelsY[i][j].get_parameters())
+                    logging.info("Full parameters for y: {}",self.kernelsY[i][j].get_parameters())
                     stop = timeit.default_timer()
                     execution_time = stop - start
-                    print("[OPT] Parameter optimization done in %.2f seconds"%execution_time)
+                    logging.info("Parameter optimization done in {:2f} seconds".format(execution_time))
                 else:
                     self.kernelsX[i][j] = None
                     self.kernelsY[i][j] = None
