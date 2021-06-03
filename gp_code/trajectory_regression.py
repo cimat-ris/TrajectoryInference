@@ -3,6 +3,7 @@ A class for GP-based trajectory regression (path AND time)
 """
 import numpy as np
 import math
+import logging
 from gp_code.path_regression import *
 from utils.stats_trajectories import avg_speed
 
@@ -48,7 +49,7 @@ class trajectory_regression(path_regression):
         self.speedAverage    = np.average(observations[:,4],axis=0,weights=weights)
         self.currentTime     = observations[-1,3]
         self.currentArcLength= observations[-1,2]
-        print('[INF] Time: {:2.2f} Arc-length: {:4.2f} Speed: {:2.2f}'.format(self.currentTime,self.currentArcLength,self.speedAverage))
+        logging.info('Time: {:2.2f} Arc-length: {:4.2f} Speed: {:2.2f}'.format(self.currentTime,self.currentArcLength,self.speedAverage))
 
     # Generate a sample from perturbations
     def sample_trajectory_with_perturbation(self,deltaX,deltaY):

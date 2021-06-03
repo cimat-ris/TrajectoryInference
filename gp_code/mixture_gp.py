@@ -52,6 +52,7 @@ class mixtureOfGPs:
         # Update each regressor with its corresponding observations
         for i in range(self.goalsData.goals_n):
             if self.gpTrajectoryRegressor[i] is not None:
+                logging.info("Updating goal {:d}".format(i))
                 goalCenter,__= goal_center_and_size(self.goalsData.goals_areas[i][1:])
                 distToGoal   = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
                 dist         = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
