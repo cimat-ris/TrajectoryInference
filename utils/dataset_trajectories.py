@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
 import matplotlib.pyplot as plt
-
+import logging
 
 class TrajDataset:
     def __init__(self):
@@ -91,7 +91,7 @@ class TrajDataset:
             dt = data_grouped["timestamp"].diff()
 
             if (dt > 2).sum():
-                print('Warning! too big dt in [%s]' % self.title)
+                logging.warn('Too big dt in {}'.format(self.title))
 
             self.data["vel_x"] = (data_grouped["pos_x"].diff() / dt).astype(float)
             self.data["vel_y"] = (data_grouped["pos_y"].diff() / dt).astype(float)
@@ -103,7 +103,7 @@ class TrajDataset:
         if use_kalman:
             def smooth(group):
                 if len(group) < 2: return group
-                print('Smoothing trajectories %d / %d' % (group["agent_id"].iloc[0], len(data_grouped)))
+                logging.info('Smoothing trajectories {:d} / {:d}'.format((group["agent_id"].iloc[0], len(data_grouped))))
                 dt = group["timestamp"].diff().iloc[1]
                 kf = KalmanModel(dt, n_dim=2, n_iter=7)
                 smoothed_pos, smoothed_vel = kf.smooth(group[["pos_x", "pos_y"]].to_numpy())
