@@ -7,47 +7,65 @@ from gp_code.kernels import *
 from gp_code.mixture_gpT import mixtureGPT
 from utils.stats_trajectories import truncate
 
-# Read the areas file, dataset, and form the goalsLearnedStructure object
-imgGCS           = 'imgs/train_station.jpg'
 
-traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',use_pickled_data=True)
+def main():
+    # Parsing arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--coordinates', default='img',help='Type of coordinates (img or world)')
+    parser.add_argument('--dataset_id', '--id',default='GCS',help='dataset id, GCS or EIF (default: GCS)')
+    parser.add_argument('--log_level',type=int, default=20,help='Log level (default: 20)')
+    parser.add_argument('--log_file',default='',help='Log file (default: standard output)')
+    args = parser.parse_args()
+    if args.log_file=='':
+        logging.basicConfig(format='%(levelname)s: %(message)s',level=args.log_level)
+    else:
+        logging.basicConfig(filename=args.log_file,format='%(levelname)s: %(message)s',level=args.log_level)
 
-#I'm skipping the training for now
+    # Read the areas file, dataset, and form the goalsLearnedStructure object
+    imgGCS           = './datasets/GC/reference.jpg'
+    coordinates      = args.coordinates
+    traj_dataset, goalsData, trajMat, __ = read_and_filter(args.dataset_id,use_pickled_data=True)
 
-goalsData.kernelsX = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
-goalsData.kernelsY = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
+    #I'm skipping the training for now
 
-"""**********          Testing          ***********"""
-gi, gj, k = 0, 6, 5
-path = trajMat[gi][gj][k]
+    goalsData.kernelsX = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
+    goalsData.kernelsY = create_kernel_matrix('combinedTrautman', goalsData.goals_n, goalsData.goals_n)
 
-mgps     = mixtureGPT(gi,goalsData)
-nSamples = 5
+    """**********          Testing          ***********"""
+    gi, gj, k = 0, 6, 5
+    path = trajMat[gi][gj][k]
 
-# Divides the trajectory in part_num parts and consider
-part_num = 3
-pathSize = len(path[0])
+    mgps     = mixtureGPT(gi,goalsData)
+    nSamples = 5
 
-# For different sub-parts of the trajectory
-for i in range(1,part_num-1):
-    p = plotter()
-    p.set_background("/datasets/GC/reference.jpg")
-    p.plot_scene_structure(goalsData)
+    # Divides the trajectory in part_num parts and consider
+    part_num = 3
+    pathSize = len(path[0])
 
-    knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
-    observations = observed_data(path,knownN)
-    """Multigoal prediction test"""
-    print('[INF] Updating likelihoods')
-    likelihoods = mgps.update(observations)
+    # For different sub-parts of the trajectory
+    for i in range(1,part_num-1):
+        p = plotter()
+        p.set_background("./datasets/GC/reference.jpg")
+        p.plot_scene_structure(goalsData)
 
-    print('[INF] Performing prediction')
-    predictedXYVec,varXYVec = mgps.predict_path()
-    #print('[INF] Plotting')
-    #p.plot_multiple_predictions_and_goal_likelihood(path[0],path[1],knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
+        knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
+        observations = observed_data(path,knownN)
+        """Multigoal prediction test"""
+        logging.info('Updating likelihoods')
+        likelihoods = mgps.update(observations)
 
-    print("[RES] Goals likelihood\n",mgps.goalsLikelihood)
-    print("[RES] Mean likelihood:", mgps.meanLikelihood)
-    print('[INF] Generating samples')
-    samplePaths = mgps.sample_paths(nSamples)
-    p.plot_path_samples_with_observations(observations,samplePaths)
-    p.show()
+        logging.info('Performing prediction')
+        predictedXYVec,varXYVec = mgps.predict_path()
+        #print('[INF] Plotting')
+        #p.plot_multiple_predictions_and_goal_likelihood(path[0],path[1],knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
+
+        logging.info('Goals likelihood:{}'.format(mgps.goalsLikelihood))
+        logging.info('Mean likelihood:{}'.format(mgps.meanLikelihood))
+        logging.info('Generating samples')
+        samplePaths = mgps.sample_paths(nSamples)
+        p.plot_path_samples_with_observations(observations,samplePaths)
+        p.show()
+
+
+if __name__ == '__main__':
+    main()
