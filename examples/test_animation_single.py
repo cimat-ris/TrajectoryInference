@@ -6,18 +6,19 @@ from gp_code.mixture_gp import mixtureOfGPs
 from gp_code.single_gp import singleGP
 
 # Read the areas file, dataset, and form the goalsLearnedStructure object
-imgGCS           = './datasets/GC/reference.jpg'
+img_bckgd        = './datasets/GC/reference.jpg'
+img_bckgd        = './datasets/Edinburgh/edinburgh.jpg'
 coordinates      = "img"
 
-traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',coordinate_system=coordinates,use_pickled_data=True)
+traj_dataset, goalsData, trajMat, __ = read_and_filter('EIF',coordinate_system=coordinates,use_pickled_data=True)
 
 # Selection of the kernel type
 kernelType  = "linePriorCombined"
 nParameters = 4
 
 # Read the kernel parameters from file
-goalsData.kernelsX = read_and_set_parameters("parameters/linearpriorcombined20x20_GCS_img_x.txt",nParameters)
-goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined20x20_GCS_img_y.txt",nParameters)
+goalsData.kernelsX = read_and_set_parameters("parameters/linearpriorcombined20x20_EIF_img_x.txt",nParameters)
+goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined20x20_EIF_img_y.txt",nParameters)
 
 """**********          Testing          ***********"""
 # We give the start and ending goals
@@ -52,7 +53,7 @@ p = plotter()
 # For different sub-parts of the trajectory
 for knownN in range(10,pathSize-1):
     print('--------------------------')
-    p.set_background(imgGCS)
+    p.set_background(img_bckgd)
     p.plot_scene_structure(goalsData)
     observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
     """Single goal prediction test"""
