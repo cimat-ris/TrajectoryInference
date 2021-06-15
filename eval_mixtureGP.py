@@ -34,21 +34,48 @@ def main():
     # Read the kernel parameters from file
     goalsData.kernelsX = read_and_set_parameters('parameters/linearpriorcombined20x20_GCS_img_x.txt',nParameters)
     goalsData.kernelsY = read_and_set_parameters('parameters/linearpriorcombined20x20_GCS_img_y.txt',nParameters)
-
     
-    # For each traj in test_dataset
+    # Divides the trajectory in part_num parts and consider
+    part_num = 5
+    ade = np.empty()
+    
+    for i in range(part_num):
+        ade[i] = []
+
     for i in range(test_set.shape[0]):
         for j in range(test_set.shape[1]):
-            tr = trajectories_matrix[i][j]
-            # Prediction of single paths with a mixture model
-            mgps     = mixtureOfGPs(i,goalsData)
-            nSamples = 50
-        # create mgps
-        # For each sub-part of the trajectory
-            # get observations
-            # update mgps
-            # get most likely sample
-            # compute ade and fde
+            for tr in test_set[i][j]:
+                # Prediction of single paths with a mixture model
+                mgps     = mixtureOfGPs(i,goalsData)
+                n_samples = 50
+                arclen = trajectory_arclength(tr)
+                #append arclen to tr
+                path_size = len(arclen)
+                # For different sub-parts of the trajectory
+                for k in range(1,part_num-1):
+                    p = plotter()
+                    p.set_background(imgGCS)
+                    p.plot_scene_structure(goalsData)
+                    #get path size
+                    knownN = int((k+1)*(path_size/part_num)) #numero de datos conocidos
+                    
+                    #get pathX, pathY, pathT, pathL
+                    observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
+                    """Multigoal prediction test"""
+                    logging.info('Updating likelihoods')
+                    likelihoods = mgps.update(observations)
+                    logging.info('Performing prediction')
+                    filteredPaths           = mgps.filter()
+                    predictedXYVec,varXYVec = mgps.predict_trajectory()
+                    logging.info('Plotting')
+                    p.plot_multiple_predictions_and_goal_likelihood(observations,predictedXYVec,varXYVec,likelihoods)
+                    logging.info('Goals likelihood:{}'.format(mgps.goalsLikelihood))
+                    logging.info('Mean likelihood:{}'.format(mgps.meanLikelihood))
+                    p.show()
+                    # get observations
+                    # update mgps
+                    # get most likely sample
+                    # compute ade and fde
             
     
 if __name__ == '__main__':
