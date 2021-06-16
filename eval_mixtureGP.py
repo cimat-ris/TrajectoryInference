@@ -1,9 +1,20 @@
 """
 """
-from test_common import *
+import os
+import sys
+import random
+import logging
+import argparse
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import numpy as np
+
 from gp_code.mixture_gp import mixtureOfGPs
 from utils.io_trajectories import read_and_filter
 from utils.io_trajectories import partition_train_test
+from utils.io_parameters import read_and_set_parameters
+from utils.stats_trajectories import trajectory_arclength
+from utils.manip_trajectories import observed_data
+from utils.plotting import plotter, plot_path_samples
 
 
 
@@ -49,18 +60,19 @@ def main():
                 mgps     = mixtureOfGPs(i,goalsData)
                 n_samples = 50
                 arclen = trajectory_arclength(tr)
-                #append arclen to tr
                 path_size = len(arclen)
+                
+                tr_data = [tr[0],tr[1],arclen,tr[2]] # data = [X,Y,L,T]
+                
                 # For different sub-parts of the trajectory
                 for k in range(1,part_num-1):
                     p = plotter()
                     p.set_background(imgGCS)
                     p.plot_scene_structure(goalsData)
-                    #get path size
+                    
                     knownN = int((k+1)*(path_size/part_num)) #numero de datos conocidos
                     
-                    #get pathX, pathY, pathT, pathL
-                    observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
+                    observations, ground_truth = observed_data(tr_data,knownN)
                     """Multigoal prediction test"""
                     logging.info('Updating likelihoods')
                     likelihoods = mgps.update(observations)
@@ -72,7 +84,6 @@ def main():
                     logging.info('Goals likelihood:{}'.format(mgps.goalsLikelihood))
                     logging.info('Mean likelihood:{}'.format(mgps.meanLikelihood))
                     p.show()
-                    # get observations
                     # update mgps
                     # get most likely sample
                     # compute ade and fde
