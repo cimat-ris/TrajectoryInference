@@ -20,7 +20,7 @@ def image_to_world(p, Homog):
 
 def load_gcs(path, **kwargs):
     traj_dataset = TrajDataset()
-    raw_dataset = pd.DataFrame()
+    raw_dataset  = pd.DataFrame()
     annotation_path = os.path.join(path,"Annotations")
     file_list = sorted(os.listdir(annotation_path))
     raw_data_list = []  # the data to be converted into Pandas DataFrame

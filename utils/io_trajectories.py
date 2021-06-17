@@ -13,12 +13,13 @@ import logging
 dataset_dirs = { 'GCS':'./datasets/GC/','EIF':'./datasets/Edinburgh/'}
 
 # Get trajectories from files, and group them by pairs of goals
-def get_traj_from_file(dataset_id, dataset_traj, coordinate_system='img'):
+def get_traj_from_file(dataset_id, coordinate_system='img'):
+    dataset_dir=dataset_dirs[dataset_id]
     if dataset_id=='GCS':
-        traj_dataset= load_gcs(dataset_traj, coordinate_system=coordinate_system)
+        traj_dataset= load_gcs(dataset_dir, coordinate_system=coordinate_system)
     else:
         if dataset_id=='EIF':
-            traj_dataset= load_edinburgh(dataset_traj, coordinate_system=coordinate_system)
+            traj_dataset= load_edinburgh(dataset_dir, coordinate_system=coordinate_system)
         else:
             logging.error('Cannot open this dataset')
 
@@ -56,7 +57,7 @@ def read_and_filter(dataset_id,use_pickled_data=False, pickle_dir='pickle', coor
     dataset_dir = dataset_dirs[dataset_id]
     if not use_pickled_data:
         # We process here multi-objective trajectories into sub-trajectories
-        raw_trajectories, goals_areas = get_traj_from_file(dataset_id,trajectories_file,coordinate_system=coordinate_system)
+        raw_trajectories, goals_areas = get_traj_from_file(dataset_id,coordinate_system=coordinate_system)
         # Dump trajectory dataset
         logging.info("Pickling data...")
         pickle_out = open(pickle_dir+'/trajectories-'+dataset_id+'-'+coordinate_system+'.pickle',"wb")
