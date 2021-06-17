@@ -15,6 +15,8 @@ def main():
     parser.add_argument('--dataset_id', '--id',default='GCS',help='dataset id, GCS or EIF (default: GCS)')
     parser.add_argument('--log_level',type=int, default=20,help='Log level (default: 20)')
     parser.add_argument('--log_file',default='',help='Log file (default: standard output)')
+    parser.add_argument('--no_pickle', dest='pickle',action='store_false')
+    parser.set_defaults(pickle=True)
     args = parser.parse_args()
     if args.log_file=='':
         logging.basicConfig(format='%(levelname)s: %(message)s',level=args.log_level)
@@ -27,7 +29,7 @@ def main():
     dataset_name     = args.dataset_id
     coordinates      = args.coordinates
 
-    traj_dataset, goalsData, trajMat, __ = read_and_filter(dataset_name,coordinate_system=coordinates,use_pickled_data=True)
+    traj_dataset, goalsData, trajMat, __ = read_and_filter(dataset_name,coordinate_system=coordinates,use_pickled_data=args.pickle)
 
     # Partition test/train set
     train_trajectories_matrix, test_trajectories_matrix = partition_train_test(trajMat)
