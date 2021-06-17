@@ -1,0 +1,5 @@
+termcolor
+matplotlib
+scipy
+sklearn
+opencv-python
