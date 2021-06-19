@@ -12,6 +12,7 @@ from gp_code.single_gp import singleGP
 from utils.plotting import plotter, plot_path_samples
 from utils.plotting import animate_multiple_predictions_and_goal_likelihood
 import numpy as np
+import time
 
 def main():
     # Parsing arguments
@@ -56,26 +57,32 @@ def main():
 
     # Total path length
     pathSize = len(pathX)
-
+    nSamples = 100
     # Prediction of single paths with a mixture model
     mgps     = mixtureOfGPs(startG,goalsData)
 
     p = plotter()
     # For different sub-parts of the trajectory
     for knownN in range(5,pathSize-1):
-        logging.info("--------------------------")
         p.set_background(imgGCS)
         p.plot_scene_structure(goalsData)
+        logging.info("--------------------------")
+        tic = time.process_time()
+        # Monte Carlo
         observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
-        """Single goal prediction test"""
-        logging.info("Updating observations")
-        # Update the GP with (real) observations
-        likelihoods  = mgps.update(observations)
+        """Multigoal prediction test"""
+        logging.info('Updating likelihoods')
+        likelihoods = mgps.update(observations)
         filteredPaths= mgps.filter()
+        logging.info('Performing prediction')
+        predictedXYVec,varXYVec = mgps.predict_trajectory(compute_sqRoot=True)
+        logging.info('Generating samples')
+        paths = mgps.sample_paths(nSamples)
         # Perform prediction
-        predictedXYVec,varXYVec = mgps.predict_trajectory()
+        toc = time.process_time()
+        print(1000*(toc-tic))
         logging.info("Plotting")
-        p.plot_multiple_predictions_and_goal_likelihood(observations,predictedXYVec,varXYVec,likelihoods)
+        p.plot_path_samples_with_observations(observations,paths)
         logging.info("Goals likelihood {}".format(mgps.goalsLikelihood))
         logging.info("Mean likelihood: {}".format(mgps.meanLikelihood))
         # Plot the ground truth
