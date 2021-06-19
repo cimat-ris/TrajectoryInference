@@ -2,7 +2,6 @@
 @author: karenlc
 """
 from test_common import *
-from gp_code.mixture_gp import mixtureOfGPs
 from gp_code.single_gp import singleGP
 
 

@@ -11,8 +11,8 @@ from utils.stats_trajectories import euclidean_distance
 from utils.manip_trajectories import goal_center_and_size
 from statistics import mean
 
-# Class for performing path regression with a mixture of Gaussian processes
-class mixtureOfGPs:
+# Class for performing trajectory regression with a mixture of Gaussian processes
+class mGP_trajectory_prediction:
 
     # Constructor
     def __init__(self, startG, goalsData):
@@ -32,11 +32,13 @@ class mixtureOfGPs:
         self.predictedMeans  = [np.zeros((0,3),  dtype=float)]*n
         self.predictedVars   = [np.zeros((0,0,0),dtype=float)]*n
         self.filteredPaths   = [np.zeros((0,3),  dtype=float)]*n
-        self.sqRootVarX      = np.empty(n, dtype=object)
-        self.sqRootVarY      = np.empty(n, dtype=object)
-        self.observedX       = None
-        self.observedY       = None
-        self.observedL       = None
+        self._observed_x        = None
+        self._observed_y        = None
+        self._observed_l        = None
+        self._current_time      = 0.0
+        self._current_arc_length= 0.0
+        self._speed_average     = 1.0
+
         # The basic elements here is this array of objects, that will do the regression work
         self.gpTrajectoryRegressor = [None]*n
         for i in range(self.goalsData.goals_n):
@@ -46,16 +48,25 @@ class mixtureOfGPs:
 
     # Update observations and compute likelihoods based on observations
     def update(self,observations):
-        self.observedX = observations[:,0]
-        self.observedY = observations[:,1]
-        self.observedT = observations[:,2]
+        self._observed_x = observations[:,0]
+        self._observed_y = observations[:,1]
+        self._observed_l = observations[:,2]
+        # Update time and current arc length
+        self._current_time      = observations[-1,3]
+        self._current_arc_length= observations[-1,2]
+        logging.info('Time: {:2.2f} Arc-length: {:4.2f} Speed: {:2.2f}'.format(self._current_time,self._current_arc_length,self._speed_average))
+        # Average speed
+        nobs    = observations.shape[0]
+        weights = np.linspace(0.0,1.0,num=nobs)
+        weights = weights/np.sum(weights)
+        self._speed_average    = np.average(observations[:,4],axis=0,weights=weights)
         # Update each regressor with its corresponding observations
         for i in range(self.goalsData.goals_n):
             if self.gpTrajectoryRegressor[i] is not None:
                 logging.info("Updating goal {:d}".format(i))
                 goalCenter,__= goal_center_and_size(self.goalsData.goals_areas[i][1:])
-                distToGoal   = euclidean_distance([self.observedX[-1],self.observedY[-1]], goalCenter)
-                dist         = euclidean_distance([self.observedX[0],self.observedY[0]], goalCenter)
+                distToGoal   = euclidean_distance([self._observed_x[-1],self._observed_y[-1]], goalCenter)
+                dist         = euclidean_distance([self._observed_x[0],self._observed_y[0]], goalCenter)
                 # Update observations and re-compute the kernel matrices
                 self.gpTrajectoryRegressor[i].update_observations(observations)
                 # Compute the model likelihood
@@ -101,7 +112,7 @@ class mixtureOfGPs:
         for i in range(self.goalsData.goals_n):
             if self.gpTrajectoryRegressor[i] is not None:
                 # Uses the already computed matrices to apply regression over missing data
-                self.predictedMeans[i], self.predictedVars[i] = self.gpTrajectoryRegressor[i].predict_trajectory_to_finish_point(compute_sqRoot=compute_sqRoot)
+                self.predictedMeans[i], self.predictedVars[i] = self.gpTrajectoryRegressor[i].predict_trajectory_to_finish_point(self._speed_average,self._current_time,self._current_arc_length,compute_sqRoot=compute_sqRoot)
         return self.predictedMeans,self.predictedVars
 
     def sample_path(self):
