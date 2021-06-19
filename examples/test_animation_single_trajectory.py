@@ -48,7 +48,7 @@ def main():
             if len(trajMat[startG][endG])>0 and goalsData.kernelsX[startG][endG].optimized is True:
                 pathId = random.randrange( len(trajMat[startG][endG]) )
                 flag = False
-        print("[INF] Selected goals:",(startG,endG),"| path index:", pathId)
+        logging.info("Selected goals: {} {} | path index: {}".format(startG,endG,pathId))
     else:
         startG,endG = 0, 7
         pathId       = np.random.randint(0,len(trajMat[startG][endG]))

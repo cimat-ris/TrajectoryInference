@@ -44,14 +44,14 @@ def main():
             if len(trajMat[gi][gj]) > 0:
                 pathId = random.randrange( len(trajMat[gi][gj]) )
                 flag = False
-        print("[INF] Selected goals:",(gi,gj),"| path index:", pathId)
+        logging.info("Selected goals: {} {} | path index: {}".format(gi,gj,pathId))
     else:
         gi, gj = 0, 7
         pathId       = np.random.randint(0,len(trajMat[gi][gj]))
 
     # Get the ground truth path
     if goalsData.kernelsX[gi][gj].optimized is not True:
-        print("[INF] This pair of goals have not optimized parameters. Aborting.")
+        logging.error("This pair of goals have not optimized parameters. Aborting.")
         sys.exit()
 
     path  = trajMat[gi][gj][pathId]
