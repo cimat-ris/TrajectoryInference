@@ -7,8 +7,7 @@ from utils.io_parameters import read_and_set_parameters
 from utils.io_trajectories import read_and_filter
 from utils.manip_trajectories import observed_data
 from utils.stats_trajectories import trajectory_arclength, trajectory_speeds
-from gp_code.mixture_gp import mixtureOfGPs
-from gp_code.single_gp import singleGP
+from gp_code.mGP_trajectory_prediction import mGP_trajectory_prediction
 from utils.plotting import plotter, plot_path_samples
 from utils.plotting import animate_multiple_predictions_and_goal_likelihood
 import numpy as np
@@ -59,7 +58,7 @@ def main():
     pathSize = len(pathX)
     nSamples = 100
     # Prediction of single paths with a mixture model
-    mgps     = mixtureOfGPs(startG,goalsData)
+    mgps     = mGP_trajectory_prediction(startG,goalsData)
 
     p = plotter()
     # For different sub-parts of the trajectory
@@ -67,23 +66,23 @@ def main():
         p.set_background(imgGCS)
         p.plot_scene_structure(goalsData)
         logging.info("--------------------------")
-        tic = time.process_time()
+        tic = time.perf_counter()
         # Monte Carlo
         observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
         """Multigoal prediction test"""
         logging.info('Updating likelihoods')
-        likelihoods = mgps.update(observations)
+        likelihoods  = mgps.update(observations)
         filteredPaths= mgps.filter()
         logging.info('Performing prediction')
         predictedXYVec,varXYVec = mgps.predict_trajectory(compute_sqRoot=True)
         logging.info('Generating samples')
         paths = mgps.sample_paths(nSamples)
         # Perform prediction
-        toc = time.process_time()
-        print(1000*(toc-tic))
+        toc = time.perf_counter()
+        print('Time in s {}'.format(toc-tic))
         logging.info("Plotting")
         p.plot_path_samples_with_observations(observations,paths)
-        logging.info("Goals likelihood {}".format(mgps.goalsLikelihood))
+        logging.info("Goals likelihood {}".format(likelihoods))
         logging.info("Mean likelihood: {}".format(mgps.meanLikelihood))
         # Plot the ground truth
         p.plot_ground_truth(ground_truth)
