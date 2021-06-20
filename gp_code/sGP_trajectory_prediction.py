@@ -12,20 +12,20 @@ class sGP_trajectory_prediction:
     def __init__(self, startG, endG, goalsData, mode = None):
         self.goalsData       = goalsData
         self.nPoints         = 5
-        self.startG          = startG
-        self.endG            = endG
-        self.predictedMeans  = None
-        self.predictedVars   = None
+        self._start          = startG
+        self._end            = endG
+        self._predicted_means   = None
+        self._predicted_vars    = None
         self._current_time      = 0.0
         self._current_arc_length= 0.0
         self._speed_average     = 1.0
 
         # The basic element here is this object, that will do the regression work
         if mode == 'Trautman': #!Using path_regression for now
-            timeTransitionData = [self.goalsData.timeTransitionMeans[self.startG][self.endG],self.goalsData.timeTransitionStd[self.startG][self.endG]]
-            self.gpTrajectoryRegressor = path_regression(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],goalsData.sigmaNoise,self.goalsData.units[self.startG][self.endG],self.goalsData.goals_areas[self.endG],mode='Trautman',timeTransitionData=timeTransitionData)
+            timeTransitionData = [self.goalsData.timeTransitionMeans[self._start][self._end],self.goalsData.timeTransitionStd[self._start][self._end]]
+            self.gpTrajectoryRegressor = path_regression(self.goalsData.kernelsX[self._start][self._end], self.goalsData.kernelsY[self._start][self._end],goalsData.sigmaNoise,self.goalsData.units[self._start][self._end],self.goalsData.goals_areas[self._end],mode='Trautman',timeTransitionData=timeTransitionData)
         else:
-            self.gpTrajectoryRegressor = trajectory_regression(self.goalsData.kernelsX[self.startG][self.endG], self.goalsData.kernelsY[self.startG][self.endG],goalsData.sigmaNoise,self.goalsData.speedModels[self.startG][self.endG],self.goalsData.units[self.startG][self.endG],self.goalsData.goals_areas[self.endG],self.goalsData.priorTransitions[self.startG][self.endG])
+            self.gpTrajectoryRegressor = trajectory_regression(self.goalsData.kernelsX[self._start][self._end], self.goalsData.kernelsY[self._start][self._end],goalsData.sigmaNoise,self.goalsData.speedModels[self._start][self._end],self.goalsData.units[self._start][self._end],self.goalsData.goals_areas[self._end],self.goalsData.priorTransitions[self._start][self._end])
 
     # Update observations and compute likelihood based on observations
     def update(self,observations):
@@ -46,14 +46,14 @@ class sGP_trajectory_prediction:
     # Performs path prediction
     def predict_path(self,compute_sqRoot=False):
         # Uses the already computed matrices to apply regression over missing data
-        self.predictedMeans, self.predictedVars = self.gpTrajectoryRegressor.predict_path_to_finish_point(compute_sqRoot=compute_sqRoot)
-        return self.predictedMeans,self.predictedVars
+        self._predicted_means, self._predicted_vars = self.gpTrajectoryRegressor.predict_path_to_finish_point(compute_sqRoot=compute_sqRoot)
+        return self._predicted_means,self._predicted_vars
 
     # Performs trajectory prediction
     def predict_trajectory(self,compute_sqRoot=False):
         # Uses the already computed matrices to apply regression over missing data
-        self.predictedMeans, self.predictedVars = self.gpTrajectoryRegressor.predict_trajectory_to_finish_point(self._speed_average,self._current_time,self._current_arc_length,compute_sqRoot=compute_sqRoot)
-        return self.predictedMeans,self.predictedVars
+        self._predicted_means, self._predicted_vars = self.gpTrajectoryRegressor.predict_trajectory_to_finish_point(self._speed_average,self._current_time,self._current_arc_length,compute_sqRoot=compute_sqRoot)
+        return self._predicted_means,self._predicted_vars
 
     # Get a filtered version of the initial observations
     def filter(self):

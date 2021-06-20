@@ -25,13 +25,13 @@ class mGP_trajectory_prediction:
         # Number of elements in the mixture
         n                    = self.goalsData.goals_n
         # Starting goal
-        self.startG          = startG
+        self._start          = startG
         # Likelihoods
         self.goalsLikelihood = np.zeros(n, dtype=float)
         # Predicted means (per element of the mixture)
-        self.predictedMeans  = [np.zeros((0,3),  dtype=float)]*n
-        self.predictedVars   = [np.zeros((0,0,0),dtype=float)]*n
-        self.filteredPaths   = [np.zeros((0,3),  dtype=float)]*n
+        self._predicted_means   = [np.zeros((0,3),  dtype=float)]*n
+        self._predicted_vars    = [np.zeros((0,0,0),dtype=float)]*n
+        self.filteredPaths      = [np.zeros((0,3),  dtype=float)]*n
         self._observed_x        = None
         self._observed_y        = None
         self._observed_l        = None
@@ -42,9 +42,9 @@ class mGP_trajectory_prediction:
         # The basic elements here is this array of objects, that will do the regression work
         self.gpTrajectoryRegressor = [None]*n
         for i in range(self.goalsData.goals_n):
-            if self.goalsData.priorTransitions[self.startG][i]>0:
+            if self.goalsData.priorTransitions[self._start][i]>0:
                 # One regressor per goal
-                self.gpTrajectoryRegressor[i]=trajectory_regression(self.goalsData.kernelsX[self.startG][i], self.goalsData.kernelsY[self.startG][i],goalsData.sigmaNoise,self.goalsData.speedModels[self.startG][i],self.goalsData.units[self.startG][i],self.goalsData.goals_areas[i],prior=self.goalsData.priorTransitions[self.startG][i])
+                self.gpTrajectoryRegressor[i]=trajectory_regression(self.goalsData.kernelsX[self._start][i], self.goalsData.kernelsY[self._start][i],goalsData.sigmaNoise,self.goalsData.speedModels[self._start][i],self.goalsData.units[self._start][i],self.goalsData.goals_areas[i],prior=self.goalsData.priorTransitions[self._start][i])
 
     # Update observations and compute likelihoods based on observations
     def update(self,observations):
@@ -103,8 +103,8 @@ class mGP_trajectory_prediction:
         for i in range(self.goalsData.goals_n):
             if self.gpTrajectoryRegressor[i] is not None:
                 # Uses the already computed matrices to apply regression over missing data
-                self.predictedMeans[i], self.predictedVars[i] = self.gpTrajectoryRegressor[i].predict_path_to_finish_point(compute_sqRoot=compute_sqRoot)
-        return self.predictedMeans,self.predictedVars
+                self._predicted_means[i], self._predicted_vars[i] = self.gpTrajectoryRegressor[i].predict_path_to_finish_point(compute_sqRoot=compute_sqRoot)
+        return self._predicted_means,self._predicted_vars
 
     # Performs trajectory prediction
     def predict_trajectory(self,compute_sqRoot=False):
@@ -112,8 +112,8 @@ class mGP_trajectory_prediction:
         for i in range(self.goalsData.goals_n):
             if self.gpTrajectoryRegressor[i] is not None:
                 # Uses the already computed matrices to apply regression over missing data
-                self.predictedMeans[i], self.predictedVars[i] = self.gpTrajectoryRegressor[i].predict_trajectory_to_finish_point(self._speed_average,self._current_time,self._current_arc_length,compute_sqRoot=compute_sqRoot)
-        return self.predictedMeans,self.predictedVars
+                self._predicted_means[i], self._predicted_vars[i] = self.gpTrajectoryRegressor[i].predict_trajectory_to_finish_point(self._speed_average,self._current_time,self._current_arc_length,compute_sqRoot=compute_sqRoot)
+        return self._predicted_means,self._predicted_vars
 
     def sample_path(self):
         p = self.goalsLikelihood[:self.goalsData.goals_n]

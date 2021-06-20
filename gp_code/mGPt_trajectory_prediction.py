@@ -9,8 +9,8 @@ from gp_code.likelihood import nearestPD
 from utils.stats_trajectories import euclidean_distance
 from utils.manip_trajectories import goal_center_and_size
 
-# Class for performing path regression with a mixture of Gaussian processes | Trautman's approach
-class mixtureGPT:
+# Class for performing path regression with a mixture of Gaussian processes with time variable (Trautman's approach)
+class mGPt_trajectory_prediction:
     def __init__(self, startG, goalsData):
         # The goals structure
         self.goalsData       = goalsData
@@ -36,13 +36,11 @@ class mixtureGPT:
         # Likelihoods
         self.goalsLikelihood = np.zeros(n, dtype=float)
         # Predicted means (per element of the mixture)
-        self.predictedMeans  = [np.zeros((0,3), dtype=float)]*n
-        self.predictedVars   = [np.zeros((0,0,0), dtype=float)]*n
-        self.sqRootVarX      = np.empty(n, dtype=object)
-        self.sqRootVarY      = np.empty(n, dtype=object)
-        self.observedX       = None
-        self.observedY       = None
-        self.observedT       = None
+        self._predicted_means= [np.zeros((0,3), dtype=float)]*n
+        self._predicted_vars = [np.zeros((0,0,0), dtype=float)]*n
+        self._observed_x     = None
+        self._observed_y     = None
+        self._observed_l     = None
         # The basic element here is this object, that will do the regression work
         self.gpPathRegressor = [None]*n
         self.gpTrajectoryRegressor = [None]*n
@@ -53,9 +51,9 @@ class mixtureGPT:
             self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][gi], self.goalsData.kernelsY[self.startG][gi],goalsData.sigmaNoise,None,self.goalsData.goals_areas[gi],mode='Trautman',timeTransitionData=timeTransitionData)
 
     def update(self, observations):
-        self.observedX = observations[:,0]
-        self.observedY = observations[:,1]
-        self.observedT = observations[:,2]
+        self._observed_x = observations[:,0]
+        self._observed_y = observations[:,1]
+        self._observed_t = observations[:,2]
         # Update each regressor with its corresponding observations
         for i in range(len(self.goalTransitions)):
             # Update observations and re-compute the kernel matrices
@@ -83,9 +81,9 @@ class mixtureGPT:
             gi = self.goalTransitions[i]
             goalCenter,__ = goal_center_and_size(self.goalsData.goals_areas[gi,1:])
             # Uses the already computed matrices to apply regression over missing data
-            self.predictedMeans[i], self.predictedVars[i] = self.gpPathRegressor[i].predict_path_to_finish_point()
+            self._predicted_means[i], self._predicted_vars[i] = self.gpPathRegressor[i].predict_path_to_finish_point()
 
-        return self.predictedMeans,self.predictedVars
+        return self._predicted_means,self._predicted_vars
 
     def sample_path(self):
         n = len(self.goalTransitions)
