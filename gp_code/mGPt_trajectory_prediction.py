@@ -32,23 +32,23 @@ class mGPt_trajectory_prediction:
         # Points to evaluate the likelihoods
         self.nPoints         = 5
         # Starting goal
-        self.startG          = startG
+        self._start          = startG
         # Likelihoods
-        self.goalsLikelihood = np.zeros(n, dtype=float)
+        self._goals_likelihood= np.zeros(n, dtype=float)
         # Predicted means (per element of the mixture)
-        self._predicted_means= [np.zeros((0,3), dtype=float)]*n
-        self._predicted_vars = [np.zeros((0,0,0), dtype=float)]*n
-        self._observed_x     = None
-        self._observed_y     = None
-        self._observed_l     = None
+        self._predicted_means = [np.zeros((0,3), dtype=float)]*n
+        self._predicted_vars  = [np.zeros((0,0,0), dtype=float)]*n
+        self._observed_x      = None
+        self._observed_y      = None
+        self._observed_l      = None
         # The basic element here is this object, that will do the regression work
         self.gpPathRegressor = [None]*n
         self.gpTrajectoryRegressor = [None]*n
 
         for i in range(n):
             gi = self. goalTransitions[i]
-            timeTransitionData = [self.goalsData.timeTransitionMeans[self.startG][gi],self.goalsData.timeTransitionStd[self.startG][gi]]
-            self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self.startG][gi], self.goalsData.kernelsY[self.startG][gi],goalsData.sigmaNoise,None,self.goalsData.goals_areas[gi],mode='Trautman',timeTransitionData=timeTransitionData)
+            timeTransitionData = [self.goalsData.timeTransitionMeans[self._start][gi],self.goalsData.timeTransitionStd[self._start][gi]]
+            self.gpPathRegressor[i] = path_regression(self.goalsData.kernelsX[self._start][gi], self.goalsData.kernelsY[self._start][gi],goalsData.sigmaNoise,None,self.goalsData.goals_areas[gi],mode='Trautman',timeTransitionData=timeTransitionData)
 
     def update(self, observations):
         self._observed_x = observations[:,0]
@@ -59,19 +59,20 @@ class mGPt_trajectory_prediction:
             # Update observations and re-compute the kernel matrices
             self.gpPathRegressor[i].update_observations(observations)
             # Compute the model likelihood
-            self.goalsLikelihood[i] = self.gpPathRegressor[i].compute_likelihood()
+            self._goals_likelihood[i] = self.gpPathRegressor[i].compute_likelihood()
 
         # Compute the mean likelihood
-        self.meanLikelihood = mean(self.goalsLikelihood)
+        self.meanLikelihood = mean(self._goals_likelihood)
 
         n = len(self.goalTransitions)
         mostLikely = 0
+        # TODO: avoid cycle
         for i in range(n):
-            if self.goalsLikelihood[i] > self.goalsLikelihood[mostLikely]:
+            if self._goals_likelihood[i] > self._goals_likelihood[mostLikely]:
                 mostLikely = i
         self.mostLikelyGoal = mostLikely
 
-        return self.goalsLikelihood
+        return self._goals_likelihood
 
     # Performs prediction
     def predict_path(self):
@@ -87,7 +88,7 @@ class mGPt_trajectory_prediction:
 
     def sample_path(self):
         n = len(self.goalTransitions)
-        p = self.goalsLikelihood[:n]
+        p = self._goals_likelihood[:n]
         normp = p/np.linalg.norm(p,ord=1)
         # Sample goal
         sampleId = np.random.choice(n,1,p=normp)

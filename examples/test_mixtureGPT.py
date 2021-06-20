@@ -4,7 +4,7 @@ Test GP misture | Trautman
 import random
 from test_common import *
 from gp_code.kernels import *
-from gp_code.mixture_gpT import mixtureGPT
+from gp_code.mGPt_trajectory_prediction import mGPt_trajectory_prediction
 from utils.stats_trajectories import truncate
 
 
@@ -37,7 +37,7 @@ def main():
     gi, gj, k = 0, 6, 5
     path = trajMat[gi][gj][k]
 
-    mgps     = mixtureGPT(gi,goalsData)
+    mgps     = mGPt_trajectory_prediction(gi,goalsData)
     nSamples = 5
 
     # Divides the trajectory in part_num parts and consider
@@ -61,7 +61,7 @@ def main():
         #print('[INF] Plotting')
         #p.plot_multiple_predictions_and_goal_likelihood(path[0],path[1],knownN,goalsData.nGoals,likelihoods,predictedXYVec,varXYVec)
 
-        logging.info('Goals likelihood:{}'.format(mgps.goalsLikelihood))
+        logging.info('Goals likelihood:{}'.format(likelihoods))
         logging.info('Mean likelihood:{}'.format(mgps.meanLikelihood))
         logging.info('Generating samples')
         samplePaths = mgps.sample_paths(nSamples)

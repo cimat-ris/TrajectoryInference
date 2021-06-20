@@ -78,7 +78,7 @@ def main():
         predictedXYVec,varXYVec = mgps.predict_trajectory()
         logging.info("Plotting")
         p.plot_multiple_predictions_and_goal_likelihood(observations,predictedXYVec,varXYVec,likelihoods)
-        logging.info("Goals likelihood {}".format(mgps.goalsLikelihood))
+        logging.info("Goals likelihood {}".format(likelihoods))
         logging.info("Mean likelihood: {}".format(mgps.meanLikelihood))
         # Plot the ground truth
         p.plot_ground_truth(ground_truth)

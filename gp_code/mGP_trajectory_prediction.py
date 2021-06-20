@@ -27,11 +27,11 @@ class mGP_trajectory_prediction:
         # Starting goal
         self._start          = startG
         # Likelihoods
-        self.goalsLikelihood = np.zeros(n, dtype=float)
+        self._goals_likelihood  = np.zeros(n, dtype=float)
         # Predicted means (per element of the mixture)
         self._predicted_means   = [np.zeros((0,3),  dtype=float)]*n
         self._predicted_vars    = [np.zeros((0,0,0),dtype=float)]*n
-        self.filteredPaths      = [np.zeros((0,3),  dtype=float)]*n
+        self._filtered_paths    = [np.zeros((0,3),  dtype=float)]*n
         self._observed_x        = None
         self._observed_y        = None
         self._observed_l        = None
@@ -70,32 +70,32 @@ class mGP_trajectory_prediction:
                 # Update observations and re-compute the kernel matrices
                 self.gpTrajectoryRegressor[i].update_observations(observations)
                 # Compute the model likelihood
-                self.goalsLikelihood[i] = self.gpTrajectoryRegressor[i].compute_likelihood()
+                self._goals_likelihood[i] = self.gpTrajectoryRegressor[i].compute_likelihood()
 
         # Sum of the likelihoods
-        s = sum(self.goalsLikelihood)
+        s = sum(self._goals_likelihood)
         # Compute the mean likelihood
-        self.meanLikelihood = mean(self.goalsLikelihood)
+        self.meanLikelihood = mean(self._goals_likelihood)
         # Maintain a list of likely goals
         for i in range(self.goalsData.goals_n):
-            self.goalsLikelihood[i] /= s
-            if(self.goalsLikelihood[i] > 0.85*self.meanLikelihood):
+            self._goals_likelihood[i] /= s
+            if(self._goals_likelihood[i] > 0.85*self.meanLikelihood):
                 self.likelyGoals.append(i)
         # Save most likely goal
         mostLikely = 0
         for i in range(self.goalsData.goals_n):
-            if self.goalsLikelihood[i] > self.goalsLikelihood[mostLikely]:
+            if self._goals_likelihood[i] > self._goals_likelihood[mostLikely]:
                 mostLikely = i
         self.mostLikelyGoal = mostLikely
-        return self.goalsLikelihood
+        return self._goals_likelihood
 
     # Get a filtered version of the initial observations
     def filter(self):
         # For all likely goals
         for i in range(self.goalsData.goals_n):
             if self.gpTrajectoryRegressor[i] is not None:
-                self.filteredPaths[i]=self.gpTrajectoryRegressor[i].filter_observations()
-        return self.filteredPaths
+                self._filtered_paths[i]=self.gpTrajectoryRegressor[i].filter_observations()
+        return self._filtered_paths
 
     # Performs path prediction
     def predict_path(self,compute_sqRoot=False):
@@ -116,7 +116,7 @@ class mGP_trajectory_prediction:
         return self._predicted_means,self._predicted_vars
 
     def sample_path(self):
-        p = self.goalsLikelihood[:self.goalsData.goals_n]
+        p = self._goals_likelihood[:self.goalsData.goals_n]
         # Sample goal
         goalSample = np.random.choice(self.goalsData.goals_n,1,p=p)
         end        = goalSample[0]
