@@ -3,7 +3,7 @@
 """
 import random
 from test_common import *
-from gp_code.single_gp import singleGP
+from gp_code.sGP_trajectory_prediction import sGP_trajectory_prediction
 import matplotlib.pyplot as plt
 
 def main():
@@ -61,7 +61,7 @@ def main():
     pathSize = len(pathX)
 
     # Prediction of single paths with single goals
-    gp = singleGP(gi,gj,goalsData)
+    gp = sGP_trajectory_prediction(gi,gj,goalsData)
 
     # Divides the trajectory in part_num parts and infer the posterior over the remaining part
     part_num = 10

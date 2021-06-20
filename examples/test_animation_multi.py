@@ -3,9 +3,6 @@
 """
 from test_common import *
 from gp_code.mGP_trajectory_prediction import mGP_trajectory_prediction
-from gp_code.single_gp import singleGP
-
-
 
 
 def main():
@@ -73,7 +70,6 @@ def main():
         p.set_background(imgGCS)
         p.plot_scene_structure(goalsData)
         observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
-        """Single goal prediction test"""
         logging.info("Updating observations")
         # Update the GP with (real) observations
         likelihoods  = mgps.update(observations)

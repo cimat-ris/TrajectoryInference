@@ -2,7 +2,7 @@
 @author: karenlc
 """
 from test_common import *
-from gp_code.mixture_gp import mixtureOfGPs
+from gp_code.mGP_trajectory_prediction import mGP_trajectory_prediction
 
 
 
@@ -51,7 +51,7 @@ def main():
     pathSize = len(pathX)
 
     # Prediction of single paths with a mixture model
-    mgps     = mixtureOfGPs(startG,goalsData)
+    mgps     = mGP_trajectory_prediction(startG,goalsData)
     nSamples = 50
 
     # Divides the trajectory in part_num parts and consider

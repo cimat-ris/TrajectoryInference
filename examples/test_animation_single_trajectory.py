@@ -2,7 +2,7 @@
 @author: karenlc
 """
 from test_common import *
-from gp_code.single_gp import singleGP
+from gp_code.sGP_trajectory_prediction import sGP_trajectory_prediction
 import matplotlib.pyplot as plt
 from matplotlib import animation
 
@@ -65,7 +65,7 @@ def main():
     pathSize = len(pathX)
 
     # Test function: prediction of single trajectories with a single goal
-    gp = singleGP(startG,endG,goalsData)
+    gp = sGP_trajectory_prediction(startG,endG,goalsData)
 
     # For different sub-parts of the trajectory
     for knownN in range(10,pathSize-1,10):
