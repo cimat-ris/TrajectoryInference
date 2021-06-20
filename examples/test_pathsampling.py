@@ -2,9 +2,7 @@
 @author: karenlc
 """
 from test_common import *
-from gp_code.single_gp import singleGP
-from utils.manip_trajectories import goal_centroid
-
+from gp_code.sGP_trajectory_prediction import sGP_trajectory_prediction
 
 def main():
     # Parsing arguments
@@ -46,7 +44,7 @@ def main():
                 if observations is None:
                     continue
                 # The basic element here is this object, that will do the regression work
-                gp = singleGP(i,j,goalsData)
+                gp = sGP_trajectory_prediction(i,j,goalsData)
                 likelihood = gp.update(observations)
                 # Generate samples
                 predictedXY,varXY = gp.predict_path(compute_sqRoot=True)
