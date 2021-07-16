@@ -8,6 +8,9 @@ from gp_code.path_regression import *
 from utils.stats_trajectories import avg_speed
 
 
+"""
+trajectory_regression inherits from path_regression
+"""
 class trajectory_regression(path_regression):
 
     # Constructor

@@ -117,10 +117,11 @@ class mGP_trajectory_prediction:
 
     def sample_path(self):
         p = self._goals_likelihood[:self.goalsData.goals_n]
-        # Sample goal
+        # Sample goal (discrete choice)
         goalSample = np.random.choice(self.goalsData.goals_n,1,p=p)
         end        = goalSample[0]
         k          = end
+        print(goalSample)
         finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.goals_areas[end][1:], self.goalsData.goals_areas[end][0])
         # Use a pertubation approach to get the sample
         deltaX = finishX[0]-self.gpTrajectoryRegressor[k].finalAreaCenter[0]

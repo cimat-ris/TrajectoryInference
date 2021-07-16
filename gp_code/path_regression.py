@@ -122,24 +122,28 @@ class path_regression:
         return np.concatenate([predx, predy, self.predictedL],axis=1),np.stack([varx,vary],axis=0)
 
     # Generate a sample from perturbations
-    def sample_path_with_perturbation(self,deltaX,deltaY):
+    def sample_path_with_perturbation(self,deltaX,deltaY,efficient=True):
         # A first order approximation of the new final value of L
         deltaL       = deltaX*(self.finalAreaCenter[0]-self.regression_x.observedX[-2])/self.dist + deltaY*(self.finalAreaCenter[1]-self.regression_y.observedX[-2])/self.dist
-        # Given a perturbation of the final point, determine the new characteristics of the GP
+        #if efficient:
+            # Given a perturbation of the final point, determine the new characteristics of the GP
         predictedL,predictedX,__=self.regression_x.predict_to_perturbed_finish_point(deltaL,deltaX)
         predictedL,predictedY,__=self.regression_y.predict_to_perturbed_finish_point(deltaL,deltaY)
+        #else:
+        predictedL2,predictedX2,__=self.regression_x.predict_to_perturbed_finish_point_slow(deltaL,deltaX)
+        predictedL2,predictedY2,__=self.regression_y.predict_to_perturbed_finish_point_slow(deltaL,deltaY)
+        print(np.max(np.abs(predictedX2-predictedX)),np.max(np.abs(predictedY2-predictedY)))
         if predictedX is None or predictedY is None:
             return None,None,None
         # Generate a sample from this Gaussian distribution
         return np.concatenate([predictedX+self.regression_x.generate_random_variation(),predictedY+self.regression_y.generate_random_variation(), predictedL],axis=1)
 
     # Generate a sample from the predictive distribution with a perturbed finish point
-    def sample_path_with_perturbed_finish_point(self):
+    def sample_path_with_perturbed_finish_point(self,efficient=True):
         # Sample end point around the sampled goal
-
         size = self.finalAreaSize[self.finalArea[0]]
         finishX, finishY, axis = uniform_sampling_1D_around_point(1, self.finalAreaCenter,size, self.finalAreaAxis)
         # Use a pertubation approach to get the sample
         deltaX = finishX[0]-self.finalAreaCenter[0]
         deltaY = finishY[0]-self.finalAreaCenter[1]
-        return self.sample_path_with_perturbation(deltaX,deltaY)
+        return self.sample_path_with_perturbation(deltaX,deltaY,efficient)

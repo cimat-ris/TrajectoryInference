@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 import math as m
 import numpy as np
+import logging
 
 # Returns two rowsxcolumns matrices:
 # - the matrix of kernels with the default parameters
@@ -41,7 +42,7 @@ class Kernel:
         self.type        = "generic"
         self.linearPrior = False
         self.optimized   = False
-        
+
     # Overload the operator ()
     @abstractmethod
     def __call__(self,x,y): pass
@@ -145,7 +146,7 @@ class maternKernel(Kernel):
         l = l1[:, None] - l2[None, :]
         rn  = np.abs(l)/self.length
         if rn.min()<0:
-            print("MEGA UY",rn.min(),self.length)
+            logging.error("Numerical problem: {} {}".format(rn.min(),self.length))
         rn2 = rn**2
         return self.sigmaSq*(1. + self.sqrootof5*rn + 1.67*rn2)*np.exp(-self.sqrootof5*rn)
 
@@ -198,7 +199,7 @@ class combinedTrautmanKernel(Kernel):
 
     # Method to print parameters
     def print_parameters(self):
-        print("combined kernel parameters\n gamma =",self.gamma,"\n s =",self.sigmaSq,", l = ",self.length)
+        logging.info("Combined kernel parameters\n gamma ={}\n s ={}, l = {}".format(self.gamma,self.sigmaSq,self.length))
 
 
 
@@ -266,7 +267,7 @@ class linePriorCombinedKernel(Kernel):
 
     # Method to print parameters
     def print_parameters(self):
-        print("combined kernel parameters\n gamma_a =",self.sigmaSlope,"\n gamma_0",self.sigmaConstant,"\n s =",self.sigmaSq,", l = ",self.length)
+        logging.info("combined kernel parameters\n gamma_a = {}\n gamma_0={}\n s ={}, l = {}".format(self.sigmaSlope,self.sigmaConstant,self.sigmaSq,self.length))
 
 # Exponential kernel
 class exponentialKernel(Kernel):

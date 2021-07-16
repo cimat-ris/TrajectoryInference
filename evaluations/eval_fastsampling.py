@@ -64,7 +64,7 @@ def main():
     # For different sub-parts of the trajectory
     for knownN in range(5,pathSize-1):
         p.set_background(imgGCS)
-        p.plot_scene_structure(goalsData)
+        p.plot_scene_structure(goalsData,draw_ids=True)
         logging.info("--------------------------")
         tic = time.perf_counter()
         # Monte Carlo
@@ -86,8 +86,8 @@ def main():
         logging.info("Mean likelihood: {}".format(mgps.meanLikelihood))
         # Plot the ground truth
         p.plot_ground_truth(ground_truth)
-        p.pause(0.05)
-
+        #p.pause(0.05)
+        p.show()
 
 if __name__ == '__main__':
     main()

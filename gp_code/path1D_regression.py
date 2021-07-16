@@ -147,7 +147,6 @@ class path1D_regression:
         if self.kernel.linearPrior!=False:
             self.predictedX += (self.predictedL*self.kernel.meanSlope+self.kernel.meanConstant)
 
-
         # Estimate the variance in the predicted x
         self.ktKp_1= self.k.transpose().dot(self.Kp_1)
         self.varX  = self.C - self.ktKp_1.dot(self.k)
@@ -183,8 +182,8 @@ class path1D_regression:
         return self.predictedL, newx, self.varX
 
 
-    # Prediction as a perturbation of the "normal" prediction done to the center of an area. Efficient way.
-    def sample_to_perturbed_finish_point_slow(self,deltal,deltax):
+    # Prediction as a perturbation of the "normal" prediction done to the center of an area. Slow way.
+    def predict_to_perturbed_finish_point_slow(self,deltal,deltax):
         n            = len(self.observedX)
         npredicted   = len(self.predictedL)
         if npredicted == 0:
@@ -192,13 +191,11 @@ class path1D_regression:
         # Observation vectors: X and L
         observedL       = self.observedL
         observedX       = self.observedX
-        observedL[-1,0] = self.finalL+deltal
-        observedX[-1,0] = self.finalX+deltax
-        # Center the data in case we use the linear prior
-        if self.kernel.linearPrior!=False:
-            observedX -= (self.kernel.meanSlope*observedL+self.kernel.meanConstant)
+        observedL[-1,0] = observedL[-1,0]+deltal
+        print("{} dx {} dl {}".format(observedX[-1,0],deltax,deltal))
+        observedX[-1,0] = observedX[-1,0]+deltax
         # Fill in K, first elements (nxn)
-        K = self.kernel(observedL[:,0],observedL[:,0])
+        K    = self.kernel(observedL[:,0],observedL[:,0])
         # Fill in k
         k    = self.kernel(observedL[:,0],self.predictedL[:,0])
         Kp_1 = inv(K+self.sigmaNoise*np.eye(K.shape[0]))
@@ -210,14 +207,11 @@ class path1D_regression:
         if self.kernel.linearPrior!=False:
             predictedX += (self.predictedL*self.kernel.meanSlope+self.kernel.meanConstant)
         # Estimate the variance in the predicted x
-        ktKp_1= k.transpose().dot(Kp_1)
-        varX  = self.C - ktKp_1.dot(k)
+        # ktKp_1= k.transpose().dot(Kp_1)
+        # varX  = self.C - ktKp_1.dot(k)
         # Regularization to avoid singular matrices
-        varX += self.epsilonReg*np.eye(varX.shape[0])
-        # Cholesky on varX: done only if the compute_sqRoot flag is true
-        sqRootVar    = cholesky(self.varX,lower=True)
-        sX           = np.random.normal(size=(len(self.predictedL),1))
-        return sqRootVar.dot(sX)
+        # varX += self.epsilonReg*np.eye(varX.shape[0])
+        return self.predictedL, predictedX, None
 
     # Generate a random variation to the mean
     def generate_random_variation(self):
