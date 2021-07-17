@@ -54,7 +54,7 @@ class mGP_trajectory_prediction:
         # Update time and current arc length
         self._current_time      = observations[-1,3]
         self._current_arc_length= observations[-1,2]
-        logging.info('Time: {:2.2f} Arc-length: {:4.2f} Speed: {:2.2f}'.format(self._current_time,self._current_arc_length,self._speed_average))
+        logging.debug('Time: {:2.2f} Arc-length: {:4.2f} Speed: {:2.2f}'.format(self._current_time,self._current_arc_length,self._speed_average))
         # Average speed
         nobs    = observations.shape[0]
         weights = np.linspace(0.0,1.0,num=nobs)
@@ -63,7 +63,7 @@ class mGP_trajectory_prediction:
         # Update each regressor with its corresponding observations
         for i in range(self.goalsData.goals_n):
             if self.gpTrajectoryRegressor[i] is not None:
-                logging.info("Updating goal {:d}".format(i))
+                logging.debug("Updating goal {:d}".format(i))
                 goalCenter,__= goal_center_and_size(self.goalsData.goals_areas[i][1:])
                 distToGoal   = euclidean_distance([self._observed_x[-1],self._observed_y[-1]], goalCenter)
                 dist         = euclidean_distance([self._observed_x[0],self._observed_y[0]], goalCenter)
@@ -121,17 +121,17 @@ class mGP_trajectory_prediction:
         goalSample = np.random.choice(self.goalsData.goals_n,1,p=p)
         end        = goalSample[0]
         k          = end
-        print(goalSample)
         finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.goals_areas[end][1:], self.goalsData.goals_areas[end][0])
         # Use a pertubation approach to get the sample
         deltaX = finishX[0]-self.gpTrajectoryRegressor[k].finalAreaCenter[0]
         deltaY = finishY[0]-self.gpTrajectoryRegressor[k].finalAreaCenter[1]
-        return self.gpTrajectoryRegressor[k].sample_path_with_perturbation(deltaX,deltaY)
+        return self.gpTrajectoryRegressor[k].sample_path_with_perturbation(deltaX,deltaY),[finishX, finishY]
 
     # Generate samples from the predictive distribution
     def sample_paths(self,nSamples):
         vec = []
         for k in range(nSamples):
-            path = self.sample_path()
+            path, finalPosition = self.sample_path()
             vec.append(path)
+            print(finalPosition)
         return vec

@@ -76,6 +76,7 @@ class path1D_regression:
         self.observedX       = np.zeros((n_obs+1,1))
         self.observedL[:-1]  = selectedL
         self.observedX[:-1]  = selectedX
+        # Last observation is a **fixed** value for the final point
         self.observedL[-1,0] = finalL
         self.observedX[-1,0] = finalX
         # Center the data in case we use the linear prior
@@ -163,13 +164,18 @@ class path1D_regression:
         npredicted   = len(self.predictedL)
         if npredicted == 0:
             return None, None, None
+        print("EFF last x: {} dx: {} dl: {}".format(self.observedX[-1,0],deltax,deltal))
         # Express the displacement wrt the nominal ending point, as a nx1 vector
+        # TODO: could be optimized
         deltaX       = np.zeros((n,1))
         deltaX[n-1,0]= deltax
+        deltaL       = np.zeros((n,1))
+        deltaL[n-1,0]= deltal
         # TODO: revise terms from the equations in the paper
         # In this approximation, only the predictive mean is adapted (will be used for sampling)
+        newx = self.predictedX
         # First order term #1: variation in observedX
-        newx = self.predictedX + self.ktKp_1.dot(deltaX)
+        newx+= self.ktKp_1.dot(deltaX-self.kernel.meanSlope*deltaL)
         # First order term #2: variation in kX
         newx+= self.Kp_1o[-1][0]*deltal*self.deltak
         # First order term #3: variation in Kx_1
@@ -192,7 +198,7 @@ class path1D_regression:
         observedL       = self.observedL
         observedX       = self.observedX
         observedL[-1,0] = observedL[-1,0]+deltal
-        print("{} dx {} dl {}".format(observedX[-1,0],deltax,deltal))
+        print("INEFF last x: {} dx: {} dl: {}".format(observedX[-1,0],deltax,deltal))
         observedX[-1,0] = observedX[-1,0]+deltax
         # Fill in K, first elements (nxn)
         K    = self.kernel(observedL[:,0],observedL[:,0])
@@ -206,11 +212,6 @@ class path1D_regression:
         # When using a linear prior, we need to add it again
         if self.kernel.linearPrior!=False:
             predictedX += (self.predictedL*self.kernel.meanSlope+self.kernel.meanConstant)
-        # Estimate the variance in the predicted x
-        # ktKp_1= k.transpose().dot(Kp_1)
-        # varX  = self.C - ktKp_1.dot(k)
-        # Regularization to avoid singular matrices
-        # varX += self.epsilonReg*np.eye(varX.shape[0])
         return self.predictedL, predictedX, None
 
     # Generate a random variation to the mean

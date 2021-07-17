@@ -132,11 +132,13 @@ class path_regression:
         #else:
         predictedL2,predictedX2,__=self.regression_x.predict_to_perturbed_finish_point_slow(deltaL,deltaX)
         predictedL2,predictedY2,__=self.regression_y.predict_to_perturbed_finish_point_slow(deltaL,deltaY)
-        print(np.max(np.abs(predictedX2-predictedX)),np.max(np.abs(predictedY2-predictedY)))
+        print("Largest deviations in x: {} and y: {}".format(np.max(np.abs(predictedX2-predictedX)),np.max(np.abs(predictedY2-predictedY))))
         if predictedX is None or predictedY is None:
             return None,None,None
         # Generate a sample from this Gaussian distribution
-        return np.concatenate([predictedX+self.regression_x.generate_random_variation(),predictedY+self.regression_y.generate_random_variation(), predictedL],axis=1)
+        nx=self.regression_x.generate_random_variation()
+        ny=self.regression_y.generate_random_variation()
+        return np.concatenate([predictedX+nx,predictedY+ny,predictedL],axis=1),np.concatenate([predictedX2+nx,predictedY2+ny,predictedL2],axis=1)
 
     # Generate a sample from the predictive distribution with a perturbed finish point
     def sample_path_with_perturbed_finish_point(self,efficient=True):
