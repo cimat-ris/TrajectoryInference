@@ -103,7 +103,7 @@ class plotter():
                     self.ax.add_patch(ell)
 
     # Plot a set of sample trajectories and an observed partial trajectory
-    def plot_path_samples_with_observations(self,observations, paths):
+    def plot_path_samples_with_observations(self,observations, paths, spec_color=None):
         samples = len(paths)
         if (samples == 0):
             return
@@ -116,7 +116,10 @@ class plotter():
 
         for i in range(samples):
             if paths[i][0] is not None:
-                randColor = random.choice(color)
+                if spec_color is None:
+                    randColor = random.choice(color)
+                else:
+                    randColor = spec_color    
                 samplex = paths[i][:,0]
                 sampley = paths[i][:,1]
                 samplex.reshape((-1,1))
