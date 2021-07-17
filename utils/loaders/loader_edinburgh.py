@@ -8,6 +8,7 @@ import glob
 import ast
 import sys
 import cv2
+import logging
 from utils.dataset_trajectories import TrajDataset
 from copy import deepcopy
 
@@ -58,7 +59,7 @@ def load_edinburgh(path, **kwargs):
         data.reset_index(inplace =True)
         properties = data[data['index'].str.startswith('Properties')]
         data = data[data['index'].str.startswith('TRACK')]
-        print("[INF] Loaded Edinburgh dataset file: ",file)
+        logging.info("Loaded Edinburgh dataset file: {}".format(file))
         #reconstruct the data in arrays
         track_data = []
         for row in range(len(data)):
