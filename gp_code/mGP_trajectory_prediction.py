@@ -42,12 +42,15 @@ class mGP_trajectory_prediction:
         # The basic elements here is this array of objects, that will do the regression work
         self.gpTrajectoryRegressor = [None]*n
         for i in range(self.goalsData.goals_n):
-            if self.goalsData.priorTransitions[self._start][i]>0:
+            if self.goalsData.priorTransitions[self._start][i]>0 and self.goalsData.kernelsX[self._start][i] is not None:
                 # One regressor per goal
                 self.gpTrajectoryRegressor[i]=trajectory_regression(self.goalsData.kernelsX[self._start][i], self.goalsData.kernelsY[self._start][i],goalsData.sigmaNoise,self.goalsData.speedModels[self._start][i],self.goalsData.units[self._start][i],self.goalsData.goals_areas[i],prior=self.goalsData.priorTransitions[self._start][i])
 
     # Update observations and compute likelihoods based on observations
     def update(self,observations):
+        nobs             = observations.shape[0]
+        if nobs<2:
+            return None
         self._observed_x = observations[:,0]
         self._observed_y = observations[:,1]
         self._observed_l = observations[:,2]
@@ -56,7 +59,6 @@ class mGP_trajectory_prediction:
         self._current_arc_length= observations[-1,2]
         logging.debug('Time: {:2.2f} Arc-length: {:4.2f} Speed: {:2.2f}'.format(self._current_time,self._current_arc_length,self._speed_average))
         # Average speed
-        nobs    = observations.shape[0]
         weights = np.linspace(0.0,1.0,num=nobs)
         weights = weights/np.sum(weights)
         self._speed_average    = np.average(observations[:,4],axis=0,weights=weights)
@@ -115,7 +117,7 @@ class mGP_trajectory_prediction:
                 self._predicted_means[i], self._predicted_vars[i] = self.gpTrajectoryRegressor[i].predict_trajectory_to_finish_point(self._speed_average,self._current_time,self._current_arc_length,compute_sqRoot=compute_sqRoot)
         return self._predicted_means,self._predicted_vars
 
-    def sample_path(self):
+    def sample_path(self,efficient=True):
         p = self._goals_likelihood[:self.goalsData.goals_n]
         # Sample goal (discrete choice)
         goalSample = np.random.choice(self.goalsData.goals_n,1,p=p)
@@ -125,13 +127,12 @@ class mGP_trajectory_prediction:
         # Use a pertubation approach to get the sample
         deltaX = finishX[0]-self.gpTrajectoryRegressor[k].finalAreaCenter[0]
         deltaY = finishY[0]-self.gpTrajectoryRegressor[k].finalAreaCenter[1]
-        return self.gpTrajectoryRegressor[k].sample_path_with_perturbation(deltaX,deltaY),[finishX, finishY]
+        return self.gpTrajectoryRegressor[k].sample_path_with_perturbation(deltaX,deltaY,efficient),[finishX, finishY]
 
     # Generate samples from the predictive distribution
-    def sample_paths(self,nSamples):
+    def sample_paths(self,nSamples,efficient=True):
         vec = []
         for k in range(nSamples):
-            path, finalPosition = self.sample_path()
+            path, finalPosition = self.sample_path(efficient)
             vec.append(path)
-            print(finalPosition)
         return vec

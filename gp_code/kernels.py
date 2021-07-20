@@ -156,7 +156,7 @@ class maternKernel(Kernel):
         rn  = np.abs(l)/self.length
         rn2 = rn**2
         rp  = np.copysign(1,l1[:, None] - l2[None, :])/self.length
-        return np.squeeze(-self.sigmaSq*rn*rp*1.67*(1. + self.sqrootof5*rn)*np.exp(-self.sqrootof5*rn),axis=0)
+        return -self.sigmaSq*rn*rp*1.67*(1. + self.sqrootof5*rn)*np.exp(-self.sqrootof5*rn)
 
 
 class combinedTrautmanKernel(Kernel):

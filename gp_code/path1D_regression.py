@@ -91,12 +91,10 @@ class path1D_regression:
         self.Kp_1o   = self.Kp_1.dot(self.observedX)
         # For usage in prediction
         nnew         = len(predictedL)
-        self.deltak  = np.zeros((nnew,1))
-        self.deltaK  = np.zeros((n_obs+1,1))
-        # Fill in deltakx
-        self.deltak  = self.kernel.dkdy(self.observedL[n_obs],predictedL)
-        # Fill in deltaKx
-        self.deltaK = self.kernel.dkdy(self.observedL[n_obs],self.observedL)
+        # Fill in deltak
+        self.deltak  = self.kernel.dkdy(np.array([self.observedL[n_obs]])[:,0],predictedL[:,0]).T
+        # Fill in deltaK
+        self.deltaK = self.kernel.dkdy(np.array([self.observedL[n_obs]])[:,0],self.observedL[:,0]).T
 
     # Deduce the mean for the filtered distribution for the observations
     # f = K (K + s I)^-1
@@ -164,27 +162,19 @@ class path1D_regression:
         npredicted   = len(self.predictedL)
         if npredicted == 0:
             return None, None, None
-        print("EFF last x: {} dx: {} dl: {}".format(self.observedX[-1,0],deltax,deltal))
         # Express the displacement wrt the nominal ending point, as a nx1 vector
-        # TODO: could be optimized
-        deltaX       = np.zeros((n,1))
-        deltaX[n-1,0]= deltax
-        deltaL       = np.zeros((n,1))
-        deltaL[n-1,0]= deltal
-        # TODO: revise terms from the equations in the paper
         # In this approximation, only the predictive mean is adapted (will be used for sampling)
         newx = self.predictedX
         # First order term #1: variation in observedX
-        newx+= self.ktKp_1.dot(deltaX-self.kernel.meanSlope*deltaL)
-        # First order term #2: variation in kX
-        newx+= self.Kp_1o[-1][0]*deltal*self.deltak
+        newx+= (deltax-self.kernel.meanSlope*deltal)*self.ktKp_1[:,n-1:n]
+        # First order term #2: variation in kX. Note that it is proportional to deltak because
+        # only the last column of deltak matters (and it is multiplied by self.Kp_1o[-1,0])
+        newx+= deltal*self.Kp_1o[-1,0] * self.deltak
         # First order term #3: variation in Kx_1
-        #  x= k^T (K+DK)^{-1}x
-        #  x= k^T ((I+DK.K^{-1})K)^{-1}x
-        #  x= k^T K^{-1}(I+DK.K^{-1})^{-1}x
-        # dx=-k^T K^{-1}.DK.K^{-1}x
-        newx-= deltal*self.Kp_1o[-1][0]*self.ktKp_1.dot(self.deltaK)
-        newx-= deltal*self.ktKp_1[0][-1]*self.deltaK.transpose().dot(self.Kp_1o)
+        #  We use here the particular form of the deltaK matrix (with just the last row/column that are non zero)
+        newx -= deltal*self.Kp_1o[-1,0]*self.ktKp_1.dot(self.deltaK)
+        newx -= deltal*(self.deltaK.T.dot(self.Kp_1o))*self.ktKp_1[npredicted-1:npredicted,-1]
+        newx += deltal*(self.deltaK[-1,0]*self.Kp_1o[-1,0])*self.ktKp_1[npredicted-1:npredicted,-1]
         return self.predictedL, newx, self.varX
 
 
@@ -198,7 +188,6 @@ class path1D_regression:
         observedL       = self.observedL
         observedX       = self.observedX
         observedL[-1,0] = observedL[-1,0]+deltal
-        print("INEFF last x: {} dx: {} dl: {}".format(observedX[-1,0],deltax,deltal))
         observedX[-1,0] = observedX[-1,0]+deltax
         # Fill in K, first elements (nxn)
         K    = self.kernel(observedL[:,0],observedL[:,0])

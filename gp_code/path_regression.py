@@ -11,6 +11,7 @@ from utils.manip_trajectories import goal_center_and_size
 from utils.stats_trajectories import euclidean_distance
 from gp_code.likelihood import ADE
 from scipy.optimize import bisect
+import time, logging
 
 class path_regression:
     # Constructor
@@ -125,20 +126,20 @@ class path_regression:
     def sample_path_with_perturbation(self,deltaX,deltaY,efficient=True):
         # A first order approximation of the new final value of L
         deltaL       = deltaX*(self.finalAreaCenter[0]-self.regression_x.observedX[-2])/self.dist + deltaY*(self.finalAreaCenter[1]-self.regression_y.observedX[-2])/self.dist
-        #if efficient:
+        if efficient:
             # Given a perturbation of the final point, determine the new characteristics of the GP
-        predictedL,predictedX,__=self.regression_x.predict_to_perturbed_finish_point(deltaL,deltaX)
-        predictedL,predictedY,__=self.regression_y.predict_to_perturbed_finish_point(deltaL,deltaY)
-        #else:
-        predictedL2,predictedX2,__=self.regression_x.predict_to_perturbed_finish_point_slow(deltaL,deltaX)
-        predictedL2,predictedY2,__=self.regression_y.predict_to_perturbed_finish_point_slow(deltaL,deltaY)
-        print("Largest deviations in x: {} and y: {}".format(np.max(np.abs(predictedX2-predictedX)),np.max(np.abs(predictedY2-predictedY))))
+            predictedL,predictedX,__=self.regression_x.predict_to_perturbed_finish_point(deltaL,deltaX)
+            predictedL,predictedY,__=self.regression_y.predict_to_perturbed_finish_point(deltaL,deltaY)
+        else:
+            predictedL,predictedX,__=self.regression_x.predict_to_perturbed_finish_point_slow(deltaL,deltaX)
+            predictedL,predictedY,__=self.regression_y.predict_to_perturbed_finish_point_slow(deltaL,deltaY)
+
         if predictedX is None or predictedY is None:
             return None,None,None
         # Generate a sample from this Gaussian distribution
         nx=self.regression_x.generate_random_variation()
         ny=self.regression_y.generate_random_variation()
-        return np.concatenate([predictedX+nx,predictedY+ny,predictedL],axis=1),np.concatenate([predictedX2+nx,predictedY2+ny,predictedL2],axis=1)
+        return np.concatenate([predictedX+nx,predictedY+ny,predictedL],axis=1)
 
     # Generate a sample from the predictive distribution with a perturbed finish point
     def sample_path_with_perturbed_finish_point(self,efficient=True):
