@@ -67,6 +67,7 @@ class path1D_regression:
         # Values of arc length L at which we will predict X
         self.predictedL      = predictedL
         # Set the observations
+        # TODO: do jointly for x and y?
         selectedL, selectedX = self.select_observations(observedL,observedX)
         n_obs                = selectedL.shape[0]
         # Covariance matrix

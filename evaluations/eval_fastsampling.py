@@ -13,6 +13,8 @@ from utils.io_trajectories import read_and_filter,partition_train_test
 import numpy as np
 import time,pickle
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+plt.rcParams.update({'font.size': 24})
 
 def main():
     # Parsing arguments
@@ -64,10 +66,17 @@ def main():
         goalsData = pickle.load(pickle_in)
 
     """**********          Testing          ***********"""
-    timesEff  = []
-    timesSlow = []
-    ratios    = []
-    for startG, endG in tqdm(np.ndindex(goalsData.goals_n,goalsData.goals_n),total=goalsData.goals_n*goalsData.goals_n):
+    props        = []
+    timesEffMean = []
+    timesEffSlow = []
+    nsamplesSet  = []
+    #for prop in [0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
+    for nSamples in [1,10,100,1000]:
+        timesEff  = []
+        timesSlow = []
+        ratios    = []
+
+        for startG, endG in tqdm(np.ndindex(goalsData.goals_n,goalsData.goals_n),total=goalsData.goals_n*goalsData.goals_n):
             if goalsData.kernelsX[startG][endG] is not None and goalsData.kernelsY[startG][endG] is not None:
                 for trajectory in test_trajectories_matrix[startG][endG]:
                     # Get the path data
@@ -76,12 +85,13 @@ def main():
 
                     # Total path length
                     pathSize = len(pathX)
-                    nSamples = 100
+                    #nSamples = 100
+                    prop = 0.5
                     # Prediction of single paths with a mixture model
                     mgps     = mGP_trajectory_prediction(startG,goalsData)
 
                     # Take half of the trajectory
-                    knownN = pathSize//4
+                    knownN = int(prop*pathSize)
                     logging.debug("--------------------------")
                     # Monte Carlo
                     observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
@@ -102,9 +112,20 @@ def main():
                     timesSlow.append(toc-tic)
                     ratios.append(timesEff[-1]/timesSlow[-1])
                     #        print("Largest deviations in x: {} and y: {}".format(np.max(np.abs(predictedX2-predictedX)),np.max(np.abs(predictedY2-predictedY))))
-    print(np.mean(timesEff))
-    print(np.mean(timesSlow))
-    print(np.median(ratios))
-
+        timesEffMean.append(np.mean(timesEff))
+        timesEffSlow.append(np.mean(timesSlow))
+        props.append(prop)
+        nsamplesSet.append(nSamples)
+    #plt.plot(props,timesEffMean,'g',label='Efficient sampling')
+    #plt.plot(props,timesEffSlow,'b',label='Naive sampling')
+    plt.plot(nsamplesSet,timesEffMean,'g',label='Efficient sampling')
+    plt.plot(nsamplesSet,timesEffSlow,'b',label='Naive sampling')
+    plt.ylim(0,1.2*np.max(timesEffSlow))
+    #plt.xlabel('Proportion of the observations')
+    plt.xlabel('Number of samples')
+    plt.xscale("log")
+    plt.ylabel('Computational times (s)')
+    plt.legend()
+    plt.show()
 if __name__ == '__main__':
     main()

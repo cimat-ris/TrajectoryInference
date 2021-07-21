@@ -48,6 +48,8 @@ class mGP_trajectory_prediction:
 
     # Update observations and compute likelihoods based on observations
     def update(self,observations):
+        if observations is None:
+            return None
         nobs             = observations.shape[0]
         if nobs<2:
             return None
