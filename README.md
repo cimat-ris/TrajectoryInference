@@ -10,7 +10,6 @@ We recommend using a virtual environment:
 
 
 ```
-$ cd GPMixture
 $ python3 -m venv ./venv
 $ source ./venv/bin/activate
 $ pip install -r requirements.txt
@@ -27,7 +26,7 @@ $ python3 examples/test_kernelVisualization.py
 ## Training the GP parameters in a given setup
 
 ```
-$ python3 examples/train.py
+$ python3 examples/test_train.py
 ```
 
 ## Running some prediction examples
