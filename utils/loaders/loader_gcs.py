@@ -7,6 +7,7 @@ from math import ceil
 import os
 import numpy as np
 import pandas as pd
+import logging
 from scipy.interpolate import interp1d
 from utils.dataset_trajectories import TrajDataset
 
@@ -99,7 +100,7 @@ def load_gcs(path, **kwargs):
         tmp = image_to_world(np.flip(np.reshape(traj_dataset.goals_areas[:,1:],(-1,2)),axis=1), homog)
         traj_dataset.goals_areas[:,1:] = np.reshape(np.flip(tmp,axis=1),(n_goals,-1))*0.8
     # post-process
-    print("[INF] Post-process")
+    logging.info("Post-process")
     sampling_rate = kwargs.get('sampling_rate', 1)
     use_kalman = kwargs.get('use_kalman', False)
     traj_dataset.postprocess(fps=fps, sampling_rate=sampling_rate, use_kalman=use_kalman)
