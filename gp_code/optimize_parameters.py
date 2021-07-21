@@ -8,7 +8,7 @@ from utils.linalg import positive_definite
 from scipy.linalg import *
 from gp_code.kernels import *
 from copy import copy
-import random
+import random, logging
 import timeit
 from termcolor import colored
 
@@ -52,7 +52,7 @@ def fit_parameters(t,x,kernel,theta,sigmaNoise):
         parametersX = minimize(neg_sum_log_p,theta,(t,x,kernel,sigmaNoise),method='L-BFGS-B',options={'maxiter':100,'disp': True},bounds=((1.0,10000.0),(1.0,500.0)))
         px          = parametersX.x
     except Exception as e:
-        print(colored("[ERR] {:s} ".format(e),'red'))
+        logging.error("[ERR] {:s} ".format(e))
         px = theta
     kernel.set_optimizable_parameters(px)
     return px

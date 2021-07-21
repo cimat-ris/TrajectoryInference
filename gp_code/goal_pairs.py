@@ -171,9 +171,9 @@ class goal_pairs:
                         meanY, varY  = get_linear_prior_mean(trainingSet[i][j], 'y')
                         ker.set_linear_prior(meanY[0],meanY[1],varY[0],varY[1])
                     thetaY  = fit_parameters(l,y,ker,theta,self.sigmaNoise)
-                    logging.info("Optimized parameters for y: {}",thetaY)
+                    logging.info("Optimized parameters for y: {}".format(thetaY))
                     self.kernelsY[i][j].set_parameters(ker.get_parameters())
-                    logging.info("Full parameters for y: {}",self.kernelsY[i][j].get_parameters())
+                    logging.info("Full parameters for y: {}".format(self.kernelsY[i][j].get_parameters()))
                     stop = timeit.default_timer()
                     execution_time = stop - start
                     logging.info("Parameter optimization done in {:2f} seconds".format(execution_time))
