@@ -74,7 +74,7 @@ def main():
         predictedXYVec,varXYVec = mgps.predict_trajectory()
         logging.info('Plotting')
         p.plot_multiple_predictions_and_goal_likelihood(observations,predictedXYVec,varXYVec,likelihoods)
-        logging.info('Goals likelihood:{}'.format(mgps.goalsLikelihood))
+        logging.info('Goals likelihood:{}'.format(mgps._goals_likelihood))
         logging.info('Mean likelihood:{}'.format(mgps.meanLikelihood))
         p.show()
 
@@ -92,7 +92,7 @@ def main():
         likelihoods = mgps.update(observations)
         logging.info('Performing prediction')
         predictedXYVec,varXYVec = mgps.predict_path(compute_sqRoot=True)
-        logging.info('Goals likelihood {}'.format(mgps.goalsLikelihood))
+        logging.info('Goals likelihood {}'.format(mgps._goals_likelihood))
         logging.info('Mean likelihood: {}'.format(mgps.meanLikelihood))
         logging.info('Generating samples')
         paths = mgps.sample_paths(nSamples)
