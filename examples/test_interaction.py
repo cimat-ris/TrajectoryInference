@@ -5,7 +5,7 @@ import random
 import numpy as np
 from test_common import *
 from gp_code.kernels import *
-from gp_code.mixture_gpT import mixtureGPT
+from gp_code.mGPt_trajectory_prediction import mGPt_trajectory_prediction
 from gp_code.interactions import interaction_potential_for_a_set_of_trajectories
 from utils.manip_trajectories import start_time, get_trajectories_given_time_interval, get_goal_of_point
 from utils.manip_trajectories import observed_data_given_time, reshape_trajectory
@@ -43,7 +43,7 @@ observations = np.empty(n,dtype=object)
 samples      = np.empty(n,dtype=object)
 
 for i in range(n):
-    mgps[i] = mixtureGPT(startGoals[i] ,goalsData)
+    mgps[i] = mGPt_trajectory_prediction(startGoals[i] ,goalsData)
 
 samples_n = 5
 part_num = 3
