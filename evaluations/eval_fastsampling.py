@@ -25,6 +25,9 @@ def main():
     parser.add_argument('--log_file',default='',help='Log file (default: standard output)')
     parser.add_argument('--pickle', dest='pickle', action='store_true',help='uses previously pickled data')
     parser.set_defaults(pickle=False)
+    parser.add_argument('--timevsnsamples', dest='timevsnsamples', action='store_true',help='')
+    parser.set_defaults(timevsnsamples=False)
+
     args = parser.parse_args()
     if args.log_file=='':
         logging.basicConfig(format='%(levelname)s: %(message)s',level=args.log_level)
@@ -32,11 +35,9 @@ def main():
         logging.basicConfig(filename=args.log_file,format='%(levelname)s: %(message)s',level=args.log_level)
 
     # Read the areas file, dataset, and form the goalsLearnedStructure object
-    imgGCS           = './datasets/GC/reference.jpg'
     coordinates      = args.coordinates
     dataset_name     = args.dataset_id
     traj_dataset, goalsData, trajMat, __ = read_and_filter(dataset_name,coordinate_system=coordinates,use_pickled_data=args.pickle)
-
     # Selection of the kernel type
     kernelType  = "linePriorCombined"
 
@@ -66,12 +67,16 @@ def main():
         goalsData = pickle.load(pickle_in)
 
     """**********          Testing          ***********"""
-    props        = []
     timesEffMean = []
     timesEffSlow = []
     nsamplesSet  = []
-    #for prop in [0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
-    for nSamples in [1,10,100,1000]:
+    propSet      = []
+
+    if args.timevsnsamples:
+        vars = [1,10,100,1000]
+    else:
+        vars =  [0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]
+    for var in vars:
         timesEff  = []
         timesSlow = []
         ratios    = []
@@ -85,8 +90,12 @@ def main():
 
                     # Total path length
                     pathSize = len(pathX)
-                    #nSamples = 100
-                    prop = 0.5
+                    if args.timevsnsamples:
+                        prop     = 0.5
+                        nSamples = var
+                    else:
+                        nSamples = 100
+                        prop     = var
                     # Prediction of single paths with a mixture model
                     mgps     = mGP_trajectory_prediction(startG,goalsData)
 
@@ -114,15 +123,19 @@ def main():
                     #        print("Largest deviations in x: {} and y: {}".format(np.max(np.abs(predictedX2-predictedX)),np.max(np.abs(predictedY2-predictedY))))
         timesEffMean.append(np.mean(timesEff))
         timesEffSlow.append(np.mean(timesSlow))
-        props.append(prop)
+        propSet.append(prop)
         nsamplesSet.append(nSamples)
-    #plt.plot(props,timesEffMean,'g',label='Efficient sampling')
-    #plt.plot(props,timesEffSlow,'b',label='Naive sampling')
-    plt.plot(nsamplesSet,timesEffMean,'g',label='Efficient sampling')
-    plt.plot(nsamplesSet,timesEffSlow,'b',label='Naive sampling')
+
+    if args.timevsnsamples:
+        plt.plot(nsamplesSet,timesEffMean,'g',label='Efficient sampling')
+        plt.plot(nsamplesSet,timesEffSlow,'b',label='Naive sampling')
+        plt.xlabel('Number of samples')
+    else:
+        plt.plot(propSet,timesEffMean,'g',label='Efficient sampling')
+        plt.plot(propSet,timesEffSlow,'b',label='Naive sampling')
+        plt.xlabel('Proportion of the observations')
+
     plt.ylim(0,1.2*np.max(timesEffSlow))
-    #plt.xlabel('Proportion of the observations')
-    plt.xlabel('Number of samples')
     plt.xscale("log")
     plt.ylabel('Computational times (s)')
     plt.legend()
