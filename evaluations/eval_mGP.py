@@ -44,12 +44,12 @@ def main():
     goalsData.kernelsY = read_and_set_parameters("../parameters/linearpriorcombined20x20_GCS_img_y.txt",nParameters)
 
     part_num = 5
-    samples = 5
+    nsamples = 5
     
     print('Test set shape:', test_set.shape)
         
-    for i in range(1):#test_set.shape[0]):
-        for j in range(1):#test_set.shape[1]):
+    for i in range(test_set.shape[0]):
+        for j in range(test_set.shape[1]):
             for tr in test_set[i][j]:
                 # Prediction of single paths with a mixture model
                 mgps     = mGP_trajectory_prediction(i,goalsData)
@@ -57,7 +57,7 @@ def main():
                 tr_data = [tr[0],tr[1],arclen,tr[2]] # data = [X,Y,L,T]
                 path_size = len(arclen)
                 
-                for k in range(1,2):#,part_num-1):
+                for k in range(1,part_num-1):
                     m = int((k+1)*(path_size/part_num))
                     observations, ground_truth = observed_data(tr_data,m)
                     gt = np.concatenate([np.reshape(tr[0][m:],(-1,1)), np.reshape(tr[1][m:],(-1,1))], axis=1)                  
@@ -68,14 +68,24 @@ def main():
                     #filteredPaths= mgps.filter()
                     predictedXYVec,varXYVec = mgps.predict_trajectory(compute_sqRoot=True)
                     logging.debug('Generating samples')
-                    paths = mgps.sample_paths(samples) # <- returns a list
-                    print('Ground truth:')
-                    print(gt)
-                    print('Sampled element:') 
-                    print(paths[0])
-                    print('ADE', ADE(gt, paths[0]))
+                    paths = mgps.sample_paths(nsamples)
                     
-#TODO: get min ade, compute mean error, plot
+                    pred_ade = []
+                    for path in predictedXYVec:
+                        pred_ade.append(ADE(gt, path))
+                        
+                    samples_ade = []
+                    for path in paths:
+                        samples_ade.append(ADE(gt, path))
+                        
+                    #print('Ground truth:')
+                    #print(gt)
+                    print('Prediction error:') 
+                    print(pred_ade)
+                    print('Sampled error:') 
+                    print(samples_ade)
+                    
+#TODO: plot error
     
 if __name__ == '__main__':
     main()
