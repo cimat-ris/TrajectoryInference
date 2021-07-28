@@ -12,7 +12,7 @@ from utils.plotting import plotter, plot_path_samples
 from utils.plotting import animate_multiple_predictions_and_goal_likelihood
 from gp_code.likelihood import ADE
 import numpy as np
-import time
+import time, pickle
 
 def main():
     # Parsing arguments
@@ -33,24 +33,47 @@ def main():
     imgGCS           = '../datasets/GC/reference.jpg'
     coordinates      = args.coordinates
     traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',coordinate_system=coordinates,use_pickled_data=args.pickle)
-    train_set, test_set = partition_train_test(trajMat, training_ratio=0.8)
+    train_trajectories_matrix, test_trajectories_matrix = partition_train_test(trajMat, training_ratio=0.8)
     
     # Selection of the kernel type
     kernelType  = "linePriorCombined"
     nParameters = 4
+    """
+    # Partition test/train set
+    pickle_dir='../pickle'
+    if args.pickle==False:
+        train_trajectories_matrix, test_trajectories_matrix = partition_train_test(trajMat,training_ratio=0.2)
+        pickle_out = open(pickle_dir+'/train_trajectories_matrix-'+args.dataset_id+'-'+coordinates+'.pickle',"wb")
+        pickle.dump(train_trajectories_matrix, pickle_out, protocol=2)
+        pickle_out.close()
+        pickle_out = open(pickle_dir+'/test_trajectories_matrix-'+args.dataset_id+'-'+coordinates+'.pickle',"wb")
+        pickle.dump(train_trajectories_matrix, pickle_out, protocol=2)
+        pickle_out.close()
 
+        logging.info("Starting the learning phase")
+        goalsData.optimize_kernel_parameters(kernelType,train_trajectories_matrix)
+        pickle_out = open(pickle_dir+'/goalsData-'+args.dataset_id+'-'+coordinates+'.pickle',"wb")
+        pickle.dump(goalsData, pickle_out, protocol=2)
+        pickle_out.close()
+    else:
+        pickle_in = open(pickle_dir+'/train_trajectories_matrix-'+args.dataset_id+'-'+coordinates+'.pickle', "rb")
+        train_trajectories_matrix = pickle.load(pickle_in)
+        pickle_in = open(pickle_dir+'/test_trajectories_matrix-'+args.dataset_id+'-'+coordinates+'.pickle', "rb")
+        test_trajectories_matrix = pickle.load(pickle_in)
+        pickle_in = open(pickle_dir+'/goalsData-'+args.dataset_id+'-'+coordinates+'.pickle',"rb")
+        goalsData = pickle.load(pickle_in)
+    """
     # Read the kernel parameters from file
     goalsData.kernelsX = read_and_set_parameters("../parameters/linearpriorcombined20x20_GCS_img_x.txt",nParameters)
     goalsData.kernelsY = read_and_set_parameters("../parameters/linearpriorcombined20x20_GCS_img_y.txt",nParameters)
 
     part_num = 5
     nsamples = 5
-    
-    print('Test set shape:', test_set.shape)
         
-    for i in range(test_set.shape[0]):
-        for j in range(test_set.shape[1]):
-            for tr in test_set[i][j]:
+    ade = [[], [], [] ] # ade for 25%, 50% and 75% of observed data
+    for i in range(test_trajectories_matrix.shape[0]):
+        for j in range(test_trajectories_matrix.shape[1]):
+            for tr in test_trajectories_matrix[i][j]:
                 # Prediction of single paths with a mixture model
                 mgps     = mGP_trajectory_prediction(i,goalsData)
                 arclen = trajectory_arclength(tr)
@@ -77,14 +100,10 @@ def main():
                     samples_ade = []
                     for path in paths:
                         samples_ade.append(ADE(gt, path))
-                        
-                    #print('Ground truth:')
-                    #print(gt)
-                    print('Prediction error:') 
-                    print(pred_ade)
-                    print('Sampled error:') 
-                    print(samples_ade)
                     
+                    ade[k-1].append(min(samples_ade))
+    print('------ADE------')
+    print(ade)
 #TODO: plot error
     
 if __name__ == '__main__':
