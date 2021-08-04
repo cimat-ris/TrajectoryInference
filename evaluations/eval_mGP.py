@@ -67,7 +67,7 @@ def main():
     goalsData.kernelsX = read_and_set_parameters("../parameters/linearpriorcombined20x20_GCS_img_x.txt",nParameters)
     goalsData.kernelsY = read_and_set_parameters("../parameters/linearpriorcombined20x20_GCS_img_y.txt",nParameters)
 
-    part_num = 5
+    part_num = 4
     nsamples = 5
         
     ade = [[], [], [] ] # ade for 25%, 50% and 75% of observed data
@@ -80,8 +80,10 @@ def main():
                 tr_data = [tr[0],tr[1],arclen,tr[2]] # data = [X,Y,L,T]
                 path_size = len(arclen)
                 
-                for k in range(1,part_num-1):
-                    m = int((k+1)*(path_size/part_num))
+                for k in range(1,part_num):
+                    m = int((k)*(path_size/part_num))
+                    if m<2:
+                        continue
                     observations, ground_truth = observed_data(tr_data,m)
                     gt = np.concatenate([np.reshape(tr[0][m:],(-1,1)), np.reshape(tr[1][m:],(-1,1))], axis=1)                  
                     # Multigoal prediction
