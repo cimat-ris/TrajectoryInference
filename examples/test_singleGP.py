@@ -14,6 +14,8 @@ def main():
     parser.add_argument('--log_level',type=int, default=20,help='Log level (default: 20)')
     parser.add_argument('--log_file',default='',help='Log file (default: standard output)')
     parser.add_argument('--pickle', dest='pickle', action='store_true',help='uses previously pickled data')
+    parser.add_argument('--start', dest='start',type=int, default=0,help='Specify starting goal')
+    parser.add_argument('--end', dest='end',type=int, default=9,help='Specify ending goal')
     parser.set_defaults(pickle=False)
     args = parser.parse_args()
     if args.log_file=='':
@@ -36,18 +38,10 @@ def main():
 
     """**********          Testing          ***********"""
     # We select a pair of starting and ending goals, and a trajectory id
-    randomPath = False
-    if randomPath:
-        flag = True
-        while flag:
-            gi, gj = random.randrange(goalsData.nGoals), random.randrange(goalsData.nGoals)
-            if len(trajMat[gi][gj]) > 0:
-                pathId = random.randrange( len(trajMat[gi][gj]) )
-                flag = False
-        logging.info("Selected goals: {} {} | path index: {}".format(gi,gj,pathId))
-    else:
-        gi, gj = 0, 7
+    gi, gj = args.start, args.end
+    if len(trajMat[gi][gj]) > 0:
         pathId       = np.random.randint(0,len(trajMat[gi][gj]))
+        logging.info("Selected goals: {} {} | path index: {}".format(gi,gj,pathId))
 
     # Get the ground truth path
     if goalsData.kernelsX[gi][gj].optimized is not True:
