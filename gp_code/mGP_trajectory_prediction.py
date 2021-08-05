@@ -42,7 +42,7 @@ class mGP_trajectory_prediction:
         # The basic elements here is this array of objects, that will do the regression work
         self.gpTrajectoryRegressor = [None]*n
         for i in range(self.goalsData.goals_n):
-            if self.goalsData.priorTransitions[self._start][i]>0 and self.goalsData.kernelsX[self._start][i] is not None:
+            if self.goalsData.priorTransitions[self._start][i]>0 and self.goalsData.kernelsX[self._start][i].optimized:
                 # One regressor per goal
                 self.gpTrajectoryRegressor[i]=trajectory_regression(self.goalsData.kernelsX[self._start][i], self.goalsData.kernelsY[self._start][i],goalsData.sigmaNoise,self.goalsData.speedModels[self._start][i],self.goalsData.units[self._start][i],self.goalsData.goals_areas[i],prior=self.goalsData.priorTransitions[self._start][i])
 
