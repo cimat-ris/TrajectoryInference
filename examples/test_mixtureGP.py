@@ -14,6 +14,7 @@ def main():
     parser.add_argument('--log_level',type=int, default=20,help='Log level (default: 20)')
     parser.add_argument('--log_file',default='',help='Log file (default: standard output)')
     parser.add_argument('--pickle', dest='pickle', action='store_true',help='uses previously pickled data')
+    parser.add_argument('--start', dest='start',type=int, default=0,help='Specify starting goal')
     parser.set_defaults(pickle=False)
     args = parser.parse_args()
     if args.log_file=='':
@@ -38,9 +39,13 @@ def main():
     """******************************************************************************"""
     """**************    Testing                           **************************"""
     # We give the start and ending goals and the index of the trajectory to predict
-    startG = 0
-    nextG  = 6
-    pathId = 3
+    startG = args.start
+    flag = True
+    while flag:
+        nextG = random.randrange(goalsData.goals_n)
+        if len(trajMat[startG][nextG]) > 0:
+            pathId = random.randrange( len(trajMat[startG][nextG]))
+            flag = False
 
     # Get the ground truth path
     _path = trajMat[startG][nextG][pathId]
