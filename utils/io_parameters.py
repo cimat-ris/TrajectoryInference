@@ -49,6 +49,7 @@ def read_and_set_parameters(file_name, nParameters):
             parameters.append(float(parameters_str[k]))
         logging.info("From goal {:d} to {:d} parameters {}".format(i,j,parameters))
         kernels[i][j].set_parameters(parameters)
+        # Flag for 
         kernels[i][j].optimized = True
     file.close()
     return kernels

@@ -15,6 +15,93 @@ color = ['lightgreen','springgreen','g','b','steelblue','y','tomato','orange','r
          'cyan','teal','deepskyblue','dodgerblue','royalblue','blueviolet','indigo',
          'purple','magenta','deeppink','hotpink','sandybrown','darkorange','coral']
 
+
+# Plot the goal
+def plot_goals(ax,goal,color="green"):
+    center, size = goal_center_and_size(goal)
+    # Create rectangle patch
+    rect = plt.Rectangle((center[0]-size[0]/2,center[1]-size[1]/2), size[0], size[1],facecolor=color, alpha=0.35)
+    ax.add_patch(rect)
+
+class multiple_plotter():
+    def __init__(self,nplots=4,title=None):
+        self.nplots        = nplots
+        self.ncols         = 2
+        self.nrows         = nplots//self.ncols
+        self.figs,self.axs = plt.subplots(nrows=self.nrows,ncols=self.ncols)
+        for i in range(self.nrows):
+            for j in range(self.ncols):
+                self.axs[i][j].margins(0, 0)
+                self.axs[i][j].set_axis_off()
+                self.axs[i][j].xaxis.set_major_locator(plt.NullLocator())
+                self.axs[i][j].yaxis.set_major_locator(plt.NullLocator())
+                if title!=None:
+                    self.axs[i][j].set_title(title)
+        plt.subplots_adjust(wspace=0.01, hspace=0.1)
+
+    def set_background(self,img_background_path):
+        # Use the image as a background
+        img = mpimg.imread(img_background_path)
+        s = img.shape
+        v = [0,s[1],s[0],0]
+        for i in range(self.nrows):
+            for j in range(self.ncols):
+                self.axs[i][j].imshow(img)
+                self.axs[i][j].axis(v)
+
+    # Plot the scene structure: goals and sub-goals
+    def plot_scene_structure(self,goals_data, goals_likelihoods, draw_ids=False):
+        inds = np.argsort(goals_likelihoods)
+        inds = np.flip(inds)
+        print(inds)
+        for i in range(self.nrows):
+            for j in range(self.ncols):
+                idx = inds[i*self.ncols+j]
+                for k in range(goals_data.goals_n):
+                    center, size = goal_center_and_size(goals_data.goals_areas[k][1:])
+                    if k!=idx:
+                        plot_goals(self.axs[i][j],goals_data.goals_areas[k][1:])
+                    else:
+                        plot_goals(self.axs[i][j],goals_data.goals_areas[k][1:],color="blue")
+                    if draw_ids:
+                        self.axs[i][j].text(center[0], center[1],str(k),color='white')
+
+    # Plot multiple predictions
+    def plot_likeliest_predictions(self,observations, filtered_paths, predicted_paths, var_paths, goals_likelihoods,min_likelihood=0.001):
+        # Plot the observed data
+        for i in range(self.nrows):
+            for j in range(self.ncols):
+                self.axs[i][j].plot(observations[:,0],observations[:,1],'c')
+
+        # Cycle over the potential goals
+        inds = np.argsort(goals_likelihoods)
+        inds = np.flip(inds)
+        for idx in range(self.nplots):
+            filt_path = filtered_paths[inds[idx]]
+            pred_path = predicted_paths[inds[idx]]
+            var_path  = var_paths[inds[idx]]
+            likelihood= goals_likelihoods[inds[idx]]
+            # For each goal, draws the prediction
+            self.axs[idx//self.ncols][idx%self.ncols].plot(filt_path[:-1,0],filt_path[:-1,1],'b--')
+            self.axs[idx//self.ncols][idx%self.ncols].plot(pred_path[:,0],pred_path[:,1],'b--')
+            predictedN = pred_path.shape[0]
+            # For the jth predicted element
+            for j in range(predictedN):
+                if j%2==0:
+                    xy = [pred_path[j,0],pred_path[j,1]]
+                    # It is: to have 3.0 sigmas. Then, the Ellipse constructor asks for the diameter, hence the 2.0
+                    vx  = var_path[0,j,j]
+                    vy  = var_path[1,j,j]
+                    ell = Ellipse(xy,6.0*math.sqrt(math.fabs(vx)),6.0*math.sqrt(math.fabs(vy)))
+                    ell.set_lw(1.0)
+                    ell.set_fill(0)
+                    ell.set_edgecolor('m')
+                    self.axs[idx//self.ncols][idx%self.ncols].add_patch(ell)
+            self.axs[idx//self.ncols][idx%self.ncols].set_title("Goal {}. Likelihood {:.2f}".format(inds[idx],likelihood))
+    # Show the plots
+    def show(self):
+        plt.show()
+
 class plotter():
     def __init__(self,title=None):
         self.fig,self.ax = plt.subplots(1)
@@ -37,17 +124,10 @@ class plotter():
     # Plot the scene structure: goals and sub-goals
     def plot_scene_structure(self,goals_data, draw_ids=False):
         for i in range(goals_data.goals_n):
-            self.plot_goals(goals_data.goals_areas[i][1:],goals_data.goals_areas[i][0])
+            plot_goals(self.ax,goals_data.goals_areas[i][1:])
             if draw_ids:
                 center, size = goal_center_and_size(goals_data.goals_areas[i][1:])
                 self.ax.text(center[0], center[1],str(i),color='white')
-
-    # Plot the goal
-    def plot_goals(self,goal, axis):
-        center, size = goal_center_and_size(goal)
-        # Create rectangle patch
-        rect = plt.Rectangle((center[0]-size[0]/2,center[1]-size[1]/2), size[0], size[1],facecolor="green", alpha=0.35)
-        self.ax.add_patch(rect)
 
     # Plot the true data, the predicted ones and their variance
     def plot_prediction(self,observations, predicted, variances):
@@ -64,14 +144,17 @@ class plotter():
             ell.set_edgecolor('m')
             self.ax.add_patch(ell)
 
-    # Plot the filtered data
+    # Plot the ground truth data
     def plot_ground_truth(self,gtPath):
         self.ax.plot(gtPath[:-1,0],gtPath[:-1,1],'c--')
 
 
     # Plot the filtered data
-    def plot_filtered(self,filtered_path):
-        self.ax.plot(filtered_path[:-1,0],filtered_path[:-1,1],'b--')
+    def plot_filtered(self,filtered_paths):
+        # Cycle over the potential goals
+        for filtered_path in filtered_paths:
+            if filtered_path.shape[0]>0:
+                self.ax.plot(filtered_path[:-1,0],filtered_path[:-1,1],'b--')
 
     # Plot multiple predictions
     def plot_multiple_predictions_and_goal_likelihood(self,observations, paths, var_paths, goals_likelihood,min_likelihood=0.01):
@@ -119,7 +202,7 @@ class plotter():
                 if spec_color is None:
                     randColor = random.choice(color)
                 else:
-                    randColor = spec_color    
+                    randColor = spec_color
                 samplex = paths[i][:,0]
                 sampley = paths[i][:,1]
                 samplex.reshape((-1,1))

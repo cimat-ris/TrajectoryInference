@@ -65,23 +65,23 @@ def main():
 
     # For different sub-parts of the trajectory
     for i in range(1,part_num-1):
-        p = plotter()
-        p.set_background(imgGCS)
-        p.plot_scene_structure(goalsData)
+        mp = multiple_plotter()
+        mp.set_background(imgGCS)
 
         knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
         observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
         """Multigoal prediction test"""
         logging.info('Updating likelihoods')
         likelihoods = mgps.update(observations)
+        mp.plot_scene_structure(goalsData,likelihoods,draw_ids=True)
         logging.info('Performing prediction')
         filteredPaths           = mgps.filter()
         predictedXYVec,varXYVec = mgps.predict_trajectory()
         logging.info('Plotting')
-        p.plot_multiple_predictions_and_goal_likelihood(observations,predictedXYVec,varXYVec,likelihoods)
+        mp.plot_likeliest_predictions(observations,filteredPaths,predictedXYVec,varXYVec,likelihoods)
         logging.info('Goals likelihood:{}'.format(mgps._goals_likelihood))
         logging.info('Mean likelihood:{}'.format(mgps.meanLikelihood))
-        p.show()
+        mp.show()
 
 
     # Again, with Monte Carlo
