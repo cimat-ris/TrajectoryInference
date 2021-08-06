@@ -41,7 +41,7 @@ class path1D_regression:
         # Noise
         self.sigmaNoise      = sigmaNoise
         #
-        self.m               = 5
+        self.m               = 10
         self.n               = 0
 
     # Method to select observations
@@ -53,17 +53,25 @@ class path1D_regression:
         return observedL[idx],observedX[idx]
 
     # Update observations for the Gaussian process
-    def update_observations(self,observedX,observedL,finalX,finalL,finalVar,predictedL):
+    def update_observations(self,observedX,observedL,finalX,finalL,finalVar,predictedL,consecutiveObservations=True):
         # Number of "real" observations (we add one: the final point)
         self.n               = len(observedX)
         # Keep the solution for future likelihood evaluations
-        if self.n%self.m==0:
-            self.Kp_1_3m = self.Kp_1_2m
-            self.Kp_1_2m = self.Kp_1
-            self.Kp_1o_3m= self.Kp_1o_2m
-            self.Kp_1o_2m= self.Kp_1o
-            self.observedL_3m = self.observedL_2m
-            self.observedL_2m = self.observedL
+        if consecutiveObservations:
+            if self.n%self.m==0:
+                self.Kp_1_3m = self.Kp_1_2m
+                self.Kp_1_2m = self.Kp_1
+                self.Kp_1o_3m= self.Kp_1o_2m
+                self.Kp_1o_2m= self.Kp_1o
+                self.observedL_3m = self.observedL_2m
+                self.observedL_2m = self.observedL
+        else:
+            startL            = max(0,self.n-2*self.m-1)
+            self.observedL_3m = observedL[startL:startL+self.m]
+            observedX_3m      = observedX[startL:startL+self.m]
+            K_3m              = self.kernel(self.observedL_3m[:,0],self.observedL_3m[:,0])
+            self.Kp_1_3m =inv(K_3m+self.sigmaNoise*np.eye(K_3m.shape[0]))
+            self.Kp_1o_3m=self.Kp_1_3m.dot(observedX_3m-(self.kernel.meanSlope*self.observedL_3m+self.kernel.meanConstant))
         # Values of arc length L at which we will predict X
         self.predictedL      = predictedL
         # Set the observations

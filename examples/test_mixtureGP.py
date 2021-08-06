@@ -72,7 +72,7 @@ def main():
         observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
         """Multigoal prediction test"""
         logging.info('Updating likelihoods')
-        likelihoods = mgps.update(observations)
+        likelihoods = mgps.update(observations,consecutiveObservations=False)
         mp.plot_scene_structure(goalsData,likelihoods,draw_ids=True)
         logging.info('Performing prediction')
         filteredPaths           = mgps.filter()

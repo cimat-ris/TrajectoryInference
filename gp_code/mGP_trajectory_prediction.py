@@ -47,7 +47,7 @@ class mGP_trajectory_prediction:
                 self.gpTrajectoryRegressor[i]=trajectory_regression(self.goalsData.kernelsX[self._start][i], self.goalsData.kernelsY[self._start][i],goalsData.sigmaNoise,self.goalsData.speedModels[self._start][i],self.goalsData.units[self._start][i],self.goalsData.goals_areas[i],prior=self.goalsData.priorTransitions[self._start][i])
 
     # Update observations and compute likelihoods based on observations
-    def update(self,observations):
+    def update(self,observations,consecutiveObservations=True):
         if observations is None:
             return None
         nobs             = observations.shape[0]
@@ -72,7 +72,7 @@ class mGP_trajectory_prediction:
                 distToGoal   = euclidean_distance([self._observed_x[-1],self._observed_y[-1]], goalCenter)
                 dist         = euclidean_distance([self._observed_x[0],self._observed_y[0]], goalCenter)
                 # Update observations and re-compute the kernel matrices
-                self.gpTrajectoryRegressor[i].update_observations(observations)
+                self.gpTrajectoryRegressor[i].update_observations(observations,consecutiveObservations)
                 # Compute the model likelihood
                 self._goals_likelihood[i] = self.gpTrajectoryRegressor[i].compute_likelihood()
 

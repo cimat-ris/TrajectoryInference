@@ -31,7 +31,7 @@ class path_regression:
             self.timeTransitionStd  = timeTransitionData[1]
 
     # Update observations x,y,l for the Gaussian process (matrix K)
-    def update_observations(self,observations):
+    def update_observations(self,observations,consecutiveObservations=True):
         # Last really observed point
         lastObs = observations[-1]
         if self.mode == 'Trautman':
@@ -51,8 +51,8 @@ class path_regression:
         else:
             s              = self.finalAreaSize[1]
         # Update observations of each process (x,y)
-        self.regression_x.update_observations(observations[:,0:1],observations[:,2:3],self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
-        self.regression_y.update_observations(observations[:,1:2],observations[:,2:3],self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL)
+        self.regression_x.update_observations(observations[:,0:1],observations[:,2:3],self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL,consecutiveObservations)
+        self.regression_y.update_observations(observations[:,1:2],observations[:,2:3],self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL,consecutiveObservations)
 
 
     def prediction_set_arclength(self, lastObs, finishPoint):

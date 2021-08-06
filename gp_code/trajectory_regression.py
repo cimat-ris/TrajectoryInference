@@ -39,9 +39,9 @@ class trajectory_regression(path_regression):
         return trajectory, var
 
     # Update observations
-    def update_observations(self,observations):
+    def update_observations(self,observations,consecutiveObservations=True):
         # Call the method for the path regression
-        super(trajectory_regression, self).update_observations(observations)
+        super(trajectory_regression, self).update_observations(observations,consecutiveObservations)
 
 
     # Generate a sample from perturbations
