@@ -11,6 +11,8 @@ from gp_code.mGP_trajectory_prediction import mGP_trajectory_prediction
 from utils.plotting import plotter, plot_path_samples
 from utils.plotting import animate_multiple_predictions_and_goal_likelihood
 from gp_code.likelihood import ADE
+import matplotlib.pyplot as plt
+import statistics
 import numpy as np
 import time, pickle
 
@@ -106,6 +108,8 @@ def main():
                     ade[k-1].append(min(samples_ade))
     print('------ADE------')
     print(ade)
+    print('Plotting median ade')
+    plt.plot([25,50,75],[statistics.median(ade[0]), statistics.median(ade[1]), statistics.median(ade[2])])
 #TODO: plot error
     
 if __name__ == '__main__':
