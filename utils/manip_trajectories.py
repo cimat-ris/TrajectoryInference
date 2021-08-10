@@ -171,10 +171,9 @@ def get_linear_prior_mean(trajectories, flag):
     if n == 0:
         return [0.,0.,0.]
     lineParameters = np.array([ line_parameters(trajectories[i], flag) for i in range(n)])
-    mean = [np.mean(lineParameters[:,0]), np.mean(lineParameters[:,1]) ]
+    mean = [np.median(lineParameters[:,0]), np.median(lineParameters[:,1]) ]
     var = [np.var(lineParameters[:,0]), np.var(lineParameters[:,1]) ]
     cov = np.cov(lineParameters[:,0],lineParameters[:,1])
-
     return mean, var
 
 def arclen_to_time(init_time, arclen, speed):
@@ -183,7 +182,6 @@ def arclen_to_time(init_time, arclen, speed):
     time[0] = init_time
     for i in range(1,len(arclen)):
         time[i] = int(time[i-1] + (arclen[i]-arclen[i-1])/speed)
-
     return time
 
 
