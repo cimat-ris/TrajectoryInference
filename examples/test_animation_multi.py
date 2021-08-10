@@ -68,11 +68,11 @@ def main():
     for knownN in range(5,pathSize-1):
         logging.info("--------------------------")
         p.set_background(imgGCS)
-        p.plot_scene_structure(goalsData)
+        p.plot_scene_structure(goalsData,draw_ids=True)
         observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
         logging.info("Updating observations")
         # Update the GP with (real) observations
-        likelihoods  = mgps.update(observations)
+        likelihoods  = mgps.update(observations,consecutiveObservations=False)
         filteredPaths= mgps.filter()
         # Perform prediction
         predictedXYVec,varXYVec = mgps.predict_trajectory()
@@ -83,6 +83,7 @@ def main():
         # Plot the ground truth
         p.plot_ground_truth(ground_truth)
         p.pause(0.05)
+        input("Press Enter to continue...")
 
 
 if __name__ == '__main__':
