@@ -18,7 +18,7 @@ import numpy as np
 class goal_pairs:
 
     # Constructor
-    def __init__(self, goals_areas, trajMat, sigmaNoise=200.0, min_traj_number=5):
+    def __init__(self, goals_areas, trainingSet, sigmaNoise=200.0, min_traj_number=5):
         self.goals_n            = len(goals_areas)
         self.goals_areas        = goals_areas
         self.min_traj_number    = min_traj_number
@@ -30,7 +30,7 @@ class goal_pairs:
         # that have been learned
         self.learned        = np.zeros((self.goals_n,self.goals_n),dtype=int)
         # Mean length for all pairs of goals
-        self.meanLengths        = np.zeros((self.goals_n,self.goals_n))
+        self.medianLengths      = np.zeros((self.goals_n,self.goals_n))
         self.euclideanDistances = np.zeros((self.goals_n,self.goals_n))
         self.units              = np.zeros((self.goals_n,self.goals_n))
         self.priorTransitions   = np.zeros((self.goals_n,self.goals_n))
@@ -40,20 +40,20 @@ class goal_pairs:
         self.timeTransitionMeans= np.empty((self.goals_n,self.goals_n),dtype=object)
         self.timeTransitionStd  = np.empty((self.goals_n,self.goals_n),dtype=object)
         # Compute the mean lengths
-        self.compute_mean_lengths(trajMat)
+        self.compute_median_lengths(trainingSet)
         # Compute the distances between pairs of goals (as a nGoalsxnGoals matrix)
         self.compute_euclidean_distances()
         # Compute the ratios between average path lengths and inter-goal distances
         self.compute_distance_unit()
         # Computer prior probabispeedRegressorlities between goals
-        self.compute_prior_transitions(trajMat)
+        self.compute_prior_transitions(trainingSet)
         # Compute transition probabilities between goals
-        self.compute_time_transitions(trajMat)
+        self.compute_time_transitions(trainingSet)
         # Compute speed models
-        self.optimize_speed_models(trajMat)
+        self.optimize_speed_models(trainingSet)
 
     # Fills in the matrix with the mean length of the trajectories
-    def compute_mean_lengths(self, trajectories):
+    def compute_median_lengths(self, trajectories):
         # For each pair of goals (gi,gj), compute the mean arc-length
         for i in range(self.goals_n):
             for j in range(self.goals_n):
@@ -65,7 +65,7 @@ class goal_pairs:
                     m = np.mean(arclengths)
                 else:
                     m = 0
-                self.meanLengths[i][j] = m
+                self.medianLengths[i][j] = m
 
     # Fills in the Euclidean distances between goals
     def compute_euclidean_distances(self):
@@ -78,30 +78,41 @@ class goal_pairs:
                 d = euclidean_distance(p,q)
                 self.euclideanDistances[i][j] = d
 
+    # For a given goal, determines the closest
+    def closest(self,start,k):
+        i1 = 0
+        d1 = math.inf
+        for i in range(0,self.goals_n):
+            if i!=k and self.kernelsX[start][i].optimized and self.euclideanDistances[start][i]<d1:
+                d1 = self.euclideanDistances[start][i]
+                i1 = i
+        return i1
+
     # Computes the ratio between path length and linear path length
     # (distance between goals)
     def compute_distance_unit(self):
         for i in range(self.goals_n):
             for j in range(self.goals_n):
-                if(self.euclideanDistances[i][j] == 0 or self.meanLengths[i][j] == 0):
+                if(self.euclideanDistances[i][j] == 0 or self.medianLengths[i][j] == 0):
                     u = 1.0
                 else:
                     # Ratio between mean length and goal-to-goal distance
-                    u = self.meanLengths[i][j]/self.euclideanDistances[i][j]
+                    u = self.medianLengths[i][j]/self.euclideanDistances[i][j]
                 self.units[i][j] = u
 
     # Fills in the probability transition matrix gi -> gj
-    def compute_prior_transitions(self,pathMat):
+    def compute_prior_transitions(self,pathMat,epsilon=0.01):
         for i in range(self.goals_n):
             count = 0.
+            # Total count of trajectories outgoing from i
             for j in range(self.goals_n):
                 count += len(pathMat[i][j])
             for j in range(self.goals_n):
                 if count == 0:
-                    self.priorTransitions[i][j] = 0.
+                    self.priorTransitions[i][j] = epsilon
                 else:
-                    val = float(len(pathMat[i][j])/count)
-                    self.priorTransitions[i][j] = truncate(val,8)
+                    val = float(len(pathMat[i][j]))/count
+                    self.priorTransitions[i][j] = max(epsilon,float(truncate(val,8)))
             s = np.sum(self.priorTransitions[i])
             if s > 0.0 and s < 1.0:
                 d = truncate(1.0 - s,8)
@@ -145,7 +156,7 @@ class goal_pairs:
             for j in range(self.goals_n):
                 # Get the set of paths that go from i to j
                 paths = trainingSet[i][j]
-                # We define a GP only if we have enough trajectories
+                # We optimize a GP only if we have enough trajectories
                 if len(paths) > self.min_traj_number:
                     start = timeit.default_timer()
                     # Get the path data as x,y,z (z is arclength)
@@ -180,6 +191,20 @@ class goal_pairs:
                 else:
                     self.kernelsX[i][j] = None
                     self.kernelsY[i][j] = None
+
+    def copyFromClosest(self,start,k):
+        # When we have no data for a goal, we instantiate one with Parameters equal to the closest one
+        j = self.closest(start,k)
+        # Build a kernel with the specified type and initial parameters theta
+        self.kernelsX[start][k]   = set_kernel(self.kernelsX[start][j].type)
+        # Copying from j
+        self.kernelsX[start][k].set_parameters(self.kernelsX[start][j].get_parameters())
+        # TODO: should update the linear term to the line
+        logging.info("Full parameters for x: {}".format(self.kernelsX[start][k].get_parameters()))
+        # Copying from j
+        self.kernelsY[start][k].set_parameters(self.kernelsY[start][j].get_parameters())
+        logging.info("Full parameters for y: {}".format(self.kernelsY[start][k].get_parameters()))
+        return j
 
     # Fills in the probability transition matrix
     def compute_time_transitions(self, trMat):

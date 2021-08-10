@@ -2,7 +2,7 @@
 A class for GP-based path regression
 """
 import numpy as np
-import math
+import math, logging
 from gp_code.regression import *
 from gp_code.likelihood import nearestPD
 from gp_code.sampling import *
@@ -49,7 +49,7 @@ class path1D_regression:
         # Number of data we will use
         k       = int(np.log(self.n)/np.log(1+self.epsilonSel))
         l2      = np.array(range(2,k+1))
-        idx     = self.n-(np.power(1+self.epsilonSel,l2)).astype(int)
+        idx     = np.flip(self.n-(np.power(1+self.epsilonSel,l2)).astype(int))
         return observedL[idx],observedX[idx]
 
     # Update observations for the Gaussian process
@@ -117,12 +117,16 @@ class path1D_regression:
     # Compute the log-likelihood for this coordinates
     def loglikelihood_from_partial_path(self):
         if self.Kp_1_3m is None:
+            logging.info("Not enough observations to compute likelihood")
             return 1.0
         # We remove the last element (corresponds to goal)
-        mL        = np.max(self.observedL_3m[:-1,0])
-        idx       = self.observedL>mL
-        predictedL= self.observedL[idx].reshape((-1,1))
-        trueX     = self.observedX[idx].reshape((-1,1))
+        mL        = np.max(self.observedL_3m[:,0])
+        idx       = self.observedL[:-1]>mL
+        if idx.any()==False:
+            logging.info("Not enough observations to compute likelihood")
+            return 1.0
+        predictedL= self.observedL[:-1][idx].reshape((-1,1))
+        trueX     = self.observedX[:-1][idx].reshape((-1,1))
         k_3m      = self.kernel(self.observedL_3m[:,0],predictedL[:,0])
         C_3m      = self.kernel(predictedL[:,0],predictedL[:,0])
         # Predictive mean
