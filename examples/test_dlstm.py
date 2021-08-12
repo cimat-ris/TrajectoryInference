@@ -8,10 +8,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../t
 
 #import trajnetplusplustools
 from trajnetplusplusbaselines.trajnetbaselines.lstm import LSTMPredictor
-
+from trajnetplusplustools.reader import Reader
 ## Parallel Compute
 import multiprocessing
-from joblib import Parallel, delayed
 from tqdm import tqdm
 
 def process_scene(predictor, model_name, paths, scene_goal, args):
@@ -42,6 +41,8 @@ def main():
                         help='noise thresh')
     parser.add_argument('--ped_type', default='primary',
                         help='type of ped to add noise to')
+    parser.add_argument('--normalize_scene', action='store_true',
+                        help='augment scenes')
 
     args = parser.parse_args()
 
@@ -97,17 +98,24 @@ def main():
             # if 'collision_test' in name:
             #    continue
 
-            ## Filter for Scene Type
-            # reader_tag = trajnetplusplustools.Reader(args.path.replace('_pred', '_private') + dataset + '.ndjson', scene_type='tags')
-            # if args.scene_type != 0:
-            #     filtered_scene_ids = [s_id for s_id, tag, s in reader_tag.scenes() if tag[0] == args.scene_type]
-            # else:
-            #     filtered_scene_ids = [s_id for s_id, _, _ in reader_tag.scenes()]
-
-            # Read file from 'test'
-            # reader = trajnetplusplustools.Reader(args.path.replace('_pred', '') + dataset + '.ndjson', scene_type='paths')
-            ## Necessary modification of train scene to add filename (for goals)
-            # scenes = [(dataset, s_id, s) for s_id, s in reader.scenes() if s_id in filtered_scene_ids]
+    ## Filter for Scene Type
+    reader_tag = Reader('/home/jbhayet/opt/repositories/devel/trajnet++/trajnetplusplusbaselines/DATA_BLOCK/trajdata/test/biwi_hotel.ndjson', scene_type='tags')
+    if args.scene_type != 0:
+        filtered_scene_ids = [s_id for s_id, tag, s in reader_tag.scenes() if tag[0] == args.scene_type]
+    else:
+        filtered_scene_ids = [s_id for s_id, _, _ in reader_tag.scenes()]
+    print(filtered_scene_ids)
+    # Read file from 'test'
+    reader = Reader('/home/jbhayet/opt/repositories/devel/trajnet++/trajnetplusplusbaselines/DATA_BLOCK/trajdata/test/biwi_hotel.ndjson', scene_type='paths')
+    scenes = reader.scenes()
+    for s_id, paths in reader.scenes():
+        if s_id in filtered_scene_ids:
+            print(s_id)
+            predictions = predictor(paths, np.zeros((len(paths), 2)), n_predict=args.pred_length, obs_length=args.obs_length, modes=3, args=args)
+            print(predictions[0][0].shape)
+            print(predictions[0][1].shape)
+    # Necessary modification of train scene to add filename (for goals)
+    #scenes = [(dataset, s_id, s) for s_id, s in reader.scenes() if s_id in filtered_scene_ids]
 
             ## Consider goals
             ## Goal file must be present in 'goal_files/test_private' folder
@@ -125,7 +133,8 @@ def main():
             # print("Getting Predictions")
             # scenes = tqdm(scenes)
             ## Get all predictions in parallel. Faster!
-            # pred_list = Parallel(n_jobs=12)(delayed(process_scene)(predictor, model_name, paths, scene_goal, args)
+
+    #pred_list = Parallel(n_jobs=12)(delayed(process_scene)(predictor, model_name, paths, scene_goal, args)
             #                                for (_, _, paths), scene_goal in zip(scenes, scene_goals))
 
             ## GT Scenes
