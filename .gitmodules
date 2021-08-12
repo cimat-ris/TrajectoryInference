@@ -1,0 +1,6 @@
+[submodule "trajnetplusplusbaselines"]
+	path = trajnetplusplusbaselines
+	url = git@github.com:vita-epfl/trajnetplusplusbaselines.git
+[submodule "trajnetplusplustools"]
+	path = trajnetplusplustools
+	url = git@github.com:vita-epfl/trajnetplusplustools.git
