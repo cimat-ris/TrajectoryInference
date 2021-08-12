@@ -112,6 +112,11 @@ def main():
         if s_id in filtered_scene_ids:
             print(s_id)
             predictions = predictor(paths, np.zeros((len(paths), 2)), n_predict=args.pred_length, obs_length=args.obs_length, modes=3, args=args)
+            # Predictions are given that way:
+            # * dictionnary, indexed by the mode.
+            # * for each mode, a list of two elements
+            # * first element is the prediction for the pedestrian of interest (12x2)
+            # * second element is the prediction for the other pedestrians (12xnx2)
             print(predictions[0][0].shape)
             print(predictions[0][1].shape)
     # Necessary modification of train scene to add filename (for goals)
