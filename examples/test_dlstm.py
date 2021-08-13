@@ -1,22 +1,20 @@
-import os,sys,pickle,argparse
+import os,sys,pickle,argparse,logging
 from collections import OrderedDict
+from test_common import *
 import numpy as np
 import scipy
 import torch
+import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../trajnetplusplustools')))
 
 #import trajnetplusplustools
 from trajnetplusplusbaselines.trajnetbaselines.lstm import LSTMPredictor
 from trajnetplusplustools.reader import Reader
+from trajnetplusplustools.data import TrackRow
 ## Parallel Compute
 import multiprocessing
 from tqdm import tqdm
-
-def process_scene(predictor, model_name, paths, scene_goal, args):
-    ## For each scene, get predictions
-    predictions = predictor(paths, scene_goal, n_predict=args.pred_length, obs_length=args.obs_length, modes=args.modes, args=args)
-    return predictions
 
 def main():
     parser = argparse.ArgumentParser()
@@ -43,16 +41,67 @@ def main():
                         help='type of ped to add noise to')
     parser.add_argument('--normalize_scene', action='store_true',
                         help='augment scenes')
+    parser.add_argument('--dataset_id', '--id',default='GCS',help='dataset id, GCS or EIF (default: GCS)')
+    parser.add_argument('--log_level',type=int, default=20,help='Log level (default: 20)')
+    parser.add_argument('--log_file',default='',help='Log file (default: standard output)')
+    parser.add_argument('--pickle', dest='pickle', action='store_true',help='uses previously pickled data')
+    parser.add_argument('--start', dest='start',type=int, default=0,help='Specify starting goal')
 
     args = parser.parse_args()
 
     np.seterr('ignore')
 
-    ## Path to the data folder name to predict
-    args.path = 'DATA_BLOCK/' + args.path + '/'
+    if args.log_file=='':
+        logging.basicConfig(format='%(levelname)s: %(message)s',level=args.log_level)
+    else:
+        logging.basicConfig(filename=args.log_file,format='%(levelname)s: %(message)s',level=args.log_level)
 
-    ## Test_pred: Folders for saving model predictions
-    args.path = args.path + 'test_pred/'
+    # Read the areas file, dataset, and form the goalsLearnedStructure object
+    imgGCS           = './datasets/GC/reference.jpg'
+    coordinates      = 'world'
+
+    traj_dataset, goalsData, trajMat, __ = read_and_filter(args.dataset_id,coordinate_system=coordinates,use_pickled_data=args.pickle)
+
+    # Selection of the kernel type
+    kernelType  = "linePriorCombined"
+    nParameters = 4
+
+    # Read the kernel parameters from file
+    goalsData.kernelsX = read_and_set_parameters('parameters/linearpriorcombined20x20_GCS_img_x.txt',nParameters)
+    goalsData.kernelsY = read_and_set_parameters('parameters/linearpriorcombined20x20_GCS_img_y.txt',nParameters)
+
+    """******************************************************************************"""
+    """**************    Testing                           **************************"""
+    # We give the start and ending goals and the index of the trajectory to predict
+    startG = args.start
+    flag = True
+    while flag:
+        nextG = random.randrange(goalsData.goals_n)
+        if len(trajMat[startG][nextG]) > 0:
+            pathId = random.randrange( len(trajMat[startG][nextG]))
+            flag = False
+
+    # Get the ground truth path
+    _path = trajMat[startG][nextG][pathId]
+    # Get the path data
+    pathX, pathY, pathT = _path
+    pathL = trajectory_arclength(_path)
+    # Total path length
+    pathSize = len(pathX)
+
+    # Divides the trajectory in part_num parts and consider
+    part_num = 5
+    knownN = int(3*(pathSize/part_num)) #numero de datos conocidos
+    observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
+
+    # Take the last 9 observations
+    past = observations[-9:]
+    rows = [[]]
+    logging.info("Observed:")
+    logging.info("{}".format(past[:,0:2]))
+    for i in range(9):
+        row = TrackRow(past[i][2],10,past[i][0],past[i][1], None, 0)
+        rows[0].append(row)
 
     if (not args.unimodal) and (not args.topk) and (not args.multimodal):
         args.unimodal = True # Compute unimodal metrics by default
@@ -63,13 +112,6 @@ def main():
     if args.multimodal:
         args.modes = 20
 
-    enable_col1 = True
-    ## drop pedestrians that appear post observation
-    def drop_post_obs(ground_truth, obs_length):
-        obs_end_frame = ground_truth[0][obs_length].frame
-        ground_truth = [track for track in ground_truth if track[0].frame < obs_end_frame]
-        return ground_truth
-
     predictor = LSTMPredictor.load("lstm_directional_None.pkl")
     goal_flag = predictor.model.goal_flag
 
@@ -77,76 +119,15 @@ def main():
     device = torch.device('cpu')
     predictor.model.to(device)
 
-    total_scenes = 0
-    average = 0
-    final = 0
-    gt_col = 0.
-    pred_col = 0.
-    neigh_scenes = 0
-    topk_average = 0
-    topk_final = 0
-    all_goals = {}
-    average_nll = 0
+    predictions = predictor(rows, np.zeros((len(rows), 2)), n_predict=args.pred_length, obs_length=args.obs_length, modes=3, args=args)
+    logging.info("Predicted:")
+    logging.info("{}".format(predictions[0][0]))
 
-        ## Start writing in dataset/test_pred
-        # for dataset in datasets:
-            # Model's name
-            # name = dataset.replace(args.path.replace('_pred', '') + 'test/', '')
-
-            # Copy file from test into test/train_pred folder
-            # print('processing ' + name)
-            # if 'collision_test' in name:
-            #    continue
-
-    ## Filter for Scene Type
-    reader_tag = Reader('/home/jbhayet/opt/repositories/devel/trajnet++/trajnetplusplusbaselines/DATA_BLOCK/trajdata/test/biwi_hotel.ndjson', scene_type='tags')
-    if args.scene_type != 0:
-        filtered_scene_ids = [s_id for s_id, tag, s in reader_tag.scenes() if tag[0] == args.scene_type]
-    else:
-        filtered_scene_ids = [s_id for s_id, _, _ in reader_tag.scenes()]
-    print(filtered_scene_ids)
-    # Read file from 'test'
-    reader = Reader('/home/jbhayet/opt/repositories/devel/trajnet++/trajnetplusplusbaselines/DATA_BLOCK/trajdata/test/biwi_hotel.ndjson', scene_type='paths')
-    scenes = reader.scenes()
-    for s_id, paths in reader.scenes():
-        if s_id in filtered_scene_ids:
-            print(s_id)
-            predictions = predictor(paths, np.zeros((len(paths), 2)), n_predict=args.pred_length, obs_length=args.obs_length, modes=3, args=args)
-            # Predictions are given that way:
-            # * dictionnary, indexed by the mode.
-            # * for each mode, a list of two elements
-            # * first element is the prediction for the pedestrian of interest (12x2)
-            # * second element is the prediction for the other pedestrians (12xnx2)
-            print(predictions[0][0].shape)
-            print(predictions[0][1].shape)
-    # Necessary modification of train scene to add filename (for goals)
-    #scenes = [(dataset, s_id, s) for s_id, s in reader.scenes() if s_id in filtered_scene_ids]
-
-            ## Consider goals
-            ## Goal file must be present in 'goal_files/test_private' folder
-            ## Goal file must have the same name as corresponding test file
-            # if goal_flag:
-            #    goal_dict = pickle.load(open('goal_files/test_private/' + dataset +'.pkl', "rb"))
-            #    all_goals[dataset] = {s_id: [goal_dict[path[0].pedestrian] for path in s] for _, s_id, s in scenes}
-
-            ## Get Goals
-            # if goal_flag:
-            #     scene_goals = [np.array(all_goals[filename][scene_id]) for filename, scene_id, _ in scenes]
-            # else:
-            #     scene_goals = [np.zeros((len(paths), 2)) for _, scene_id, paths in scenes]
-
-            # print("Getting Predictions")
-            # scenes = tqdm(scenes)
-            ## Get all predictions in parallel. Faster!
-
-    #pred_list = Parallel(n_jobs=12)(delayed(process_scene)(predictor, model_name, paths, scene_goal, args)
-            #                                for (_, _, paths), scene_goal in zip(scenes, scene_goals))
-
-            ## GT Scenes
-            # reader_gt = trajnetplusplustools.Reader(args.path.replace('_pred', '_private') + dataset + '.ndjson', scene_type='paths')
-            # scenes_gt = [s for s_id, s in reader_gt.scenes() if s_id in filtered_scene_ids]
-            # total_scenes += len(scenes_gt)
-
+    #
+    plt.figure(1)
+    plt.plot(predictions[0][0][:,0],predictions[0][0][:,1],'r')
+    plt.plot(past[:,0],past[:,1],'b')
+    plt.show()
 
 if __name__ == '__main__':
     main()
