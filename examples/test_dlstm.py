@@ -62,71 +62,65 @@ def main():
 
     traj_dataset, goalsData, trajMat, __ = read_and_filter(args.dataset_id,coordinate_system=coordinates,use_pickled_data=args.pickle)
 
-    # Selection of the kernel type
-    kernelType  = "linePriorCombined"
-    nParameters = 4
-
-    # Read the kernel parameters from file
-    goalsData.kernelsX = read_and_set_parameters('parameters/linearpriorcombined20x20_GCS_img_x.txt',nParameters)
-    goalsData.kernelsY = read_and_set_parameters('parameters/linearpriorcombined20x20_GCS_img_y.txt',nParameters)
-
     """******************************************************************************"""
     """**************    Testing                           **************************"""
-    # We give the start and ending goals and the index of the trajectory to predict
-    startG = args.start
-    flag = True
-    while flag:
-        nextG = random.randrange(goalsData.goals_n)
-        if len(trajMat[startG][nextG]) > 0:
-            pathId = random.randrange( len(trajMat[startG][nextG]))
-            flag = False
 
-    # Get the ground truth path
-    _path = trajMat[startG][nextG][pathId]
-    # Get the path data
-    pathX, pathY, pathT = _path
-    pathL = trajectory_arclength(_path)
-    # Total path length
-    pathSize = len(pathX)
-
-    # Divides the trajectory in part_num parts and consider
-    part_num = 5
-    knownN = int(3*(pathSize/part_num)) #numero de datos conocidos
-    observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
-
-    # Take the last 9 observations
-    past = observations[-9:]
-    rows = [[]]
-    logging.info("Observed:")
-    logging.info("{}".format(past[:,0:2]))
-    for i in range(9):
-        row = TrackRow(past[i][2],10,past[i][0],past[i][1], None, 0)
-        rows[0].append(row)
-
-    if (not args.unimodal) and (not args.topk) and (not args.multimodal):
-        args.unimodal = True # Compute unimodal metrics by default
-
-    if args.topk:
-        args.modes = 3
-
-    if args.multimodal:
-        args.modes = 20
-
-    predictor = LSTMPredictor.load("lstm_directional_None.pkl")
-    goal_flag = predictor.model.goal_flag
-
+    # Instanciate a predictor
+    predictor = LSTMPredictor.load("parameters/lstm_directional_None.pkl")
     # On CPU
     device = torch.device('cpu')
     predictor.model.to(device)
 
-    predictions = predictor(rows, np.zeros((len(rows), 2)), n_predict=args.pred_length, obs_length=args.obs_length, modes=3, args=args)
-    logging.info("Predicted:")
-    logging.info("{}".format(predictions[0][0]))
+    # We give the start and ending goals and the index of the trajectory to predict
+    startG = args.start
 
+    # Modes
+    args.mode = 3
+
+    # We sample 10 paths starting from this goal
+    observations = []
+    predictions  = []
+    ground_truth = []
+
+    for s in range(20):
+        flag = True
+        while flag:
+            nextG = random.randrange(goalsData.goals_n)
+            if len(trajMat[startG][nextG]) > 0:
+                pathId = random.randrange( len(trajMat[startG][nextG]))
+                if len(trajMat[startG][nextG][pathId][0])>9:
+                    flag = False
+
+        # Get the ground truth path
+        _path = trajMat[startG][nextG][pathId]
+        # Get the path data
+        pathX, pathY, pathT = _path
+        pathL = trajectory_arclength(_path)
+        # Total path length
+        pathSize = len(pathX)
+        # Divides the trajectory in part_num parts and consider
+        part_num = 5
+        knownN = int(3*(pathSize/part_num)) #numero de datos conocidos
+        obs, gt = observed_data([pathX,pathY,pathL,pathT],knownN)
+        observations.append(obs)
+        ground_truth.append(gt)
+
+        # Take the last 9 observations
+        input= [[]]
+        past = obs[-9:]
+        for i in range(9):
+            input[0].append(TrackRow(past[i][2],10,past[i][0],past[i][1], None, 0))
+
+        # Output is the following:
+        # * Dictionnary of modes
+        # * Each mode element is a list of agents. 0 is the agent of interest.
+        preds = predictor(input, np.zeros((len(input), 2)), n_predict=args.pred_length, obs_length=args.obs_length, modes=3, args=args)
+        predictions.append(preds[0][0])
     #
     plt.figure(1)
-    plt.plot(predictions[0][0][:,0],predictions[0][0][:,1],'r')
-    plt.plot(past[:,0],past[:,1],'b')
+    for s in range(10):
+        plt.plot(predictions[s][:,0],predictions[s][:,1],'r')
+        plt.plot(observations[s][:,0],observations[s][:,1],'b')
     plt.show()
 
 if __name__ == '__main__':
