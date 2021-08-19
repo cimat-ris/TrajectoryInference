@@ -10,7 +10,7 @@ from utils.stats_trajectories import trajectory_arclength, trajectory_speeds
 from gp_code.mGP_trajectory_prediction import mGP_trajectory_prediction
 from utils.plotting import plotter, plot_path_samples
 from utils.plotting import animate_multiple_predictions_and_goal_likelihood
-from gp_code.likelihood import ADE
+from gp_code.likelihood import ADE, FDE
 import matplotlib.pyplot as plt
 import statistics
 import numpy as np
@@ -73,8 +73,11 @@ def main():
     nsamples = 5
         
     ade = [[], [], [] ] # ade for 25%, 50% and 75% of observed data
+    fde = [[], [], [] ]
     for i in range(test_trajectories_matrix.shape[0]):
+        print('[INF] row ',i,'/',test_trajectories_matrix.shape[0])
         for j in range(test_trajectories_matrix.shape[1]):
+            print('[INF] column ',j,'/',test_trajectories_matrix.shape[1])
             for tr in test_trajectories_matrix[i][j]:
                 # Prediction of single paths with a mixture model
                 mgps     = mGP_trajectory_prediction(i,goalsData)
@@ -102,14 +105,29 @@ def main():
                         pred_ade.append(ADE(gt, path))
                         
                     samples_ade = []
+                    samples_fde = []
                     for path in paths:
                         samples_ade.append(ADE(gt, path))
+                        samples_fde.append(FDE([gt[-1,0],gt[-1,1]], [path[-1,0],path[-1,1]] ))
                     
                     ade[k-1].append(min(samples_ade))
+                    fde[k-1].append(min(samples_fde))
     print('------ADE------')
     print(ade)
+    print('------FDE------')
+    print(fde)
     print('Plotting median ade')
-    plt.plot([25,50,75],[statistics.median(ade[0]), statistics.median(ade[1]), statistics.median(ade[2])])
+    #plt.plot([25,50,75],[statistics.median(ade[0]), statistics.median(ade[1]), statistics.median(ade[2])])
+    print('Plotting mean ade')
+    #plt.plot([25,50,75],[np.mean(np.array(ade[0])), np.mean(np.array(ade[1])), np.mean(np.array(ade[2]))])
+    f, (ax1,ax2) = plt.subplots(1,2)
+    ax1.plot([25,50,75],[statistics.median(ade[0]), statistics.median(ade[1]), statistics.median(ade[2])])
+    ax1.set_title('Median ADE')
+    ax2.plot([25,50,75],[np.mean(np.array(ade[0])), np.mean(np.array(ade[1])), np.mean(np.array(ade[2]))])
+    ax2.set_title('Mean ADE')
+    ax1.set(xlabel='Percentage of observed data', ylabel='ADE error in pixels')
+
+
 #TODO: plot error
     
 if __name__ == '__main__':
