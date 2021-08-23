@@ -33,8 +33,8 @@ def ADE(true_xy, prediction_xy):
     r      = np.sqrt( (true_x - pred_x)**2 + (true_y - pred_y)**2 )
     return np.mean(r)
 
-# The distance between the predicted final destination and the true final destination
-def final_displacement_error(final, predicted_final):
+# Final displacement error
+def FDE(final, predicted_final):
     error = math.sqrt((final[0]-predicted_final[0])**2 + (final[1]-predicted_final[1])**2)
     return error
 
