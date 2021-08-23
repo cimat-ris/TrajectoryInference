@@ -102,7 +102,8 @@ def main():
                     
                     pred_ade = []
                     for path in predictedXYVec:
-                        pred_ade.append(ADE(gt, path))
+                        if path[0] is not None:
+                            pred_ade.append(ADE(gt, path))
                         
                     samples_ade = []
                     samples_fde = []
