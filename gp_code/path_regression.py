@@ -41,7 +41,8 @@ class path_regression:
             if self.dist < 1.0:
                 self.dist = 1.0
         else:
-            self.stepUnit = float(len(observations[:,2:3])/lastObs[2])
+            if lastObs[2] > 1:
+                self.stepUnit = float(len(observations[:,2:3])/lastObs[2])
             # Determine the set of arclengths (predictedL) to predict
             self.predictedL, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
 
