@@ -136,7 +136,7 @@ class path_regression:
             predictedL,predictedY,__=self.regression_y.predict_to_perturbed_finish_point_slow(deltaL,deltaY)
 
         if predictedX is None or predictedY is None:
-            return None,None,None
+            return None#,None,None
         # Generate a sample from this Gaussian distribution
         nx=self.regression_x.generate_random_variation()
         ny=self.regression_y.generate_random_variation()

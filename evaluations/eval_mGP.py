@@ -75,26 +75,25 @@ def main():
     ade = [[], [], [] ] # ade for 25%, 50% and 75% of observed data
     fde = [[], [], [] ]
     for i in range(test_trajectories_matrix.shape[0]):
-        print('[INF] row ',i,'/',test_trajectories_matrix.shape[0])
         for j in range(test_trajectories_matrix.shape[1]):
-            print('[INF] column ',j,'/',test_trajectories_matrix.shape[1])
             for tr in test_trajectories_matrix[i][j]:
                 # Prediction of single paths with a mixture model
                 mgps     = mGP_trajectory_prediction(i,goalsData)
                 arclen = trajectory_arclength(tr)
                 tr_data = [tr[0],tr[1],arclen,tr[2]] # data = [X,Y,L,T]
+                
                 path_size = len(arclen)
+                if path_size < 10:
+                    continue
                 
                 for k in range(1,part_num):
                     m = int((k)*(path_size/part_num))
-                    if m<2:
-                        continue
+                    #if m<2:
+                    #    continue
                     observations, ground_truth = observed_data(tr_data,m)
                     gt = np.concatenate([np.reshape(tr[0][m:],(-1,1)), np.reshape(tr[1][m:],(-1,1))], axis=1)                  
                     # Multigoal prediction
                     likelihoods  = mgps.update(observations)
-                    if(observations is None):
-                        print('Observations is None!')
                     #filteredPaths= mgps.filter()
                     predictedXYVec,varXYVec = mgps.predict_trajectory(compute_sqRoot=True)
                     logging.debug('Generating samples')
@@ -102,14 +101,19 @@ def main():
                     
                     pred_ade = []
                     for path in predictedXYVec:
-                        if path[0] is not None:
+                        if path is  None:
+                            print('Prediction is None!')
+                        else:
                             pred_ade.append(ADE(gt, path))
                         
                     samples_ade = []
                     samples_fde = []
                     for path in paths:
-                        samples_ade.append(ADE(gt, path))
-                        samples_fde.append(FDE([gt[-1,0],gt[-1,1]], [path[-1,0],path[-1,1]] ))
+                        if path is  None:
+                            print('Sample is None!')
+                        else:
+                            samples_ade.append(ADE(gt, path))
+                            samples_fde.append(FDE([gt[-1,0],gt[-1,1]], [path[-1,0],path[-1,1]] ))
                     
                     ade[k-1].append(min(samples_ade))
                     fde[k-1].append(min(samples_fde))
