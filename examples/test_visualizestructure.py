@@ -16,8 +16,11 @@ def main():
     parser.add_argument('--dataset_id', '--id',default='GCS',help='dataset id, GCS or EIF (default: GCS)')
     parser.add_argument('--log_level',type=int, default=20,help='Log level (default: 20)')
     parser.add_argument('--log_file',default='',help='Log file (default: standard output)')
-    parser.add_argument('--pickle', dest='pickle', action='store_true',help='uses previously pickled data')
+    parser.add_argument('--pickle', dest='pickle', action='store_true',help='Uses previously pickled data')
     parser.set_defaults(pickle=False)
+    parser.add_argument('--no_draw_trajs', dest='no_draw_trajs', action='store_true',help='Draws trajectories samples')
+    parser.set_defaults(no_draw_trajs=False)
+
     args = parser.parse_args()
     if args.log_file=='':
         logging.basicConfig(format='%(levelname)s: %(message)s',level=args.log_level)
@@ -26,37 +29,12 @@ def main():
 
     # Read the areas file, dataset, and form the goalsLearnedStructure object
     coordinates      = args.coordinates
-
-    # InD dataset
-    test_ind = False
-    if test_ind:
-        dataset_dir = "/home/jbhayet/opt/datasets/inD-dataset-v1.0/data/"
-        for i in range(32):
-            dataset_file= "{:02d}_tracks.csv".format(i)
-            traj_dataset= load_ind(dataset_dir+dataset_file)
-            traj_set    = traj_dataset.get_trajectories()
-            logging.info("Loaded InD set {:02d}, length: {:03d} ".format(i,len(traj_set)))
-
-    # GCS (Grand Central) dataset
-    test_gcs = False
-    if test_gcs:
-        dataset_dir = "./datasets/GC/Annotation/"
-        traj_dataset= load_gcs(dataset_dir)
-        traj_set    = traj_dataset.get_trajectories()
-        logging.info("Loaded gcs set, length: {:03d} ".format(len(traj_set)))
-
-    # Edinburgh dataset
-    test_edi = False
-    if test_edi:
-        dataset_dir = "./datasets/Edinburgh/annotations"
-        traj_dataset= load_edinburgh(dataset_dir)
-        traj_set    = traj_dataset.get_trajectories()
-        logging.info("Loaded Edinburgh set, length: {:03d} ".format(len(traj_set)))
-
-    img_bckgd        = './imgs/train_station.jpg'
-    img_bckgd        = './datasets/Edinburgh/edinburgh.jpg'
+    if args.dataset_id=='GCS':
+        img_bckgd        = './datasets/GC/reference.jpg'
+    else:
+        img_bckgd        = './datasets/Edinburgh/edinburgh.jpg'
     coordinates      ='img'
-    traj_dataset, goalsData, trajMat, __ = read_and_filter('EIF',coordinate_system=coordinates,use_pickled_data=args.pickle)
+    traj_dataset, goalsData, trajMat, __ = read_and_filter(args.dataset_id,coordinate_system=coordinates,use_pickled_data=args.pickle)
     logging.info("Number of trajectories: {:d}".format(len(traj_dataset)))
     # Plot trajectories and structure
     showDataset = True
@@ -64,7 +42,8 @@ def main():
     if coordinates=='img':
         p.set_background(img_bckgd)
     p.plot_scene_structure(goalsData,draw_ids=True)
-    p.plot_paths_samples_gt(trajMat,n_samples=1)
+    if args.no_draw_trajs==False:
+        p.plot_paths_samples_gt(trajMat,n_samples=1)
 
     p.save("structure.pdf")
     p.show()
