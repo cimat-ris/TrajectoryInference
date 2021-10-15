@@ -74,8 +74,9 @@ def main():
         
     ade = [[], [], [] ] # ade for 25%, 50% and 75% of observed data
     fde = [[], [], [] ]
-    for i in range(test_trajectories_matrix.shape[0]):
-        for j in range(test_trajectories_matrix.shape[1]):
+    end_goal = [0,0,0]
+    for i in range(10):#test_trajectories_matrix.shape[0]):
+        for j in range(10):#test_trajectories_matrix.shape[1]):
             for tr in test_trajectories_matrix[i][j]:
                 # Prediction of single paths with a mixture model
                 mgps     = mGP_trajectory_prediction(i,goalsData)
@@ -99,8 +100,9 @@ def main():
                     logging.debug('Generating samples')
                     paths = mgps.sample_paths(nsamples)
                     # Compare most likely goal and true goal
-                    print('Most likely goal:',mgps.mostLikelyGoal,' True goal:',j)
-
+                    #print('Most likely goal:',mgps.mostLikelyGoal,' True goal:',j)
+                    if mgps.mostLikelyGoal == j:
+                        end_goal[k-1] += 1
                     
                     pred_ade = []
                     for path in predictedXYVec:
@@ -121,18 +123,22 @@ def main():
                     ade[k-1].append(min(samples_ade))
                     fde[k-1].append(min(samples_fde))
 
-    
+    print(end_goal)
     print('Plotting mean ade')
     percent = [25,50,75]
+    plt.figure()
     plt.plot(percent,[np.mean(np.array(ade[0])), np.mean(np.array(ade[1])), np.mean(np.array(ade[2]))])    
     plt.xlabel('Percentage of observed data')
     plt.ylabel('Error in pixels')
-    plt.savefig('ade.png')
+    plt.show()
+    #plt.savefig('ade.png')
     
+    plt.figure()
     plt.plot(percent,[np.mean(np.array(fde[0])), np.mean(np.array(fde[1])), np.mean(np.array(fde[2]))])    
     plt.xlabel('Percentage of observed data')
     plt.ylabel('Error in pixels')
-    plt.savefig('fde.png')
+    #plt.savefig('fde.png')
+    plt.show()
     """
     f, (ax1,ax2) = plt.subplots(1,2)
     ax1.plot(percent,[statistics.median(ade[0]), statistics.median(ade[1]), statistics.median(ade[2])])
