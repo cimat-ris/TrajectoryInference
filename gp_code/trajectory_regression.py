@@ -14,9 +14,9 @@ trajectory_regression inherits from path_regression
 class trajectory_regression(path_regression):
 
     # Constructor
-    def __init__(self, kernelX, kernelY, sigmaNoise, speedModel, unit, finalArea, prior=0.0):
+    def __init__(self, kernelX, kernelY, sigmaNoise, speedModel, unit, finalArea, prior=0.0, mode=None, timeTransitionData=None):
         # Init of the base class
-        super(trajectory_regression, self).__init__(kernelX, kernelY, sigmaNoise, unit, finalArea, prior)
+        super(trajectory_regression, self).__init__(kernelX, kernelY, sigmaNoise, unit, finalArea, prior, mode, timeTransitionData)
         # Regression model for the relative value of speed
         self.speedModel       = speedModel
 
