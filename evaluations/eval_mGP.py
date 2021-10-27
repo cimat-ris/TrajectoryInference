@@ -16,6 +16,13 @@ import statistics
 import numpy as np
 import time, pickle
 
+def save_values(file_name, values):
+    with open(file_name+".txt", "w") as file:
+        for row in values:
+            s = " ".join(map(str, row))
+            file.write(s+'\n')
+
+
 def main():
     # Parsing arguments
     parser = argparse.ArgumentParser()
@@ -68,18 +75,20 @@ def main():
     # Read the kernel parameters from file
     goalsData.kernelsX = read_and_set_parameters("../parameters/linearpriorcombined20x20_GCS_img_x.txt",nParameters)
     goalsData.kernelsY = read_and_set_parameters("../parameters/linearpriorcombined20x20_GCS_img_y.txt",nParameters)
-
+    # Set mode
+    mode = 'Trautman'
+    
     part_num = 4
     nsamples = 5
         
     ade = [[], [], [] ] # ade for 25%, 50% and 75% of observed data
     fde = [[], [], [] ]
     end_goal = [0,0,0]
-    for i in range(10):#test_trajectories_matrix.shape[0]):
-        for j in range(10):#test_trajectories_matrix.shape[1]):
+    for i in range(3):#test_trajectories_matrix.shape[0]):
+        for j in range(3):#test_trajectories_matrix.shape[1]):
             for tr in test_trajectories_matrix[i][j]:
                 # Prediction of single paths with a mixture model
-                mgps     = mGP_trajectory_prediction(i,goalsData)
+                mgps     = mGP_trajectory_prediction(i,goalsData, mode=mode)
                 arclen = trajectory_arclength(tr)
                 tr_data = [tr[0],tr[1],arclen,tr[2]] # data = [X,Y,L,T]
                 
@@ -95,12 +104,12 @@ def main():
                     gt = np.concatenate([np.reshape(tr[0][m:],(-1,1)), np.reshape(tr[1][m:],(-1,1))], axis=1)                  
                     # Multigoal prediction
                     likelihoods  = mgps.update(observations)
-                    filteredPaths= mgps.filter()
+                    if mode != 'Trautman':
+                        filteredPaths= mgps.filter()
                     predictedXYVec,varXYVec = mgps.predict_trajectory(compute_sqRoot=True)
                     logging.debug('Generating samples')
                     paths = mgps.sample_paths(nsamples)
                     # Compare most likely goal and true goal
-                    #print('Most likely goal:',mgps.mostLikelyGoal,' True goal:',j)
                     if mgps.mostLikelyGoal == j:
                         end_goal[k-1] += 1
                     
@@ -120,10 +129,14 @@ def main():
                             samples_ade.append(ADE(gt, path))
                             samples_fde.append(FDE([gt[-1,0],gt[-1,1]], [path[-1,0],path[-1,1]] ))
                     
-                    ade[k-1].append(min(samples_ade))
-                    fde[k-1].append(min(samples_fde))
+                    ade[k-1].append(round(min(samples_ade),3))
+                    fde[k-1].append(round(min(samples_fde),3))
 
-    print(end_goal)
+    save_values('ade',ade)
+    save_values('fde',fde)
+    save_values('end_goal',[end_goal])
+    
+    print('traj mat shape:', test_trajectories_matrix.shape)
     print('Plotting mean ade')
     percent = [25,50,75]
     plt.figure()
