@@ -10,6 +10,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../t
 
 #import trajnetplusplustools
 from trajnetplusplusbaselines.trajnetbaselines.lstm import LSTMPredictor
+from trajnetplusplusbaselines.trajnetbaselines.vae import VAEPredictor
+from trajnetplusplusbaselines.trajnetbaselines.sgan import SGANPredictor
 from trajnetplusplustools.reader import Reader
 from trajnetplusplustools.data import TrackRow
 ## Parallel Compute
@@ -59,14 +61,20 @@ def main():
     # Read the areas file, dataset, and form the goalsLearnedStructure object
     imgGCS           = './datasets/GC/reference.jpg'
     coordinates      = 'world'
-
+    logging.info('Loading data')
     traj_dataset, goalsData, trajMat, __ = read_and_filter(args.dataset_id,coordinate_system=coordinates,use_pickled_data=args.pickle)
 
     """******************************************************************************"""
     """**************    Testing                           **************************"""
 
     # Instanciate a predictor
-    predictor = LSTMPredictor.load("parameters/lstm_directional_None.pkl")
+    # This one is a single output predictor
+    #predictor = LSTMPredictor.load("parameters/lstm_directional_None.pkl")
+    #predictor = VAEPredictor.load("parameters/vae_directional_None.pkl")
+    predictor = SGANPredictor.load("parameters/sgan_directional_None.pkl")
+    # Important note: These predictors are learned at 2.5fps. Here we have data at 25fps
+    scaleFPS = 5
+
     # On CPU
     device = torch.device('cpu')
     predictor.model.to(device)
@@ -75,14 +83,15 @@ def main():
     startG = args.start
 
     # Modes
-    args.mode = 3
+    args.mode = 10
 
     # We sample 10 paths starting from this goal
     observations = []
+    observations_used = []
     predictions  = []
     ground_truth = []
 
-    for s in range(20):
+    for s in range(10):
         flag = True
         while flag:
             nextG = random.randrange(goalsData.goals_n)
@@ -93,35 +102,44 @@ def main():
 
         # Get the ground truth path
         _path = trajMat[startG][nextG][pathId]
-        # Get the path data
+        # Get the path data (x,y,t,l)
         pathX, pathY, pathT = _path
         pathL = trajectory_arclength(_path)
         # Total path length
         pathSize = len(pathX)
-        # Divides the trajectory in part_num parts and consider
+        # Divides the trajectory in part_num parts and consider a first part of it
         part_num = 5
-        knownN = int(3*(pathSize/part_num)) #numero de datos conocidos
+        knownN = int(4*(pathSize/part_num)) #numero de datos conocidos
         obs, gt = observed_data([pathX,pathY,pathL,pathT],knownN)
-        observations.append(obs)
-        ground_truth.append(gt)
 
-        # Take the last 9 observations
+        # Take the last 9 observations to be used as input by the predictor
         input= [[]]
-        past = obs[-9:]
+        past = obs[-9*scaleFPS::scaleFPS]
+        print(past.shape)
+        if past.shape[0]<9:
+            continue
         for i in range(9):
             input[0].append(TrackRow(past[i][2],10,past[i][0],past[i][1], None, 0))
 
         # Output is the following:
         # * Dictionnary of modes
         # * Each mode element is a list of agents. 0 is the agent of interest.
-        preds = predictor(input, np.zeros((len(input), 2)), n_predict=args.pred_length, obs_length=args.obs_length, modes=3, args=args)
-        predictions.append(preds[0][0])
+        preds = predictor(input, np.zeros((len(input), 2)), n_predict=args.pred_length, obs_length=args.obs_length, modes=args.mode, args=args)
+        for l in range(args.mode):
+            predictions.append(preds[l][0])
+        ground_truth.append(gt)
+        observations.append(obs)
+        observations_used.append(past[:,0:2])
+
     #
-    plt.figure(1)
-    for s in range(10):
-        plt.plot(predictions[s][:,0],predictions[s][:,1],'r')
+    for s in range(len(ground_truth)):
+        plt.figure(1)
         plt.plot(observations[s][:,0],observations[s][:,1],'b')
-    plt.show()
+        plt.plot(observations_used[s][:,0],observations_used[s][:,1],'b+')
+        plt.plot(ground_truth[s][:,0],ground_truth[s][:,1],'g')
+        for l in range(args.mode):
+            plt.plot(predictions[s*args.mode+l][:,0],predictions[s*args.mode+l][:,1],'r')
+        plt.show()
 
 if __name__ == '__main__':
     main()
