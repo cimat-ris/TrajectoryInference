@@ -30,7 +30,7 @@ class onedim_regressionT:
         self.sigmaNoise      = sigmaNoise
         
     # Update observations for the Gaussian process (matrix K)
-    def update_observations(self,observedY,observedX,finalY,finalX,finalVar,predictedX):
+    def update_observations(self,observedY,observedX,finalY,finalX,finalVar,predictedX,consecutiveObservations=False):
         # Number of "real" observations (we add one: the final point) --> check!
         n                    = len(observedY)
         # Observations (x,y)

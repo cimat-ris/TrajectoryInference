@@ -16,6 +16,13 @@ import statistics
 import numpy as np
 import time, pickle
 
+def save_values(file_name, values):
+    with open(file_name+".txt", "w") as file:
+        for row in values:
+            s = " ".join(map(str, row))
+            file.write(s+'\n')
+
+
 def main():
     # Parsing arguments
     parser = argparse.ArgumentParser()
@@ -68,17 +75,20 @@ def main():
     # Read the kernel parameters from file
     goalsData.kernelsX = read_and_set_parameters("../parameters/linearpriorcombined20x20_GCS_img_x.txt",nParameters)
     goalsData.kernelsY = read_and_set_parameters("../parameters/linearpriorcombined20x20_GCS_img_y.txt",nParameters)
-
+    # Set mode
+    mode = 'Trautman'
+    
     part_num = 4
     nsamples = 5
         
     ade = [[], [], [] ] # ade for 25%, 50% and 75% of observed data
     fde = [[], [], [] ]
-    for i in range(test_trajectories_matrix.shape[0]):
-        for j in range(test_trajectories_matrix.shape[1]):
+    end_goal = [0,0,0]
+    for i in range(3):#test_trajectories_matrix.shape[0]):
+        for j in range(3):#test_trajectories_matrix.shape[1]):
             for tr in test_trajectories_matrix[i][j]:
                 # Prediction of single paths with a mixture model
-                mgps     = mGP_trajectory_prediction(i,goalsData)
+                mgps     = mGP_trajectory_prediction(i,goalsData, mode=mode)
                 arclen = trajectory_arclength(tr)
                 tr_data = [tr[0],tr[1],arclen,tr[2]] # data = [X,Y,L,T]
                 
@@ -94,10 +104,14 @@ def main():
                     gt = np.concatenate([np.reshape(tr[0][m:],(-1,1)), np.reshape(tr[1][m:],(-1,1))], axis=1)                  
                     # Multigoal prediction
                     likelihoods  = mgps.update(observations)
-                    #filteredPaths= mgps.filter()
+                    if mode != 'Trautman':
+                        filteredPaths= mgps.filter()
                     predictedXYVec,varXYVec = mgps.predict_trajectory(compute_sqRoot=True)
                     logging.debug('Generating samples')
                     paths = mgps.sample_paths(nsamples)
+                    # Compare most likely goal and true goal
+                    if mgps.mostLikelyGoal == j:
+                        end_goal[k-1] += 1
                     
                     pred_ade = []
                     for path in predictedXYVec:
@@ -115,25 +129,38 @@ def main():
                             samples_ade.append(ADE(gt, path))
                             samples_fde.append(FDE([gt[-1,0],gt[-1,1]], [path[-1,0],path[-1,1]] ))
                     
-                    ade[k-1].append(min(samples_ade))
-                    fde[k-1].append(min(samples_fde))
-    print('------ADE------')
-    print(ade)
-    print('------FDE------')
-    print(fde)
-    print('Plotting median ade')
-    #plt.plot([25,50,75],[statistics.median(ade[0]), statistics.median(ade[1]), statistics.median(ade[2])])
+                    ade[k-1].append(round(min(samples_ade),3))
+                    fde[k-1].append(round(min(samples_fde),3))
+
+    save_values('ade',ade)
+    save_values('fde',fde)
+    save_values('end_goal',[end_goal])
+    
+    print('traj mat shape:', test_trajectories_matrix.shape)
     print('Plotting mean ade')
-    #plt.plot([25,50,75],[np.mean(np.array(ade[0])), np.mean(np.array(ade[1])), np.mean(np.array(ade[2]))])
+    percent = [25,50,75]
+    plt.figure()
+    plt.plot(percent,[np.mean(np.array(ade[0])), np.mean(np.array(ade[1])), np.mean(np.array(ade[2]))])    
+    plt.xlabel('Percentage of observed data')
+    plt.ylabel('Error in pixels')
+    plt.show()
+    #plt.savefig('ade.png')
+    
+    plt.figure()
+    plt.plot(percent,[np.mean(np.array(fde[0])), np.mean(np.array(fde[1])), np.mean(np.array(fde[2]))])    
+    plt.xlabel('Percentage of observed data')
+    plt.ylabel('Error in pixels')
+    #plt.savefig('fde.png')
+    plt.show()
+    """
     f, (ax1,ax2) = plt.subplots(1,2)
-    ax1.plot([25,50,75],[statistics.median(ade[0]), statistics.median(ade[1]), statistics.median(ade[2])])
+    ax1.plot(percent,[statistics.median(ade[0]), statistics.median(ade[1]), statistics.median(ade[2])])
     ax1.set_title('Median ADE')
     ax2.plot([25,50,75],[np.mean(np.array(ade[0])), np.mean(np.array(ade[1])), np.mean(np.array(ade[2]))])
     ax2.set_title('Mean ADE')
     ax1.set(xlabel='Percentage of observed data', ylabel='ADE error in pixels')
+    """
 
-
-#TODO: plot error
     
 if __name__ == '__main__':
     main()
