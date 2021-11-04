@@ -10,8 +10,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../t
 
 #import trajnetplusplustools
 from trajnetplusplusbaselines.trajnetbaselines.lstm import LSTMPredictor
-from trajnetplusplusbaselines.trajnetbaselines.vae import VAEPredictor
-from trajnetplusplusbaselines.trajnetbaselines.sgan import SGANPredictor
 from trajnetplusplustools.reader import Reader
 from trajnetplusplustools.data import TrackRow
 ## Parallel Compute
@@ -24,7 +22,7 @@ def main():
                         help='directory of data to test')
     parser.add_argument('--model', nargs='+',
                         help='relative path to saved model')
-    parser.add_argument('--obs_length', default=9, type=int,
+    parser.add_argument('--obs_length', default=8, type=int,
                         help='observation length')
     parser.add_argument('--pred_length', default=12, type=int,
                         help='prediction length')
@@ -61,20 +59,15 @@ def main():
     # Read the areas file, dataset, and form the goalsLearnedStructure object
     imgGCS           = './datasets/GC/reference.jpg'
     coordinates      = 'world'
-    logging.info('Loading data')
+
     traj_dataset, goalsData, trajMat, __ = read_and_filter(args.dataset_id,coordinate_system=coordinates,use_pickled_data=args.pickle)
 
     """******************************************************************************"""
     """**************    Testing                           **************************"""
 
     # Instanciate a predictor
-    # This one is a single output predictor
     #predictor = LSTMPredictor.load("parameters/lstm_directional_None.pkl")
-    #predictor = VAEPredictor.load("parameters/vae_directional_None.pkl")
-    predictor = SGANPredictor.load("parameters/sgan_directional_None.pkl")
-    # Important note: These predictors are learned at 2.5fps. Here we have data at 25fps
-    scaleFPS = 5
-
+    predictor = LSTMPredictor.load("parameters/sgan_directional_None.pkl")
     # On CPU
     device = torch.device('cpu')
     predictor.model.to(device)
@@ -83,15 +76,16 @@ def main():
     startG = args.start
 
     # Modes
-    args.mode = 10
+    args.mode = 5
 
     # We sample 10 paths starting from this goal
     observations = []
-    observations_used = []
+    lastobservations = []
     predictions  = []
     ground_truth = []
 
-    for s in range(10):
+    tests = 10
+    for s in range(tests):
         flag = True
         while flag:
             nextG = random.randrange(goalsData.goals_n)
@@ -102,44 +96,49 @@ def main():
 
         # Get the ground truth path
         _path = trajMat[startG][nextG][pathId]
-        # Get the path data (x,y,t,l)
+        # Get the path data
         pathX, pathY, pathT = _path
         pathL = trajectory_arclength(_path)
         # Total path length
         pathSize = len(pathX)
-        # Divides the trajectory in part_num parts and consider a first part of it
+        # Divides the trajectory in part_num parts and consider
         part_num = 5
-        knownN = int(4*(pathSize/part_num)) #numero de datos conocidos
+        knownN = int(3*(pathSize/part_num)) #numero de datos conocidos
         obs, gt = observed_data([pathX,pathY,pathL,pathT],knownN)
 
-        # Take the last 9 observations to be used as input by the predictor
+        # Take the last 8 observations.
+        # Caution, Social-GAN has been trained at 2.5fps. Here in GC we are at 1.25fps
         input= [[]]
-        past = obs[-9*scaleFPS::scaleFPS]
-        print(past.shape)
-        if past.shape[0]<9:
+        #past = obs[-9::]
+        #print(past.shape)
+        past = []
+        for k in reversed(range(4)):
+            past.append(0.5*(obs[-k-1]+obs[-k]))
+            past.append(obs[-k])
+        past = np.array(past)
+        if (past.shape[0]<8):
             continue
-        for i in range(9):
+        for i in range(8):
             input[0].append(TrackRow(past[i][2],10,past[i][0],past[i][1], None, 0))
 
         # Output is the following:
         # * Dictionnary of modes
         # * Each mode element is a list of agents. 0 is the agent of interest.
         preds = predictor(input, np.zeros((len(input), 2)), n_predict=args.pred_length, obs_length=args.obs_length, modes=args.mode, args=args)
-        for l in range(args.mode):
-            predictions.append(preds[l][0])
-        ground_truth.append(gt)
+        predictions.append(preds)
         observations.append(obs)
-        observations_used.append(past[:,0:2])
+        lastobservations.append(obs[-4:])
+        ground_truth.append(gt)
 
     #
-    for s in range(len(ground_truth)):
-        plt.figure(1)
-        plt.plot(observations[s][:,0],observations[s][:,1],'b')
-        plt.plot(observations_used[s][:,0],observations_used[s][:,1],'b+')
-        plt.plot(ground_truth[s][:,0],ground_truth[s][:,1],'g')
-        for l in range(args.mode):
-            plt.plot(predictions[s*args.mode+l][:,0],predictions[s*args.mode+l][:,1],'r')
-        plt.show()
+    plt.figure(1)
+    for s,pred in enumerate(predictions):
+        for k in range(args.mode):
+            mode =pred[k][0]
+            plt.plot(mode[:,0],mode[:,1],'r')
+        plt.plot(observations[s][:,0],observations[s][:,1],'b--')
+        plt.plot(lastobservations[s][:,0],lastobservations[s][:,1],'b')
+    plt.show()
 
 if __name__ == '__main__':
     main()
