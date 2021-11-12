@@ -7,7 +7,7 @@ import torch
 import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../trajnetplusplustools')))
-
+from utils.manip_trajectories import start_time, end_time, get_trajectories_given_time_interval, get_goal_of_point
 #import trajnetplusplustools
 from trajnetplusplusbaselines.trajnetbaselines.lstm import LSTMPredictor
 from trajnetplusplustools.reader import Reader
@@ -60,7 +60,8 @@ def main():
     imgGCS           = './datasets/GC/reference.jpg'
     coordinates      = 'world'
 
-    traj_dataset, goalsData, trajMat, __ = read_and_filter(args.dataset_id,coordinate_system=coordinates,use_pickled_data=args.pickle)
+    traj_dataset, goalsData, trajMat, filtered = read_and_filter(args.dataset_id,coordinate_system=coordinates,use_pickled_data=args.pickle)
+    filtered.sort(key=start_time)
 
     """******************************************************************************"""
     """**************    Testing                           **************************"""
@@ -94,8 +95,13 @@ def main():
                 if len(trajMat[startG][nextG][pathId][0])>9:
                     flag = False
 
+
         # Get the ground truth path
         _path = trajMat[startG][nextG][pathId]
+        stime = start_time(_path)
+        etime = end_time(_path)
+        #trajs = get_trajectories_given_time_interval(filtered, stime, etime)
+        #print(trajs)
         # Get the path data
         pathX, pathY, pathT = _path
         pathL = trajectory_arclength(_path)
@@ -106,13 +112,12 @@ def main():
         knownN = int(3*(pathSize/part_num)) #numero de datos conocidos
         obs, gt = observed_data([pathX,pathY,pathL,pathT],knownN)
 
-        # Take the last 8 observations.
-        # Caution, Social-GAN has been trained at 2.5fps. Here in GC we are at 1.25fps
+        # Take the last 4 observations.
+        # Caution, Social-GAN has been trained at 2.5fps. Here in GC we are at 1.25fps: So we interpolate!
         input= [[]]
-        #past = obs[-9::]
-        #print(past.shape)
         past = []
         for k in reversed(range(4)):
+            # This position is interpolated!
             past.append(0.5*(obs[-k-1]+obs[-k]))
             past.append(obs[-k])
         past = np.array(past)
@@ -126,7 +131,9 @@ def main():
         # * Each mode element is a list of agents. 0 is the agent of interest.
         preds = predictor(input, np.zeros((len(input), 2)), n_predict=args.pred_length, obs_length=args.obs_length, modes=args.mode, args=args)
         predictions.append(preds)
+        # To visualize the whole set of observations
         observations.append(obs)
+        # To visualize the observations used to perform the short-term prediction
         lastobservations.append(obs[-4:])
         ground_truth.append(gt)
 
