@@ -86,8 +86,12 @@ def filter_traj_matrix(raw_path_set_matrix):
 def start_time(traj):
     return traj[2][0]
 
+def end_time(traj):
+    return traj[2][-1]
+
+# For a set of trajectories, determine those that have some timestamps in the [start_time, finish_time] interval
 def get_trajectories_given_time_interval(trajectories, start_time, finish_time):
-    # Note: the list of trajectories is sorted by initial time
+    # Note: the list of trajectories should be initially sorted by initial time
     n = len(trajectories)
     if n == 0:
         logging.error("Empty set")
@@ -98,11 +102,13 @@ def get_trajectories_given_time_interval(trajectories, start_time, finish_time):
     t = start_time
     while(t <= finish_time):
         tr = trajectories[i]
-        t = tr[2][0]
-        if(start_time <= t and t <= finish_time):
+        # Starting time
+        st  = tr[2][0]
+        et  = tr[2][-1]
+        # TODO: is it necessary to have both conditions?
+        if(start_time <= et and st <= finish_time):
             traj_set.append(tr)
         i += 1
-
     return traj_set
 
 # Split a trajectory into sub-trajectories between pairs of goals
@@ -172,8 +178,8 @@ def get_linear_prior_mean(trajectories, flag):
         return [0.,0.,0.]
     lineParameters = np.array([ line_parameters(trajectories[i], flag) for i in range(n)])
     mean = [np.median(lineParameters[:,0]), np.median(lineParameters[:,1]) ]
-    var = [np.var(lineParameters[:,0]), np.var(lineParameters[:,1]) ]
-    cov = np.cov(lineParameters[:,0],lineParameters[:,1])
+    var  = [np.var(lineParameters[:,0]), np.var(lineParameters[:,1]) ]
+    cov  = np.cov(lineParameters[:,0],lineParameters[:,1])
     return mean, var
 
 def arclen_to_time(init_time, arclen, speed):
