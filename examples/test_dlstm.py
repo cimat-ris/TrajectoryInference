@@ -84,8 +84,8 @@ def main():
     lastobservations = []
     predictions  = []
     ground_truth = []
-
-    tests = 10
+    neighbors    = []
+    tests = 1
     for s in range(tests):
         flag = True
         while flag:
@@ -98,10 +98,10 @@ def main():
 
         # Get the ground truth path
         _path = trajMat[startG][nextG][pathId]
+        print(len(_path))
         stime = start_time(_path)
         etime = end_time(_path)
-        #trajs = get_trajectories_given_time_interval(filtered, stime, etime)
-        #print(trajs)
+        neighbors_trajs = get_trajectories_given_time_interval(filtered, stime, etime)
         # Get the path data
         pathX, pathY, pathT = _path
         pathL = trajectory_arclength(_path)
@@ -121,6 +121,15 @@ def main():
             past.append(0.5*(obs[-k-1]+obs[-k]))
             past.append(obs[-k])
         past = np.array(past)
+
+        neighbor_pos = []
+        for neighbor_traj in neighbors_trajs:
+            if len(neighbor_traj[0][neighbor_traj[2]==etime])==0:
+                continue
+            neighbor_pos.append(neighbor_traj[0][neighbor_traj[2]==etime])
+            neighbor_pos.append(neighbor_traj[1][neighbor_traj[2]==etime])
+        neighbor_pos = np.array(neighbor_pos)
+        neighbor_pos = neighbor_pos.reshape(-1,2)
         if (past.shape[0]<8):
             continue
         for i in range(8):
@@ -136,7 +145,7 @@ def main():
         # To visualize the observations used to perform the short-term prediction
         lastobservations.append(obs[-4:])
         ground_truth.append(gt)
-
+        neighbors.append(neighbor_pos)
     #
     plt.figure(1)
     for s,pred in enumerate(predictions):
@@ -145,6 +154,7 @@ def main():
             plt.plot(mode[:,0],mode[:,1],'r')
         plt.plot(observations[s][:,0],observations[s][:,1],'b--')
         plt.plot(lastobservations[s][:,0],lastobservations[s][:,1],'b')
+        plt.plot(neighbors[s][:,1],neighbors[s][:,0],'og')
     plt.show()
 
 if __name__ == '__main__':

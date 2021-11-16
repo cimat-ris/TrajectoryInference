@@ -14,7 +14,7 @@ def separate_trajectories_between_goals(trajectories, goals_areas):
             mat[i][j]       = []
     not_associated = []
     # For all trajectories
-    for idx,tr in enumerate(trajectories):
+    for tr in trajectories:
         x, y = tr[0], tr[1]
         traj_len = len(x)
         associated_to_goals = False
@@ -78,6 +78,7 @@ def filter_traj_matrix(raw_path_set_matrix):
             # If the list of trajectories is non-empty, filter it
             if(len(raw_path_set_matrix[i][j]) > 0):
                 filtered = filter_trajectories(raw_path_set_matrix[i][j])
+                print(filtered[0])
                 filtered_matrix[i][j].extend(filtered)
                 all_trajectories.extend(filtered)
 
@@ -100,7 +101,7 @@ def get_trajectories_given_time_interval(trajectories, start_time, finish_time):
     traj_set = []
     i = 0
     t = start_time
-    while(t <= finish_time):
+    while (t <= finish_time and i<n):
         tr = trajectories[i]
         # Starting time
         st  = tr[2][0]

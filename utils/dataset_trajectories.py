@@ -191,25 +191,9 @@ class TrajDataset:
         trajectories = [g for _, g in df.groupby(["scene_id", "agent_id"])]
         trl_np_list = []
         for trl in trajectories:
-            trl_np = trl[["pos_y", "pos_x", "vel_y", "vel_x", "timestamp"]].to_numpy()
+            trl_np = trl[["pos_y", "pos_x", "vel_y", "vel_x", "timestamp", "agent_id", "scene_id"]].to_numpy()
             trl_np_list.append(trl_np)
         return(trl_np_list)
-
-    # TODO:
-    def get_entries(self, agent_ids=[], frame_ids=[], label=""):
-        """
-        Returns a list of data entries
-        :param agent_ids: select specific agent ids, ignore if empty
-        :param frame_ids: select a time interval, ignore if empty  # TODO:
-        :param label: select agents from a specific label (e.g. car), ignore if empty # TODO:
-        :return list of data entries
-        """
-        output_table = self.data  # no filter
-        if agent_ids:
-            output_table = output_table[output_table["agent_id"].isin(agent_ids)]
-        if frame_ids:
-            output_table = output_table[output_table["frame_id"].isin(frame_ids)]
-        return output_table
 
     def get_frames(self, frame_ids: list = [], scene_ids=""):
         if not frame_ids:
