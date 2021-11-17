@@ -213,7 +213,7 @@ class plotter():
 
                 self.ax.plot(samplex,sampley,color=randColor,alpha=0.5)
 
-    # Plot a set of sample trajectoriesstructure
+    # Plot a set of sample trajectories
     def plot_paths_samples_gt(self,paths_per_goals, n_samples=2):
         ngoals = len(paths_per_goals)
         for i in range(ngoals):

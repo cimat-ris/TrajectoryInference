@@ -37,10 +37,9 @@ def main():
     for i in range(goalsData.goals_n):
         for j in range(i,goalsData.goals_n):
             if(i != j) and len(trajMat[i][j])>0 and goalsData.kernelsX[i][j].optimized is True:
-                path  = trajMat[i][j][0]
-                pathX, pathY, pathT = path
-                pathL = trajectory_arclength(path)
-                observations, __ = observed_data([pathX,pathY,pathL,pathT],2)
+                _path  = trajMat[i][j][0]
+                pathL = trajectory_arclength(_path)
+                observations, ground_truth = observed_data([_path[:,0],_path[:,1],pathL,_path[:,2]],2)
                 if observations is None:
                     continue
                 # The basic element here is this object, that will do the regression work

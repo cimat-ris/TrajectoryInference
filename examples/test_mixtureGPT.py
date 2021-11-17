@@ -35,7 +35,7 @@ def main():
 
     """**********          Testing          ***********"""
     gi, gj, k = 0, 6, 5
-    path = trajMat[gi][gj][k]
+    _path = trajMat[gi][gj][k]
 
     mgps     = mGPt_trajectory_prediction(gi,goalsData)
     nSamples = 5
@@ -52,6 +52,8 @@ def main():
 
         knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
         observations = observed_data(path,knownN)
+        observations, ground_truth = observed_data([_path[:,0],_path[:,1],_path[:,2]],knownN)
+
         """Multigoal prediction test"""
         logging.info('Updating likelihoods')
         likelihoods = mgps.update(observations)
