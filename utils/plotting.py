@@ -226,7 +226,7 @@ class plotter():
 
     def plot_paths(self,traj_set, n_max=500):
         for i,tr in enumerate(traj_set):
-            self.ax.plot(tr[0],tr[1])
+            self.ax.plot(tr[:,0],tr[:,1])
             if i == n_max:
                 break
 

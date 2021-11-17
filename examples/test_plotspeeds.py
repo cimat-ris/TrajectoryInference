@@ -41,7 +41,7 @@ def main():
             lengths        = []
             for tr in trajSet:
                 # Times
-                t = tr[2]
+                t = tr[:,2]
                 # Average speed
                 v = avg_speed(tr)
                 # Arc lengths
