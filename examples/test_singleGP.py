@@ -49,10 +49,9 @@ def main():
         sys.exit()
 
     path  = trajMat[gi][gj][pathId]
-    pathX, pathY, pathT = path
     pathL = trajectory_arclength(path)
     # Total path length
-    pathSize = len(pathX)
+    pathSize = len(path)
 
     # Prediction of single paths with single goals
     gp = sGP_trajectory_prediction(gi,gj,goalsData)
@@ -67,7 +66,7 @@ def main():
         p.plot_scene_structure(goalsData)
         # Data we will suppose known
         knownN = int((i+1)*(pathSize/part_num))
-        observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
+        observations, ground_truth = observed_data([path[:,0],path[:,1],pathL,path[:,2]],knownN)
         """Single goal prediction test"""
         logging.info('Updating likelihoods')
         # Update the GP with (real) observations
@@ -84,7 +83,7 @@ def main():
         logging.info('Likelihood: {:f}'.format(likelihood))
         logging.info('Plotting')
         # Plot the filtered version of the observations
-        p.plot_filtered(filteredPath)
+        p.plot_filtered([filteredPath])
         # Plot the prediction
         p.plot_prediction(observations,predictedXY,varXY)
         # Plot the ground truth
