@@ -113,6 +113,9 @@ class plotter():
         if title!=None:
             self.ax.set_title(title)
 
+    def clf(self):
+        plt.clf()
+
     def set_background(self,img_background_path):
         # Use the image as a background
         img = mpimg.imread(img_background_path)
@@ -210,7 +213,7 @@ class plotter():
 
                 self.ax.plot(samplex,sampley,color=randColor,alpha=0.5)
 
-    # Plot a set of sample trajectories
+    # Plot a set of sample trajectoriesstructure
     def plot_paths_samples_gt(self,paths_per_goals, n_samples=2):
         ngoals = len(paths_per_goals)
         for i in range(ngoals):
@@ -219,7 +222,7 @@ class plotter():
                 n_samples_eff = min(n_samples,len(tr))
                 idx= np.random.choice(len(tr), n_samples_eff, replace=False)
                 for k in idx:
-                    self.ax.plot(tr[k][0],tr[k][1],color="white",alpha=0.3)
+                    self.ax.plot(tr[k][:,0],tr[k][:,1],color="white",alpha=0.3)
 
     def plot_paths(self,traj_set, n_max=500):
         for i,tr in enumerate(traj_set):
@@ -236,9 +239,11 @@ class plotter():
         plt.savefig(file_name,transparent=True,bbox_inches='tight')
 
     # Show the plots
-    def show(self):
-        plt.show()
+    def show(self,block=True):
+        plt.show(block=block)
 
+    def clear(self):
+        self.fig.clear()
 #******************************************************************************#
 
 # partial path and euclidian distance to goal

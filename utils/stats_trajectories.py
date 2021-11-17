@@ -38,7 +38,7 @@ def median_speed(trajectory):
 def trajectory_duration(trajectory):
     return trajectory[-1,2] - trajectory[0,2]
 
-# Evaluates histogram function for duration and arclength
+# Evaluates histogram function for duration and arclength on a group of trajectories
 def tr_histogram(trajectories):
     duration = []
     arclen   = []
