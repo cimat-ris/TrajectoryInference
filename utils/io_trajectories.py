@@ -28,9 +28,9 @@ def get_traj_from_file(dataset_id, coordinate_system='img'):
     # Output will be a list of trajectories
     trajectories = []
     for tr in traj_set:
-        x, y, t = np.array(tr[:,0]), np.array(tr[:,1]), np.array(tr[:,4])
         # TODO: Should we check if there are repeated positions in the traj?
-        trajectories.append([x,y,t])
+        # trajectories.append([x,y,t])
+        trajectories.append(tr[:,[0,1,4]])
     # Detect the trajectories that go between more than a pair of goals
     final_trajectories = []
     for tr in trajectories:
@@ -76,13 +76,14 @@ def read_and_filter(dataset_id,use_pickled_data=False, pickle_dir='pickle', coor
 
     logging.info("Assignment to goals.")
     # Get useful paths and split the trajectories into pairs of goals
-    trajectories_matrix, __ = separate_trajectories_between_goals(raw_trajectories, goals_areas)
+    trajectories_matrix, unassociated = separate_trajectories_between_goals(raw_trajectories, goals_areas)
     n = goals_areas.shape[0]
     s = 0
     for i in range(n):
         for j in range(n):
             s = s + len(trajectories_matrix[i][j])
     logging.info("Trajectories within goals {:d}".format(s))
+    logging.info("Trajectories not associated to goals {:d}".format(len(unassociated)))
     # Remove the trajectories that are either too short or too long
     if filter:
         filtered_trajectories_matrix, filtered_trajectories = filter_traj_matrix(trajectories_matrix)

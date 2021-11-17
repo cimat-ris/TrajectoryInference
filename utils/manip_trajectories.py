@@ -14,27 +14,26 @@ def separate_trajectories_between_goals(trajectories, goals_areas):
             mat[i][j]       = []
     not_associated = []
     # For all trajectories
-    for idx,tr in enumerate(trajectories):
-        x, y = tr[0], tr[1]
-        traj_len = len(x)
+    for trajectory in trajectories:
+        traj_len = len(trajectory)
         associated_to_goals = False
         if traj_len > 2:
             # Start and finish points
-            start_x, start_y     = x[0], y[0]
-            end_x, end_y         = x[-1],y[-1]
+            start     = trajectory[0,:]
+            end       = trajectory[-1,:]
             start_goal, end_goal = None, None
             # Find starting and finishing goal
             for j in range(goals_n):
-                if(is_in_area([start_x,start_y], goals[j])):
+                if(is_in_area(start, goals[j])):
                     start_goal = j
             for k in range(goals_n):
-                if(is_in_area([end_x,end_y], goals[k])):
+                if(is_in_area(end, goals[k])):
                     end_goal = k
             if start_goal is not None and end_goal is not None:
-                mat[start_goal][end_goal].append(tr)
+                mat[start_goal][end_goal].append(trajectory)
                 associated_to_goals = True
         if (not associated_to_goals):
-            not_associated.append(tr)
+            not_associated.append(trajectory)
     return mat,not_associated
 
 # Removes atypical trajectories
@@ -56,12 +55,11 @@ def filter_trajectories(trajectories):
     else:
         SD = stats.stdev(arclen)
 
-    # remove trajectories that differ more than 3SD
+    # Remove atypical trajectories that differ more than 3SD
     filtered_set = []
     for i in range(n_trajs):
         if arclen[i] > 0 and abs(arclen[i] - M) <= 3.0*SD:
             filtered_set.append(trajectories[i])
-
     return filtered_set
 
 # Removes atypical trajectories from a multidimensional array
@@ -113,34 +111,33 @@ def get_trajectories_given_time_interval(trajectories, start_time, finish_time):
 
 # Split a trajectory into sub-trajectories between pairs of goals
 def break_multigoal_traj(tr, goals):
-    x, y, t = tr[0], tr[1], tr[2]
     traj_set = []
-    new_x, new_y, new_t = [], [], []    # New trajectory
-    last_goal = -1                      # Last goal
-    started   = False                   # Flag to indicate that we have started with one goal
-    for i in range(len(x)):
-        xy = [x[i], y[i]]       # Current position
+    new_traj = []          # New trajectory
+    last_goal = -1         # Last goal
+    started   = False      # Flag to indicate that we have started with one goal
+    for i,pos in enumerate(tr):
         # Am I in a goal
         current_goal = -1
         for j in range(len(goals)):
             # If the position lies in the goal zone
-            if is_in_area(xy, goals[j,1:]):
+            if is_in_area(pos[0:2], goals[j,1:]):
                 current_goal=j
-        if current_goal==-1 and last_goal!=-1 and started:
-            # Split the trajectory just before
-            traj_set.append([np.array(new_x),np.array(new_y),np.array(new_t)] )
+        # We have just left a goal zone
         if current_goal==-1 and last_goal!=-1:
+            if started:
+                # Split the trajectory just before
+                new_traj = np.array(new_traj)
+                traj_set.append(new_traj)
             # At that point we start the trajectory
             # with a point that should be in last_goal
             started = True
-            new_x, new_y, new_t = [x[i-1]], [y[i-1]], [t[i-1]]
+            new_traj = [tr[i-1]]
         last_goal=current_goal
-        new_x.append(x[i])
-        new_y.append(y[i])
-        new_t.append(t[i])
+        new_traj.append(pos)
         # Coming at the end
-        if current_goal>0 and i==len(x)-1 and started:
-            traj_set.append([np.array(new_x),np.array(new_y),np.array(new_t)] )
+        if current_goal>0 and i==len(tr)-1 and started:
+            new_traj = np.array(new_traj)
+            traj_set.append(new_traj)
     return traj_set
 
 # Returns 3 lists with the x, y and arc-len values of a trajectory set, respectively

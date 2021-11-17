@@ -11,14 +11,11 @@ def euclidean_distance(p, q):
     return dist
 
 def trajectory_arclength(traj):
-    x, y = traj[0], traj[1]
-    n    = len(x)
-    arclen = np.empty(n)
-    arclen[0] = 0
+    n        = len(traj)
+    arclen   = np.empty(n)
+    arclen[0]= 0
     for i in range(1,n):
-        d = euclidean_distance( [x[i],y[i]], [x[i-1], y[i-1]] )
-        arclen[i] = arclen[i-1] + d
-
+        arclen[i] = arclen[i-1] + euclidean_distance(traj[i],traj[i-1])
     return arclen
 
 def trajectory_speeds(traj):

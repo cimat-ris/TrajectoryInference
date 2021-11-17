@@ -46,7 +46,7 @@ def main():
     parser.add_argument('--log_file',default='',help='Log file (default: standard output)')
     parser.add_argument('--pickle', dest='pickle', action='store_true',help='uses previously pickled data')
     parser.add_argument('--start', dest='start',type=int, default=0,help='Specify starting goal')
-
+    parser.add_argument('--filter', dest='filter',action='store_true',help='apply filtering')
     args = parser.parse_args()
 
     np.seterr('ignore')
@@ -60,7 +60,7 @@ def main():
     imgGCS           = './datasets/GC/reference.jpg'
     coordinates      = 'world'
 
-    traj_dataset, goalsData, trajMat, filtered = read_and_filter(args.dataset_id,coordinate_system=coordinates,use_pickled_data=args.pickle)
+    traj_dataset, goalsData, trajMat, filtered = read_and_filter(args.dataset_id,coordinate_system=coordinates,use_pickled_data=args.pickle,filter=args.filter)
     filtered.sort(key=start_time)
 
     """******************************************************************************"""
@@ -84,7 +84,6 @@ def main():
     lastobservations = []
     predictions  = []
     ground_truth = []
-
     tests = 10
     for s in range(tests):
         flag = True
@@ -92,10 +91,8 @@ def main():
             nextG = random.randrange(goalsData.goals_n)
             if len(trajMat[startG][nextG]) > 0:
                 pathId = random.randrange( len(trajMat[startG][nextG]))
-                if len(trajMat[startG][nextG][pathId][0])>9:
+                if len(trajMat[startG][nextG][pathId])>9:
                     flag = False
-
-
         # Get the ground truth path
         _path = trajMat[startG][nextG][pathId]
         stime = start_time(_path)
@@ -103,14 +100,13 @@ def main():
         #trajs = get_trajectories_given_time_interval(filtered, stime, etime)
         #print(trajs)
         # Get the path data
-        pathX, pathY, pathT = _path
         pathL = trajectory_arclength(_path)
         # Total path length
-        pathSize = len(pathX)
+        pathSize = len(_path)
         # Divides the trajectory in part_num parts and consider
         part_num = 5
         knownN = int(3*(pathSize/part_num)) #numero de datos conocidos
-        obs, gt = observed_data([pathX,pathY,pathL,pathT],knownN)
+        obs, gt = observed_data([_path[:,0],_path[:,1],pathL,_path[:,2]],knownN)
 
         # Take the last 4 observations.
         # Caution, Social-GAN has been trained at 2.5fps. Here in GC we are at 1.25fps: So we interpolate!
