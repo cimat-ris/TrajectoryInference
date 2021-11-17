@@ -6,6 +6,7 @@ import math
 from gp_code.regression import *
 from gp_code.sampling import *
 from gp_code.trajectory_regression import *
+from gp_code.trajectory_regressionT import *
 from gp_code.likelihood import nearestPD
 from utils.stats_trajectories import euclidean_distance
 from utils.manip_trajectories import goal_center_and_size
@@ -44,16 +45,24 @@ class mGP_trajectory_prediction:
         for i in range(self.goalsData.goals_n):
             if mode == 'Trautman':
                 timeTransitionData = [self.goalsData.timeTransitionMeans[self._start][i], self.goalsData.timeTransitionStd[self._start][i] ]
+                # If we have had enough data during the training phase to train the GP for this pa
+                if self.goalsData.kernelsX[self._start][i].optimized:
+                    # One regressor per goal
+                    self.gpTrajectoryRegressor[i]=trajectory_regressionT(self.goalsData.kernelsX[self._start][i], self.goalsData.kernelsY[self._start][i],goalsData.sigmaNoise,self.goalsData.units[self._start][i],self.goalsData.goals_areas[i],prior=self.goalsData.priorTransitions[self._start][i], mode=mode, timeTransitionData=timeTransitionData)
+                else:
+                    k=self.goalsData.copyFromClosest(self._start,i)
+                    self.gpTrajectoryRegressor[i]=trajectory_regressionT(self.goalsData.kernelsX[self._start][i], self.goalsData.kernelsY[self._start][i],goalsData.sigmaNoise,self.goalsData.units[self._start][k],self.goalsData.goals_areas[i],prior=self.goalsData.priorTransitions[self._start][i], mode=mode, timeTransitionData=timeTransitionData)
+
             else:
-                 timeTransitionData = None 
+                timeTransitionData = None 
                 
-            # If we have had enough data during the training phase to train the GP for this pa
-            if self.goalsData.kernelsX[self._start][i].optimized:
-                # One regressor per goal
-                self.gpTrajectoryRegressor[i]=trajectory_regression(self.goalsData.kernelsX[self._start][i], self.goalsData.kernelsY[self._start][i],goalsData.sigmaNoise,self.goalsData.speedModels[self._start][i],self.goalsData.units[self._start][i],self.goalsData.goals_areas[i],prior=self.goalsData.priorTransitions[self._start][i], mode=mode, timeTransitionData=timeTransitionData)
-            else:
-                k=self.goalsData.copyFromClosest(self._start,i)
-                self.gpTrajectoryRegressor[i]=trajectory_regression(self.goalsData.kernelsX[self._start][i], self.goalsData.kernelsY[self._start][i],goalsData.sigmaNoise,self.goalsData.speedModels[self._start][i],self.goalsData.units[self._start][k],self.goalsData.goals_areas[i],prior=self.goalsData.priorTransitions[self._start][i], mode=mode, timeTransitionData=timeTransitionData)
+                # If we have had enough data during the training phase to train the GP for this pa
+                if self.goalsData.kernelsX[self._start][i].optimized:
+                    # One regressor per goal
+                    self.gpTrajectoryRegressor[i]=trajectory_regression(self.goalsData.kernelsX[self._start][i], self.goalsData.kernelsY[self._start][i],goalsData.sigmaNoise,self.goalsData.speedModels[self._start][i],self.goalsData.units[self._start][i],self.goalsData.goals_areas[i],prior=self.goalsData.priorTransitions[self._start][i], mode=mode, timeTransitionData=timeTransitionData)
+                else:
+                    k=self.goalsData.copyFromClosest(self._start,i)
+                    self.gpTrajectoryRegressor[i]=trajectory_regression(self.goalsData.kernelsX[self._start][i], self.goalsData.kernelsY[self._start][i],goalsData.sigmaNoise,self.goalsData.speedModels[self._start][i],self.goalsData.units[self._start][k],self.goalsData.goals_areas[i],prior=self.goalsData.priorTransitions[self._start][i], mode=mode, timeTransitionData=timeTransitionData)
 
     # Update observations and compute likelihoods based on observations
     def update(self,observations,consecutiveObservations=True):

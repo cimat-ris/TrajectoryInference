@@ -67,6 +67,20 @@ class trajectory_regressionT():
                 predset[-1,0] = t + remainingTime
         return predset, t + remainingTime, distToGoal
     
+    def loglikelihood_from_partial_path(self):
+        px = self.regression_x.loglikelihood_from_partial_path()
+        py = self.regression_y.loglikelihood_from_partial_path()
+        return px+py
+
+    # Compute the likelihood
+    def compute_likelihood(self):
+        if self.mode == 'Trautman':
+            self.likelihood = self.loglikelihood_from_partial_path()
+        else:
+            # TODO:
+            self.likelihood = self.prior*np.exp(self.loglikelihood_from_partial_path())
+        return self.likelihood
+
     # The main path regression function: perform regression for a
     # vector of values of future L, that has been computed in update
     def predict_path_to_finish_point(self,compute_sqRoot=False):
@@ -75,6 +89,27 @@ class trajectory_regressionT():
         predx, varx = self.regression_x.predict_to_finish_point(compute_sqRoot=compute_sqRoot)
         predy, vary = self.regression_y.predict_to_finish_point(compute_sqRoot=compute_sqRoot)
         return np.concatenate([predx, predy, self.predictedL],axis=1),np.stack([varx,vary],axis=0)
+
+    # Prediction of the trajectory
+    def predict_trajectory_to_finish_point(self,current_speed,current_time,current_arc_length,compute_sqRoot=False):
+        # Predict path
+        path, var   = self.predict_path_to_finish_point(compute_sqRoot)
+        if path is None:
+            return None,None
+        """
+        arc_lengths     = path[:,2]
+        arc_lengths_ext = np.concatenate([[current_arc_length],path[:,2]])
+        # Use the speed model to predict relative speed with respect to the average
+        if isinstance(self.speedModel, int):
+            predicted_relative_speeds = np.ones(arc_lengths.shape)
+        else:
+            predicted_relative_speeds = self.speedModel.predict(arc_lengths.reshape(-1, 1))
+        predicted_speeds          = current_speed*predicted_relative_speeds.reshape(-1, 1)
+        times = current_time + np.cumsum(np.divide((arc_lengths_ext[1:]-arc_lengths_ext[:-1]).reshape(-1,1),predicted_speeds)).reshape(-1,1)
+        trajectory = np.concatenate([path,times,predicted_speeds],axis=1)
+        return trajectory, var
+        """
+        return path, var
 
     # Generate a sample from perturbations
     def sample_path_with_perturbation(self,deltaX,deltaY,efficient=True):
