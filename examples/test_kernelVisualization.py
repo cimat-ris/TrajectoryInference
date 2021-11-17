@@ -12,8 +12,6 @@ def evaluateCovarianceMatrix(kernel,length):
     return kernel(np.arange(0,l.size),np.arange(0,l.size))
 
 
-
-
 def main():
     # Parsing arguments
     parser = argparse.ArgumentParser()

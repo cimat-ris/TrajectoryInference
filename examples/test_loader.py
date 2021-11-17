@@ -36,17 +36,17 @@ def main():
             logging.info("Loaded InD set {:02d}, length: {:03d} ".format(i,len(traj_set)))
 
     # GCS (Grand Central) dataset
-    test_gcs = False
+    test_gcs = True
     if test_gcs:
-        dataset_dir = "./datasets/GC/Annotation/"
+        dataset_dir = "./datasets/GC/"
         traj_dataset= load_gcs(dataset_dir)
         traj_set    = traj_dataset.get_trajectories()
         logging.info("Loaded gcs set, length: {:03d} ".format(len(traj_set)))
 
     # Edinburgh dataset
-    test_edi = False
+    test_edi = True
     if test_edi:
-        dataset_dir = "./datasets/Edinburgh/annotations"
+        dataset_dir = "datasets/Edinburgh"
         traj_dataset= load_edinburgh(dataset_dir)
         traj_set    = traj_dataset.get_trajectories()
         logging.info("Loaded Edinburgh set, length: {:03d} ".format(len(traj_set)))
