@@ -35,6 +35,7 @@ def main():
     # Read the kernel parameters from file
     goalsData.kernelsX = read_and_set_parameters('parameters/linearpriorcombined20x20_GCS_img_x.txt',nParameters)
     goalsData.kernelsY = read_and_set_parameters('parameters/linearpriorcombined20x20_GCS_img_y.txt',nParameters)
+    goalsData.sigmaNoise = 1800.0
 
     """******************************************************************************"""
     """**************    Testing                           **************************"""
@@ -50,10 +51,9 @@ def main():
     # Get the ground truth path
     _path = trajMat[startG][nextG][pathId]
     # Get the path data
-    pathX, pathY, pathT = _path
     pathL = trajectory_arclength(_path)
     # Total path length
-    pathSize = len(pathX)
+    pathSize = len(_path)
 
     # Prediction of single paths with a mixture model
     mgps     = mGP_trajectory_prediction(startG,goalsData)
@@ -69,7 +69,8 @@ def main():
         mp.set_background(imgGCS)
 
         knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
-        observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
+        observations, ground_truth = observed_data([_path[:,0],_path[:,1],pathL,_path[:,2]],knownN)
+
         """Multigoal prediction test"""
         logging.info('Updating likelihoods')
         likelihoods = mgps.update(observations,consecutiveObservations=False)
