@@ -14,14 +14,8 @@ def separate_trajectories_between_goals(trajectories, goals_areas):
             mat[i][j]       = []
     not_associated = []
     # For all trajectories
-<<<<<<< HEAD
     for trajectory in trajectories:
         traj_len = len(trajectory)
-=======
-    for tr in trajectories:
-        x, y = tr[0], tr[1]
-        traj_len = len(x)
->>>>>>> 72c0c057622b3a4883c448fecfea9085892e23ef
         associated_to_goals = False
         if traj_len > 2:
             # Start and finish points

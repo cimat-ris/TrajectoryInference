@@ -84,12 +84,8 @@ def main():
     lastobservations = []
     predictions  = []
     ground_truth = []
-<<<<<<< HEAD
-    tests = 10
-=======
     neighbors    = []
     tests = 1
->>>>>>> 72c0c057622b3a4883c448fecfea9085892e23ef
     for s in range(tests):
         flag = True
         while flag:
