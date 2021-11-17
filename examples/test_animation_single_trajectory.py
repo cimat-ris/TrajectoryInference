@@ -56,13 +56,12 @@ def main():
     kernelX = goalsData.kernelsX[startG][endG]
     kernelY = goalsData.kernelsY[startG][endG]
     # Get the ground truth path
-    path = trajMat[startG][endG][pathId]
+    _path = trajMat[startG][endG][pathId]
     # Get the path data
-    pathX, pathY, pathT = path
-    pathL = trajectory_arclength(path)
-    pathS = trajectory_speeds(path)
+    pathL = trajectory_arclength(_path)
+    pathS = trajectory_speeds(_path)
     # Total path length
-    pathSize = len(pathX)
+    pathSize = len(_path)
 
     # Test function: prediction of single trajectories with a single goal
     gp = sGP_trajectory_prediction(startG,endG,goalsData)
@@ -85,7 +84,7 @@ def main():
         logging.info('--------------------------')
         # Observations: x,y,l,t
         # Ground truth: x,y,t
-        observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
+        observations, ground_truth = observed_data([_path[:,0],_path[:,1],pathL,_path[:,2]],knownN)
         """Single goal prediction test"""
         logging.info('Updating observations')
         # Update the GP with (real) observations
@@ -94,16 +93,17 @@ def main():
         # Perform prediction
         predictedXYLTV,varXY = gp.predict_trajectory()
         logging.info('Plotting')
-        ax[0].axis([0,np.max(pathL),0,np.max(pathX)])
+        ax[0].axis([0,np.max(pathL),0,np.max(_path[:,0])])
         ax[0].plot(predictedXYLTV[:,2],predictedXYLTV[:,0],'b')
         ax[0].plot(observations[:,2],observations[:,0],'r')
-        ax[1].axis([0,np.max(pathL),0,np.max(pathY)])
+        ax[1].axis([0,np.max(pathL),0,np.max(_path[:,1])])
         ax[1].plot(predictedXYLTV[:,2],predictedXYLTV[:,1],'b')
         ax[1].plot(observations[:,2],observations[:,1],'r')
         ax[2].axis([0,np.max(pathL),0,np.max(pathS)])
         ax[2].plot(predictedXYLTV[:,2],predictedXYLTV[:,4],'b')
-        ax[2].plot(observations[:,2],pathS[:knownN],'r')
-        ax[3].axis([0,np.max(pathL),np.min(pathT),np.max(pathT)])
+        # TODO: bug with speeds
+        #ax[2].plot(observations[:,2],pathS[:knownN],'r')
+        ax[3].axis([0,np.max(pathL),np.min(_path[:,2]),np.max(_path[:,2])])
         ax[3].plot(predictedXYLTV[:,2],predictedXYLTV[:,3],'b')
         ax[3].plot(observations[:,2],observations[:,3],'r')
         times_predicted = predictedXYLTV[:,3]
@@ -113,7 +113,8 @@ def main():
         x_interpolated  = np.interp(times_animated,times_predicted,x_predicted)
         y_interpolated  = np.interp(times_animated,times_predicted,y_predicted)
         # Plot the filtered version of the observations
-        p.plot_filtered(filteredPath)
+        # TODO: bug here
+        # p.plot_filtered(filteredPath)
         # Plot the prediction
         p.plot_prediction(observations,predictedXYLTV,varXY)
         # Plot the ground truth
