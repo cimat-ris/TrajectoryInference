@@ -142,22 +142,20 @@ def break_multigoal_traj(tr, goals):
 # Returns 3 lists with the x, y and arc-len values of a trajectory set, respectively
 def get_data_from_set(trajectories):
     list_x, list_y, list_arclen = [], [], []
-    for tr in trajectories:
-        list_x.append(tr[0])
-        list_y.append(tr[1])
-        list_arclen.append(trajectory_arclength(tr) )
+    for trajectory in trajectories:
+        list_x.append(trajectory[:,0])
+        list_y.append(trajectory[:,1])
+        list_arclen.append(trajectory_arclength(trajectory))
     return list_x, list_y, list_arclen
-
 
 # Linear regression: f(l) = a + b*l
 # Returns the slope of the line and the intercept
-def line_parameters(traj, flag):
-    traj_arclen = trajectory_arclength(traj)
-    arclen = traj_arclen[-1]
+def line_parameters(trajectory, flag):
+    arclen = trajectory_arclength(trajectory)[-1]
     if arclen == 0:
         return 0.,0.
 
-    x, y = traj[0], traj[1]
+    x, y = trajectory[:,0], trajectory[:,1]
     if flag == 'x':
         b = x[0]
         a = (x[-1]-b)/arclen

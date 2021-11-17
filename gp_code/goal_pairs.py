@@ -129,13 +129,13 @@ class goal_pairs:
                     continue
                 relativeSpeeds = []
                 lengths        = []
-                for tr in trajSet:
+                for trajectory in trajSet:
                     # Times
-                    t = tr[:,2]
+                    t = trajectory[:,2]
                     # Average speed
-                    v = avg_speed(tr)+self.epsilon
+                    v = avg_speed(trajectory)+self.epsilon
                     # Arc lengths
-                    d = trajectory_arclength(tr)
+                    d = trajectory_arclength(trajectory)
                     for k in range(1,len(t)):
                         relativeSpeeds.append(float((d[k]-d[k-1])/(t[k]-t[k-1]))/v)
                         lengths.append(d[k])
