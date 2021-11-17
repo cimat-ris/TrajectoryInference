@@ -95,10 +95,9 @@ def main():
                 if len(trajMat[startG][nextG][pathId])>9:
                     flag = False
         # Get the ground truth path
-        _path = trajMat[startG][nextG][pathId]
-        stime = start_time(_path)
-        etime = end_time(_path)
-        neighbors_trajs = get_trajectories_given_time_interval(filtered, stime, etime)
+        _path   = trajMat[startG][nextG][pathId]
+        _path_id=  int(_path[0][3])
+        logging.info("ID: {:d}".format(_path_id))
         # Get the path data
         pathL = trajectory_arclength(_path)
         # Total path length
@@ -107,24 +106,32 @@ def main():
         part_num = 5
         knownN = int(3*(pathSize/part_num)) #numero de datos conocidos
         obs, gt = observed_data([_path[:,0],_path[:,1],pathL,_path[:,2]],knownN)
+        # Starting/ending times
+        etime = obs[-1,3]
+        stime = obs[-4,3]
+        neighbors_trajs = get_trajectories_given_time_interval(filtered, stime, etime)
 
         # Take the last 4 observations.
         # Caution, Social-GAN has been trained at 2.5fps. Here in GC we are at 1.25fps: So we interpolate!
         input= [[]]
         past = []
-        for k in reversed(range(4)):
+        for k in reversed(range(1,5)):
             # This position is interpolated!
             past.append(0.5*(obs[-k-1]+obs[-k]))
             past.append(obs[-k])
         past = np.array(past)
 
-        neighbor_pos = []
+        neighbor_positions = []
         for neighbor_traj in neighbors_trajs:
             if len(neighbor_traj[neighbor_traj[:,2]==etime])==0:
                 continue
-            neighbor_pos.append(neighbor_traj[neighbor_traj[:,2]==etime])
-        if len(neighbor_pos)>0:
-            neighbor_pos = np.squeeze(np.array(neighbor_pos),axis=1)
+            neighbor_position = neighbor_traj[neighbor_traj[:,2]==etime]
+            if neighbor_position[0,3]==_path_id:
+                continue
+            neighbor_positions.append(neighbor_position)
+
+        if len(neighbor_positions)>0:
+            neighbor_positions = np.squeeze(np.array(neighbor_positions),axis=1)
         if (past.shape[0]<8):
             continue
         for i in range(8):
@@ -140,7 +147,7 @@ def main():
         # To visualize the observations used to perform the short-term prediction
         lastobservations.append(obs[-4:])
         ground_truth.append(gt)
-        neighbors.append(neighbor_pos)
+        neighbors.append(neighbor_positions)
     #
     plt.figure(1)
     for s,pred in enumerate(predictions):
@@ -149,7 +156,7 @@ def main():
             plt.plot(mode[:,0],mode[:,1],'r')
         plt.plot(observations[s][:,0],observations[s][:,1],'b--')
         plt.plot(lastobservations[s][:,0],lastobservations[s][:,1],'b')
-        if len(neighbor_pos)>0:
+        if len(neighbors[s])>0:
             plt.plot(neighbors[s][:,0],neighbors[s][:,1],'og')
     plt.show()
 
