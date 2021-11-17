@@ -131,7 +131,7 @@ class goal_pairs:
                 lengths        = []
                 for tr in trajSet:
                     # Times
-                    t = tr[2]
+                    t = tr[:,2]
                     # Average speed
                     v = avg_speed(tr)+self.epsilon
                     # Arc lengths
