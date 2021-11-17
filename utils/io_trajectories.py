@@ -28,10 +28,9 @@ def get_traj_from_file(dataset_id, coordinate_system='img'):
     # Output will be a list of trajectories
     trajectories = []
     for tr in traj_set:
-        # x, y, t   = np.array(tr[:,0]), np.array(tr[:,1]), np.array(tr[:,4])
-        # p_id,s_id = np.array(tr[:,5]), np.array(tr[:,6])
-        # TODO: Should we check if there are repeated positions in the traj?
-        trajectories.append(tr[:,[0,1,4]])
+        # x, y, t: indices 0,1,4
+        # p_id,s_id: indices 5,6
+        trajectories.append(tr[:,[0,1,4,5,6]])
     # Detect the trajectories that go between more than a pair of goals
     final_trajectories = []
     for tr in trajectories:

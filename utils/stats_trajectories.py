@@ -24,8 +24,7 @@ def trajectory_speeds(traj):
 
 # Average speed of a trajectory
 def avg_speed(traj):
-    x, y, t = np.array(traj[0]), np.array(traj[1]), np.array(traj[2])
-    speed = np.divide(np.sqrt(np.square(x[1:]-x[:-1])+np.square(y[1:]-y[:-1])),t[1:]-t[:-1])
+    speed = np.divide(np.sqrt(np.square(traj[1:,0]-traj[:-1,0])+np.square(traj[1:,1]-traj[:-1,1])),traj[1:,2]-traj[:-1,2])
     return np.mean(speed)
 
 # Median speed of a trajectory

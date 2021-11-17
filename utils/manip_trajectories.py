@@ -76,17 +76,16 @@ def filter_traj_matrix(raw_path_set_matrix):
             # If the list of trajectories is non-empty, filter it
             if(len(raw_path_set_matrix[i][j]) > 0):
                 filtered = filter_trajectories(raw_path_set_matrix[i][j])
-                print(filtered[0])
                 filtered_matrix[i][j].extend(filtered)
                 all_trajectories.extend(filtered)
 
     return filtered_matrix, all_trajectories
 
 def start_time(traj):
-    return traj[2][0]
+    return traj[0,2]
 
 def end_time(traj):
-    return traj[2][-1]
+    return traj[-1,2]
 
 # For a set of trajectories, determine those that have some timestamps in the [start_time, finish_time] interval
 def get_trajectories_given_time_interval(trajectories, start_time, finish_time):
@@ -101,10 +100,9 @@ def get_trajectories_given_time_interval(trajectories, start_time, finish_time):
     t = start_time
     while (t <= finish_time and i<n):
         tr = trajectories[i]
-        # Starting time
-        st  = tr[2][0]
-        et  = tr[2][-1]
-        # TODO: is it necessary to have both conditions?
+        # Starting/ending times
+        st  = tr[0,2]
+        et  = tr[-1,2]
         if(start_time <= et and st <= finish_time):
             traj_set.append(tr)
         i += 1
