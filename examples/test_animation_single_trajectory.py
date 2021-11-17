@@ -101,8 +101,7 @@ def main():
         ax[1].plot(observations[:,2],observations[:,1],'r')
         ax[2].axis([0,np.max(pathL),0,np.max(pathS)])
         ax[2].plot(predictedXYLTV[:,2],predictedXYLTV[:,4],'b')
-        # TODO: bug with speeds
-        #ax[2].plot(observations[:,2],pathS[:knownN],'r')
+        ax[2].plot(observations[:,2],pathS[:knownN],'r')
         ax[3].axis([0,np.max(pathL),np.min(_path[:,2]),np.max(_path[:,2])])
         ax[3].plot(predictedXYLTV[:,2],predictedXYLTV[:,3],'b')
         ax[3].plot(observations[:,2],observations[:,3],'r')
