@@ -28,8 +28,9 @@ def get_traj_from_file(dataset_id, coordinate_system='img'):
     # Output will be a list of trajectories
     trajectories = []
     for tr in traj_set:
+        # x, y, t   = np.array(tr[:,0]), np.array(tr[:,1]), np.array(tr[:,4])
+        # p_id,s_id = np.array(tr[:,5]), np.array(tr[:,6])
         # TODO: Should we check if there are repeated positions in the traj?
-        # trajectories.append([x,y,t])
         trajectories.append(tr[:,[0,1,4]])
     # Detect the trajectories that go between more than a pair of goals
     final_trajectories = []
@@ -38,19 +39,6 @@ def get_traj_from_file(dataset_id, coordinate_system='img'):
         final_trajectories.extend(break_multigoal_traj(tr, traj_dataset.goals_areas))
     logging.info("After handling goals, length: {:03d} ".format(len(final_trajectories)))
     return final_trajectories, traj_dataset.goals_areas
-
-# new get_uncut_paths_from_file
-# gets trajectories from the file without modifications
-def get_complete_traj_from_file(dataset_id,dataset_traj,coordinate_system='img'):
-    traj_dataset= load_gcs(dataset_traj, coordinate_system=coordinate_system)
-    traj_set    = traj_dataset.get_trajectories()
-    logging.info("Loaded {:s} set, length: {:03d} ".format(dataset_id,len(traj_set)))
-    trajectories = []
-    # Get trajectories x,y,t
-    for tr in traj_set:
-        x, y, t = tr[:,0], tr[:,1], tr[:,4]
-        trajectories.append([x,y,t])
-    return trajectories
 
 # Main function for reading the data from a dataset
 def read_and_filter(dataset_id,use_pickled_data=False, pickle_dir='pickle', coordinate_system='img',filter=False):
