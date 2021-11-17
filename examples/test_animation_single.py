@@ -57,13 +57,11 @@ def main():
     kernelX = goalsData.kernelsX[startG][endG]
     kernelY = goalsData.kernelsY[startG][endG]
     # Get the ground truth path
-    path = trajMat[startG][endG][pathId]
-    # Get the path data
-    pathX, pathY, pathT = path
-    pathL = trajectory_arclength(path)
+    _path = trajMat[startG][endG][pathId]
+    pathL = trajectory_arclength(_path)
 
     # Total path length
-    pathSize = len(pathX)
+    pathSize = len(_path)
 
     # Test function: prediction of single paths with multiple goals
     gp = sGP_trajectory_prediction(startG,endG,goalsData)
@@ -74,7 +72,7 @@ def main():
         logging.info('--------------------------')
         p.set_background(img_bckgd)
         p.plot_scene_structure(goalsData)
-        observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
+        observations, ground_truth = observed_data([_path[:,0],_path[:,1],pathL,_path[:,2]],knownN)
         """Single goal prediction test"""
         logging.info('Updating observations')
         # Update the GP with (real) observations
@@ -85,7 +83,8 @@ def main():
         logging.info('Likelihood: {}'.format(likelihood))
         logging.info('Plotting')
         # Plot the filtered version of the observations
-        p.plot_filtered(filteredPath)
+        # TODO: pbug with this plotting function
+        # p.plot_filtered(filteredPath)
         # Plot the prediction
         p.plot_prediction(observations,predictedXY,varXY)
         # Plot the ground truth
