@@ -33,7 +33,7 @@ def main():
     # Read the kernel parameters from file
     goalsData.kernelsX = read_and_set_parameters("parameters/linearpriorcombined20x20_GCS_img_x.txt",nParameters)
     goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined20x20_GCS_img_y.txt",nParameters)
-
+    goalsData.sigmaNoise = 600.0
     """**********          Testing          ***********"""
     # We give the start and ending goals
     randomPath = True
@@ -52,24 +52,22 @@ def main():
     kernelX = goalsData.kernelsX[startG][endG]
     kernelY = goalsData.kernelsY[startG][endG]
     # Get the ground truth path
-    path = trajMat[startG][endG][pathId]
+    _path = trajMat[startG][endG][pathId]
     # Get the path data
-    pathX, pathY, pathT = path
-    pathL = trajectory_arclength(path)
-
+    pathL = trajectory_arclength(_path)
     # Total path length
-    pathSize = len(pathX)
+    pathSize = len(_path)
 
     # Prediction of single paths with a mixture model
     mgps     = mGP_trajectory_prediction(startG,goalsData)
 
-    p = plotter()
     # For different sub-parts of the trajectory
     for knownN in range(5,pathSize-1):
+        p = plotter()
         logging.info("--------------------------")
         p.set_background(imgGCS)
         p.plot_scene_structure(goalsData,draw_ids=True)
-        observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
+        observations, ground_truth = observed_data([_path[:,0],_path[:,1],pathL,_path[:,2]],knownN)
         logging.info("Updating observations")
         # Update the GP with (real) observations
         likelihoods  = mgps.update(observations,consecutiveObservations=False)
@@ -82,9 +80,7 @@ def main():
         logging.info("Mean likelihood: {}".format(mgps.meanLikelihood))
         # Plot the ground truth
         p.plot_ground_truth(ground_truth)
-        p.pause(0.05)
-        input("Press Enter to continue...")
-
+        p.show()
 
 if __name__ == '__main__':
     main()
