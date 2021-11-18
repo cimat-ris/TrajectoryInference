@@ -43,7 +43,7 @@ def main():
     coordinates      = args.coordinates
     traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',coordinate_system=coordinates,use_pickled_data=args.pickle)
     train_trajectories_matrix, test_trajectories_matrix = partition_train_test(trajMat, training_ratio=0.8)
-    
+
     # Selection of the kernel type
     kernelType  = "linePriorCombined"
     nParameters = 4
@@ -77,10 +77,10 @@ def main():
     goalsData.kernelsY = read_and_set_parameters("../parameters/linearpriorcombined20x20_GCS_img_y.txt",nParameters)
     # Set mode
     mode = 'Trautman'
-    
+
     part_num = 4
     nsamples = 5
-        
+
     ade = [[], [], [] ] # ade for 25%, 50% and 75% of observed data
     fde = [[], [], [] ]
     end_goal = [0,0,0]
@@ -90,18 +90,18 @@ def main():
                 # Prediction of single paths with a mixture model
                 mgps     = mGP_trajectory_prediction(i,goalsData, mode=mode)
                 arclen = trajectory_arclength(tr)
-                tr_data = [tr[0],tr[1],arclen,tr[2]] # data = [X,Y,L,T]
-                
+                tr_data = [tr[:,0],tr[:,1],arclen,tr[:,2]] # data = [X,Y,L,T]
+
                 path_size = len(arclen)
                 if path_size < 10:
                     continue
-                
+
                 for k in range(1,part_num):
                     m = int((k)*(path_size/part_num))
                     #if m<2:
                     #    continue
                     observations, ground_truth = observed_data(tr_data,m)
-                    gt = np.concatenate([np.reshape(tr[0][m:],(-1,1)), np.reshape(tr[1][m:],(-1,1))], axis=1)                  
+                    gt = np.concatenate([np.reshape(tr[m:,0],(-1,1)), np.reshape(tr[1][m:],(-1,1))], axis=1)
                     # Multigoal prediction
                     likelihoods  = mgps.update(observations)
                     if mode != 'Trautman':
@@ -112,14 +112,14 @@ def main():
                     # Compare most likely goal and true goal
                     if mgps.mostLikelyGoal == j:
                         end_goal[k-1] += 1
-                    
+
                     pred_ade = []
                     for path in predictedXYVec:
                         if path is  None:
                             print('Prediction is None!')
                         else:
                             pred_ade.append(ADE(gt, path))
-                        
+
                     samples_ade = []
                     samples_fde = []
                     for path in paths:
@@ -128,26 +128,26 @@ def main():
                         else:
                             samples_ade.append(ADE(gt, path))
                             samples_fde.append(FDE([gt[-1,0],gt[-1,1]], [path[-1,0],path[-1,1]] ))
-                    
+
                     ade[k-1].append(round(min(samples_ade),3))
                     fde[k-1].append(round(min(samples_fde),3))
 
     save_values('ade',ade)
     save_values('fde',fde)
     save_values('end_goal',[end_goal])
-    
+
     print('traj mat shape:', test_trajectories_matrix.shape)
     print('Plotting mean ade')
     percent = [25,50,75]
     plt.figure()
-    plt.plot(percent,[np.mean(np.array(ade[0])), np.mean(np.array(ade[1])), np.mean(np.array(ade[2]))])    
+    plt.plot(percent,[np.mean(np.array(ade[0])), np.mean(np.array(ade[1])), np.mean(np.array(ade[2]))])
     plt.xlabel('Percentage of observed data')
     plt.ylabel('Error in pixels')
     plt.show()
     #plt.savefig('ade.png')
-    
+
     plt.figure()
-    plt.plot(percent,[np.mean(np.array(fde[0])), np.mean(np.array(fde[1])), np.mean(np.array(fde[2]))])    
+    plt.plot(percent,[np.mean(np.array(fde[0])), np.mean(np.array(fde[1])), np.mean(np.array(fde[2]))])
     plt.xlabel('Percentage of observed data')
     plt.ylabel('Error in pixels')
     #plt.savefig('fde.png')
@@ -161,7 +161,6 @@ def main():
     ax1.set(xlabel='Percentage of observed data', ylabel='ADE error in pixels')
     """
 
-    
+
 if __name__ == '__main__':
     main()
-
