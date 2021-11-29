@@ -47,7 +47,7 @@ def main():
     # Selection of the kernel type
     kernelType  = "linePriorCombined"
     nParameters = 4
-    """
+    
     # Partition test/train set
     pickle_dir='../pickle'
     if args.pickle==False:
@@ -71,7 +71,7 @@ def main():
         test_trajectories_matrix = pickle.load(pickle_in)
         pickle_in = open(pickle_dir+'/goalsData-'+args.dataset_id+'-'+coordinates+'.pickle',"rb")
         goalsData = pickle.load(pickle_in)
-    """
+    
     # Read the kernel parameters from file
     goalsData.kernelsX = read_and_set_parameters("../parameters/linearpriorcombined20x20_GCS_img_x.txt",nParameters)
     goalsData.kernelsY = read_and_set_parameters("../parameters/linearpriorcombined20x20_GCS_img_y.txt",nParameters)
@@ -101,7 +101,7 @@ def main():
                     #if m<2:
                     #    continue
                     observations, ground_truth = observed_data(tr_data,m)
-                    gt = np.concatenate([np.reshape(tr[m:,0],(-1,1)), np.reshape(tr[1][m:],(-1,1))], axis=1)
+                    gt = np.concatenate([np.reshape(tr[m:,0],(-1,1)), np.reshape(tr[m:,1],(-1,1))], axis=1)
                     # Multigoal prediction
                     likelihoods  = mgps.update(observations)
                     if mode != 'Trautman':
