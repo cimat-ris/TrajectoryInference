@@ -128,8 +128,12 @@ def main():
         if (past.shape[0]<8):
             continue
         for i in range(8):
-            input[0].append(TrackRow(past[i][2],10,past[i][0],past[i][1], None, 0))
-
+            input[0].append(TrackRow(past[i][2],past[i][3],past[i][0],past[i][1], None, 0))
+        for neighbor in neighbor_positions:
+            traj_neighbor = []
+            for pos in neighbor:
+                traj_neighbor.append(TrackRow(pos[2],pos[3],pos[0],pos[1], None, 0))
+            input.append(traj_neighbor)
         # Output is the following:
         # * Dictionnary of modes
         # * Each mode element is a list of agents. 0 is the agent of interest.
@@ -143,9 +147,9 @@ def main():
             plt.plot(obs[:,0],obs[:,1],'b--')
             plt.plot(obs[-1:][:,0],obs[-1:][:,1],'ob')
             plt.plot(obs[-4:][:,0],obs[-4:][:,1],'b')
-            for neighbor in neighbor_positions:
-                plt.plot(neighbor[-1,0],neighbor[-1,1],'og')
-                plt.plot(neighbor[:,0],neighbor[:,1],'g')
+        for neighbor in neighbor_positions:
+            plt.plot(neighbor[-1,0],neighbor[-1,1],'og')
+            plt.plot(neighbor[:,0],neighbor[:,1],'g')
         plt.show()
 
 if __name__ == '__main__':
