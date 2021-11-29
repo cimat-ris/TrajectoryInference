@@ -67,7 +67,6 @@ def main():
     """**************    Testing                           **************************"""
 
     # Instanciate a predictor
-    #predictor = LSTMPredictor.load("parameters/lstm_directional_None.pkl")
     predictor = LSTMPredictor.load("parameters/sgan_directional_None.pkl")
     # On CPU
     device = torch.device('cpu')
@@ -79,13 +78,8 @@ def main():
     # Modes
     args.mode = 5
 
-    # We sample 10 paths starting from this goal
-    observations = []
-    lastobservations = []
-    predictions  = []
-    ground_truth = []
-    neighbors    = []
-    tests = 1
+    # We sample 'tests' paths starting from this goal
+    tests = 5
     for s in range(tests):
         flag = True
         while flag:
@@ -106,7 +100,7 @@ def main():
         part_num = 5
         knownN = int(3*(pathSize/part_num)) #numero de datos conocidos
         obs, gt = observed_data([_path[:,0],_path[:,1],pathL,_path[:,2]],knownN)
-        # Starting/ending times
+        # Starting/ending times of the observation
         etime = obs[-1,3]
         stime = obs[-4,3]
         neighbors_trajs = get_trajectories_given_time_interval(filtered, stime, etime)
@@ -125,13 +119,12 @@ def main():
         for neighbor_traj in neighbors_trajs:
             if len(neighbor_traj[neighbor_traj[:,2]==etime])==0:
                 continue
-            neighbor_position = neighbor_traj[neighbor_traj[:,2]==etime]
+            neighbor_position = neighbor_traj[(neighbor_traj[:,2]<=etime) & (neighbor_traj[:,2]>=stime)]
+            # To avoid including the same trajctory that we are testing
             if neighbor_position[0,3]==_path_id:
                 continue
             neighbor_positions.append(neighbor_position)
 
-        if len(neighbor_positions)>0:
-            neighbor_positions = np.squeeze(np.array(neighbor_positions),axis=1)
         if (past.shape[0]<8):
             continue
         for i in range(8):
@@ -141,24 +134,19 @@ def main():
         # * Dictionnary of modes
         # * Each mode element is a list of agents. 0 is the agent of interest.
         preds = predictor(input, np.zeros((len(input), 2)), n_predict=args.pred_length, obs_length=args.obs_length, modes=args.mode, args=args)
-        predictions.append(preds)
-        # To visualize the whole set of observations
-        observations.append(obs)
-        # To visualize the observations used to perform the short-term prediction
-        lastobservations.append(obs[-4:])
-        ground_truth.append(gt)
-        neighbors.append(neighbor_positions)
-    #
-    plt.figure(1)
-    for s,pred in enumerate(predictions):
+
+        #
+        plt.figure(1)
         for k in range(args.mode):
-            mode =pred[k][0]
+            mode =preds[k][0]
             plt.plot(mode[:,0],mode[:,1],'r')
-        plt.plot(observations[s][:,0],observations[s][:,1],'b--')
-        plt.plot(lastobservations[s][:,0],lastobservations[s][:,1],'b')
-        if len(neighbors[s])>0:
-            plt.plot(neighbors[s][:,0],neighbors[s][:,1],'og')
-    plt.show()
+            plt.plot(obs[:,0],obs[:,1],'b--')
+            plt.plot(obs[-1:][:,0],obs[-1:][:,1],'ob')
+            plt.plot(obs[-4:][:,0],obs[-4:][:,1],'b')
+            for neighbor in neighbor_positions:
+                plt.plot(neighbor[-1,0],neighbor[-1,1],'og')
+                plt.plot(neighbor[:,0],neighbor[:,1],'g')
+        plt.show()
 
 if __name__ == '__main__':
     main()
