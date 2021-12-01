@@ -58,9 +58,11 @@ class onedim_regressionT:
         self.deltak  = np.zeros((nnew,1))
         self.deltaK  = np.zeros((n+1,1))
         # Fill in deltakx
-        self.deltak  = self.kernel.dkdy(self.observedX[n],predictedX)
+        #self.deltak  = self.kernel.dkdy(self.observedX[n],predictedX)
+        self.deltak  = self.kernel.dkdy(np.array([self.observedX[n]])[:, 0], predictedX[:,0]).T
         # Fill in deltaKx
-        self.deltaK = self.kernel.dkdy(self.observedX[n],self.observedX)
+        #self.deltaK = self.kernel.dkdy(self.observedX[n],self.observedX)
+        self.deltaK = self.kernel.dkdy(np.array([self.observedX[n]])[:, 0], self.observedX[:,0]).T
     
     # Compute the likelihood for this coordinates
     def loglikelihood_from_partial_path(self):
@@ -119,7 +121,7 @@ class onedim_regressionT:
         
         deltaY        = np.zeros((n,1))
         deltaY[n-1,0] = deltay
-        
+        print('Shapes: Kp_1o=', self.Kp_1o.shape, 'deltax=', deltax.shape, 'deltak=', self.deltak.shape)
         newy = self.predictedY + self.ktKp_1.dot(deltaY)
         newy+= self.Kp_1o[-1][0]*deltax*self.deltak
         newy-= deltax*self.Kp_1o[-1][0]*self.ktKp_1.dot(self.deltaK)
