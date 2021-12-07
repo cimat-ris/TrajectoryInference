@@ -15,9 +15,9 @@ import time, logging
 
 class path_regression:
     # Constructor
-    def __init__(self, kernelX, kernelY, sigmaNoise, unit, finalArea, prior=0.0,  mode=None, timeTransitionData=None):
-        self.regression_x    = onedim_regressionT(kernelX) if mode == 'Trautman' else path1D_regression(kernelX,sigmaNoise)
-        self.regression_y    = onedim_regressionT(kernelY) if mode == 'Trautman' else path1D_regression(kernelY,sigmaNoise)
+    def __init__(self, kernelX, kernelY, sigmaNoise, unit, finalArea, prior=0.0, timeTransitionData=None):
+        self.regression_x    = path1D_regression(kernelX,sigmaNoise)
+        self.regression_y    = path1D_regression(kernelY,sigmaNoise)
         self.predictedL      = None
         self.distUnit        = unit
         self.stepUnit        = 1.0
@@ -25,26 +25,15 @@ class path_regression:
         self.finalAreaCenter, self.finalAreaSize = goal_center_and_size(finalArea[1:])
         self.finalAreaAxis   = finalArea[0]
         self.prior           = prior
-        self.mode            = mode
-        if mode == 'Trautman':
-            self.timeTransitionMean = timeTransitionData[0]
-            self.timeTransitionStd  = timeTransitionData[1]
 
     # Update observations x,y,l for the Gaussian process (matrix K)
     def update_observations(self,observations,consecutiveObservations=True):
         # Last really observed point
         lastObs = observations[-1]
-        if self.mode == 'Trautman':
-            elapsedTime = observations[:,2:3][-1][0] - observations[:,2:3][0][0]
-            timeStep    = observations[:,2:3][1][0] - observations[:,2:3][0][0]
-            self.predictedL, finalL, self.dist = self.prediction_set_time(lastObs, self.finalAreaCenter, elapsedTime, timeStep)
-            if self.dist < 1.0:
-                self.dist = 1.0
-        else:
-            if lastObs[2] > 1:
-                self.stepUnit = float(len(observations[:,2:3])/lastObs[2])
-            # Determine the set of arclengths (predictedL) to predict
-            self.predictedL, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
+        if lastObs[2] > 1:
+            self.stepUnit = float(len(observations[:,2:3])/lastObs[2])
+        # Determine the set of arclengths (predictedL) to predict
+        self.predictedL, finalL, self.dist = self.prediction_set_arclength(lastObs,self.finalAreaCenter)
 
         # Define the variance associated to the last point (varies with the area)
         if self.finalAreaAxis==0:
@@ -107,11 +96,8 @@ class path_regression:
 
     # Compute the likelihood
     def compute_likelihood(self):
-        if self.mode == 'Trautman':
-            self.likelihood = self.loglikelihood_from_partial_path()
-        else:
-            # TODO:
-            self.likelihood = self.prior*np.exp(self.loglikelihood_from_partial_path())
+        # TODO:
+        self.likelihood = self.prior*np.exp(self.loglikelihood_from_partial_path())
         return self.likelihood
 
     # The main path regression function: perform regression for a

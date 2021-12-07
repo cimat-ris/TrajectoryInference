@@ -117,13 +117,13 @@ class path1D_regression:
     # Compute the log-likelihood for this coordinates
     def loglikelihood_from_partial_path(self):
         if self.Kp_1_3m is None:
-            logging.info("Not enough observations to compute likelihood")
+            logging.debug("Not enough observations to compute likelihood")
             return 1.0
         # We remove the last element (corresponds to goal)
         mL        = np.max(self.observedL_3m[:,0])
         idx       = self.observedL[:-1]>mL
         if idx.any()==False:
-            logging.info("Not enough observations to compute likelihood")
+            logging.debug("Not enough observations to compute likelihood")
             return 1.0
         predictedL= self.observedL[:-1][idx].reshape((-1,1))
         trueX     = self.observedX[:-1][idx].reshape((-1,1))

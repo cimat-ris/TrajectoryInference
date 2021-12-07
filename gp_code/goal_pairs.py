@@ -83,9 +83,10 @@ class goal_pairs:
         i1 = 0
         d1 = math.inf
         for i in range(0,self.goals_n):
-            if i!=k and self.kernelsX[start][i].optimized and self.euclideanDistances[start][i]<d1:
-                d1 = self.euclideanDistances[start][i]
-                i1 = i
+            if i!=k and self.kernelsX[start][i] is not None:
+                if self.kernelsX[start][i].optimized and self.euclideanDistances[start][i]<d1:
+                    d1 = self.euclideanDistances[start][i]
+                    i1 = i
         return i1
 
     # Computes the ratio between path length and linear path length
@@ -175,6 +176,7 @@ class goal_pairs:
                     thetaX  = fit_parameters(l,x,ker,theta,self.sigmaNoise)
                     logging.info("Optimized parameters for x: {}".format(thetaX))
                     self.kernelsX[i][j].set_parameters(ker.get_parameters())
+                    self.kernelsX[i][j].optimized = True
                     logging.info("Full parameters for x: {}".format(self.kernelsX[i][j].get_parameters()))
                     # Fit parameters in Y
                     ker   = set_kernel(kernelType)
@@ -184,6 +186,7 @@ class goal_pairs:
                     thetaY  = fit_parameters(l,y,ker,theta,self.sigmaNoise)
                     logging.info("Optimized parameters for y: {}".format(thetaY))
                     self.kernelsY[i][j].set_parameters(ker.get_parameters())
+                    self.kernelsY[i][j].optimized = True
                     logging.info("Full parameters for y: {}".format(self.kernelsY[i][j].get_parameters()))
                     stop = timeit.default_timer()
                     execution_time = stop - start
