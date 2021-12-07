@@ -12,7 +12,6 @@ def separate_trajectories_between_goals(trajectories, goals_areas):
     for i in range(goals_n):
         for j in range(goals_n):
             mat[i][j]       = []
-    not_associated = []
     # For all trajectories
     for trajectory in trajectories:
         traj_len = len(trajectory)
@@ -32,9 +31,7 @@ def separate_trajectories_between_goals(trajectories, goals_areas):
             if start_goal is not None and end_goal is not None:
                 mat[start_goal][end_goal].append(trajectory)
                 associated_to_goals = True
-        if (not associated_to_goals):
-            not_associated.append(trajectory)
-    return mat,not_associated
+    return mat
 
 # Removes atypical trajectories
 def filter_trajectories(trajectories):
@@ -115,7 +112,7 @@ def break_multigoal_traj(tr, goals):
     last_goal = -1         # Last goal
     started   = False      # Flag to indicate that we have started with one goal
     for i,pos in enumerate(tr):
-        # Am I in a goal
+        # Am I within a goal area
         current_goal = -1
         for j in range(len(goals)):
             # If the position lies in the goal zone
@@ -124,7 +121,7 @@ def break_multigoal_traj(tr, goals):
         # We have just left a goal zone
         if current_goal==-1 and last_goal!=-1:
             if started:
-                # Split the trajectory just before
+                # Split the trajectory just before and add the piece
                 new_traj = np.array(new_traj)
                 traj_set.append(new_traj)
             # At that point we start the trajectory
