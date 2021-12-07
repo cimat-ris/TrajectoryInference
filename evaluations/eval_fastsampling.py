@@ -51,7 +51,6 @@ def main():
         pickle_out = open(pickle_dir+'/test_trajectories_matrix-'+args.dataset_id+'-'+coordinates+'.pickle',"wb")
         pickle.dump(train_trajectories_matrix, pickle_out, protocol=2)
         pickle_out.close()
-
         """**************    Learning GP parameters     **************************"""
         logging.info("Starting the learning phase")
         goalsData.optimize_kernel_parameters(kernelType,train_trajectories_matrix)
@@ -65,7 +64,6 @@ def main():
         test_trajectories_matrix = pickle.load(pickle_in)
         pickle_in = open(pickle_dir+'/goalsData-'+args.dataset_id+'-'+coordinates+'.pickle',"rb")
         goalsData = pickle.load(pickle_in)
-
     """**********          Testing          ***********"""
     timesEffMean = []
     timesEffSlow = []
@@ -83,13 +81,11 @@ def main():
 
         for startG, endG in tqdm(np.ndindex(goalsData.goals_n,goalsData.goals_n),total=goalsData.goals_n*goalsData.goals_n):
             if goalsData.kernelsX[startG][endG] is not None and goalsData.kernelsY[startG][endG] is not None:
-                for trajectory in test_trajectories_matrix[startG][endG]:
+                for _path in test_trajectories_matrix[startG][endG]:
                     # Get the path data
-                    pathX, pathY, pathT = trajectory
-                    pathL = trajectory_arclength(trajectory)
-
+                    pathL = trajectory_arclength(_path)
                     # Total path length
-                    pathSize = len(pathX)
+                    pathSize = len(_path)
                     if args.timevsnsamples:
                         prop     = 0.5
                         nSamples = var
@@ -103,7 +99,7 @@ def main():
                     knownN = int(prop*pathSize)
                     logging.debug("--------------------------")
                     # Monte Carlo
-                    observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
+                    observations, ground_truth = observed_data([_path[:,0],_path[:,1],pathL,_path[:,2]],knownN)
                     """Multigoal prediction test"""
                     likelihoods  = mgps.update(observations)
                     if likelihoods is None:
