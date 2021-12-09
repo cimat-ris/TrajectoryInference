@@ -67,7 +67,7 @@ class multiple_plotter():
                         self.axs[i][j].text(center[0], center[1],str(k),color='white')
 
     # Plot multiple predictions
-    def plot_likeliest_predictions(self,observations,ground_truth,filtered_paths, predicted_paths, var_paths, goals_likelihoods,min_likelihood=0.001):
+    def plot_likeliest_predictions(self,observations,ground_truth,filtered_paths, predicted_paths, var_paths, goals_likelihoods,goals_likelihoods_preds,min_likelihood=0.001):
         # Plot the observed data
         for i in range(self.nrows):
             for j in range(self.ncols):
@@ -80,11 +80,13 @@ class multiple_plotter():
             filt_path = filtered_paths[inds[idx]]
             pred_path = predicted_paths[inds[idx]]
             var_path  = var_paths[inds[idx]]
-            likelihood= goals_likelihoods[inds[idx]]
+            likelihood       = goals_likelihoods[inds[idx]]
+            likelihood_preds_x,likelihood_preds_y = goals_likelihoods_preds[inds[idx]]
             # For each goal, draws the prediction
             self.axs[idx//self.ncols][idx%self.ncols].plot(filt_path[:-1,0],filt_path[:-1,1],'b--')
             self.axs[idx//self.ncols][idx%self.ncols].plot(pred_path[:,0],pred_path[:,1],'b--')
             self.axs[idx//self.ncols][idx%self.ncols].plot(ground_truth[:,0],ground_truth[:,1],'g')
+            self.axs[idx//self.ncols][idx%self.ncols].plot(likelihood_preds_x[:],likelihood_preds_y[:],'w')
             predictedN = pred_path.shape[0]
             # For the jth predicted element
             for j in range(predictedN):
