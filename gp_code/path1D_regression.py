@@ -67,8 +67,9 @@ class path1D_regression:
                 self.observedL_2m = self.observedL
         else:
             startL            = max(0,self.n-2*self.m-1)
-            self.observedL_3m = observedL[startL:startL+self.m]
-            observedX_3m      = observedX[startL:startL+self.m]
+            # Added the last position
+            self.observedL_3m = np.append(observedL[startL:startL+self.m],finalL).reshape((-1,1))
+            observedX_3m      = np.append(observedX[startL:startL+self.m],finalX).reshape((-1,1))
             K_3m              = self.kernel(self.observedL_3m[:,0],self.observedL_3m[:,0])
             self.Kp_1_3m =inv(K_3m+self.sigmaNoise*np.eye(K_3m.shape[0]))
             self.Kp_1o_3m=self.Kp_1_3m.dot(observedX_3m-(self.kernel.meanSlope*self.observedL_3m+self.kernel.meanConstant))
@@ -81,13 +82,9 @@ class path1D_regression:
         # Covariance matrix
         self.K               = np.zeros((n_obs+1,n_obs+1))
         # Observation vectors: X and L
-        self.observedL       = np.zeros((n_obs+1,1))
-        self.observedX       = np.zeros((n_obs+1,1))
-        self.observedL[:-1]  = selectedL
-        self.observedX[:-1]  = selectedX
         # Last observation is a **fixed** value for the final point
-        self.observedL[-1,0] = finalL
-        self.observedX[-1,0] = finalX
+        self.observedL       = np.append(selectedL,finalL).reshape((-1,1))
+        self.observedX       = np.append(selectedX,finalX).reshape((-1,1))
         # Center the data in case we use the linear prior
         if self.kernel.linearPrior!=False:
             self.observedX -= (self.kernel.meanSlope*self.observedL+self.kernel.meanConstant)
@@ -118,17 +115,17 @@ class path1D_regression:
     def loglikelihood_from_partial_path(self):
         if self.Kp_1_3m is None:
             logging.debug("Not enough observations to compute likelihood")
-            return 1.0
-        # We remove the last element (corresponds to goal)
-        mL        = np.max(self.observedL_3m[:,0])
-        idx       = self.observedL[:-1]>mL
-        if idx.any()==False:
+            return 1.0, None
+        # Consider the group of observations to be used
+        mL        = np.max(self.observedL_3m[:-1,0])
+        idx_eval  = self.observedL[:-1]>mL
+        if idx_eval.any()==False:
             logging.debug("Not enough observations to compute likelihood")
-            return 1.0
-        predictedL= self.observedL[:-1][idx].reshape((-1,1))
-        trueX     = self.observedX[:-1][idx].reshape((-1,1))
+            return 1.0, None
+        predictedL= self.observedL[:-1][idx_eval].reshape((-1,1))
+        trueX     = self.observedX[:-1][idx_eval].reshape((-1,1))
         k_3m      = self.kernel(self.observedL_3m[:,0],predictedL[:,0])
-        C_3m      = self.kernel(predictedL[:,0],predictedL[:,0])
+        C_3m      = self.kernel(predictedL[:,0],       predictedL[:,0])
         # Predictive mean
         predictedX_3m = k_3m.transpose().dot(self.Kp_1o_3m)
         error         = predictedX_3m-trueX
@@ -138,7 +135,7 @@ class path1D_regression:
         # Regularization to avoid singular matrices
         varX_3m  += (self.epsilonReg+self.sigmaNoise)*np.eye(varX_3m.shape[0])
         errorSq   = np.divide(np.square(error),np.diagonal(varX_3m).reshape((-1,1)))
-        return -errorSq.sum()
+        return -errorSq.sum(), predictedX_3m+(predictedL*self.kernel.meanSlope+self.kernel.meanConstant)
 
     # The main regression function: perform regression for a vector of values
     # lnew, that has been computed in update

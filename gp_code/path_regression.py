@@ -90,15 +90,15 @@ class path_regression:
         return np.concatenate([filteredx,filteredy],axis=1)
 
     def loglikelihood_from_partial_path(self):
-        px = self.regression_x.loglikelihood_from_partial_path()
-        py = self.regression_y.loglikelihood_from_partial_path()
-        return px+py
+        llx, predx  = self.regression_x.loglikelihood_from_partial_path()
+        lly, predy =  self.regression_y.loglikelihood_from_partial_path()
+        return llx+lly,predx,predy
 
     # Compute the likelihood
     def compute_likelihood(self):
-        # TODO:
-        self.likelihood = self.prior*np.exp(self.loglikelihood_from_partial_path())
-        return self.likelihood
+        ll,predx,predy = self.loglikelihood_from_partial_path()
+        self.likelihood = self.prior*np.exp(ll)
+        return self.likelihood,predx,predy
 
     # The main path regression function: perform regression for a
     # vector of values of future L, that has been computed in update
