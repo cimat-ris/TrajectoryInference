@@ -67,7 +67,7 @@ class multiple_plotter():
                         self.axs[i][j].text(center[0], center[1],str(k),color='white')
 
     # Plot multiple predictions
-    def plot_likeliest_predictions(self,observations, filtered_paths, predicted_paths, var_paths, goals_likelihoods,min_likelihood=0.001):
+    def plot_likeliest_predictions(self,observations,ground_truth,filtered_paths, predicted_paths, var_paths, goals_likelihoods,min_likelihood=0.001):
         # Plot the observed data
         for i in range(self.nrows):
             for j in range(self.ncols):
@@ -84,10 +84,11 @@ class multiple_plotter():
             # For each goal, draws the prediction
             self.axs[idx//self.ncols][idx%self.ncols].plot(filt_path[:-1,0],filt_path[:-1,1],'b--')
             self.axs[idx//self.ncols][idx%self.ncols].plot(pred_path[:,0],pred_path[:,1],'b--')
+            self.axs[idx//self.ncols][idx%self.ncols].plot(ground_truth[:,0],ground_truth[:,1],'g')
             predictedN = pred_path.shape[0]
             # For the jth predicted element
             for j in range(predictedN):
-                if j%2==0:
+                if j%6==0:
                     xy = [pred_path[j,0],pred_path[j,1]]
                     # It is: to have 3.0 sigmas. Then, the Ellipse constructor asks for the diameter, hence the 2.0
                     vx  = var_path[0,j,j]

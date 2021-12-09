@@ -43,8 +43,11 @@ def main():
     startG = args.start
     flag = True
     while flag:
+        # Choose a goal randomly
         nextG = random.randrange(goalsData.goals_n)
+        # Do we have trajectories to this goal
         if len(trajMat[startG][nextG]) > 0:
+            # Choose one trajectory randomly
             pathId = random.randrange( len(trajMat[startG][nextG]))
             flag = False
 
@@ -62,13 +65,12 @@ def main():
     # Divides the trajectory in part_num parts and consider
     part_num = 5
 
-
     # For different sub-parts of the trajectory
     for i in range(1,part_num-1):
         mp = multiple_plotter()
         mp.set_background(imgGCS)
-
         knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
+        logging.info("{} {}".format(knownN,pathSize))
         observations, ground_truth = observed_data([_path[:,0],_path[:,1],pathL,_path[:,2]],knownN)
 
         """Multigoal prediction test"""
@@ -79,7 +81,7 @@ def main():
         filteredPaths           = mgps.filter()
         predictedXYVec,varXYVec = mgps.predict_trajectory()
         logging.info('Plotting')
-        mp.plot_likeliest_predictions(observations,filteredPaths,predictedXYVec,varXYVec,likelihoods)
+        mp.plot_likeliest_predictions(observations,ground_truth,filteredPaths,predictedXYVec,varXYVec,likelihoods)
         logging.info('Goals likelihood:{}'.format(mgps._goals_likelihood))
         logging.info('Mean likelihood:{}'.format(mgps.meanLikelihood))
         mp.show()
@@ -92,7 +94,7 @@ def main():
         p.plot_scene_structure(goalsData)
 
         knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
-        observations, ground_truth = observed_data([pathX,pathY,pathL,pathT],knownN)
+        observations, ground_truth = observed_data([_path[:,0],_path[:,1],pathL,_path[:,2]],knownN)
         """Multigoal prediction test"""
         logging.info('Updating likelihoods')
         likelihoods = mgps.update(observations)
