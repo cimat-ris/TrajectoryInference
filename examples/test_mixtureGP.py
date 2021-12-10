@@ -70,7 +70,6 @@ def main():
         mp = multiple_plotter()
         mp.set_background(imgGCS)
         knownN = int((i+1)*(pathSize/part_num)) #numero de datos conocidos
-        logging.info("{} {}".format(knownN,pathSize))
         observations, ground_truth = observed_data([_path[:,0],_path[:,1],pathL,_path[:,2]],knownN)
 
         """Multigoal prediction test"""
