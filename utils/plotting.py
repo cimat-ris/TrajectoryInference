@@ -53,7 +53,6 @@ class multiple_plotter():
     def plot_scene_structure(self,goals_data, goals_likelihoods, draw_ids=False):
         inds = np.argsort(goals_likelihoods)
         inds = np.flip(inds)
-        print(inds)
         for i in range(self.nrows):
             for j in range(self.ncols):
                 idx = inds[i*self.ncols+j]

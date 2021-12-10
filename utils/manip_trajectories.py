@@ -151,7 +151,6 @@ def line_parameters(trajectory, flag):
     arclen = trajectory_arclength(trajectory)[-1]
     if arclen == 0:
         return 0.,0.
-
     x, y = trajectory[:,0], trajectory[:,1]
     if flag == 'x':
         b = x[0]
@@ -167,7 +166,7 @@ def get_linear_prior_mean(trajectories, flag):
     n = len(trajectories)
     if n == 0:
         return [0.,0.,0.]
-    lineParameters = np.array([ line_parameters(trajectories[i], flag) for i in range(n)])
+    lineParameters = np.array([line_parameters(trajectories[i], flag) for i in range(n)])
     mean = [np.median(lineParameters[:,0]), np.median(lineParameters[:,1]) ]
     var  = [np.var(lineParameters[:,0]), np.var(lineParameters[:,1]) ]
     cov  = np.cov(lineParameters[:,0],lineParameters[:,1])

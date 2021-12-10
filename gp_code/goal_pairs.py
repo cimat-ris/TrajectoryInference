@@ -2,6 +2,7 @@ from gp_code.kernels import set_kernel
 from gp_code.optimize_parameters import *
 from utils.stats_trajectories import trajectory_arclength, trajectory_duration
 from utils.manip_trajectories import get_linear_prior_mean
+from utils.manip_trajectories import line_parameters
 from utils.manip_trajectories import get_data_from_set
 from utils.manip_trajectories import goal_center
 from utils.stats_trajectories import euclidean_distance, avg_speed, median_speed
@@ -80,12 +81,12 @@ class goal_pairs:
 
     # For a given goal, determines the closest
     def closest(self,start,k):
-        i1 = 0
+        i1 = -1
         d1 = math.inf
-        for i in range(0,self.goals_n):
+        for i in range(self.goals_n):
             if i!=k and self.kernelsX[start][i] is not None:
-                if self.kernelsX[start][i].optimized and self.euclideanDistances[start][i]<d1:
-                    d1 = self.euclideanDistances[start][i]
+                if self.kernelsX[start][i].optimized and self.euclideanDistances[k][i]<d1:
+                    d1 = self.euclideanDistances[k][i]
                     i1 = i
         return i1
 
@@ -198,14 +199,22 @@ class goal_pairs:
     def copyFromClosest(self,start,k):
         # When we have no data for a goal, we instantiate one with Parameters equal to the closest one
         j = self.closest(start,k)
+        logging.info("Setting parameters of {}-{} from {}-{}".format(start,k,start,j))
         # Build a kernel with the specified type and initial parameters theta
-        self.kernelsX[start][k]   = set_kernel(self.kernelsX[start][j].type)
+        self.kernelsX[start][k] = set_kernel(self.kernelsX[start][j].type)
         # Copying from j
         self.kernelsX[start][k].set_parameters(self.kernelsX[start][j].get_parameters())
+        gs = goal_center(self.goals_areas[start][1:])
+        gk = goal_center(self.goals_areas[k][1:])
+        self.kernelsX[start][k].meanSlope   = (gk[0]-gs[0])/self.medianLengths[start][j]
+        self.kernelsX[start][k].manConstant = gs[0]
+
         # TODO: should update the linear term to the line
         logging.info("Full parameters for x: {}".format(self.kernelsX[start][k].get_parameters()))
         # Copying from j
         self.kernelsY[start][k].set_parameters(self.kernelsY[start][j].get_parameters())
+        self.kernelsY[start][k].meanSlope   = (gk[1]-gs[1])/self.medianLengths[start][j]
+        self.kernelsY[start][k].manConstant = gs[1]
         logging.info("Full parameters for y: {}".format(self.kernelsY[start][k].get_parameters()))
         return j
 
