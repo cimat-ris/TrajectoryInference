@@ -75,13 +75,13 @@ def main():
 
         """Multigoal prediction test"""
         logging.info('Updating likelihoods')
-        likelihoods = mgps.update(observations,consecutiveObservations=False)
+        likelihoods, likelihoods_preds = mgps.update(observations,consecutiveObservations=False)
         mp.plot_scene_structure(goalsData,likelihoods,draw_ids=True)
         logging.info('Performing prediction')
         filteredPaths           = mgps.filter()
         predictedXYVec,varXYVec = mgps.predict_trajectory()
         logging.info('Plotting')
-        mp.plot_likeliest_predictions(observations,ground_truth,filteredPaths,predictedXYVec,varXYVec,likelihoods)
+        mp.plot_likeliest_predictions(observations,ground_truth,filteredPaths,predictedXYVec,varXYVec,likelihoods,likelihoods_preds)
         logging.info('Goals likelihood:{}'.format(mgps._goals_likelihood))
         logging.info('Mean likelihood:{}'.format(mgps.meanLikelihood))
         mp.show()
@@ -97,7 +97,7 @@ def main():
         observations, ground_truth = observed_data([_path[:,0],_path[:,1],pathL,_path[:,2]],knownN)
         """Multigoal prediction test"""
         logging.info('Updating likelihoods')
-        likelihoods = mgps.update(observations)
+        likelihoods,__= mgps.update(observations)
         logging.info('Performing prediction')
         predictedXYVec,varXYVec = mgps.predict_path(compute_sqRoot=True)
         logging.info('Goals likelihood {}'.format(mgps._goals_likelihood))

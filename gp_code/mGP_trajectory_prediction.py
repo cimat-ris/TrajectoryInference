@@ -71,6 +71,7 @@ class mGP_trajectory_prediction:
         weights = np.linspace(0.0,1.0,num=nobs)
         weights = weights/np.sum(weights)
         self._speed_average    = np.average(observations[:,4],axis=0,weights=weights)
+        all_lk_predicted       = []
         # Update each regressor with its corresponding observations
         for i in range(self.goalsData.goals_n):
             if self.gpTrajectoryRegressor[i] is not None:
@@ -81,8 +82,11 @@ class mGP_trajectory_prediction:
                 # Update observations and re-compute the kernel matrices
                 self.gpTrajectoryRegressor[i].update_observations(observations,consecutiveObservations)
                 # Compute the model likelihood
-                self._goals_likelihood[i] = self.gpTrajectoryRegressor[i].compute_likelihood()
-
+                lkhd,px,py  = self.gpTrajectoryRegressor[i].compute_likelihood()
+                all_lk_predicted.append((px,py))
+                self._goals_likelihood[i] =lkhd
+            else:
+                all_lk_predicted.append(None)
         # Sum of the likelihoods
         s = sum(self._goals_likelihood)
         # Compute the mean likelihood
@@ -98,7 +102,7 @@ class mGP_trajectory_prediction:
             if self._goals_likelihood[i] > self._goals_likelihood[mostLikely]:
                 mostLikely = i
         self.mostLikelyGoal = mostLikely
-        return self._goals_likelihood
+        return self._goals_likelihood, all_lk_predicted
 
     # Get a filtered version of the initial observations
     def filter(self):
