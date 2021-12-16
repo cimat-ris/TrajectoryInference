@@ -2,8 +2,16 @@
 A class for handling a single GP in trajectory prediction
 """
 import numpy as np
-import math
+import math, sys, os
+import torch
 from gp_code.sGP_trajectory_prediction import *
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../trajnetplusplustools')))
+from utils.manip_trajectories import start_time, end_time, get_trajectories_given_time_interval, get_goal_of_point
+#import trajnetplusplustools
+from trajnetplusplusbaselines.trajnetbaselines.lstm import LSTMPredictor
+from trajnetplusplustools.reader import Reader
+from trajnetplusplustools.data import TrackRow
 
 # Class for performing path regression with a single Gaussian Process
 class sGPsT_trajectory_prediction(sGP_trajectory_prediction):
@@ -12,6 +20,11 @@ class sGPsT_trajectory_prediction(sGP_trajectory_prediction):
     def __init__(self, startG, endG, goalsData, mode = None):
         # Init of the base class
         super(sGPsT_trajectory_prediction, self).__init__(startG, endG, goalsData, mode)
+        # Instanciate a predictor
+        predictor = LSTMPredictor.load("parameters/sgan_directional_None.pkl")
+        # On CPU
+        device    = torch.device('cpu')
+        predictor.model.to(device)
 
     # Update observations and compute likelihood based on observations
     def update(self,observations,consecutiveObservations=True):
