@@ -80,12 +80,13 @@ class multiple_plotter():
             pred_path = predicted_paths[inds[idx]]
             var_path  = var_paths[inds[idx]]
             likelihood       = goals_likelihoods[inds[idx]]
-            likelihood_preds_x,likelihood_preds_y = goals_likelihoods_preds[inds[idx]]
+            likelihood_preds = goals_likelihoods_preds[inds[idx]]
             # For each goal, draws the prediction
             self.axs[idx//self.ncols][idx%self.ncols].plot(filt_path[:-1,0],filt_path[:-1,1],'b--')
             self.axs[idx//self.ncols][idx%self.ncols].plot(pred_path[:,0],pred_path[:,1],'b--')
             self.axs[idx//self.ncols][idx%self.ncols].plot(ground_truth[:,0],ground_truth[:,1],'g')
-            self.axs[idx//self.ncols][idx%self.ncols].plot(likelihood_preds_x[:],likelihood_preds_y[:],'w')
+            if likelihood_preds is not None:
+                self.axs[idx//self.ncols][idx%self.ncols].plot(likelihood_preds[:,0],likelihood_preds[:,1],'w')
             predictedN = pred_path.shape[0]
             # For the jth predicted element
             for j in range(predictedN):
@@ -100,6 +101,7 @@ class multiple_plotter():
                     ell.set_edgecolor('m')
                     self.axs[idx//self.ncols][idx%self.ncols].add_patch(ell)
             self.axs[idx//self.ncols][idx%self.ncols].set_title("Goal {}. Likelihood {:.2f}".format(inds[idx],likelihood))
+
     # Show the plots
     def show(self):
         plt.show()
