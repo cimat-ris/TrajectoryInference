@@ -19,13 +19,7 @@ class sGP_trajectory_prediction:
         self._current_time      = 0.0
         self._current_arc_length= 0.0
         self._speed_average     = 1.0
-
-        # The basic element here is this object, that will do the regression work
-        if mode == 'Trautman': #!Using path_regression for now
-            timeTransitionData = [self.goalsData.timeTransitionMeans[self._start][self._end],self.goalsData.timeTransitionStd[self._start][self._end]]
-            self.gpTrajectoryRegressor = path_regression(self.goalsData.kernelsX[self._start][self._end], self.goalsData.kernelsY[self._start][self._end],goalsData.sigmaNoise,self.goalsData.units[self._start][self._end],self.goalsData.goals_areas[self._end],mode='Trautman',timeTransitionData=timeTransitionData)
-        else:
-            self.gpTrajectoryRegressor = trajectory_regression(self.goalsData.kernelsX[self._start][self._end], self.goalsData.kernelsY[self._start][self._end],goalsData.sigmaNoise,self.goalsData.speedModels[self._start][self._end],self.goalsData.units[self._start][self._end],self.goalsData.goals_areas[self._end],self.goalsData.priorTransitions[self._start][self._end])
+        self.gpTrajectoryRegressor = trajectory_regression(self.goalsData.kernelsX[self._start][self._end], self.goalsData.kernelsY[self._start][self._end],goalsData.sigmaNoise,self.goalsData.speedModels[self._start][self._end],self.goalsData.units[self._start][self._end],self.goalsData.goals_areas[self._end],self.goalsData.priorTransitions[self._start][self._end])
 
     # Update observations and compute likelihood based on observations
     def update(self,observations,consecutiveObservations=True):
