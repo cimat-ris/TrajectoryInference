@@ -82,8 +82,8 @@ class mGP_trajectory_prediction:
                 # Update observations and re-compute the kernel matrices
                 self.gpTrajectoryRegressor[i].update_observations(observations,consecutiveObservations)
                 # Compute the model likelihood
-                lkhd,px,py  = self.gpTrajectoryRegressor[i].compute_likelihood()
-                all_lk_predicted.append((px,py))
+                lkhd,lkhd_preds = self.gpTrajectoryRegressor[i].compute_likelihood()
+                all_lk_predicted.append(lkhd_preds)
                 self._goals_likelihood[i] =lkhd
             else:
                 all_lk_predicted.append(None)

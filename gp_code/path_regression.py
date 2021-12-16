@@ -89,16 +89,22 @@ class path_regression:
         filteredy = self.regression_y.filter_observations()
         return np.concatenate([filteredx,filteredy],axis=1)
 
+    # Compute the log likelihood independently on x and y, the sum them.
+    # Each call also returns the predicted piece of trajectory
     def loglikelihood_from_partial_path(self):
         llx, predx  = self.regression_x.loglikelihood_from_partial_path()
         lly, predy =  self.regression_y.loglikelihood_from_partial_path()
-        return llx+lly,predx,predy
+        if predx is None or predy is None:
+            pred = None
+        else:
+            pred = np.concatenate([predx,predy],axis=1)
+        return llx+lly,pred
 
     # Compute the likelihood
     def compute_likelihood(self):
-        ll,predx,predy = self.loglikelihood_from_partial_path()
+        ll,preds = self.loglikelihood_from_partial_path()
         self.likelihood = self.prior*np.exp(ll)
-        return self.likelihood,predx,predy
+        return self.likelihood,preds
 
     # The main path regression function: perform regression for a
     # vector of values of future L, that has been computed in update

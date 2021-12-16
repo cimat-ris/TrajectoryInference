@@ -114,7 +114,7 @@ class path1D_regression:
     # Compute the log-likelihood for this coordinates
     def loglikelihood_from_partial_path(self):
         if self.Kp_1_3m is None:
-            logging.debug("Not enough observations to compute likelihood")
+            logging.debug("Kp_1_3m not defined")
             return 1.0, None
         # Consider the group of observations to be used
         mL        = np.max(self.observedL_3m[:-1,0])

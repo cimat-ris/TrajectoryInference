@@ -28,7 +28,7 @@ class sGP_trajectory_prediction:
             self.gpTrajectoryRegressor = trajectory_regression(self.goalsData.kernelsX[self._start][self._end], self.goalsData.kernelsY[self._start][self._end],goalsData.sigmaNoise,self.goalsData.speedModels[self._start][self._end],self.goalsData.units[self._start][self._end],self.goalsData.goals_areas[self._end],self.goalsData.priorTransitions[self._start][self._end])
 
     # Update observations and compute likelihood based on observations
-    def update(self,observations):
+    def update(self,observations,consecutiveObservations=True):
         # Update time and current arc length
         self._current_time      = observations[-1,3]
         self._current_arc_length= observations[-1,2]
@@ -39,7 +39,7 @@ class sGP_trajectory_prediction:
         weights = weights/np.sum(weights)
         self._speed_average    = np.average(observations[:,4],axis=0,weights=weights)
         # Update observations and re-compute the kernel matrices
-        self.gpTrajectoryRegressor.update_observations(observations)
+        self.gpTrajectoryRegressor.update_observations(observations,consecutiveObservations)
         # Compute the model likelihood
         return self.gpTrajectoryRegressor.compute_likelihood()
 
