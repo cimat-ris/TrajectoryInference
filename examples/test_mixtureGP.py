@@ -21,6 +21,7 @@ def main():
         logging.basicConfig(format='%(levelname)s: %(message)s',level=args.log_level)
     else:
         logging.basicConfig(filename=args.log_file,format='%(levelname)s: %(message)s',level=args.log_level)
+    logging.getLogger('matplotlib.font_manager').disabled = True
 
     # Read the areas file, dataset, and form the goalsLearnedStructure object
     imgGCS           = './datasets/GC/reference.jpg'

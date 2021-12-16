@@ -22,6 +22,7 @@ def main():
         logging.basicConfig(format='%(levelname)s: %(message)s',level=args.log_level)
     else:
         logging.basicConfig(filename=args.log_file,format='%(levelname)s: %(message)s',level=args.log_level)
+    logging.getLogger('matplotlib.font_manager').disabled = True
 
     # Read the areas file, dataset, and form the goalsLearnedStructure object
     imgGCS           = './datasets/GC/reference.jpg'
@@ -70,10 +71,10 @@ def main():
         """Single goal prediction test"""
         logging.info('Updating likelihoods')
         # Update the GP with (real) observations
-        start        = time.process_time()
-        likelihood   = gp.update(observations)
-        stop         = time.process_time()
-        filteredPath = gp.filter()
+        start                      = time.process_time()
+        likelihood,preds_likelihood= gp.update(observations,consecutiveObservations=False)
+        stop                       = time.process_time()
+        filteredPath               = gp.filter()
         logging.info('CPU process time (update): {:.1f} [ms]'.format(1000.0*(stop-start)))
         start = stop
         # Perform prediction
