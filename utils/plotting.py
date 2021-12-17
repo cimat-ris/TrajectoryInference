@@ -92,7 +92,7 @@ class multiple_plotter():
             for j in range(predictedN):
                 if j%6==0:
                     xy = [pred_path[j,0],pred_path[j,1]]
-                    # It is: to have 3.0 sigmas. Then, the Ellipse constructor asks for the diameter, hence the 2.0
+                    # It is: to have 3.0 sigmas. Then, the Ellipse constructor asks for the diameter, hence the 6.0
                     vx  = var_path[0,j,j]
                     vy  = var_path[1,j,j]
                     ell = Ellipse(xy,6.0*math.sqrt(math.fabs(vx)),6.0*math.sqrt(math.fabs(vy)))
@@ -227,6 +227,11 @@ class plotter():
                 idx= np.random.choice(len(tr), n_samples_eff, replace=False)
                 for k in idx:
                     self.ax.plot(tr[k][:,0],tr[k][:,1],color="white",alpha=0.3)
+    # Plot neighbors
+    def plot_neighbors(self,neighbor_positions):
+        for neighbor in neighbor_positions:
+            plt.plot(neighbor[-1,0],neighbor[-1,1],'og')
+            plt.plot(neighbor[:,0],neighbor[:,1],'g')
 
     def plot_paths(self,traj_set, n_max=500):
         for i,tr in enumerate(traj_set):
