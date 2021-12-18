@@ -230,8 +230,14 @@ class plotter():
     # Plot neighbors
     def plot_neighbors(self,neighbor_positions):
         for neighbor in neighbor_positions:
-            plt.plot(neighbor[-1,0],neighbor[-1,1],'og')
-            plt.plot(neighbor[:,0],neighbor[:,1],'g')
+            self.ax.plot(neighbor[-1,0],neighbor[-1,1],'og')
+            self.ax.plot(neighbor[:,0],neighbor[:,1],'g')
+
+    # Plot tajctories modes
+    def plot_modes(self,preds):
+        for k in range(len(preds)):
+            mode =preds[k][0]
+            self.ax.plot(mode[:,0],mode[:,1],'r')
 
     def plot_paths(self,traj_set, n_max=500):
         for i,tr in enumerate(traj_set):
