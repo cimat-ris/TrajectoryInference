@@ -21,7 +21,8 @@ def write_parameters(kernels,fileName,kernelType='linePriorCombined'):
     f.close()
 
 # Read a parameter file and return the matrix of kernels corresponding to this file
-def read_and_set_parameters(file_name, nParameters):
+def read_and_set_parameters(file_name_base,dataset_id,coordinate_system,xy):
+    file_name = file_name_base+'_'+dataset_id+'_'+coordinate_system+'_'+xy+'.txt'
     try:
         file = open(file_name,'r')
     except OSError:
