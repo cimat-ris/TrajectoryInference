@@ -26,16 +26,13 @@ def main():
 
     # Read the areas file, dataset, and form the goalsLearnedStructure object
     imgGCS           = './datasets/GC/reference.jpg'
-    coordinates      = args.coordinates
 
-    traj_dataset, goalsData, trajMat, __ = read_and_filter(args.dataset_id,coordinate_system=coordinates,use_pickled_data=args.pickle)
-    # Selection of the kernel type
-    kernelType = "linePriorCombined"
-    nParameters = 4
+    traj_dataset, goalsData, trajMat, __ = read_and_filter(args.dataset_id,coordinate_system=args.coordinates,use_pickled_data=args.pickle)
 
     # Read the kernel parameters from file
-    goalsData.kernelsX = read_and_set_parameters('parameters/linearpriorcombined20x20_GCS_img_x.txt',nParameters)
-    goalsData.kernelsY = read_and_set_parameters('parameters/linearpriorcombined20x20_GCS_img_y.txt',nParameters)
+    goalsData.kernelsX = read_and_set_parameters('parameters/linearpriorcombined20x20',args.dataset_id,args.coordinates,'x')
+    goalsData.kernelsY = read_and_set_parameters('parameters/linearpriorcombined20x20',args.dataset_id,args.coordinates,'y')
+    goalsData.sigmaNoise = 600.0
 
     """**********          Testing          ***********"""
     # We select a pair of starting and ending goals, and a trajectory id
@@ -62,7 +59,7 @@ def main():
     for i in range(1,part_num-1):
         p = plotter()
         logging.info('--------------------------')
-        if coordinates=='img':
+        if args.coordinates=='img':
             p.set_background(imgGCS)
         p.plot_scene_structure(goalsData)
         # Data we will suppose known

@@ -23,16 +23,11 @@ def main():
 
     # Read the areas file, dataset, and form the goalsLearnedStructure object
     imgGCS           = './datasets/GC/reference.jpg'
-    coordinates      = args.coordinates
-    traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',coordinate_system=coordinates,use_pickled_data=args.pickle)
-
-    # Selection of the kernel type
-    kernelType  = "linePriorCombined"
-    nParameters = 4
+    traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',coordinate_system=args.coordinates,use_pickled_data=args.pickle)
 
     # Read the kernel parameters from file
-    goalsData.kernelsX = read_and_set_parameters("parameters/linearpriorcombined20x20_GCS_img_x.txt",nParameters)
-    goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined20x20_GCS_img_y.txt",nParameters)
+    goalsData.kernelsX = read_and_set_parameters('parameters/linearpriorcombined20x20',args.dataset_id,args.coordinates,'x')
+    goalsData.kernelsY = read_and_set_parameters('parameters/linearpriorcombined20x20',args.dataset_id,args.coordinates,'y')
     goalsData.sigmaNoise = 600.0
     """**********          Testing          ***********"""
     # We give the start and ending goals
@@ -70,7 +65,7 @@ def main():
         observations, ground_truth = observed_data([_path[:,0],_path[:,1],pathL,_path[:,2]],knownN)
         logging.info("Updating observations")
         # Update the GP with (real) observations
-        likelihoods  = mgps.update(observations,consecutiveObservations=False)
+        likelihoods, __  = mgps.update(observations,consecutiveObservations=False)
         filteredPaths= mgps.filter()
         # Perform prediction
         predictedXYVec,varXYVec = mgps.predict_trajectory()
