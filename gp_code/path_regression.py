@@ -52,7 +52,8 @@ class path_regression:
         euclideanDist = euclidean_distance([x,y], finishPoint)
         # Rough estimate of the remaining arc length
         distToGoal    = euclideanDist*self.distUnit
-        size          = int(distToGoal*self.stepUnit)
+        size          = 1+int(distToGoal*self.stepUnit)
+        logging.debug("Points to predict {}".format(size))
         predset = np.zeros((size,1))
         if size > 0:
             step = distToGoal/float(size)
