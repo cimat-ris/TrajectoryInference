@@ -10,13 +10,7 @@ import pandas as pd
 import logging
 from scipy.interpolate import interp1d
 from utils.dataset_trajectories import TrajDataset
-
-
-def image_to_world(p, Homog):
-    pp = np.stack((p[:, 0], p[:, 1], np.ones(len(p))), axis=1)
-    PP = np.matmul(Homog, pp.T).T
-    P_normal = PP / np.repeat(PP[:, 2].reshape((-1, 1)), 3, axis=1)
-    return P_normal[:, :2]
+from utils.manip_trajectories import image_to_world
 
 
 def load_gcs(path, **kwargs):
@@ -76,11 +70,11 @@ def load_gcs(path, **kwargs):
                                                        "pos_x": interp_X_,
                                                        "pos_y": interp_Y_}))
     raw_dataset = raw_dataset.reset_index()
-    homog = [[4.97412897e-02, -4.24730883e-02, 7.25543911e+01],
+    traj_dataset.homography = [[4.97412897e-02, -4.24730883e-02, 7.25543911e+01],
              [1.45017874e-01, -3.35678711e-03, 7.97920970e+00],
              [1.36068797e-03, -4.98339188e-05, 1.00000000e+00]]
     if coordinate_system!="img":
-        world_coords = image_to_world(raw_dataset[["pos_x", "pos_y"]].to_numpy(), homog)
+        world_coords = image_to_world(raw_dataset[["pos_x", "pos_y"]].to_numpy(), traj_dataset.homography)
         raw_dataset[["pos_x", "pos_y"]] = pd.DataFrame(world_coords * 0.8)
 
     # Copy columns
@@ -97,7 +91,7 @@ def load_gcs(path, **kwargs):
     # May have to transform goal areas coordinates
     if coordinate_system!="img":
         n_goals    = traj_dataset.goals_areas.shape[0]
-        tmp = image_to_world(np.flip(np.reshape(traj_dataset.goals_areas[:,1:],(-1,2)),axis=1), homog)
+        tmp = image_to_world(np.flip(np.reshape(traj_dataset.goals_areas[:,1:],(-1,2)),axis=1), traj_dataset.homography)
         traj_dataset.goals_areas[:,1:] = np.reshape(np.flip(tmp,axis=1),(n_goals,-1))*0.8
     # post-process
     logging.info("Post-process")

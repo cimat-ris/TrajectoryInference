@@ -2,6 +2,15 @@ from utils.stats_trajectories import trajectory_arclength
 import statistics as stats
 import numpy as np
 import logging
+
+
+def image_to_world(trajectory,homography):
+    pp = np.stack((trajectory[:,0],trajectory[:,1],np.ones(len(trajectory))),axis=1)
+    PP = np.matmul(homography, pp.T).T
+    P_normal = PP / np.repeat(PP[:, 2].reshape((-1, 1)), 3, axis=1)
+    return P_normal[:, :2]
+
+
 # Returns a matrix of trajectories:
 # the entry (i,j) has the paths that go from the goal i to the goal j
 def separate_trajectories_between_goals(trajectories, goals_areas):

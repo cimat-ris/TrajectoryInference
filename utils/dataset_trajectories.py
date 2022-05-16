@@ -23,6 +23,7 @@ class TrajDataset:
         self.groupmates = {}
         self.title = ''
         self.goals_areas = None
+        self.homography  = None
 
     def postprocess(self, fps, sampling_rate=1, use_kalman=False):
         """
