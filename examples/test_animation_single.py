@@ -36,8 +36,8 @@ def main():
     nParameters = 4
 
     # Read the kernel parameters from file
-    goalsData.kernelsX = read_and_set_parameters("parameters/linearpriorcombined20x20_EIF_img_x.txt",nParameters)
-    goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined20x20_EIF_img_y.txt",nParameters)
+    goalsData.kernelsX = read_and_set_parameters("parameters/linearpriorcombined20x20",args.dataset_id,args.coordinates,'x')
+    goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined20x20",args.dataset_id,args.coordinates,'y')
 
     """**********          Testing          ***********"""
     # We give the start and ending goals
@@ -76,7 +76,7 @@ def main():
         """Single goal prediction test"""
         logging.info('Updating observations')
         # Update the GP with (real) observations
-        likelihood   = gp.update(observations)
+        likelihood,__= gp.update(observations)
         filteredPath = gp.filter()
         # Perform prediction
         predictedXY,varXY = gp.predict_trajectory()

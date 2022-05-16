@@ -41,7 +41,7 @@ class path1D_regression:
         # Noise
         self.sigmaNoise      = sigmaNoise
         #
-        self.m               = 10
+        self.m               = 7
         self.n               = 0
 
     # Method to select observations
@@ -135,6 +135,7 @@ class path1D_regression:
         # Regularization to avoid singular matrices
         varX_3m  += (self.epsilonReg+self.sigmaNoise)*np.eye(varX_3m.shape[0])
         errorSq   = np.divide(np.square(error),np.diagonal(varX_3m).reshape((-1,1)))
+         # Returns likelihood and predictive mean (for the piece being evaluated!)
         return -errorSq.sum(), predictedX_3m+(predictedL*self.kernel.meanSlope+self.kernel.meanConstant)
 
     # The main regression function: perform regression for a vector of values
