@@ -227,18 +227,20 @@ class plotter():
                 idx= np.random.choice(len(tr), n_samples_eff, replace=False)
                 for k in idx:
                     self.ax.plot(tr[k][:,0],tr[k][:,1],color="white",alpha=0.3)
+
     # Plot neighbors
     def plot_neighbors(self,neighbor_positions):
         for neighbor in neighbor_positions:
             self.ax.plot(neighbor[-1,0],neighbor[-1,1],'og')
             self.ax.plot(neighbor[:,0],neighbor[:,1],'g')
 
-    # Plot tajctories modes
+    # Plot trajectories modes
     def plot_modes(self,preds):
         for k in range(len(preds)):
             mode =preds[k][0]
             self.ax.plot(mode[:,0],mode[:,1],'r')
 
+    # Plot a set of paths
     def plot_paths(self,traj_set, n_max=500):
         for i,tr in enumerate(traj_set):
             self.ax.plot(tr[:,0],tr[:,1])
