@@ -27,7 +27,6 @@ def main():
     coordinates      = args.coordinates
     # Read the areas file, dataset, and form the goalsLearnedStructure object
     img_bckgd        = './datasets/GC/reference.jpg'
-    #img_bckgd        = './datasets/Edinburgh/edinburgh.jpg'
 
     traj_dataset, goalsData, trajMat, __ = read_and_filter(args.dataset_id,coordinate_system=coordinates,use_pickled_data=args.pickle)
 

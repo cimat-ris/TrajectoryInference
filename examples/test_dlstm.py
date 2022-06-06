@@ -134,6 +134,7 @@ def main():
             for pos in neighbor:
                 traj_neighbor.append(TrackRow(pos[2],pos[3],pos[0],pos[1], None, 0))
             input.append(traj_neighbor)
+        # Input is a collection of trajectories, the first one being the one of interest    
         # Output is the following:
         # * Dictionnary of modes
         # * Each mode element is a list of agents. 0 is the agent of interest.

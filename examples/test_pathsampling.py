@@ -29,8 +29,8 @@ def main():
     nParameters = 4
 
     # Read the kernel parameters from file
-    goalsData.kernelsX = read_and_set_parameters("parameters/linearpriorcombined20x20_GCS_img_x.txt",nParameters)
-    goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined20x20_GCS_img_y.txt",nParameters)
+    goalsData.kernelsX = read_and_set_parameters("parameters/linearpriorcombined20x20",args.dataset_id,args.coordinates,'x')
+    goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined20x20",args.dataset_id,args.coordinates,'y')
 
     # Sampling 3 trajectories between all the pairs of goals
     allPaths = []

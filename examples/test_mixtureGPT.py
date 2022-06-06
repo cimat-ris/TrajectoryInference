@@ -1,6 +1,8 @@
 """
 Test GP misture | Trautman
 """
+## TODO: repair
+
 import random
 from test_common import *
 from gp_code.kernels import *

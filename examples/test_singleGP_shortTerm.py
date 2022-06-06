@@ -5,6 +5,10 @@ import random
 from test_common import *
 from gp_code.sGPsT_trajectory_prediction import sGPsT_trajectory_prediction
 import matplotlib.pyplot as plt
+import torch
+from trajnetplusplusbaselines.trajnetbaselines.lstm import LSTMPredictor
+from trajnetplusplustools.reader import Reader
+from trajnetplusplustools.data import TrackRow
 
 def main():
     # Parsing arguments
@@ -15,6 +19,14 @@ def main():
     parser.add_argument('--log_file',default='',help='Log file (default: standard output)')
     parser.add_argument('--pickle', dest='pickle', action='store_true',help='uses previously pickled data')
     parser.add_argument('--start', dest='start',type=int, default=0,help='Specify starting goal')
+    parser.add_argument('--obs_length', default=8, type=int,
+                        help='observation length')
+    parser.add_argument('--pred_length', default=12, type=int,
+                        help='prediction length')
+    parser.add_argument('--normalize_scene', action='store_true',
+                        help='augment scenes')
+    parser.add_argument('--mode', default=5, type=int,
+                        help='Number of modes')
     parser.set_defaults(pickle=False)
     args = parser.parse_args()
     if args.log_file=='':
@@ -25,16 +37,15 @@ def main():
 
     # Read the areas file, dataset, and form the goalsLearnedStructure object
     imgGCS           = './datasets/GC/reference.jpg'
-    coordinates      = args.coordinates
 
-    traj_dataset, goalsData, trajMat, filtered = read_and_filter(args.dataset_id,coordinate_system=coordinates,use_pickled_data=args.pickle)
+    traj_dataset, goalsData, trajMat, filtered = read_and_filter(args.dataset_id,coordinate_system=args.coordinates,use_pickled_data=args.pickle)
     # Selection of the kernel type
     kernelType = "linePriorCombined"
     nParameters = 4
 
     # Read the kernel parameters from file
-    goalsData.kernelsX = read_and_set_parameters('parameters/linearpriorcombined20x20_GCS_img_x.txt',nParameters)
-    goalsData.kernelsY = read_and_set_parameters('parameters/linearpriorcombined20x20_GCS_img_y.txt',nParameters)
+    goalsData.kernelsX = read_and_set_parameters('parameters/linearpriorcombined20x20',args.dataset_id,args.coordinates,'x')
+    goalsData.kernelsY = read_and_set_parameters('parameters/linearpriorcombined20x20',args.dataset_id,args.coordinates,'y')
 
     """**********          Testing          ***********"""
     # We select a pair of starting and ending goals, and a trajectory id
@@ -46,9 +57,9 @@ def main():
             pathId = random.randrange( len(trajMat[startG][nextG]))
             if len(trajMat[startG][nextG][pathId])>9:
                 flag = False
+    logging.info("Selected goals: {} {} | path index: {}".format(startG,nextG,pathId))
     if len(trajMat[startG][nextG]) > 0 and  goalsData.kernelsX[startG][nextG].optimized is True:
         pathId       = np.random.randint(0,len(trajMat[startG][nextG]))
-        logging.info("Selected goals: {} {} | path index: {}".format(startG,nextG,pathId))
     else:
         logging.error("This pair of goals have not optimized parameters. Aborting.")
         sys.exit()
@@ -64,13 +75,18 @@ def main():
 
     # Prediction of single paths with single goals
     gp = sGPsT_trajectory_prediction(startG,nextG,goalsData)
+    # Instanciate a predictor
+    predictor = LSTMPredictor.load("parameters/sgan_directional_None.pkl")
+    # On CPU
+    device = torch.device('cpu')
+    predictor.model.to(device)
 
     # Divides the trajectory in part_num parts and infer the posterior over the remaining part
     part_num = 10
     for i in range(1,part_num-1):
         p = plotter()
         logging.info('--------------------------')
-        if coordinates=='img':
+        if args.coordinates=='img':
             p.set_background(imgGCS)
         p.plot_scene_structure(goalsData)
         # Data we will suppose known
@@ -100,6 +116,20 @@ def main():
             if neighbor_position[0,3]==_path_id:
                 continue
             neighbor_positions.append(neighbor_position)
+        if (past.shape[0]<8):
+            continue
+        for i in range(8):
+            input[0].append(TrackRow(past[i][2],past[i][3],past[i][0],past[i][1], None, 0))
+        for neighbor in neighbor_positions:
+            traj_neighbor = []
+            for pos in neighbor:
+                traj_neighbor.append(TrackRow(pos[2],pos[3],pos[0],pos[1], None, 0))
+            input.append(traj_neighbor)
+        # Input is a collection of trajectories, the first one being the one of interest
+        # Output is the following:
+        # * Dictionnary of modes
+        # * Each mode element is a list of agents. 0 is the agent of interest.
+        preds = predictor(input, np.zeros((len(input), 2)), n_predict=args.pred_length, obs_length=args.obs_length, modes=args.mode, args=args)
 
         """Single goal prediction test"""
         logging.info('Updating likelihoods')
@@ -123,7 +153,9 @@ def main():
         # Plot the ground truth
         p.plot_ground_truth(ground_truth)
         # Plot neighbors
-        p.plot_neighbors(neighbor_positions)
+        #p.plot_neighbors(neighbor_positions)
+        print(preds)
+        p.plot_modes(preds)
         # Plot neighbors
         fig, ax = plt.subplots(2,1)
         ax[0].plot(predictedXY[:,2],predictedXY[:,0])
