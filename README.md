@@ -29,10 +29,15 @@ $ python3 examples/test_kernelVisualization.py
 $ python3 examples/test_train.py
 ```
 
-## Running some prediction examples
+## Running some inference examples
 To display the mixture predictive distribution at a certain point, from past observations  
 ```
 $ python3 examples/test_mixtureGP.py
+```
+
+To get an animation of the updates of one single trajectory conditioned on a fixed goal
+```
+$ python3 examples/test_animation_single_trajectory.py
 ```
 
 To get an animation of the updates of the trajectories
