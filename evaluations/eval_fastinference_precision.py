@@ -60,45 +60,45 @@ def main():
         goalsData = pickle.load(pickle_in)
     """**********          Testing          ***********"""
 
-    vars =  [0.5]
-    for var in vars:
-        mseApprox   = []
-        mseNoApprox = []
-        # Cycle over the goals
-        for startG, endG in tqdm(np.ndindex(goalsData.goals_n,goalsData.goals_n),total=goalsData.goals_n*goalsData.goals_n):
-            if goalsData.kernelsX[startG][endG] is not None and goalsData.kernelsY[startG][endG] is not None:
-                for _path in test_trajectories_matrix[startG][endG]:
-                    # Get the path data
-                    pathL = trajectory_arclength(_path)
-                    # Total path length
-                    pathSize = len(_path)
-                    nSamples = 10
-                    prop     = var
-                    # Prediction of single paths with a mixture model
-                    mgps     = mGP_trajectory_prediction(startG,goalsData)
+    prop =  0.75
+    precision_points = []
+    # Cycle over the goals
+    for startG, endG in tqdm(np.ndindex(goalsData.goals_n,goalsData.goals_n),total=goalsData.goals_n*goalsData.goals_n):
+        if goalsData.kernelsX[startG][endG] is not None and goalsData.kernelsY[startG][endG] is not None:
+            for _path in test_trajectories_matrix[startG][endG]:
+                # Get the path data
+                pathL = trajectory_arclength(_path)
+                # Total path length
+                pathSize = len(_path)
+                nSamples = 1
+                # Prediction of single paths with a mixture model
+                mgps     = mGP_trajectory_prediction(startG,goalsData)
 
-                    # Take half of the trajectory
-                    knownN = int(prop*pathSize)
-                    logging.debug("--------------------------")
-                    # Monte Carlo
-                    observations, ground_truth = observed_data([_path[:,0],_path[:,1],pathL,_path[:,2]],knownN)
-                    """Multigoal prediction test"""
-                    likelihoods  = mgps.update(observations)
-                    if likelihoods is None:
-                        continue
-                    filteredPaths= mgps.filter()
-                    predictedXYVec,varXYVec = mgps.predict_trajectory(compute_sqRoot=True)
-                    logging.debug('Generating samples')
-                    print("--")
-                    # Efficient sampling vs Slow sampling.
-                    # To evaluate the loss in precision, we use the same seed
-                    # to compare the samples
-                    np.random.seed(1)
-                    pathsEff  = mgps.sample_paths(nSamples,efficient=True)
-                    np.random.seed(1)
-                    pathsSlow = mgps.sample_paths(nSamples,efficient=False)
-                    for idx in range(len(pathsEff)):
-                        print(np.sqrt(((pathsEff[idx] - pathsSlow[idx])**2).sum(axis=1).mean()))
+                # Take half of the trajectory
+                knownN = int(prop*pathSize)
+                logging.debug("--------------------------")
+                # Monte Carlo
+                observations, ground_truth = observed_data([_path[:,0],_path[:,1],pathL,_path[:,2]],knownN)
+                """Multigoal prediction test"""
+                likelihoods  = mgps.update(observations,consecutiveObservations=False)
+                if likelihoods is None:
+                    continue
+                filteredPaths= mgps.filter()
+                predictedXYVec,varXYVec = mgps.predict_trajectory(compute_sqRoot=True)
+                logging.debug('Generating samples')
+                # Efficient sampling vs Slow sampling.
+                # To evaluate the loss in precision, we use the same seed to compare the samples
+                np.random.seed(3)
+                pathsEff, deltals  = mgps.sample_paths(nSamples,efficient=True)
+                np.random.seed(3)
+                pathsSlow, deltals = mgps.sample_paths(nSamples,efficient=False)
+                for idx in range(len(pathsEff)):
+                    error = np.sqrt(((pathsEff[idx][:,0:2] - pathsSlow[idx][:,0:2])**2).sum(axis=1).mean())
+                    precision_points.append(np.array([deltals[idx][0],error]))
 
+    precision_points  = np.array(precision_points)
+    plt.figure()
+    plt.scatter(precision_points[:,0],precision_points[:,1],alpha=0.3)
+    plt.show()
 if __name__ == '__main__':
     main()
