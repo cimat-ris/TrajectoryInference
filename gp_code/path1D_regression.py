@@ -14,9 +14,11 @@ class path1D_regression:
     def __init__(self, kernel, sigmaNoise):
         # Observation vectors
         self.observedX       = None
+        self.observedX_Last  = None
         self.observedL       = None
         self.observedL_2m    = None
         self.observedL_3m    = None
+        self.observedL_Last  = None
         # Prediction vectors
         self.predictedX      = None
         self.predictedL      = None
@@ -68,13 +70,14 @@ class path1D_regression:
         else:
             startL            = max(0,self.n-2*self.m-1)
             # Added the last position
+            # TODO: maybe not doing this when we
             self.observedL_3m = np.append(observedL[startL:startL+self.m],finalL).reshape((-1,1))
             observedX_3m      = np.append(observedX[startL:startL+self.m],finalX).reshape((-1,1))
             K_3m              = self.kernel(self.observedL_3m[:,0],self.observedL_3m[:,0])
             self.Kp_1_3m =inv(K_3m+self.sigmaNoise*np.eye(K_3m.shape[0]))
             self.Kp_1o_3m=self.Kp_1_3m.dot(observedX_3m-(self.kernel.meanSlope*self.observedL_3m+self.kernel.meanConstant))
         # Values of arc length L at which we will predict X
-        self.predictedL      = predictedL
+        self.predictedL      = np.copy(predictedL)
         # Set the observations
         # TODO: do jointly for x and y?
         selectedL, selectedX = self.select_observations(observedL,observedX)
@@ -83,8 +86,11 @@ class path1D_regression:
         self.K               = np.zeros((n_obs+1,n_obs+1))
         # Observation vectors: X and L
         # Last observation is a **fixed** value for the final point
+        logging.debug("Setting final L {}".format(finalL))
         self.observedL       = np.append(selectedL,finalL).reshape((-1,1))
         self.observedX       = np.append(selectedX,finalX).reshape((-1,1))
+        self.observedX_Last  = np.copy(self.observedX[-2])
+        self.observedL_Last  = np.copy(self.observedL[-2])
         # Center the data in case we use the linear prior
         if self.kernel.linearPrior!=False:
             self.observedX -= (self.kernel.meanSlope*self.observedL+self.kernel.meanConstant)
@@ -175,12 +181,12 @@ class path1D_regression:
             return None, None, None
         # Express the displacement wrt the nominal ending point, as a nx1 vector
         # In this approximation, only the predictive mean is adapted (will be used for sampling)
-        newx = self.predictedX
+        newx  = np.copy(self.predictedX)
         # First order term #1: variation in observedX
-        newx+= (deltax-self.kernel.meanSlope*deltal)*self.ktKp_1[:,n-1:n]
+        newx += (deltax-self.kernel.meanSlope*deltal)*self.ktKp_1[:,n-1:n]
         # First order term #2: variation in kX. Note that it is proportional to deltak because
         # only the last column of deltak matters (and it is multiplied by self.Kp_1o[-1,0])
-        newx+= deltal*self.Kp_1o[-1,0] * self.deltak
+        newx += deltal*self.Kp_1o[-1,0] * self.deltak
         # First order term #3: variation in Kx_1
         #  We use here the particular form of the deltaK matrix (with just the last row/column that are non zero)
         newx -= deltal*self.Kp_1o[-1,0]*self.ktKp_1.dot(self.deltaK)
@@ -189,15 +195,16 @@ class path1D_regression:
         return self.predictedL, newx, self.varX
 
 
-    # Prediction as a perturbation of the "normal" prediction done to the center of an area. Slow way.
+    # Prediction as a perturbation of the "normal" prediction done to the center of an area.
+    # Slow way.
     def predict_to_perturbed_finish_point_slow(self,deltal,deltax):
         n            = len(self.observedX)
         npredicted   = len(self.predictedL)
         if npredicted == 0:
             return None, None, None
-        # Observation vectors: X and L
-        observedL       = self.observedL
-        observedX       = self.observedX
+        # Observation vectors: X and L. We work on a copy!
+        observedL       = np.copy(self.observedL)
+        observedX       = np.copy(self.observedX)
         observedL[-1,0] = observedL[-1,0]+deltal
         observedX[-1,0] = observedX[-1,0]+deltax
         # Fill in K, first elements (nxn)

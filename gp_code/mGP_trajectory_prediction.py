@@ -135,17 +135,19 @@ class mGP_trajectory_prediction:
         # Sample goal (discrete choice)
         goalSample = np.random.choice(self.goalsData.goals_n,1,p=p)
         end        = goalSample[0]
-        k          = end
+        logging.debug("Sampling from goal {}".format(end))
         finishX, finishY, axis = uniform_sampling_1D(1, self.goalsData.goals_areas[end][1:], self.goalsData.goals_areas[end][0])
         # Use a pertubation approach to get the sample
-        deltaX = finishX[0]-self.gpTrajectoryRegressor[k].finalAreaCenter[0]
-        deltaY = finishY[0]-self.gpTrajectoryRegressor[k].finalAreaCenter[1]
-        return self.gpTrajectoryRegressor[k].sample_path_with_perturbation(deltaX,deltaY,efficient),[finishX, finishY]
+        deltaX = finishX[0]-self.gpTrajectoryRegressor[end].finalAreaCenter[0]
+        deltaY = finishY[0]-self.gpTrajectoryRegressor[end].finalAreaCenter[1]
+        return self.gpTrajectoryRegressor[end].sample_path_with_perturbation(deltaX,deltaY,efficient),[finishX, finishY]
 
     # Generate samples from the predictive distribution
     def sample_paths(self,nSamples,efficient=True):
-        vec = []
+        vec    = []
+        deltals= []
         for k in range(nSamples):
-            path, finalPosition = self.sample_path(efficient)
+            (path, deltal), finalPosition = self.sample_path(efficient)
             vec.append(path)
-        return vec
+            deltals.append(deltal)
+        return vec,deltals

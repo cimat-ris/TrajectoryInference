@@ -44,7 +44,7 @@ class path_regression:
         self.regression_x.update_observations(observations[:,0:1],observations[:,2:3],self.finalAreaCenter[0],finalL,(1.0-self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL,consecutiveObservations)
         self.regression_y.update_observations(observations[:,1:2],observations[:,2:3],self.finalAreaCenter[1],finalL,    (self.finalAreaAxis)*s*s*math.exp(-self.dist/s),self.predictedL,consecutiveObservations)
 
-
+    # This function roughly estimates what the future arclengths of a trajectory will be
     def prediction_set_arclength(self, lastObs, finishPoint):
         # Coordinates of the last observed point
         x, y, l = lastObs[0], lastObs[1], lastObs[2]
@@ -118,8 +118,10 @@ class path_regression:
 
     # Generate a sample from perturbations
     def sample_path_with_perturbation(self,deltaX,deltaY,efficient=True):
-        # A first order approximation of the new final value of L
-        deltaL       = deltaX*(self.finalAreaCenter[0]-self.regression_x.observedX[-2])/self.dist + deltaY*(self.finalAreaCenter[1]-self.regression_y.observedX[-2])/self.dist
+        # Generate modified
+        __, finalL_perturbed,__ = self.prediction_set_arclength([self.regression_x.observedX_Last,self.regression_y.observedX_Last,self.regression_x.observedL_Last],[self.finalAreaCenter[0]+deltaX,self.finalAreaCenter[1]+deltaY])
+        # Variations on the final arclength
+        deltaL = self.regression_x.observedL[-1]-finalL_perturbed
         if efficient:
             # Given a perturbation of the final point, determine the new characteristics of the GP
             predictedL,predictedX,__=self.regression_x.predict_to_perturbed_finish_point(deltaL,deltaX)
@@ -133,7 +135,7 @@ class path_regression:
         # Generate a sample from this Gaussian distribution
         nx=self.regression_x.generate_random_variation()
         ny=self.regression_y.generate_random_variation()
-        return np.concatenate([predictedX+nx,predictedY+ny,predictedL],axis=1)
+        return np.concatenate([predictedX+nx,predictedY+ny,predictedL],axis=1), deltaL/self.dist
 
     # Generate a sample from the predictive distribution with a perturbed finish point
     def sample_path_with_perturbed_finish_point(self,efficient=True):
