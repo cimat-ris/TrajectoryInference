@@ -207,14 +207,14 @@ class goal_pairs:
         gs = goal_center(self.goals_areas[start][1:])
         gk = goal_center(self.goals_areas[k][1:])
         self.kernelsX[start][k].meanSlope   = (gk[0]-gs[0])/self.medianLengths[start][j]
-        self.kernelsX[start][k].manConstant = gs[0]
+        self.kernelsX[start][k].meanConstant = gs[0]
 
         # TODO: should update the linear term to the line
         logging.info("Full parameters for x: {}".format(self.kernelsX[start][k].get_parameters()))
         # Copying from j
         self.kernelsY[start][k].set_parameters(self.kernelsY[start][j].get_parameters())
         self.kernelsY[start][k].meanSlope   = (gk[1]-gs[1])/self.medianLengths[start][j]
-        self.kernelsY[start][k].manConstant = gs[1]
+        self.kernelsY[start][k].meanConstant = gs[1]
         logging.info("Full parameters for y: {}".format(self.kernelsY[start][k].get_parameters()))
         return j
 
