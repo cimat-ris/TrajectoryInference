@@ -1,6 +1,6 @@
 from gp_code.kernels import set_kernel
 from gp_code.optimize_parameters import *
-from utils.stats_trajectories import trajectory_arclength, trajectory_duration
+from utils.stats_trajectories import trajectory_arclength, trajectory_duration, trajectory_euclidean_distance
 from utils.manip_trajectories import get_linear_prior_mean
 from utils.manip_trajectories import line_parameters
 from utils.manip_trajectories import get_data_from_set
@@ -46,7 +46,7 @@ class goal_pairs:
 		# Compute the distances between pairs of goals (as a nGoalsxnGoals matrix)
 		self.compute_euclidean_distances()
 		# Compute the ratios between average path lengths and inter-goal distances
-		self.compute_distance_unit()
+		self.compute_distance_unit(trainingSet)
 		# Computer prior probabispeedRegressorlities between goals
 		self.compute_prior_transitions(trainingSet)
 		# Compute transition probabilities between goals
@@ -93,15 +93,22 @@ class goal_pairs:
 
 	# Computes the ratio between path length and linear path length
 	# (distance between goals)
-	def compute_distance_unit(self):
+	def compute_distance_unit(self, trajectories):
+		# For each pair of goals (gi,gj), compute the mean arc-length
 		for i in range(self.goals_n):
 			for j in range(self.goals_n):
-				if(self.euclideanDistances[i][j] == 0 or self.medianLengths[i][j] == 0):
-					u = 1.0
+				if len(trajectories[i][j]) > 0:
+					ratios = []
+					for trajectory in trajectories[i][j]:
+						tr_arclen = trajectory_arclength(trajectory)
+						tr_dist   = trajectory_euclidean_distance(trajectory)
+						if (tr_dist>0):
+							ratios.append(tr_arclen[-1]/tr_dist)
+					m = np.median(ratios)
 				else:
-					# Ratio between mean length and goal-to-goal distance
-					u = self.medianLengths[i][j]/self.euclideanDistances[i][j]
-				self.units[i][j] = u
+					m = 0
+				self.units[i][j] = m
+
 
 	# Fills in the probability transition matrix gi -> gj
 	def compute_prior_transitions(self,pathMat,epsilon=0.01):
