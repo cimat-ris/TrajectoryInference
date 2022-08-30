@@ -137,13 +137,20 @@ class plotter():
 			v = [0,s[1],s[0],0]
 			plt.axis(v)
 
-	# Plot the scene structure: goals and sub-goals
+	# Plot the scene structure: goals
 	def plot_scene_structure(self,goals_data, draw_ids=False):
 		for i in range(goals_data.goals_n):
 			plot_goals(self.ax,goals_data.goals_areas[i][1:])
 			if draw_ids:
 				center, size = goal_center_and_size(goals_data.goals_areas[i][1:])
 				self.ax.text(center[0], center[1],str(i),color='white')
+
+	# Plot the likelihoods
+	def plot_likelihoods(self,goals_data, likelihoods):
+		for i in range(goals_data.goals_n):
+			center, size = goal_center_and_size(goals_data.goals_areas[i][1:])
+			self.ax.text(center[0], center[1],str(i),color='black',fontsize=8)
+			self.ax.text(center[0], center[1]-1,"{:2.2f}".format(likelihoods[i]),color='black',fontsize=8)
 
 	# Plot the true data, the predicted ones and their variance
 	def plot_prediction(self,observations, predicted, variances):
@@ -237,10 +244,15 @@ class plotter():
 				for k in idx:
 					self.ax.plot(tr[k][:,0],tr[k][:,1],color="white",alpha=0.3)
 
-	# Plot neighbors
+	# Plot ending point
 	def plot_endingpoints(self,ending_positions):
 		for ending_position in ending_positions:
 			self.ax.plot(ending_position[0],ending_position[1],'ro')
+
+	# Plot starting point
+	def plot_startingpoints(self,starting_positions):
+		for starting_position in starting_positions:
+			self.ax.plot(starting_position[0],starting_position[1],'go')
 
 	# Plot neighbors
 	def plot_neighbors(self,neighbor_positions):
