@@ -81,7 +81,7 @@ def read_and_filter(dataset_id,use_pickled_data=False, pickle_dir='pickle', coor
             s = s + len(filtered_trajectories_matrix[i][j])
     logging.info("Trajectories within goals (after filtering) {:d}".format(s))
     # Form the object goalsLearnedStructure
-    goals_data = goal_pairs(goals_areas, filtered_trajectories_matrix)
+    goals_data = goal_pairs(goals_areas, filtered_trajectories_matrix,coordinate_system)
     return raw_trajectories, goals_data, filtered_trajectories_matrix, filtered_trajectories
 
 # Partition the dataset between training and testing

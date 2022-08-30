@@ -7,8 +7,11 @@ import math
 
 # Evaluates the Euclidean distance
 def euclidean_distance(p, q):
-    dist = math.sqrt( (p[0]-q[0])**2 + (p[1]-q[1])**2 )
-    return dist
+    return math.sqrt((p[0]-q[0])**2 + (p[1]-q[1])**2 )
+
+# Evaluates euclidean distance between starting/ending points of a trajectory
+def trajectory_euclidean_distance(trajectory):
+	return euclidean_distance(trajectory[0],trajectory[-1])
 
 # Evaluates vector of arclengths along a trajectory
 def trajectory_arclength(trajectory):
