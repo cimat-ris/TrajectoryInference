@@ -33,8 +33,6 @@ def uniform_sampling_2D(m, goal):
 # Sample m points (x,y) along a line segment, with uniform sampling
 def uniform_sampling_1D(m, goal, axis):
 	_x, _y = [], []
-	print("Sampling")
-	print(goal)
 	xmin, xmax = np.min(goal[0::2]),np.max(goal[0::2])
 	ymin, ymax = np.min(goal[1::2]),np.max(goal[1::2])
 	for i  in range(m):
