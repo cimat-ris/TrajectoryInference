@@ -141,16 +141,18 @@ class mGP_trajectory_prediction:
 		deltaX = goal_x[0]-self.gpTrajectoryRegressor[end].finalAreaCenter[0]
 		deltaY = goal_y[0]-self.gpTrajectoryRegressor[end].finalAreaCenter[1]
 		logging.debug("Sampled goal deltas {} {}".format(deltaX, deltaY))
-		return self.gpTrajectoryRegressor[end].sample_path_with_perturbation(deltaX,deltaY,method),[goal_x, goal_y]
+		return self.gpTrajectoryRegressor[end].sample_path_with_perturbation(deltaX,deltaY,method),[goal_x, goal_y], end
 
 	# Generate samples from the predictive distribution
 	def sample_paths(self,nSamples,method=0):
 		vec           = []
 		deltals       = []
 		finalPositions= []
+		goalIds        = []
 		for k in range(nSamples):
-			(path, deltal), finalPosition = self.sample_path(method)
+			(path, deltal), finalPosition, goalId = self.sample_path(method)
 			vec.append(path)
 			deltals.append(deltal)
 			finalPositions.append(finalPosition)
-		return vec,deltals,finalPositions
+			goalIds.append(goalId)
+		return vec,deltals,finalPositions,goalIds
