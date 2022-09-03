@@ -145,6 +145,13 @@ class plotter():
 				center, size = goal_center_and_size(goals_data.goals_areas[i][1:])
 				self.ax.text(center[0], center[1],str(i),color='white')
 
+	# Highlight a goal
+	def highlight_goal(self,goal,color="red"):
+		center, size = goal_center_and_size(goal)
+		# Create rectangle patch
+		rect = plt.Rectangle((center[0]-size[0]/2,center[1]-size[1]/2), size[0], size[1],facecolor=color, alpha=0.35)
+		self.ax.add_patch(rect)
+
 	# Plot the likelihoods
 	def plot_likelihoods(self,goals_data, likelihoods):
 		for i in range(goals_data.goals_n):
@@ -172,12 +179,17 @@ class plotter():
 		self.ax.plot(gtPath[:-1,0],gtPath[:-1,1],'c--')
 
 
-	# Plot the filtered data
-	def plot_filtered(self,filtered_paths):
+	# Plot the filtered paths
+	def plot_filtered_paths(self,filtered_paths):
 		# Cycle over the potential goals
 		for filtered_path in filtered_paths:
 			if filtered_path.shape[0]>0:
 				self.ax.plot(filtered_path[:-1,0],filtered_path[:-1,1],'b--')
+
+	# Plot the filtered data
+	def plot_filtered_path(self,filtered_path):
+		if filtered_path.shape[0]>0:
+			self.ax.plot(filtered_path[:-1,0],filtered_path[:-1,1],'b--')
 
 	# Plot multiple predictions
 	def plot_multiple_predictions_and_goal_likelihood(self,observations, paths, var_paths, goals_likelihood,min_likelihood=0.01):
