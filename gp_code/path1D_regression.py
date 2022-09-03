@@ -97,16 +97,15 @@ class path1D_regression:
 		# Center the data in case we use the linear prior
 		if self.kernel.linearPrior!=False:
 			self.observedX -= (self.kernel.meanSlope*self.observedL+self.kernel.meanConstant)
-		# Fill in K with observed l (n+1)x(n+1)
+		# Fill in the kernel matrix K with observed l (n+1)x(n+1)
 		self.K       = self.kernel(self.observedL[:,0],self.observedL[:,0])
-		print(self.K.shape)
 		# Add the variance associated to the last point (varies with the area)
 		self.finalVar        = finalVar
 		self.K[n_obs][n_obs]+= finalVar
+		# Inverse
 		self.Kp_1    = inv(self.K+self.sigmaNoise*np.eye(self.K.shape[0]))
 		self.Kp_1o   = self.Kp_1.dot(self.observedX)
-		# For usage in prediction
-		nnew         = len(predictedL)
+		# For efficient sampling
 		# Fill in deltak
 		self.deltak  = self.kernel.dkdy(np.array([self.observedL[n_obs]])[:,0],predictedL[:,0]).T
 		# Fill in deltaK
@@ -121,35 +120,35 @@ class path1D_regression:
 			f +=self.observedL*self.kernel.meanSlope+self.kernel.meanConstant
 		return f
 
-	# Compute the log-likelihood for this coordinates
+	# Compute the log-likelihood for these coordinates
 	def loglikelihood_from_partial_path(self):
 		if self.Kp_1_3m is None:
 			logging.debug("Kp_1_3m not defined")
 			return 1.0, None
-		# Consider the group of observations to be used
+		# Consider the group of observations to be used for evaluation
 		mL        = np.max(self.observedL_3m[:-1,0])
 		idx_eval  = self.observedL[:-1]>mL
 		if idx_eval.any()==False:
 			logging.debug("Not enough observations to compute likelihood")
 			return 1.0, None
-		predictedL= self.observedL[:-1][idx_eval].reshape((-1,1))
-		trueX     = self.observedX[:-1][idx_eval].reshape((-1,1))
-		k_3m      = self.kernel(self.observedL_3m[:,0],predictedL[:,0])
-		C_3m      = self.kernel(predictedL[:,0],       predictedL[:,0])
+		observedL     = self.observedL[:-1][idx_eval].reshape((-1,1))
+		observedX     = self.observedX[:-1][idx_eval].reshape((-1,1))
+		k_3m          = self.kernel(self.observedL_3m[:,0],observedL[:,0])
+		C_3m          = self.kernel(observedL[:,0],        observedL[:,0])
 		# Predictive mean
 		predictedX_3m = k_3m.transpose().dot(self.Kp_1o_3m)
-		error         = predictedX_3m-trueX
+		error         = predictedX_3m-observedX
 		# Estimate the variance in the predicted x
-		ktKp_1_3m = k_3m.transpose().dot(self.Kp_1_3m)
-		varX_3m   = C_3m - ktKp_1_3m.dot(k_3m)
+		ktKp_1_3m    = k_3m.transpose().dot(self.Kp_1_3m)
+		varianceX_3m = C_3m - ktKp_1_3m.dot(k_3m)
 		# Regularization to avoid singular matrices
-		varX_3m  += (self.epsilonReg+self.sigmaNoise)*np.eye(varX_3m.shape[0])
-		errorSq   = np.divide(np.square(error),np.diagonal(varX_3m).reshape((-1,1)))
-		 # Returns likelihood and predictive mean (for the piece being evaluated!)
-		return -errorSq.sum(), predictedX_3m+(predictedL*self.kernel.meanSlope+self.kernel.meanConstant)
+		varianceX_3m  += (self.epsilonReg+self.sigmaNoise)*np.eye(varianceX_3m.shape[0])
+		squaredError   = np.divide(np.square(error),np.diagonal(varianceX_3m).reshape((-1,1)))
+		 # Returns log likelihood and predictive mean (for the piece being evaluated!)
+		return -squaredError.sum(), predictedX_3m+(observedL*self.kernel.meanSlope+self.kernel.meanConstant)
 
 	# The main regression function: perform regression for a vector of values
-	# lnew, that has been computed in update
+	# predictedL, that has been computed in update()
 	def predict_to_finish_point(self,compute_sqRoot=False):
 		# No prediction to do
 		if self.predictedL.shape[0]==0:
@@ -161,7 +160,7 @@ class path1D_regression:
 		# (we want to recover the unperturbed data)
 		# As Eq. 2.22 in Rasmussen
 		self.C = self.kernel(self.predictedL[:,0],self.predictedL[:,0])
-		# Predictive mean
+		# Predictive mean. Note that Kp_1o has already ben computed, in update()
 		self.predictedX = self.k.transpose().dot(self.Kp_1o)
 		# When using a linear prior, we need to add it again
 		if self.kernel.linearPrior!=False:
