@@ -145,14 +145,14 @@ class mGP_trajectory_prediction:
 
 	# Generate samples from the predictive distribution
 	def sample_paths(self,nSamples,method=0):
-		vec           = []
+		paths         = []
 		deltals       = []
 		finalPositions= []
 		goalIds        = []
 		for k in range(nSamples):
 			(path, deltal), finalPosition, goalId = self.sample_path(method)
-			vec.append(path)
+			paths.append(path)
 			deltals.append(deltal)
 			finalPositions.append(finalPosition)
 			goalIds.append(goalId)
-		return vec,deltals,finalPositions,goalIds
+		return paths,deltals,finalPositions,goalIds

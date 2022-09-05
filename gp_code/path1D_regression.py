@@ -169,8 +169,11 @@ class path1D_regression:
 		# Estimate the variance in the predicted x
 		self.ktKp_1= self.k.transpose().dot(self.Kp_1)
 		self.varX  = self.C - self.ktKp_1.dot(self.k)
+		self.varX  = 0.5*(np.transpose(self.varX)+self.varX)
 		# Regularization to avoid singular matrices
 		self.varX += self.epsilonReg*np.eye(self.varX.shape[0])
+		# Symmterization
+
 		# Cholesky on varX: done only if the compute_sqRoot flag is true
 		if compute_sqRoot and positive_definite(self.varX):
 			self.sqRootVar     = cholesky(self.varX,lower=True)
