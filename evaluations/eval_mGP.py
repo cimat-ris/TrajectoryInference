@@ -1,20 +1,10 @@
 """
 """
-import sys, os, argparse, logging,random
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils.io_parameters import read_and_set_parameters
-from utils.io_trajectories import read_and_filter
-from utils.io_trajectories import partition_train_test
-from utils.manip_trajectories import observed_data
-from utils.stats_trajectories import trajectory_arclength, trajectory_speeds
+import sys
+sys.path.append('examples')
+from test_common import *
 from gp_code.mGP_trajectory_prediction import mGP_trajectory_prediction
-from utils.plotting import plotter, plot_path_samples
-from utils.plotting import animate_multiple_predictions_and_goal_likelihood
-from gp_code.likelihood import ADE, FDE
 import matplotlib.pyplot as plt
-import statistics
-import numpy as np
-import time, pickle
 
 def save_values(file_name, values):
 	with open(file_name+".txt", "w") as file:
@@ -24,13 +14,11 @@ def save_values(file_name, values):
 
 
 def main():
-    # Load arguments and set up logging
-    args = load_args_logs()
+	# Load arguments and set up logging
+	args = load_args_logs()
 
 	# Read the areas file, dataset, and form the goalsLearnedStructure object
 	imgGCS           = 'datasets/GC/reference.jpg'
-	traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',coordinate_system=args.coordinates,use_pickled_data=args.pickle)
-	train_trajectories_matrix, test_trajectories_matrix = partition_train_test(trajMat, training_ratio=0.8)
 
 	# Selection of the kernel type
 	kernelType  = "linePriorCombined"
@@ -40,32 +28,32 @@ def main():
 	pickle_dir='pickle'
 	if args.pickle==False:
 		train_trajectories_matrix, test_trajectories_matrix = partition_train_test(trajMat,training_ratio=0.2)
-		pickle_out = open(pickle_dir+'/train_trajectories_matrix-'+args.dataset_id+'-'+coordinates+'.pickle',"wb")
+		pickle_out = open(pickle_dir+'/train_trajectories_matrix-'+args.dataset_id+'-'+args.coordinates+'.pickle',"wb")
 		pickle.dump(train_trajectories_matrix, pickle_out, protocol=2)
 		pickle_out.close()
-		pickle_out = open(pickle_dir+'/test_trajectories_matrix-'+args.dataset_id+'-'+coordinates+'.pickle',"wb")
+		pickle_out = open(pickle_dir+'/test_trajectories_matrix-'+args.dataset_id+'-'+args.coordinates+'.pickle',"wb")
 		pickle.dump(train_trajectories_matrix, pickle_out, protocol=2)
 		pickle_out.close()
 
 		logging.info("Starting the learning phase")
 		goalsData.optimize_kernel_parameters(kernelType,train_trajectories_matrix)
-		pickle_out = open(pickle_dir+'/goalsData-'+args.dataset_id+'-'+coordinates+'.pickle',"wb")
+		pickle_out = open(pickle_dir+'/goalsData-'+args.dataset_id+'-'+args.coordinates+'.pickle',"wb")
 		pickle.dump(goalsData, pickle_out, protocol=2)
 		pickle_out.close()
 	else:
-		pickle_in = open(pickle_dir+'/train_trajectories_matrix-'+args.dataset_id+'-'+coordinates+'.pickle', "rb")
+		pickle_in = open(pickle_dir+'/train_trajectories_matrix-'+args.dataset_id+'-'+args.coordinates+'.pickle', "rb")
 		train_trajectories_matrix = pickle.load(pickle_in)
-		pickle_in = open(pickle_dir+'/test_trajectories_matrix-'+args.dataset_id+'-'+coordinates+'.pickle', "rb")
+		pickle_in = open(pickle_dir+'/test_trajectories_matrix-'+args.dataset_id+'-'+args.coordinates+'.pickle', "rb")
 		test_trajectories_matrix = pickle.load(pickle_in)
-		pickle_in = open(pickle_dir+'/goalsData-'+args.dataset_id+'-'+coordinates+'.pickle',"rb")
+		pickle_in = open(pickle_dir+'/goalsData-'+args.dataset_id+'-'+args.coordinates+'.pickle',"rb")
 		goalsData = pickle.load(pickle_in)
 
 	# Read the kernel parameters from file
 	goalsData.kernelsX = read_and_set_parameters("parameters/linearpriorcombined20x20",args.dataset_id,args.coordinates,'x')
 	goalsData.kernelsY = read_and_set_parameters("parameters/linearpriorcombined20x20",args.dataset_id,args.coordinates,'y')
 	# Set mode
-	mode = 'Trautman'
-
+	# mode = 'Trautman'
+	mode = ""
 	part_num = 4
 	nsamples = 5
 
@@ -76,7 +64,7 @@ def main():
 		for j in range(3):#test_trajectories_matrix.shape[1]):
 			for tr in test_trajectories_matrix[i][j]:
 				# Prediction of single paths with a mixture model
-				mgps     = mGP_trajectory_prediction(i,goalsData)
+				mixture_model     = mGP_trajectory_prediction(i,goalsData)
 				arclen = trajectory_arclength(tr)
 				tr_data = [tr[:,0],tr[:,1],arclen,tr[:,2]] # data = [X,Y,L,T]
 
@@ -91,14 +79,17 @@ def main():
 					observations, ground_truth = observed_data(tr_data,m)
 					gt = np.concatenate([np.reshape(tr[m:,0],(-1,1)), np.reshape(tr[m:,1],(-1,1))], axis=1)
 					# Multigoal prediction
-					likelihoods  = mgps.update(observations)
-					if mode != 'Trautman':
-						filteredPaths= mgps.filter()
-					predictedXYVec,varXYVec = mgps.predict_trajectory(compute_sqRoot=True)
+					likelihoods, __  = mixture_model.update(observations,selection=False,consecutiveObservations=False)
+					if likelihoods is None:
+						continue
+					else:
+						logging.debug('{}'.format(likelihoods))
+					filteredPaths= mixture_model.filter()
+					predictedXYVec,varXYVec = mixture_model.predict_trajectory(compute_sqRoot=True)
 					logging.debug('Generating samples')
-					paths,__,__,__ = mgps.sample_paths(nsamples)
+					paths,__,__,__ = mixture_model.sample_paths(nsamples)
 					# Compare most likely goal and true goal
-					if mgps.mostLikelyGoal == j:
+					if mixture_model.mostLikelyGoal == j:
 						end_goal[k-1] += 1
 
 					pred_ade = []
