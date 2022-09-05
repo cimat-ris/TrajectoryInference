@@ -24,24 +24,12 @@ def save_values(file_name, values):
 
 
 def main():
-	# Parsing arguments
-	parser = argparse.ArgumentParser()
-	parser.add_argument('--coordinates', default='img',help='Type of coordinates (img or world)')
-	parser.add_argument('--dataset_id', '--id',default='GCS',help='dataset id, GCS or EIF (default: GCS)')
-	parser.add_argument('--log_level',type=int, default=20,help='Log level (default: 20)')
-	parser.add_argument('--log_file',default='',help='Log file (default: standard output)')
-	parser.add_argument('--no_pickle', dest='pickle',action='store_false')
-	parser.set_defaults(pickle=True)
-	args = parser.parse_args()
-	if args.log_file=='':
-		logging.basicConfig(format='%(levelname)s: %(message)s',level=args.log_level)
-	else:
-		logging.basicConfig(filename=args.log_file,format='%(levelname)s: %(message)s',level=args.log_level)
+    # Load arguments and set up logging
+    args = load_args_logs()
 
 	# Read the areas file, dataset, and form the goalsLearnedStructure object
 	imgGCS           = 'datasets/GC/reference.jpg'
-	coordinates      = args.coordinates
-	traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',coordinate_system=coordinates,use_pickled_data=args.pickle)
+	traj_dataset, goalsData, trajMat, __ = read_and_filter('GCS',coordinate_system=args.coordinates,use_pickled_data=args.pickle)
 	train_trajectories_matrix, test_trajectories_matrix = partition_train_test(trajMat, training_ratio=0.8)
 
 	# Selection of the kernel type
