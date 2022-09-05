@@ -1,36 +1,16 @@
 """
 @author: jbhayet
 """
-import sys, os, argparse, logging,random
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils.io_parameters import read_and_set_parameters
-from utils.manip_trajectories import observed_data
-from utils.stats_trajectories import trajectory_arclength, trajectory_speeds
+import sys
+sys.path.append('examples')
+from test_common import *
 from gp_code.mGP_trajectory_prediction import mGP_trajectory_prediction
-from utils.plotting import plotter, plot_path_samples
-from utils.plotting import animate_multiple_predictions_and_goal_likelihood
-from utils.io_trajectories import read_and_filter,partition_train_test
-import numpy as np
-import time,pickle
-from tqdm import tqdm
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 24})
 
 def main():
-	# Parsing arguments
-	parser = argparse.ArgumentParser()
-	parser.add_argument('--coordinates', default='world',help='Type of coordinates (img or world)')
-	parser.add_argument('--dataset_id', '--id',default='GCS',help='dataset id, GCS or EIF (default: GCS)')
-	parser.add_argument('--log_level',type=int, default=20,help='Log level (default: 20)')
-	parser.add_argument('--log_file',default='',help='Log file (default: standard output)')
-	parser.add_argument('--pickle', dest='pickle', action='store_true',help='uses previously pickled data')
-	parser.set_defaults(pickle=False)
-
-	args = parser.parse_args()
-	if args.log_file=='':
-		logging.basicConfig(format='%(levelname)s: %(message)s',level=args.log_level)
-	else:
-		logging.basicConfig(filename=args.log_file,format='%(levelname)s: %(message)s',level=args.log_level)
+	# Load arguments and set up logging
+	args = load_args_logs()
 
 	# Read the areas file, dataset, and form the goalsLearnedStructure object
 	dataset_name     = args.dataset_id
@@ -69,7 +49,7 @@ def main():
 	prop                 = 0.5
 	precision_points     = []
 	# Cycle over the goals
-	for startG, endG in tqdm(np.ndindex(goalsData.goals_n,goalsData.goals_n),total=goalsData.goals_n*goalsData.goals_n):
+	for startG, endG in np.ndindex(goalsData.goals_n,goalsData.goals_n):
 		if goalsData.kernelsX[startG][endG] is not None and goalsData.kernelsY[startG][endG] is not None:
 			# For each path from start to end
 			for _path in test_trajectories_matrix[startG][endG]:
@@ -137,5 +117,11 @@ def main():
 	plt.xlabel("Level of perturbation (m)")
 	plt.ylabel("Error (m)")
 	plt.show()
+
+
+	fig, axs = plt.subplots(1,2)
+	axs[0].boxplot(precision_points[:,0])
+	plt.show()
+
 if __name__ == '__main__':
 	main()
